@@ -1,0 +1,38 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-paper: 247 247 245;
+  --color-ink: 20 20 20;
+  --color-accent: 45 45 45;
+  --color-chrome: 255 255 255;
+}
+
+:root[data-theme='dark'] {
+  --color-paper: 11 11 12;
+  --color-ink: 240 240 240;
+  --color-accent: 188 188 188;
+  --color-chrome: 20 20 24;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+  background: rgb(var(--color-paper));
+  color: rgb(var(--color-ink));
+}
+
+body {
+  font-family: 'Iowan Old Style', 'Baskerville', 'Palatino Linotype', serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.chrome-panel {
+  backdrop-filter: blur(12px);
+  background: color-mix(in srgb, rgb(var(--color-chrome)) 72%, transparent);
+}

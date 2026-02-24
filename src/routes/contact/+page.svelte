@@ -1,0 +1,23 @@
+<section class="mx-auto max-w-[900px] px-5 py-14">
+  <h1 class="text-3xl uppercase tracking-[0.18em]">Contact</h1>
+  <p class="mt-4 text-sm uppercase tracking-[0.12em] text-ink/70">MVP static form (no backend integration yet).</p>
+
+  <form class="mt-8 grid gap-4" onsubmit={(event) => event.preventDefault()}>
+    <label class="grid gap-1 text-xs uppercase tracking-[0.14em]">
+      Name
+      <input class="rounded border border-black/20 bg-transparent px-3 py-2" name="name" required />
+    </label>
+
+    <label class="grid gap-1 text-xs uppercase tracking-[0.14em]">
+      Email
+      <input class="rounded border border-black/20 bg-transparent px-3 py-2" name="email" type="email" required />
+    </label>
+
+    <label class="grid gap-1 text-xs uppercase tracking-[0.14em]">
+      Message
+      <textarea class="min-h-40 rounded border border-black/20 bg-transparent px-3 py-2" name="message" required></textarea>
+    </label>
+
+    <button type="submit" class="w-fit rounded border border-black/20 px-4 py-2 text-xs uppercase tracking-[0.14em]">Send (Not Connected Yet)</button>
+  </form>
+</section>

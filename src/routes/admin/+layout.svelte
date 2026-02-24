@@ -1,0 +1,28 @@
+<script lang="ts">
+  import { page } from '$app/stores';
+
+  let { data, children } = $props();
+
+  const links = [
+    { href: '/admin/photos', label: 'Photos' },
+    { href: '/admin/categories', label: 'Categories' },
+    { href: '/admin/tags', label: 'Tags' },
+    { href: '/admin/pages', label: 'Pages' },
+    { href: '/admin/homepage', label: 'Homepage' },
+    { href: '/admin/settings', label: 'Settings' },
+    { href: '/admin/audit', label: 'Audit' }
+  ];
+</script>
+
+<div class="grid min-h-[calc(100vh-64px)] grid-cols-[240px_1fr]">
+  <aside class="border-r border-black/10 p-4">
+    <p class="mb-5 text-xs uppercase tracking-[0.15em]">CMS ({data.role})</p>
+    <nav class="grid gap-2 text-sm">
+      {#each links as link}
+        <a href={link.href} class:underline={$page.url.pathname === link.href}>{link.label}</a>
+      {/each}
+    </nav>
+  </aside>
+
+  <section class="p-6">{@render children()}</section>
+</div>

@@ -1,7 +1,6 @@
 <script lang="ts">
   import { photoPublicUrl } from '$lib/utils/storage-url';
   import { goto } from '$app/navigation';
-  import { onDestroy, onMount } from 'svelte';
   import { readGalleryReturnState, storeViewTransitionHint, transitionNameForImage } from '$lib/utils/view-transition';
 
   type Image = {
@@ -152,12 +151,13 @@
     navigateToImage(prevImage, 'prev');
   };
 
-  onMount(() => {
+  $effect(() => {
+    if (typeof window === 'undefined') return;
+    currentImage.id;
     revealControls();
-  });
-
-  onDestroy(() => {
-    if (hideTimer) clearTimeout(hideTimer);
+    return () => {
+      if (hideTimer) clearTimeout(hideTimer);
+    };
   });
 </script>
 

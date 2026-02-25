@@ -1,13 +1,13 @@
 <script lang="ts">
   import '../app.css';
   import { onNavigate } from '$app/navigation';
-  import { page } from '$app/stores';
-  import { onMount } from 'svelte';
+  import { page } from '$app/state';
   import { readAndClearViewTransitionHint } from '$lib/utils/view-transition';
 
   let { data, children } = $props();
   let themeMode = $state<'light' | 'dark' | 'system'>('system');
   let transitionPreset = $state<'cinematic' | 'snappy' | 'experimental'>('cinematic');
+  let hasHydratedClientPrefs = $state(false);
 
   const isGalleryRoute = (pathname: string) => pathname === '/gallery' || pathname.startsWith('/gallery/');
   const isDetailRoute = (pathname: string) => /^\/photo\/[^/]+(?:\/[^/]+)?$/.test(pathname);
@@ -64,17 +64,19 @@
     applyTransitionPreset();
   };
 
-  onMount(() => {
+  $effect(() => {
+    if (typeof window === 'undefined' || hasHydratedClientPrefs) return;
+
     themeMode = data.siteSettings?.theme_default ?? 'system';
     transitionPreset = data.siteSettings?.transition_preset ?? 'cinematic';
 
-    const stored = localStorage.getItem('theme-mode') as 'light' | 'dark' | 'system' | null;
-    if (stored) {
-      themeMode = stored;
+    const storedTheme = localStorage.getItem('theme-mode');
+    if (storedTheme === 'light' || storedTheme === 'dark' || storedTheme === 'system') {
+      themeMode = storedTheme;
     }
 
     if (data.siteSettings?.allow_transition_toggle) {
-      const storedPreset = localStorage.getItem('transition-preset') as 'cinematic' | 'snappy' | 'experimental' | null;
+      const storedPreset = localStorage.getItem('transition-preset');
       if (storedPreset === 'cinematic' || storedPreset === 'snappy' || storedPreset === 'experimental') {
         transitionPreset = storedPreset;
       }
@@ -84,7 +86,11 @@
 
     applyTransitionPreset();
     applyTheme(themeMode);
+    hasHydratedClientPrefs = true;
+  });
 
+  $effect(() => {
+    if (typeof window === 'undefined') return;
     const media = window.matchMedia('(prefers-color-scheme: dark)');
     const listener = () => {
       if (themeMode === 'system') {
@@ -144,11 +150,11 @@
   <header class="chrome-panel sticky top-0 z-40 border-b border-black/10 px-4 py-3 dark:border-white/10">
     <div class="mx-auto flex w-full max-w-[1800px] items-center justify-between gap-3">
       <nav class="flex items-center gap-4 text-sm tracking-[0.16em] uppercase">
-        <a href="/" class:underline={$page.url.pathname === '/'}>Home</a>
-        <a href="/gallery" class:underline={$page.url.pathname.startsWith('/gallery')}>Gallery</a>
-        <a href="/about" class:underline={$page.url.pathname === '/about'}>About</a>
-        <a href="/contact" class:underline={$page.url.pathname === '/contact'}>Contact</a>
-        <a href={data.session ? '/admin' : '/auth'} class:underline={$page.url.pathname.startsWith('/admin') || $page.url.pathname === '/auth'}>
+        <a href="/" class:underline={page.url.pathname === '/'}>Home</a>
+        <a href="/gallery" class:underline={page.url.pathname.startsWith('/gallery')}>Gallery</a>
+        <a href="/about" class:underline={page.url.pathname === '/about'}>About</a>
+        <a href="/contact" class:underline={page.url.pathname === '/contact'}>Contact</a>
+        <a href={data.session ? '/admin' : '/auth'} class:underline={page.url.pathname.startsWith('/admin') || page.url.pathname === '/auth'}>
           {data.session ? 'CMS' : 'Sign In'}
         </a>
       </nav>

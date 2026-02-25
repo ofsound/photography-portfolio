@@ -5,6 +5,7 @@ export const load: PageServerLoad = async ({ locals }) => {
   const page = await loadPageByKind(locals, 'about');
   return {
     page: page ?? {
+      slug: 'about',
       title: 'About',
       html_content: '<p>Add your About content from Admin -> Pages.</p>',
       css_module: ''

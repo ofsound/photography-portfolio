@@ -1,6 +1,5 @@
 <script lang="ts">
   import { invalidateAll } from '$app/navigation';
-  import { onMount } from 'svelte';
   import { photoPublicUrl } from '$lib/utils/storage-url';
   import type { HomepageImage, HomepageSlide } from '$lib/types/content';
 
@@ -11,7 +10,6 @@
 
   let selectedIds = $state<string[]>([]);
   let draggingId = $state<string | null>(null);
-  let pollTimer = $state<ReturnType<typeof setInterval> | null>(null);
   let refreshState = $state<'idle' | 'refreshing'>('idle');
   let undoStack = $state<string[][]>([]);
   let redoStack = $state<string[][]>([]);
@@ -63,23 +61,32 @@
     }
   };
 
-  onMount(() => {
+  $effect(() => {
     selectedIds = slides.map((slide) => slide.photo_image_id);
     undoStack = [];
     redoStack = [];
+  });
 
-    if (data.pendingConversionCount > 0) {
-      pollTimer = setInterval(async () => {
-        refreshState = 'refreshing';
-        await invalidateAll();
-        refreshState = 'idle';
-      }, 8000);
+  $effect(() => {
+    if (typeof window === 'undefined') return;
+    if (data.pendingConversionCount <= 0) {
+      refreshState = 'idle';
+      return;
     }
 
-    window.addEventListener('keydown', onHistoryKeydown);
+    const timer = setInterval(async () => {
+      refreshState = 'refreshing';
+      await invalidateAll();
+      refreshState = 'idle';
+    }, 8000);
 
+    return () => clearInterval(timer);
+  });
+
+  $effect(() => {
+    if (typeof window === 'undefined') return;
+    window.addEventListener('keydown', onHistoryKeydown);
     return () => {
-      if (pollTimer) clearInterval(pollTimer);
       window.removeEventListener('keydown', onHistoryKeydown);
     };
   });

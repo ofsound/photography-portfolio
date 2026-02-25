@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { page } from '$app/stores';
+  import { page } from '$app/state';
 
   let { data, children } = $props();
 
@@ -19,7 +19,7 @@
     <p class="mb-5 text-xs uppercase tracking-[0.15em]">CMS ({data.role})</p>
     <nav class="grid gap-2 text-sm">
       {#each links as link}
-        <a href={link.href} class:underline={$page.url.pathname === link.href}>{link.label}</a>
+        <a href={link.href} class:underline={page.url.pathname === link.href}>{link.label}</a>
       {/each}
     </nav>
   </aside>

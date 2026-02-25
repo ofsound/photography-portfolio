@@ -1,3 +1,5 @@
+import { sanitizeCmsCss, sanitizeCmsHtml } from '$lib/server/cms-sanitize';
+
 export type CmsPage = {
   id: string;
   slug: string;
@@ -16,7 +18,12 @@ export const loadPageByKind = async (locals: App.Locals, kind: CmsPage['kind']) 
     .is('deleted_at', null)
     .maybeSingle();
 
-  return data as CmsPage | null;
+  if (!data) return null;
+  return {
+    ...data,
+    html_content: sanitizeCmsHtml(data.html_content ?? ''),
+    css_module: sanitizeCmsCss(data.css_module ?? '', data.slug || data.kind)
+  } as CmsPage;
 };
 
 export const loadPageBySlug = async (locals: App.Locals, slug: string) => {
@@ -28,5 +35,10 @@ export const loadPageBySlug = async (locals: App.Locals, slug: string) => {
     .is('deleted_at', null)
     .maybeSingle();
 
-  return data as CmsPage | null;
+  if (!data) return null;
+  return {
+    ...data,
+    html_content: sanitizeCmsHtml(data.html_content ?? ''),
+    css_module: sanitizeCmsCss(data.css_module ?? '', data.slug || data.kind)
+  } as CmsPage;
 };

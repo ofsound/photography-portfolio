@@ -22,23 +22,26 @@ export const load: PageServerLoad = async ({ locals }) => {
       .is('delivery_storage_path', null)
   ]);
 
-  const slides = (slidesRaw ?? []).map((row: any) => {
+  const slides = (slidesRaw ?? []).map((row: { id: string; photo_image_id: string; position: number; is_active: boolean; photo_images?: unknown }) => {
     const image = Array.isArray(row.photo_images) ? row.photo_images[0] : row.photo_images;
-    const photo = Array.isArray(image?.photos) ? image.photos[0] : image?.photos;
+    const photo = image && typeof image === 'object' && 'photos' in image
+      ? (Array.isArray((image as { photos: unknown }).photos) ? (image as { photos: Array<{ title?: string; slug?: string }> }).photos[0] : (image as { photos: { title?: string; slug?: string } }).photos)
+      : undefined;
 
+    const img = image as { kind?: string; delivery_storage_path?: string } | undefined;
     return {
       id: row.id,
       photo_image_id: row.photo_image_id,
       position: row.position,
       is_active: row.is_active,
-      kind: image?.kind ?? 'additional',
-      delivery_storage_path: image?.delivery_storage_path ?? null,
+      kind: img?.kind ?? 'additional',
+      delivery_storage_path: img?.delivery_storage_path ?? null,
       photo_title: photo?.title ?? 'Untitled',
       photo_slug: photo?.slug ?? null
     };
   });
 
-  const images = (imagesRaw ?? []).map((row: any) => {
+  const images = (imagesRaw ?? []).map((row: { id: string; kind: string; position: number; delivery_storage_path: string | null; photos?: { title?: string; slug?: string } | Array<{ title?: string; slug?: string }> }) => {
     const photo = Array.isArray(row.photos) ? row.photos[0] : row.photos;
     return {
       id: row.id,
@@ -62,24 +65,17 @@ export const actions: Actions = {
     const form = await request.formData();
     const imageIds = parseUuidList(asString(form.get('ordered_image_ids')));
 
-    const { error: clearError } = await locals.supabase.from('homepage_slides').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+    const slides = imageIds.map((photoImageId, index) => ({
+      photo_image_id: photoImageId,
+      position: index,
+      is_active: true
+    }));
 
-    if (clearError) {
-      return fail(400, { message: clearError.message });
-    }
+    const { error } = await locals.supabase.rpc('save_homepage_slides', {
+      p_slides: slides
+    });
 
-    if (imageIds.length) {
-      const payload = imageIds.map((photoImageId, index) => ({
-        photo_image_id: photoImageId,
-        position: index,
-        is_active: true
-      }));
-
-      const { error } = await locals.supabase.from('homepage_slides').insert(payload);
-      if (error) {
-        return fail(400, { message: error.message });
-      }
-    }
+    if (error) return fail(400, { message: error.message });
 
     return { success: true, message: 'Homepage slideshow updated.' };
   }

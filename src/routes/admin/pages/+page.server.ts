@@ -1,4 +1,5 @@
 import { fail, type Actions } from '@sveltejs/kit';
+import type { Database } from '$lib/types/database';
 import { asBoolean, asString, toSlug } from '$lib/server/admin-helpers';
 import { sanitizeCmsCss, sanitizeCmsHtml } from '$lib/server/cms-sanitize';
 import { RESERVED_SLUGS } from '$lib/server/reserved-slugs';
@@ -37,13 +38,16 @@ const validateSlug = (slug: string, kind: string) => {
   return null;
 };
 
+type PageKind = Database['public']['Enums']['page_kind'];
+type PublishStatus = Database['public']['Enums']['publish_status'];
+
 type PagePayload = {
   title: string;
   slug: string;
-  kind: 'home' | 'about' | 'contact' | 'custom';
+  kind: PageKind;
   html_content: string;
   css_module: string;
-  status: string;
+  status: PublishStatus;
   show_in_nav: boolean;
   nav_order: number;
   seo_title: string | null;
@@ -53,11 +57,13 @@ type PagePayload = {
 };
 
 const pagePayloadFromForm = (form: FormData): { ok: true; payload: PagePayload } | { ok: false; message: string } => {
-  const kind = asString(form.get('kind'), 'custom') as 'home' | 'about' | 'contact' | 'custom';
+  const kindRaw = asString(form.get('kind'), 'custom');
+  const kind: PageKind = ['home', 'about', 'contact', 'custom'].includes(kindRaw) ? (kindRaw as PageKind) : 'custom';
   const title = asString(form.get('title')).trim();
   const slugRaw = asString(form.get('slug')).trim();
-  const generatedSlug = kind === 'custom' ? toSlug(slugRaw || title, 'page') : systemKindToSlug[kind as 'home' | 'about' | 'contact'];
-  const status = asString(form.get('status'), 'published');
+  const generatedSlug = kind === 'custom' ? toSlug(slugRaw || title, 'page') : systemKindToSlug[kind];
+  const statusRaw = asString(form.get('status'), 'published');
+  const status: PublishStatus = statusRaw === 'archived' ? 'archived' : 'published';
   const showInNav = asBoolean(form.get('show_in_nav'));
   const navOrder = Number(asString(form.get('nav_order'), '0')) || 0;
   const seoTitle = asString(form.get('seo_title')).trim() || null;
@@ -185,16 +191,18 @@ export const actions: Actions = {
     const snapshot = revision.snapshot as Record<string, unknown>;
     const id = String(snapshot.id ?? revision.entity_pk);
 
+    const kindVal = String(snapshot.kind ?? 'custom');
+    const statusVal = String(snapshot.status ?? 'published');
     const payload = {
       slug: String(snapshot.slug ?? ''),
       title: String(snapshot.title ?? ''),
-      kind: String(snapshot.kind ?? 'custom'),
+      kind: (['home', 'about', 'contact', 'custom'].includes(kindVal) ? kindVal : 'custom') as PageKind,
       html_content: sanitizeCmsHtml(String(snapshot.html_content ?? '')),
       css_module: sanitizeCmsCss(String(snapshot.css_module ?? '')),
       seo_title: snapshot.seo_title ? String(snapshot.seo_title) : null,
       seo_description: snapshot.seo_description ? String(snapshot.seo_description) : null,
       og_image_path: snapshot.og_image_path ? String(snapshot.og_image_path) : null,
-      status: String(snapshot.status ?? 'published'),
+      status: (statusVal === 'archived' ? 'archived' : 'published') as PublishStatus,
       show_in_nav: Boolean(snapshot.show_in_nav),
       nav_order: Number(snapshot.nav_order ?? 0),
       deleted_at: snapshot.deleted_at ? String(snapshot.deleted_at) : null

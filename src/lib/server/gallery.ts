@@ -66,7 +66,7 @@ export const loadGalleryPage = async (locals: App.Locals, options: GalleryLoadOp
       slug: photo.slug,
       title: photo.title,
       capture_date: photo.capture_date,
-      thumb: lead ? photoPublicUrl(lead.delivery_storage_path, 720) : null,
+      thumb: lead?.delivery_storage_path ? photoPublicUrl(lead.delivery_storage_path, 720) : null,
       thumbAlt: lead?.alt_text ?? photo.title,
       transitionName: transitionNameForImage(lead?.id)
     };

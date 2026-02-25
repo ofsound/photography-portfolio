@@ -1,6 +1,7 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
   import { onDestroy, onMount } from 'svelte';
+  import type { GalleryPhoto } from '$lib/types/content';
   import {
     clearGalleryReturnState,
     readGalleryReturnState,
@@ -13,7 +14,7 @@
   let density = $state(6);
   let layoutMode = $state<'uniform' | 'masonry'>('uniform');
   let widthMode = $state<'full' | 'constrained'>('full');
-  let photos = $state<any[]>([]);
+  let photos = $state<GalleryPhoto[]>([]);
   let currentPage = $state(1);
   let hasMore = $state(false);
   let isLoadingMore = $state(false);
@@ -98,7 +99,7 @@
       }
 
       const payload = (await response.json()) as {
-        photos: any[];
+        photos: GalleryPhoto[];
         hasMore: boolean;
         page: number;
       };

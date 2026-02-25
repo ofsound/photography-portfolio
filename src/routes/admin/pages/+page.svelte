@@ -1,8 +1,10 @@
 <script lang="ts">
+  import type { ContentRevision } from '$lib/types/content';
+
   let { data, form } = $props();
 
   const revisionsByPage = $derived(
-    data.revisions.reduce((acc: Record<string, any[]>, revision: any) => {
+    (data.revisions as ContentRevision[]).reduce((acc: Record<string, ContentRevision[]>, revision) => {
       if (!acc[revision.entity_pk]) acc[revision.entity_pk] = [];
       acc[revision.entity_pk].push(revision);
       return acc;

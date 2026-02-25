@@ -1,6 +1,7 @@
 import { env as publicEnv } from '$env/dynamic/public';
 import { createServerClient } from '@supabase/ssr';
 import type { Handle } from '@sveltejs/kit';
+import type { Database } from '$lib/types/database';
 
 export const handle: Handle = async ({ event, resolve }) => {
   const supabaseUrl = publicEnv.PUBLIC_SUPABASE_URL;
@@ -10,10 +11,10 @@ export const handle: Handle = async ({ event, resolve }) => {
     throw new Error('Missing PUBLIC_SUPABASE_URL and key (PUBLIC_SUPABASE_PUBLISHABLE_KEY or PUBLIC_SUPABASE_ANON_KEY)');
   }
 
-  event.locals.supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
+  event.locals.supabase = createServerClient<Database>(supabaseUrl, supabaseAnonKey, {
     cookies: {
       getAll: () => event.cookies.getAll(),
-      setAll: (cookiesToSet: any[]) => {
+      setAll: (cookiesToSet: { name: string; value: string; options?: Record<string, unknown> }[]) => {
         for (const cookie of cookiesToSet) {
           event.cookies.set(cookie.name, cookie.value, { ...cookie.options, path: '/' });
         }

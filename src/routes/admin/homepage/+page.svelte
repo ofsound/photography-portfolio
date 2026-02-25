@@ -2,8 +2,12 @@
   import { invalidateAll } from '$app/navigation';
   import { onMount } from 'svelte';
   import { photoPublicUrl } from '$lib/utils/storage-url';
+  import type { HomepageImage, HomepageSlide } from '$lib/types/content';
 
   let { data, form } = $props();
+
+  const slides = $derived(data.slides as HomepageSlide[]);
+  const images = $derived(data.images as HomepageImage[]);
 
   let selectedIds = $state<string[]>([]);
   let draggingId = $state<string | null>(null);
@@ -60,7 +64,7 @@
   };
 
   onMount(() => {
-    selectedIds = (data.slides as any[]).map((slide) => slide.photo_image_id);
+    selectedIds = slides.map((slide) => slide.photo_image_id);
     undoStack = [];
     redoStack = [];
 
@@ -72,21 +76,19 @@
       }, 8000);
     }
 
+    window.addEventListener('keydown', onHistoryKeydown);
+
     return () => {
       if (pollTimer) clearInterval(pollTimer);
+      window.removeEventListener('keydown', onHistoryKeydown);
     };
   });
 
-  onMount(() => {
-    window.addEventListener('keydown', onHistoryKeydown);
-    return () => window.removeEventListener('keydown', onHistoryKeydown);
-  });
-
   const imageForId = (id: string) => {
-    const fromImages = (data.images as any[]).find((image) => image.id === id);
+    const fromImages = images.find((image) => image.id === id);
     if (fromImages) return fromImages;
 
-    const fromSlides = (data.slides as any[]).find((slide) => slide.photo_image_id === id);
+    const fromSlides = slides.find((slide) => slide.photo_image_id === id);
     if (!fromSlides) return null;
 
     return {
@@ -98,8 +100,8 @@
     };
   };
 
-  const selectedSlides = $derived(selectedIds.map((id) => imageForId(id)).filter(Boolean));
-  const availableImages = $derived((data.images as any[]).filter((image) => !selectedIds.includes(image.id)));
+  const selectedSlides = $derived(selectedIds.map((id) => imageForId(id)).filter((s): s is HomepageSlide => s != null));
+  const availableImages = $derived(images.filter((image) => !selectedIds.includes(image.id)));
 
   const addSlide = (id: string) => {
     if (selectedIds.includes(id)) return;

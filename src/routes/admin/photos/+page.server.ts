@@ -10,22 +10,10 @@ import {
   storageSourcePath,
   toSlug
 } from '$lib/server/admin-helpers';
+import type { Database } from '$lib/types/database';
 import type { PageServerLoad } from './$types';
 
-type PhotoImageRow = {
-  id: string;
-  photo_id: string;
-  kind: 'lead' | 'additional';
-  position: number;
-  source_storage_path: string;
-  delivery_storage_path: string | null;
-  source_mime_type: string;
-  source_bytes: number;
-  alt_text: string | null;
-  focal_x: number;
-  focal_y: number;
-  created_at: string;
-};
+type PhotoImageRow = Database['public']['Tables']['photo_images']['Row'];
 
 const parseSearch = (q: string) => `%${q.replace(/[%_]/g, '')}%`;
 
@@ -410,31 +398,24 @@ export const actions: Actions = {
   saveRelations: async ({ locals, request }) => {
     const form = await request.formData();
     const photoId = asString(form.get('photo_id'));
-    const categoryIds = form.getAll('category_ids').map((item) => String(item));
-    const tagIds = form.getAll('tag_ids').map((item) => String(item));
+    const categoryIds = form
+      .getAll('category_ids')
+      .map((item) => String(item))
+      .filter((id) => isUuid(id));
+    const tagIds = form
+      .getAll('tag_ids')
+      .map((item) => String(item))
+      .filter((id) => isUuid(id));
 
     if (!photoId) return fail(400, { message: 'Missing photo id.' });
 
-    const [deleteCat, deleteTag] = await Promise.all([
-      locals.supabase.from('photo_categories').delete().eq('photo_id', photoId),
-      locals.supabase.from('photo_tags').delete().eq('photo_id', photoId)
-    ]);
+    const { error } = await locals.supabase.rpc('save_photo_relations', {
+      p_photo_id: photoId,
+      p_category_ids: categoryIds,
+      p_tag_ids: tagIds
+    });
 
-    if (deleteCat.error || deleteTag.error) {
-      return fail(400, { message: deleteCat.error?.message ?? deleteTag.error?.message ?? 'Failed to clear relations.' });
-    }
-
-    if (categoryIds.length) {
-      const { error } = await locals.supabase
-        .from('photo_categories')
-        .insert(categoryIds.map((categoryId) => ({ photo_id: photoId, category_id: categoryId })));
-      if (error) return fail(400, { message: error.message });
-    }
-
-    if (tagIds.length) {
-      const { error } = await locals.supabase.from('photo_tags').insert(tagIds.map((tagId) => ({ photo_id: photoId, tag_id: tagId })));
-      if (error) return fail(400, { message: error.message });
-    }
+    if (error) return fail(400, { message: error.message });
 
     return { success: true, message: 'Photo categories/tags updated.' };
   },
@@ -522,10 +503,6 @@ export const actions: Actions = {
 
     const nextPosition = (lastImage?.position ?? -1) + 1;
 
-    if (kind === 'lead') {
-      await locals.supabase.from('photo_images').update({ kind: 'additional' }).eq('photo_id', photoId).eq('kind', 'lead');
-    }
-
     const { error: uploadError } = await locals.supabase.storage.from('photos').upload(sourcePath, imageFile, {
       contentType: mimeType,
       upsert: false
@@ -535,19 +512,16 @@ export const actions: Actions = {
       return fail(400, { message: uploadError.message });
     }
 
-    const { error: rowError } = await locals.supabase.from('photo_images').insert({
-      photo_id: photoId,
-      source_storage_path: sourcePath,
-      source_mime_type: mimeType,
-      source_bytes: imageFile.size,
-      delivery_storage_path: null,
-      delivery_mime_type: null,
-      delivery_bytes: null,
-      kind,
-      position: nextPosition,
-      alt_text: altText,
-      focal_x: focalX,
-      focal_y: focalY
+    const { error: rowError } = await locals.supabase.rpc('insert_photo_image', {
+      p_photo_id: photoId,
+      p_source_path: sourcePath,
+      p_source_mime: mimeType,
+      p_source_bytes: imageFile.size,
+      p_kind: kind,
+      p_position: nextPosition,
+      p_alt_text: altText,
+      p_focal_x: focalX,
+      p_focal_y: focalY
     });
 
     if (rowError) {
@@ -565,15 +539,10 @@ export const actions: Actions = {
 
     if (!photoId || !imageId) return fail(400, { message: 'Missing image or photo id.' });
 
-    const { error: clearError } = await locals.supabase
-      .from('photo_images')
-      .update({ kind: 'additional' })
-      .eq('photo_id', photoId)
-      .eq('kind', 'lead');
-
-    if (clearError) return fail(400, { message: clearError.message });
-
-    const { error } = await locals.supabase.from('photo_images').update({ kind: 'lead' }).eq('id', imageId).eq('photo_id', photoId);
+    const { error } = await locals.supabase.rpc('set_lead_image', {
+      p_photo_id: photoId,
+      p_image_id: imageId
+    });
 
     if (error) return fail(400, { message: error.message });
 

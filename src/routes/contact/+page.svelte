@@ -1,8 +1,15 @@
-<section class="mx-auto max-w-[900px] px-5 py-14">
-  <h1 class="text-3xl uppercase tracking-[0.18em]">Contact</h1>
-  <p class="mt-4 text-sm uppercase tracking-[0.12em] text-ink/70">MVP static form (no backend integration yet).</p>
+<script lang="ts">
+  import CmsPageView from '$lib/components/CmsPageView.svelte';
 
-  <form class="mt-8 grid gap-4" onsubmit={(event) => event.preventDefault()}>
+  let { data } = $props();
+</script>
+
+<CmsPageView page={data.page} />
+
+<section class="mx-auto max-w-[900px] px-5 py-14">
+  <p class="mb-6 text-sm uppercase tracking-[0.12em] text-ink/70">MVP static form (no backend integration yet).</p>
+
+  <form class="grid gap-4" onsubmit={(event) => event.preventDefault()}>
     <label class="grid gap-1 text-xs uppercase tracking-[0.14em]">
       Name
       <input class="rounded border border-black/20 bg-transparent px-3 py-2" name="name" required />

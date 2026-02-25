@@ -2,21 +2,29 @@
   import { invalidateAll } from '$app/navigation';
   import { onMount } from 'svelte';
   import { photoPublicUrl } from '$lib/utils/storage-url';
+  import PhotoConversionBadge from '$lib/components/admin/PhotoConversionBadge.svelte';
+  import PhotoTaxonomyEditor from '$lib/components/admin/PhotoTaxonomyEditor.svelte';
+  import PhotoUploadZone from '$lib/components/admin/PhotoUploadZone.svelte';
+  import type { AdminCategory, AdminPhoto, AdminPhotoImage, AdminTag } from '$lib/types/content';
 
   let { data, form } = $props();
 
+  const photos = $derived(data.photos as AdminPhoto[]);
+  const categories = $derived(data.categories as AdminCategory[]);
+  const tags = $derived(data.tags as AdminTag[]);
+
   const selectedCategoryIds = (photoId: string) => data.photoCategoryIds[photoId] ?? [];
   const selectedTagIds = (photoId: string) => data.photoTagIds[photoId] ?? [];
-  const imagesForPhoto = (photoId: string) => data.photoImageMap[photoId] ?? [];
+  const imagesForPhoto = (photoId: string) => (data.photoImageMap[photoId] ?? []) as AdminPhotoImage[];
 
   const baseAdditionalOrder = (photoId: string) =>
     imagesForPhoto(photoId)
-      .filter((image: any) => image.kind === 'additional')
-      .sort((a: any, b: any) => a.position - b.position)
-      .map((image: any) => image.id);
+      .filter((image) => image.kind === 'additional')
+      .sort((a, b) => a.position - b.position)
+      .map((image) => image.id);
 
-  const categoryById = (id: string) => (data.categories as any[]).find((category) => category.id === id) ?? null;
-  const tagById = (id: string) => (data.tags as any[]).find((tag) => tag.id === id) ?? null;
+  const categoryById = (id: string) => categories.find((category) => category.id === id) ?? null;
+  const tagById = (id: string) => tags.find((tag) => tag.id === id) ?? null;
 
   let orderedAdditionalByPhoto = $state<Record<string, string[]>>({});
   let selectedAdditionalByPhoto = $state<Record<string, string[]>>({});
@@ -106,7 +114,7 @@
     const nextOrder: Record<string, string[]> = {};
     const nextSelected: Record<string, string[]> = {};
 
-    for (const photo of data.photos as any[]) {
+    for (const photo of photos) {
       nextOrder[photo.id] = baseAdditionalOrder(photo.id);
       nextSelected[photo.id] = [];
     }
@@ -124,23 +132,21 @@
       }, 8000);
     }
 
+    window.addEventListener('keydown', onHistoryKeydown);
+
     return () => {
       if (pollTimer) clearInterval(pollTimer);
+      window.removeEventListener('keydown', onHistoryKeydown);
     };
-  });
-
-  onMount(() => {
-    window.addEventListener('keydown', onHistoryKeydown);
-    return () => window.removeEventListener('keydown', onHistoryKeydown);
   });
 
   const additionalOrder = (photoId: string) => orderedAdditionalByPhoto[photoId] ?? baseAdditionalOrder(photoId);
   const selectedAdditional = (photoId: string) => selectedAdditionalByPhoto[photoId] ?? [];
 
   const imageById = (photoId: string, imageId: string) =>
-    (imagesForPhoto(photoId) as any[]).find((image) => image.id === imageId) ?? null;
+    imagesForPhoto(photoId).find((image) => image.id === imageId) ?? null;
 
-  const leadImage = (photoId: string) => (imagesForPhoto(photoId) as any[]).find((image) => image.kind === 'lead') ?? null;
+  const leadImage = (photoId: string) => imagesForPhoto(photoId).find((image) => image.kind === 'lead') ?? null;
 
   const moveItem = (arr: string[], from: number, to: number) => {
     const clone = [...arr];
@@ -210,7 +216,7 @@
   };
 
   const selectAllVisiblePhotos = () => {
-    selectedPhotoIds = (data.photos as any[]).map((photo) => photo.id);
+    selectedPhotoIds = photos.map((photo) => photo.id);
   };
 
   const clearSelectedPhotos = () => {
@@ -236,25 +242,10 @@
 
   const photoConversionState = (photoId: string) => data.photoConversionStateMap[photoId] ?? 'no-images';
 
-  const conversionBadgeClass = (state: string) => {
-    if (state === 'ready') return 'border-emerald-500/40 text-emerald-700';
-    if (state === 'pending') return 'border-amber-500/40 text-amber-700';
-    if (state === 'mixed') return 'border-sky-500/40 text-sky-700';
-    if (state === 'no-images') return 'border-slate-400/40 text-slate-600';
-    return 'border-black/20 text-ink/70';
-  };
-
-  const imageConversionState = (image: any) => {
+  const imageConversionState = (image: AdminPhotoImage): 'ready' | 'converting' | 'unknown' => {
     if (image.delivery_storage_path) return 'ready';
     if (image.source_storage_path) return 'converting';
     return 'unknown';
-  };
-
-  const imageConversionBadgeClass = (image: any) => {
-    const state = imageConversionState(image);
-    if (state === 'ready') return 'border-emerald-500/40 text-emerald-700';
-    if (state === 'converting') return 'border-amber-500/40 text-amber-700';
-    return 'border-rose-500/40 text-rose-700';
   };
 
   const addTaxonomyDraft = (type: 'category' | 'tag', id: string) => {
@@ -338,7 +329,7 @@
     Category
     <select name="category" class="rounded border border-black/20 px-3 py-2">
       <option value="">all</option>
-      {#each data.categories as category (category.id)}
+      {#each categories as category (category.id)}
         <option value={category.id} selected={data.filterCategoryId === category.id}>{category.name}</option>
       {/each}
     </select>
@@ -348,7 +339,7 @@
     Tag
     <select name="tag" class="rounded border border-black/20 px-3 py-2">
       <option value="">all</option>
-      {#each data.tags as tag (tag.id)}
+      {#each tags as tag (tag.id)}
         <option value={tag.id} selected={data.filterTagId === tag.id}>{tag.name}</option>
       {/each}
     </select>
@@ -421,83 +412,22 @@
     </form>
   </div>
 
-  <div class="grid gap-3 rounded border border-black/10 p-3 lg:grid-cols-3">
-    <div class="grid gap-2">
-      <p class="text-xs uppercase tracking-[0.12em]">Drag Category Chips</p>
-      <div class="flex flex-wrap gap-2">
-        {#each data.categories as category (category.id)}
-          <button
-            type="button"
-            draggable="true"
-            ondragstart={(event) => onTaxChipDragStart('category', category.id, event)}
-            ondragend={onTaxDragEnd}
-            onclick={() => addTaxonomyDraft('category', category.id)}
-            class="rounded border border-black/20 px-2 py-1 text-xs"
-          >
-            {category.name}
-          </button>
-        {/each}
-      </div>
-    </div>
-
-    <div class="grid gap-2">
-      <p class="text-xs uppercase tracking-[0.12em]">Drag Tag Chips</p>
-      <div class="flex flex-wrap gap-2">
-        {#each data.tags as tag (tag.id)}
-          <button
-            type="button"
-            draggable="true"
-            ondragstart={(event) => onTaxChipDragStart('tag', tag.id, event)}
-            ondragend={onTaxDragEnd}
-            onclick={() => addTaxonomyDraft('tag', tag.id)}
-            class="rounded border border-black/20 px-2 py-1 text-xs"
-          >
-            {tag.name}
-          </button>
-        {/each}
-      </div>
-    </div>
-
-    <form method="POST" action="?/bulkAssignTaxonomy" class="grid gap-2 rounded border border-black/20 p-2" ondragover={onTaxDragOver} ondrop={onTaxDrop}>
-      <input type="hidden" name="selected_photo_ids" value={selectedPhotoIds.join('\n')} />
-      {#each taxonomyDraftCategories as categoryId (categoryId)}
-        <input type="hidden" name="category_ids" value={categoryId} />
-      {/each}
-      {#each taxonomyDraftTags as tagId (tagId)}
-        <input type="hidden" name="tag_ids" value={tagId} />
-      {/each}
-
-      <p class="text-xs uppercase tracking-[0.12em]">Drop Taxonomy Here</p>
-
-      <div class="flex flex-wrap gap-2">
-        {#each taxonomyDraftCategories as categoryId (categoryId)}
-          {#if categoryById(categoryId)}
-            <button type="button" class="rounded border border-sky-500/40 bg-sky-50 px-2 py-1 text-xs" onclick={() => removeTaxonomyDraft('category', categoryId)}>
-              {categoryById(categoryId).name} x
-            </button>
-          {/if}
-        {/each}
-        {#each taxonomyDraftTags as tagId (tagId)}
-          {#if tagById(tagId)}
-            <button type="button" class="rounded border border-emerald-500/40 bg-emerald-50 px-2 py-1 text-xs" onclick={() => removeTaxonomyDraft('tag', tagId)}>
-              {tagById(tagId).name} x
-            </button>
-          {/if}
-        {/each}
-      </div>
-
-      <div class="flex flex-wrap items-center gap-2">
-        <button type="button" class="rounded border border-black/20 px-2 py-1 text-xs" onclick={clearTaxonomyDraft}>Clear Draft</button>
-        <button
-          class="rounded border border-black/20 px-3 py-1 text-xs uppercase tracking-[0.14em]"
-          type="submit"
-          disabled={selectedPhotoIds.length === 0 || (taxonomyDraftCategories.length === 0 && taxonomyDraftTags.length === 0)}
-        >
-          Apply Draft Taxonomy
-        </button>
-      </div>
-    </form>
-  </div>
+  <PhotoTaxonomyEditor
+    {categories}
+    {tags}
+    {taxonomyDraftCategories}
+    {taxonomyDraftTags}
+    {selectedPhotoIds}
+    {categoryById}
+    {tagById}
+    {addTaxonomyDraft}
+    {removeTaxonomyDraft}
+    {clearTaxonomyDraft}
+    {onTaxChipDragStart}
+    {onTaxDragOver}
+    {onTaxDrop}
+    {onTaxDragEnd}
+  />
 </section>
 
 <section class="mt-6 grid gap-6 lg:grid-cols-[420px_1fr]">
@@ -520,7 +450,7 @@
   </form>
 
   <div class="grid gap-4">
-    {#each data.photos as photo (photo.id)}
+    {#each photos as photo (photo.id)}
       <article class="grid gap-3 rounded border border-black/10 p-4">
         <div class="flex items-center justify-between gap-3 rounded border border-black/10 px-3 py-2">
           <label class="flex items-center gap-2 text-xs uppercase tracking-[0.12em]">
@@ -532,9 +462,7 @@
             Select Photo
           </label>
           <div class="flex items-center gap-2">
-            <span class={`rounded border px-2 py-1 text-[11px] uppercase ${conversionBadgeClass(photoConversionState(photo.id))}`}>
-              {photoConversionState(photo.id)}
-            </span>
+            <PhotoConversionBadge state={photoConversionState(photo.id)} />
             <span class="text-xs text-ink/70"><code>{photo.id}</code></span>
           </div>
         </div>
@@ -574,7 +502,7 @@
             <fieldset class="grid gap-2">
               <legend class="text-xs uppercase tracking-[0.12em]">Categories</legend>
               <div class="grid max-h-36 gap-1 overflow-auto">
-                {#each data.categories as category (category.id)}
+                {#each categories as category (category.id)}
                   <label class="flex items-center gap-2 text-sm">
                     <input
                       type="checkbox"
@@ -591,7 +519,7 @@
             <fieldset class="grid gap-2">
               <legend class="text-xs uppercase tracking-[0.12em]">Tags</legend>
               <div class="grid max-h-36 gap-1 overflow-auto">
-                {#each data.tags as tag (tag.id)}
+                {#each tags as tag (tag.id)}
                   <label class="flex items-center gap-2 text-sm">
                     <input type="checkbox" name="tag_ids" value={tag.id} checked={selectedTagIds(photo.id).includes(tag.id)} />
                     {tag.name}
@@ -604,31 +532,16 @@
           <button class="w-fit rounded border border-black/20 px-3 py-1 text-xs uppercase tracking-[0.14em]" type="submit">Save Taxonomy</button>
         </form>
 
-        <form method="POST" action="?/uploadImage" enctype="multipart/form-data" class="grid gap-2 rounded border border-black/10 p-3">
-          <input type="hidden" name="photo_id" value={photo.id} />
-          <p class="text-xs uppercase tracking-[0.12em]">Upload Image (source/; conversion async)</p>
-          <div class="grid gap-2 sm:grid-cols-4">
-            <input type="file" name="image_file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" class="sm:col-span-2" required />
-            <select name="kind" class="rounded border border-black/20 px-3 py-2 text-sm">
-              <option value="additional">additional</option>
-              <option value="lead">lead</option>
-            </select>
-            <input name="alt_text" placeholder="Alt text" class="rounded border border-black/20 px-3 py-2" />
-          </div>
-          <div class="grid gap-2 sm:grid-cols-3">
-            <input name="focal_x" type="number" min="0" max="1" step="0.001" value="0.5" class="rounded border border-black/20 px-3 py-2" />
-            <input name="focal_y" type="number" min="0" max="1" step="0.001" value="0.5" class="rounded border border-black/20 px-3 py-2" />
-            <button class="rounded border border-black/20 px-3 py-1 text-xs uppercase tracking-[0.14em]" type="submit">Upload</button>
-          </div>
-        </form>
+        <PhotoUploadZone photoId={photo.id} />
 
         <div class="grid gap-3 rounded border border-black/10 p-3">
           <p class="text-xs uppercase tracking-[0.12em]">Images</p>
 
           {#if leadImage(photo.id)}
+            {@const lead = leadImage(photo.id)!}
             <div class="grid gap-2 rounded border border-black/10 p-2 sm:grid-cols-[auto_1fr_auto] sm:items-center">
-              {#if leadImage(photo.id).delivery_storage_path}
-                <img src={photoPublicUrl(leadImage(photo.id).delivery_storage_path, 180)} alt={leadImage(photo.id).alt_text ?? photo.title} class="h-12 w-16 rounded object-cover" />
+              {#if lead.delivery_storage_path}
+                <img src={photoPublicUrl(lead.delivery_storage_path, 180)} alt={lead.alt_text ?? photo.title} class="h-12 w-16 rounded object-cover" />
               {:else}
                 <div class="grid h-12 w-16 place-items-center rounded border border-black/20 text-[10px] uppercase">pending</div>
               {/if}
@@ -636,15 +549,13 @@
               <div class="text-xs">
                 <div class="flex items-center gap-2 uppercase tracking-[0.12em]">
                   <span>Lead Image</span>
-                  <span class={`rounded border px-2 py-0.5 text-[10px] ${imageConversionBadgeClass(leadImage(photo.id))}`}>
-                    {imageConversionState(leadImage(photo.id))}
-                  </span>
+                  <PhotoConversionBadge state={imageConversionState(lead)} size="sm" />
                 </div>
-                <div><code>{leadImage(photo.id).id}</code></div>
+                <div><code>{lead.id}</code></div>
               </div>
 
               <form method="POST" action="?/removeImage">
-                <input type="hidden" name="image_id" value={leadImage(photo.id).id} />
+                <input type="hidden" name="image_id" value={lead.id} />
                 <button class="rounded border border-red-400/60 px-2 py-1 text-xs uppercase tracking-[0.12em] text-red-700" type="submit">Delete</button>
               </form>
             </div>
@@ -688,9 +599,7 @@
                       <div class="text-xs">
                         <div class="flex items-center gap-2">
                           <code>{image.id}</code>
-                          <span class={`rounded border px-2 py-0.5 text-[10px] ${imageConversionBadgeClass(image)}`}>
-                            {imageConversionState(image)}
-                          </span>
+                          <PhotoConversionBadge state={imageConversionState(image)} size="sm" />
                         </div>
                         <div>pos: {image.position}</div>
                       </div>

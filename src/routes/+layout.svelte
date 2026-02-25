@@ -2,9 +2,24 @@
   import '../app.css';
   import { onNavigate } from '$app/navigation';
   import { page } from '$app/state';
+  import { galleryTransitionPhase } from '$lib/stores/gallery-transition';
   import type { LayoutData } from './$types';
 
   let { data, children } = $props<{ data: LayoutData | null; children: import('svelte').Snippet }>();
+  let phase = $state<import('$lib/stores/gallery-transition').GalleryTransitionPhase>('idle');
+  $effect(() => {
+    const unsub = galleryTransitionPhase.subscribe((p) => {
+      phase = p;
+    });
+    return unsub;
+  });
+  const chromeHidden = $derived(
+    phase === 'fade-out-chrome' ||
+      phase === 'scale-and-mask' ||
+      phase === 'open' ||
+      phase === 'closing-chrome' ||
+      phase === 'closing-scale'
+  );
   const navPages = $derived((data?.navPages ?? []) as Array<{ id: string; slug: string; title: string; nav_order: number }>);
   const siteSettings = $derived(data?.siteSettings ?? null);
   const hasSession = $derived(Boolean(data?.session));
@@ -147,7 +162,11 @@
 </script>
 
 <div class="min-h-screen bg-bg text-text">
-  <header bind:this={siteHeaderEl} class="chrome-panel sticky top-0 z-40 border-b border-border px-4 py-3">
+  <header
+    bind:this={siteHeaderEl}
+    class="chrome-panel sticky top-0 z-40 border-b border-border px-4 py-3 transition-opacity duration-[280ms] ease-out"
+    class:opacity-0={chromeHidden}
+  >
     <div class="mx-auto flex w-full max-w-[1800px] items-center justify-between gap-3">
       <nav class="flex items-center gap-4 text-sm tracking-[0.16em] uppercase">
         <a href="/" class:underline={page.url.pathname === '/'}>Home</a>

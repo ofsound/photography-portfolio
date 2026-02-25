@@ -1,6 +1,18 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
+  import { fade } from 'svelte/transition';
   import { onDestroy, onMount } from 'svelte';
+  import { galleryTransitionPhase } from '$lib/stores/gallery-transition';
+
+  /** Portals the element to document.body so it can stack above the promoted tile (z-70). */
+  const portal = (node: HTMLElement) => {
+    document.body.appendChild(node);
+    return {
+      destroy() {
+        node.remove();
+      }
+    };
+  };
   import type { GalleryPhoto } from '$lib/types/content';
   import { GALLERY_DETAIL_SHARED_WIDTH, photoPublicUrl } from '$lib/utils/storage-url';
   import {
@@ -9,6 +21,7 @@
     movePromotedTile,
     promoteTile,
     releasePromotedTile,
+    reinsertPromotedTile,
     type TileAnimationSession
   } from './tile-animator';
 
@@ -58,8 +71,6 @@
   let prevGalleryHref = $state<string | null>(null);
   let nextGalleryHref = $state<string | null>(null);
   let controlsVisible = $state(true);
-  let metaMinimized = $state(false);
-
   let promoted = $state<TileAnimationSession | null>(null);
   let routeKey = $state('');
   let querySignature = $state('');
@@ -74,6 +85,10 @@
   let touchActive = $state(false);
   const swipeMinDistance = 48;
   const swipeMaxDurationMs = 700;
+
+  const FADE_OUT_CHROME_MS = 280;
+  const SCALE_MASK_MS = 520;
+  const CLOSING_CHROME_MS = 180;
 
   let transitionQueue = Promise.resolve();
   let transitionsInFlight = $state(0);
@@ -98,6 +113,24 @@
   };
 
   const isTransitioning = $derived(transitionsInFlight > 0);
+
+  let transitionPhase = $state<import('$lib/stores/gallery-transition').GalleryTransitionPhase>('idle');
+  $effect(() => {
+    const unsub = galleryTransitionPhase.subscribe((p) => {
+      transitionPhase = p;
+    });
+    return unsub;
+  });
+  const chromePanelHidden = $derived(
+    transitionPhase === 'fade-out-chrome' ||
+      transitionPhase === 'scale-and-mask' ||
+      transitionPhase === 'open' ||
+      transitionPhase === 'closing-chrome' ||
+      transitionPhase === 'closing-scale'
+  );
+  const overlayChromeHidden = $derived(
+    transitionPhase === 'closing-chrome' || transitionPhase === 'closing-scale'
+  );
 
   const registerTile = (node: HTMLElement, slug: string) => {
     tileRefs.set(slug, node);
@@ -239,7 +272,12 @@
     return computeContainRect(window.innerWidth, window.innerHeight, baseWidth, baseHeight, readHeaderHeight(), 0, 10, 10);
   };
 
-  const ensurePromotedTile = async (slug: string, imageId: string | null, animate: boolean) => {
+  const ensurePromotedTile = async (
+    slug: string,
+    imageId: string | null,
+    animate: boolean,
+    durationMsOverride?: number
+  ) => {
     const photo = findPhoto(slug);
     if (!photo) return;
 
@@ -251,9 +289,10 @@
     }
 
     const nextRect = targetRectFor(photo, imageId);
+    const duration = durationMsOverride ?? (animate ? 520 : 0);
     const baseMotion = {
       reducedMotion: reducedMotion(),
-      durationMs: animate ? 520 : 0,
+      durationMs: duration,
       easing: 'cubic-bezier(0.16, 1, 0.3, 1)'
     };
 
@@ -278,33 +317,48 @@
   const collapsePromotedTile = async (animate: boolean) => {
     if (!promoted) return;
 
-    const placeholderRect = promoted.placeholder.getBoundingClientRect();
+    const session = promoted;
+
+    const placeholderRect = session.placeholder.getBoundingClientRect();
     const outOfView = placeholderRect.bottom < 0 || placeholderRect.top > window.innerHeight;
     if (outOfView) {
-      promoted.placeholder.scrollIntoView({ behavior: reducedMotion() ? 'auto' : 'smooth', block: 'center' });
+      session.placeholder.scrollIntoView({ behavior: reducedMotion() ? 'auto' : 'smooth', block: 'center' });
       if (!reducedMotion()) {
         await wait(260);
       }
     }
 
-    await demoteTile(promoted, {
+    if (!reducedMotion()) {
+      galleryTransitionPhase.set('closing-chrome');
+      await wait(CLOSING_CHROME_MS);
+    }
+
+    galleryTransitionPhase.set('closing-scale');
+    activeSlug = null;
+    activeImageId = null;
+
+    await demoteTile(session, {
       reducedMotion: reducedMotion(),
       durationMs: animate ? 460 : 0,
       easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)'
     });
+
+    await wait(reducedMotion() ? 150 : SCALE_MASK_MS);
+
+    reinsertPromotedTile(session);
     promoted = null;
+    galleryTransitionPhase.set('idle');
   };
 
   const applyRouteState = async (route: ActiveRoute | null, animate: boolean) => {
     if (!route) {
       await collapsePromotedTile(animate);
-      activeSlug = null;
-      activeImageId = null;
       prevGalleryHref = null;
       nextGalleryHref = null;
       return;
     }
 
+    galleryTransitionPhase.set('open');
     const switchingPhotos = Boolean(activeSlug && activeSlug !== route.photoSlug);
     await ensurePromotedTile(route.photoSlug, route.imageId, animate && !switchingPhotos);
 
@@ -354,7 +408,25 @@
         const localNeighbors = localNeighborsFor(slug);
         prevGalleryHref = localNeighbors.prevGalleryHref;
         nextGalleryHref = localNeighbors.nextGalleryHref;
-        await ensurePromotedTile(slug, null, true);
+
+        if (reducedMotion()) {
+          activeSlug = slug;
+          activeImageId = null;
+          await ensurePromotedTile(slug, null, true);
+          galleryTransitionPhase.set('open');
+          return;
+        }
+
+        galleryTransitionPhase.set('fade-out-chrome');
+        await wait(FADE_OUT_CHROME_MS);
+
+        galleryTransitionPhase.set('scale-and-mask');
+        activeSlug = slug;
+        activeImageId = null;
+
+        await ensurePromotedTile(slug, null, true, SCALE_MASK_MS);
+
+        galleryTransitionPhase.set('open');
       });
 
       skipNextRouteAnimation = true;
@@ -368,9 +440,6 @@
     void (async () => {
       await queueTransition(async () => {
         await collapsePromotedTile(true);
-        activeSlug = null;
-        activeImageId = null;
-        metaMinimized = false;
       });
 
       skipNextRouteAnimation = true;
@@ -670,7 +739,10 @@
 <svelte:window onresize={onResize} onmousemove={onPointerMove} onkeydown={onKeydown} ontouchstart={onTouchStart} ontouchend={onTouchEnd} />
 
 <section class="mx-auto w-full px-4 py-5" style={sectionMaxWidthStyle}>
-  <div class="chrome-panel sticky top-[70px] z-30 mb-5 grid gap-2 rounded px-3 py-2 text-xs uppercase tracking-[0.15em] lg:grid-cols-[1fr_auto] lg:items-center">
+  <div
+    class="chrome-panel sticky top-[70px] z-30 mb-5 grid gap-2 rounded px-3 py-2 text-xs uppercase tracking-[0.15em] transition-opacity duration-[280ms] ease-out lg:grid-cols-[1fr_auto] lg:items-center"
+    class:opacity-0={chromePanelHidden}
+  >
     <form class="flex flex-1 items-center gap-2" onsubmit={onSearchSubmit}>
       <input
         name="q"
@@ -817,13 +889,20 @@
 </section>
 
 {#if activePhoto && currentImage}
-  <div class="fixed inset-0 z-[60] bg-black"></div>
+  <div use:portal transition:fade={{ duration: SCALE_MASK_MS }} class="fixed inset-0 z-[60] bg-black"></div>
 
   {#if controlsVisible}
+    <div
+      use:portal
+      class="fixed inset-0 z-[80] pointer-events-none transition-opacity ease-out"
+      class:opacity-0={overlayChromeHidden}
+      style="transition-duration: {CLOSING_CHROME_MS}ms"
+      aria-hidden="true"
+    >
       <a
         href={withCurrentSearch('/gallery')}
         onclick={closeToGallery}
-        class="chrome-panel fixed left-4 top-[calc(var(--site-header-height,54px)+14px)] z-[80] rounded px-3 py-2 text-xs uppercase tracking-[0.15em]"
+        class="chrome-panel pointer-events-auto fixed left-4 top-[calc(var(--site-header-height,54px)+14px)] rounded px-3 py-2 text-xs uppercase tracking-[0.15em]"
         class:pointer-events-none={isTransitioning}
         class:opacity-50={isTransitioning}
       >
@@ -834,7 +913,7 @@
       <a
         href={prevGalleryHref ? withCurrentSearch(prevGalleryHref) : '#'}
         onclick={(event) => onNeighborNavigate(event, prevGalleryHref, 'prev')}
-        class="chrome-panel fixed left-0 top-1/2 z-[80] -translate-y-1/2 px-4 py-5 text-lg"
+        class="chrome-panel pointer-events-auto fixed left-0 top-1/2 -translate-y-1/2 px-4 py-5 text-lg"
         class:pointer-events-none={isTransitioning}
         class:opacity-50={isTransitioning}
         aria-disabled={isTransitioning}
@@ -846,7 +925,7 @@
       <a
         href={nextGalleryHref ? withCurrentSearch(nextGalleryHref) : '#'}
         onclick={(event) => onNeighborNavigate(event, nextGalleryHref, 'next')}
-        class="chrome-panel fixed right-0 top-1/2 z-[80] -translate-y-1/2 px-4 py-5 text-lg"
+        class="chrome-panel pointer-events-auto fixed right-0 top-1/2 -translate-y-1/2 px-4 py-5 text-lg"
         class:pointer-events-none={isTransitioning}
         class:opacity-50={isTransitioning}
         aria-disabled={isTransitioning}
@@ -855,27 +934,23 @@
         →
       </a>
     {/if}
+    </div>
   {/if}
 
-  <aside class="chrome-panel fixed inset-x-0 bottom-0 z-[80]">
-    <button class="w-full border-b border-border px-4 py-2 text-left text-xs uppercase tracking-[0.16em]" onclick={() => (metaMinimized = !metaMinimized)}>
-      {#if metaMinimized}
-        {activePhoto.title} - Expand
-      {:else}
-        Minimize
-      {/if}
-    </button>
-
-    {#if !metaMinimized}
-      <div class="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
-        <div>
-          <h1 class="text-sm uppercase tracking-[0.16em]">{activePhoto.title}</h1>
-          {#if activePhoto.description}
-            <p class="mt-2 max-w-[70ch] text-sm text-canvas-text/80">{activePhoto.description}</p>
-          {/if}
-        </div>
+  <aside
+    use:portal
+    class="chrome-panel fixed left-[5%] bottom-[5%] z-[80] w-fit max-w-[min(90vw,70ch)] rounded px-4 py-3 transition-opacity ease-out"
+    class:opacity-0={overlayChromeHidden}
+    style="transition-duration: {CLOSING_CHROME_MS}ms"
+  >
+    <div class="flex flex-wrap items-center justify-between gap-3">
+      <div>
+        <h1 class="text-sm uppercase tracking-[0.16em]">{activePhoto.title}</h1>
+        {#if activePhoto.description}
+          <p class="mt-2 max-w-[70ch] text-sm text-canvas-text/80">{activePhoto.description}</p>
+        {/if}
       </div>
-    {/if}
+    </div>
 
     {#if activePhoto.additionalImages.length > 0}
       <div class="flex gap-2 overflow-x-auto px-4 pb-3" data-swipe-ignore>

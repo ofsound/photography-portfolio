@@ -26,6 +26,8 @@ type PromoteConfig = AnimationConfig & {
   targetRect: TileRect;
 };
 
+const DEMOTE_Z_INDEX = 90;
+
 const applyFixedRect = (node: HTMLElement, rect: TileRect) => {
   node.style.position = 'fixed';
   node.style.top = `${rect.top}px`;
@@ -38,6 +40,7 @@ const applyFixedRect = (node: HTMLElement, rect: TileRect) => {
   node.style.pointerEvents = 'none';
   node.style.transformOrigin = 'center center';
   node.style.contain = 'layout paint style';
+  node.style.opacity = '1';
 };
 
 const clearFixedRect = (node: HTMLElement) => {
@@ -52,6 +55,7 @@ const clearFixedRect = (node: HTMLElement) => {
   node.style.removeProperty('pointer-events');
   node.style.removeProperty('transform-origin');
   node.style.removeProperty('contain');
+  node.style.removeProperty('opacity');
 };
 
 const animateRect = async (node: HTMLElement, fromRect: TileRect, toRect: TileRect, options?: AnimationConfig) => {
@@ -144,11 +148,17 @@ export const movePromotedTile = async (session: TileAnimationSession, targetRect
 
 export const getPlaceholderRect = (session: TileAnimationSession): TileRect => rectFromElement(session.placeholder);
 
+/** Animates the tile to its placeholder position. Does NOT reinsert. Call reinsertPromotedTile after overlay has faded. */
 export const demoteTile = async (session: TileAnimationSession, options?: AnimationConfig) => {
+  session.node.style.zIndex = String(DEMOTE_Z_INDEX);
+  session.node.style.opacity = '1';
   const targetRect = getPlaceholderRect(session);
   await animateRect(session.node, session.currentRect, targetRect, options);
   session.currentRect = targetRect;
+};
 
+/** Reinserts the promoted tile into the grid. Call after overlay has faded so the tile stays on top during the fade. */
+export const reinsertPromotedTile = (session: TileAnimationSession) => {
   session.node.getAnimations().forEach((a) => a.cancel());
   clearFixedRect(session.node);
   const parent = session.placeholder.parentNode;

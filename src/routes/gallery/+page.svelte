@@ -198,9 +198,9 @@
         name="q"
         value={data.q}
         placeholder="Search title, description, tags, category"
-        class="w-full rounded border border-black/15 bg-transparent px-2 py-1"
+        class="w-full rounded border border-border bg-transparent px-2 py-1"
       />
-      <button class="rounded border border-black/20 px-2 py-1" type="submit">Search</button>
+      <button class="rounded border border-border-strong px-2 py-1" type="submit">Search</button>
     </form>
 
     <div class="flex flex-wrap items-center justify-end gap-3">
@@ -219,7 +219,7 @@
       <div class="flex items-center gap-1">
         <button
           type="button"
-          class="rounded border border-black/20 px-2 py-1 disabled:opacity-40"
+          class="rounded border border-border-strong px-2 py-1 disabled:opacity-40"
           onclick={() => updateLayoutMode('uniform')}
           disabled={layoutMode === 'uniform'}
         >
@@ -227,7 +227,7 @@
         </button>
         <button
           type="button"
-          class="rounded border border-black/20 px-2 py-1 disabled:opacity-40"
+          class="rounded border border-border-strong px-2 py-1 disabled:opacity-40"
           onclick={() => updateLayoutMode('masonry')}
           disabled={layoutMode === 'masonry'}
         >
@@ -238,7 +238,7 @@
       <div class="flex items-center gap-1">
         <button
           type="button"
-          class="rounded border border-black/20 px-2 py-1 disabled:opacity-40"
+          class="rounded border border-border-strong px-2 py-1 disabled:opacity-40"
           onclick={() => updateWidthMode('full')}
           disabled={widthMode === 'full'}
         >
@@ -246,7 +246,7 @@
         </button>
         <button
           type="button"
-          class="rounded border border-black/20 px-2 py-1 disabled:opacity-40"
+          class="rounded border border-border-strong px-2 py-1 disabled:opacity-40"
           onclick={() => updateWidthMode('constrained')}
           disabled={widthMode === 'constrained'}
         >
@@ -257,7 +257,7 @@
   </div>
 
   {#if photos.length === 0}
-    <p class="py-16 text-center text-sm uppercase tracking-[0.14em] text-ink/70">No photos found.</p>
+    <p class="py-16 text-center text-sm uppercase tracking-[0.14em] text-text-muted">No photos found.</p>
   {:else}
     {#if layoutMode === 'uniform'}
       <ul class="grid gap-2" style={`grid-template-columns: repeat(${colCount}, minmax(0, 1fr));`}>
@@ -279,7 +279,7 @@
 
         {#if isLoadingMore}
           {#each Array.from({ length: placeholderCount }) as _, index (index)}
-            <li class="animate-pulse rounded bg-black/5 dark:bg-white/10" style={`aspect-ratio: ${uniformRatio};`}></li>
+            <li class="animate-pulse rounded bg-surface-muted" style={`aspect-ratio: ${uniformRatio};`}></li>
           {/each}
         {/if}
       </ul>
@@ -303,7 +303,7 @@
 
         {#if isLoadingMore}
           {#each Array.from({ length: placeholderCount }) as _, index (index)}
-            <li class="mb-2 break-inside-avoid animate-pulse rounded bg-black/5 dark:bg-white/10" style={`height: ${120 + (index % 5) * 34}px;`}></li>
+            <li class="mb-2 break-inside-avoid animate-pulse rounded bg-surface-muted" style={`height: ${120 + (index % 5) * 34}px;`}></li>
           {/each}
         {/if}
       </ul>
@@ -314,13 +314,13 @@
     {/if}
 
     {#if isLoadingMore}
-      <p class="py-4 text-center text-xs uppercase tracking-[0.14em] text-ink/60">Loading more</p>
+      <p class="py-4 text-center text-xs uppercase tracking-[0.14em] text-text-subtle">Loading more</p>
     {/if}
 
     {#if loadError}
       <div class="py-4 text-center text-sm">
         <p>{loadError}</p>
-        <button class="mt-2 rounded border border-black/20 px-3 py-1 text-xs uppercase tracking-[0.14em]" type="button" onclick={() => void loadNextPage()}>
+        <button class="mt-2 rounded border border-border-strong px-3 py-1 text-xs uppercase tracking-[0.14em]" type="button" onclick={() => void loadNextPage()}>
           Retry
         </button>
       </div>

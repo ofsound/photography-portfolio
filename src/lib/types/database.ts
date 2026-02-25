@@ -472,6 +472,8 @@ export type Database = {
           grid_desktop_max: number;
           grid_mobile_default: number;
           grid_mobile_max: number;
+          homepage_slide_duration_ms: number;
+          homepage_transition_duration_ms: number;
           max_content_width_px: number | null;
           singleton_id: number;
           tailwind_palette: Json;
@@ -489,6 +491,8 @@ export type Database = {
           grid_desktop_max?: number;
           grid_mobile_default?: number;
           grid_mobile_max?: number;
+          homepage_slide_duration_ms?: number;
+          homepage_transition_duration_ms?: number;
           max_content_width_px?: number | null;
           singleton_id?: number;
           tailwind_palette?: Json;
@@ -506,6 +510,8 @@ export type Database = {
           grid_desktop_max?: number;
           grid_mobile_default?: number;
           grid_mobile_max?: number;
+          homepage_slide_duration_ms?: number;
+          homepage_transition_duration_ms?: number;
           max_content_width_px?: number | null;
           singleton_id?: number;
           tailwind_palette?: Json;

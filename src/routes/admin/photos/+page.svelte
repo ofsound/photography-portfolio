@@ -1,7 +1,6 @@
 <script lang="ts">
   import { invalidateAll } from '$app/navigation';
   import AdminPhotoCard from '$lib/components/admin/photos/AdminPhotoCard.svelte';
-  import AdminPhotoCreateForm from '$lib/components/admin/photos/AdminPhotoCreateForm.svelte';
   import AdminPhotosBulkPanel from '$lib/components/admin/photos/AdminPhotosBulkPanel.svelte';
   import AdminPhotosFilterForm from '$lib/components/admin/photos/AdminPhotosFilterForm.svelte';
   import type { AdminCategory, AdminPhoto, AdminPhotoImage, AdminTag } from '$lib/types/content';
@@ -302,17 +301,20 @@
 </script>
 
 <h1 class="text-xl uppercase tracking-[0.15em]">Photos</h1>
+<div class="mt-3">
+  <a href="/admin/photos/create" class="inline-flex rounded border border-border-strong px-3 py-1 text-xs uppercase tracking-[0.14em]">Create Photo</a>
+</div>
 <div class="mt-2 flex flex-wrap items-center gap-3 text-xs uppercase tracking-[0.12em]">
-  <span class="rounded border border-black/10 px-2 py-1">Pending conversions: {data.pendingConversionCount}</span>
+  <span class="rounded border border-border px-2 py-1">Pending conversions: {data.pendingConversionCount}</span>
   {#if data.pendingConversionCount > 0}
-    <span class="rounded border border-black/10 px-2 py-1">
+    <span class="rounded border border-border px-2 py-1">
       {refreshState === 'refreshing' ? 'Refreshing...' : 'Auto-refresh every 8s'}
     </span>
   {/if}
 </div>
 
 {#if form?.message}
-  <p class="mt-3 rounded border border-black/10 px-3 py-2 text-sm">{form.message}</p>
+  <p class="mt-3 rounded border border-border px-3 py-2 text-sm">{form.message}</p>
 {/if}
 
 <AdminPhotosFilterForm
@@ -348,10 +350,11 @@
   {redoDraftChange}
 />
 
-<section class="mt-6 grid gap-6 lg:grid-cols-[420px_1fr]">
-  <AdminPhotoCreateForm />
+<section class="mt-6">
+  <h2 class="text-sm uppercase tracking-[0.14em]">Existing Photos</h2>
+  <p class="mt-1 text-xs uppercase tracking-[0.12em] text-text-subtle">Cards are collapsed by default. Click Edit to expand.</p>
 
-  <div class="grid gap-4">
+  <div class="mt-3 grid gap-4">
     {#each photos as photo (photo.id)}
       <AdminPhotoCard
         {photo}

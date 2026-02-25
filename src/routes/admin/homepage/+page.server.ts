@@ -1,9 +1,18 @@
 import { fail, type Actions } from '@sveltejs/kit';
-import { asString, parseUuidList } from '$lib/server/admin-helpers';
+import { asOptionalNumber, asString, parseUuidList } from '$lib/server/admin-helpers';
 import type { PageServerLoad } from './$types';
 
+const DEFAULT_SLIDE_DURATION_MS = 4000;
+const DEFAULT_TRANSITION_DURATION_MS = 2000;
+const SLIDE_DURATION_MIN_MS = 1000;
+const SLIDE_DURATION_MAX_MS = 30000;
+const TRANSITION_DURATION_MIN_MS = 200;
+const TRANSITION_DURATION_MAX_MS = 10000;
+
+const clampInt = (value: number, min: number, max: number) => Math.min(max, Math.max(min, Math.round(value)));
+
 export const load: PageServerLoad = async ({ locals }) => {
-  const [{ data: slidesRaw }, { data: imagesRaw }, pendingQuery] = await Promise.all([
+  const [{ data: slidesRaw }, { data: imagesRaw }, pendingQuery, settingsQuery] = await Promise.all([
     locals.supabase
       .from('homepage_slides')
       .select('id, photo_image_id, position, is_active, photo_images:photo_image_id(id, kind, delivery_storage_path, photo_id, photos:photo_id(title, slug))')
@@ -19,7 +28,12 @@ export const load: PageServerLoad = async ({ locals }) => {
       .from('photo_images')
       .select('id', { count: 'exact', head: true })
       .eq('is_active', true)
-      .is('delivery_storage_path', null)
+      .is('delivery_storage_path', null),
+    locals.supabase
+      .from('site_settings')
+      .select('homepage_slide_duration_ms, homepage_transition_duration_ms')
+      .eq('singleton_id', 1)
+      .maybeSingle()
   ]);
 
   const slides = (slidesRaw ?? []).map((row: { id: string; photo_image_id: string; position: number; is_active: boolean; photo_images?: unknown }) => {
@@ -53,10 +67,26 @@ export const load: PageServerLoad = async ({ locals }) => {
     };
   });
 
+  const slideDurationMs = clampInt(
+    settingsQuery.data?.homepage_slide_duration_ms ?? DEFAULT_SLIDE_DURATION_MS,
+    SLIDE_DURATION_MIN_MS,
+    SLIDE_DURATION_MAX_MS
+  );
+  const transitionDurationMs = Math.min(
+    slideDurationMs,
+    clampInt(
+      settingsQuery.data?.homepage_transition_duration_ms ?? DEFAULT_TRANSITION_DURATION_MS,
+      TRANSITION_DURATION_MIN_MS,
+      TRANSITION_DURATION_MAX_MS
+    )
+  );
+
   return {
     slides,
     images,
-    pendingConversionCount: pendingQuery.count ?? 0
+    pendingConversionCount: pendingQuery.count ?? 0,
+    slideDurationMs,
+    transitionDurationMs
   };
 };
 
@@ -78,5 +108,34 @@ export const actions: Actions = {
     if (error) return fail(400, { message: error.message });
 
     return { success: true, message: 'Homepage slideshow updated.' };
+  },
+  saveTiming: async ({ locals, request }) => {
+    const form = await request.formData();
+
+    const slideDurationMs = clampInt(
+      asOptionalNumber(form.get('slide_duration_ms')) ?? DEFAULT_SLIDE_DURATION_MS,
+      SLIDE_DURATION_MIN_MS,
+      SLIDE_DURATION_MAX_MS
+    );
+    const transitionDurationMs = Math.min(
+      slideDurationMs,
+      clampInt(
+        asOptionalNumber(form.get('transition_duration_ms')) ?? DEFAULT_TRANSITION_DURATION_MS,
+        TRANSITION_DURATION_MIN_MS,
+        TRANSITION_DURATION_MAX_MS
+      )
+    );
+
+    const { error } = await locals.supabase
+      .from('site_settings')
+      .update({
+        homepage_slide_duration_ms: slideDurationMs,
+        homepage_transition_duration_ms: transitionDurationMs
+      })
+      .eq('singleton_id', 1);
+
+    if (error) return fail(400, { message: error.message });
+
+    return { success: true, message: 'Homepage slideshow timing updated.' };
   }
 };

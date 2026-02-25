@@ -4,4 +4,8 @@
   let { data } = $props();
 </script>
 
-<HomeSlideshow slides={data.slides} />
+<HomeSlideshow
+  slides={data.slides}
+  slideDurationMs={data.slideDurationMs}
+  transitionDurationMs={data.transitionDurationMs}
+/>

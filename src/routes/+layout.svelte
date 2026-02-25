@@ -5,9 +5,11 @@
   import { readAndClearViewTransitionHint } from '$lib/utils/view-transition';
 
   let { data, children } = $props();
+  const navPages = $derived(data.navPages as Array<{ id: string; slug: string; title: string; nav_order: number }>);
   let themeMode = $state<'light' | 'dark' | 'system'>('system');
   let transitionPreset = $state<'cinematic' | 'snappy' | 'experimental'>('cinematic');
   let hasHydratedClientPrefs = $state(false);
+  let siteHeaderEl: HTMLElement | null = null;
 
   const isGalleryRoute = (pathname: string) => pathname === '/gallery' || pathname.startsWith('/gallery/');
   const isDetailRoute = (pathname: string) => /^\/photo\/[^/]+(?:\/[^/]+)?$/.test(pathname);
@@ -64,6 +66,11 @@
     applyTransitionPreset();
   };
 
+  const syncSiteHeaderHeight = () => {
+    if (typeof document === 'undefined' || !siteHeaderEl) return;
+    document.documentElement.style.setProperty('--site-header-height', `${siteHeaderEl.getBoundingClientRect().height}px`);
+  };
+
   $effect(() => {
     if (typeof window === 'undefined' || hasHydratedClientPrefs) return;
 
@@ -110,6 +117,18 @@
     applyTransitionPreset();
   });
 
+  $effect(() => {
+    if (typeof window === 'undefined' || !siteHeaderEl) return;
+    syncSiteHeaderHeight();
+    const observer = new ResizeObserver(syncSiteHeaderHeight);
+    observer.observe(siteHeaderEl);
+    window.addEventListener('resize', syncSiteHeaderHeight);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('resize', syncSiteHeaderHeight);
+    };
+  });
+
   onNavigate((navigation) => {
     const fromPath = navigation.from?.url.pathname ?? window.location.pathname;
     const toPath = navigation.to?.url.pathname ?? fromPath;
@@ -146,14 +165,15 @@
   });
 </script>
 
-<div class="min-h-screen bg-paper text-ink">
-  <header class="chrome-panel sticky top-0 z-40 border-b border-black/10 px-4 py-3 dark:border-white/10">
+<div class="min-h-screen bg-bg text-text">
+  <header bind:this={siteHeaderEl} class="chrome-panel sticky top-0 z-40 border-b border-border px-4 py-3">
     <div class="mx-auto flex w-full max-w-[1800px] items-center justify-between gap-3">
       <nav class="flex items-center gap-4 text-sm tracking-[0.16em] uppercase">
         <a href="/" class:underline={page.url.pathname === '/'}>Home</a>
         <a href="/gallery" class:underline={page.url.pathname.startsWith('/gallery')}>Gallery</a>
-        <a href="/about" class:underline={page.url.pathname === '/about'}>About</a>
-        <a href="/contact" class:underline={page.url.pathname === '/contact'}>Contact</a>
+        {#each navPages as navPage (navPage.id)}
+          <a href={`/${navPage.slug}`} class:underline={page.url.pathname === `/${navPage.slug}`}>{navPage.title}</a>
+        {/each}
         <a href={data.session ? '/admin' : '/auth'} class:underline={page.url.pathname.startsWith('/admin') || page.url.pathname === '/auth'}>
           {data.session ? 'CMS' : 'Sign In'}
         </a>
@@ -163,7 +183,7 @@
         <label for="theme" class="text-xs uppercase tracking-[0.12em]">Theme</label>
         <select
           id="theme"
-          class="rounded border border-black/20 bg-transparent px-2 py-1 text-xs"
+          class="rounded border border-border-strong bg-transparent px-2 py-1 text-xs"
           bind:value={themeMode}
           onchange={(event) => updateTheme((event.currentTarget as HTMLSelectElement).value as typeof themeMode)}
         >
@@ -176,7 +196,7 @@
           <label for="transition" class="ml-2 text-xs uppercase tracking-[0.12em]">Motion</label>
           <select
             id="transition"
-            class="rounded border border-black/20 bg-transparent px-2 py-1 text-xs"
+            class="rounded border border-border-strong bg-transparent px-2 py-1 text-xs"
             bind:value={transitionPreset}
             onchange={(event) =>
               updateTransitionPreset((event.currentTarget as HTMLSelectElement).value as typeof transitionPreset)}
@@ -190,11 +210,16 @@
     </div>
   </header>
 
-  <main>{@render children()}</main>
+  <main class="site-main">{@render children()}</main>
 </div>
 
 <style>
+  :global(.site-main) {
+    view-transition-name: page-main;
+  }
+
   :global(html) {
+    --site-header-height: 54px;
     --vt-duration: 450ms;
     --vt-ease: cubic-bezier(0.22, 1, 0.36, 1);
   }
@@ -221,6 +246,11 @@
 
   :global(::view-transition-old(root)),
   :global(::view-transition-new(root)) {
+    animation: none;
+  }
+
+  :global(::view-transition-old(page-main)),
+  :global(::view-transition-new(page-main)) {
     animation-duration: var(--vt-duration);
     animation-timing-function: var(--vt-ease);
     animation-fill-mode: both;
@@ -233,45 +263,66 @@
     animation-timing-function: var(--vt-ease);
   }
 
-  :global(::view-transition-old(root)) {
+  :global(::view-transition-old(page-main)) {
     animation-name: vt-fade-out;
   }
 
-  :global(::view-transition-new(root)) {
+  :global(::view-transition-new(page-main)) {
     animation-name: vt-fade-in;
   }
 
-  :global(html[data-vt='gallery-to-detail']::view-transition-old(root)),
-  :global(html[data-vt='detail-to-gallery']::view-transition-old(root)) {
+  :global(html[data-vt='gallery-to-detail']::view-transition-old(page-main)),
+  :global(html[data-vt='detail-to-gallery']::view-transition-old(page-main)) {
     animation-name: vt-fade-out-soft;
   }
 
-  :global(html[data-vt='gallery-to-detail']::view-transition-new(root)),
-  :global(html[data-vt='detail-to-gallery']::view-transition-new(root)) {
+  :global(html[data-vt='gallery-to-detail']::view-transition-new(page-main)),
+  :global(html[data-vt='detail-to-gallery']::view-transition-new(page-main)) {
     animation-name: vt-fade-in-soft;
   }
 
-  :global(html[data-vt='detail-to-detail'][data-vt-direction='next']::view-transition-old(root)) {
+  :global(html[data-vt='detail-to-detail'][data-vt-direction='next']::view-transition-old(page-main)) {
     animation-name: vt-fade-out, vt-slide-out-next;
   }
 
-  :global(html[data-vt='detail-to-detail'][data-vt-direction='next']::view-transition-new(root)) {
+  :global(html[data-vt='detail-to-detail'][data-vt-direction='next']::view-transition-new(page-main)) {
     animation-name: vt-fade-in, vt-slide-in-next;
   }
 
-  :global(html[data-vt='detail-to-detail'][data-vt-direction='prev']::view-transition-old(root)) {
+  :global(html[data-vt='detail-to-detail'][data-vt-direction='prev']::view-transition-old(page-main)) {
     animation-name: vt-fade-out, vt-slide-out-prev;
   }
 
-  :global(html[data-vt='detail-to-detail'][data-vt-direction='prev']::view-transition-new(root)) {
+  :global(html[data-vt='detail-to-detail'][data-vt-direction='prev']::view-transition-new(page-main)) {
     animation-name: vt-fade-in, vt-slide-in-prev;
   }
 
-  :global(html[data-vt-reduced='1']::view-transition-old(root)) {
+  :global(::view-transition-group(photo-close)),
+  :global(::view-transition-group(photo-drawer)),
+  :global(::view-transition-old(photo-close)),
+  :global(::view-transition-new(photo-close)),
+  :global(::view-transition-old(photo-drawer)),
+  :global(::view-transition-new(photo-drawer)) {
+    animation-duration: var(--vt-duration);
+    animation-timing-function: linear;
+    animation-fill-mode: both;
+  }
+
+  :global(html[data-vt='detail-to-detail']::view-transition-old(photo-close)),
+  :global(html[data-vt='detail-to-detail']::view-transition-old(photo-drawer)) {
+    animation-name: vt-ui-fade-out-early;
+  }
+
+  :global(html[data-vt='detail-to-detail']::view-transition-new(photo-close)),
+  :global(html[data-vt='detail-to-detail']::view-transition-new(photo-drawer)) {
+    animation-name: vt-ui-fade-in-late;
+  }
+
+  :global(html[data-vt-reduced='1']::view-transition-old(page-main)) {
     animation-name: vt-fade-out;
   }
 
-  :global(html[data-vt-reduced='1']::view-transition-new(root)) {
+  :global(html[data-vt-reduced='1']::view-transition-new(page-main)) {
     animation-name: vt-fade-in;
   }
 
@@ -348,6 +399,30 @@
     }
     to {
       transform: translateX(0);
+    }
+  }
+
+  @keyframes vt-ui-fade-out-early {
+    0% {
+      opacity: 1;
+    }
+    22% {
+      opacity: 0;
+    }
+    100% {
+      opacity: 0;
+    }
+  }
+
+  @keyframes vt-ui-fade-in-late {
+    0% {
+      opacity: 0;
+    }
+    78% {
+      opacity: 0;
+    }
+    100% {
+      opacity: 1;
     }
   }
 </style>

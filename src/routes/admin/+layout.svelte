@@ -12,14 +12,21 @@
     { href: '/admin/settings', label: 'Settings' },
     { href: '/admin/audit', label: 'Audit' }
   ];
+
+  const isActiveLink = (href: string) => {
+    if (href === '/admin/photos') {
+      return page.url.pathname === '/admin/photos' || page.url.pathname.startsWith('/admin/photos/');
+    }
+    return page.url.pathname === href;
+  };
 </script>
 
 <div class="grid min-h-[calc(100vh-64px)] grid-cols-[240px_1fr]">
-  <aside class="border-r border-black/10 p-4">
+  <aside class="border-r border-border p-4">
     <p class="mb-5 text-xs uppercase tracking-[0.15em]">CMS ({data.role})</p>
     <nav class="grid gap-2 text-sm">
       {#each links as link}
-        <a href={link.href} class:underline={page.url.pathname === link.href}>{link.label}</a>
+        <a href={link.href} class:underline={isActiveLink(link.href)}>{link.label}</a>
       {/each}
     </nav>
   </aside>

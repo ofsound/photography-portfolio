@@ -12,6 +12,8 @@
     currentImage={data.photo.currentImage}
     leadImage={data.photo.leadImage}
     additionalImages={data.photo.additionalImages}
+    prevGalleryHref={data.photo.prevGalleryHref}
+    nextGalleryHref={data.photo.nextGalleryHref}
   />
 {:else}
   <p class="p-8">Photo unavailable.</p>

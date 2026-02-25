@@ -34,7 +34,7 @@
   }>();
 </script>
 
-<div class="grid gap-3 rounded border border-black/10 p-3 lg:grid-cols-3">
+<div class="grid gap-3 rounded border border-border p-3 lg:grid-cols-3">
   <div class="grid gap-2">
     <p class="text-xs uppercase tracking-[0.12em]">Drag Category Chips</p>
     <div class="flex flex-wrap gap-2">
@@ -45,7 +45,7 @@
           ondragstart={(event) => onTaxChipDragStart('category', category.id, event)}
           ondragend={onTaxDragEnd}
           onclick={() => addTaxonomyDraft('category', category.id)}
-          class="rounded border border-black/20 px-2 py-1 text-xs"
+          class="rounded border border-border-strong px-2 py-1 text-xs"
         >
           {category.name}
         </button>
@@ -63,7 +63,7 @@
           ondragstart={(event) => onTaxChipDragStart('tag', tag.id, event)}
           ondragend={onTaxDragEnd}
           onclick={() => addTaxonomyDraft('tag', tag.id)}
-          class="rounded border border-black/20 px-2 py-1 text-xs"
+          class="rounded border border-border-strong px-2 py-1 text-xs"
         >
           {tag.name}
         </button>
@@ -71,7 +71,7 @@
     </div>
   </div>
 
-  <form method="POST" action="?/bulkAssignTaxonomy" class="grid gap-2 rounded border border-black/20 p-2" ondragover={onTaxDragOver} ondrop={onTaxDrop}>
+  <form method="POST" action="?/bulkAssignTaxonomy" class="grid gap-2 rounded border border-border-strong p-2" ondragover={onTaxDragOver} ondrop={onTaxDrop}>
     <input type="hidden" name="selected_photo_ids" value={selectedPhotoIds.join('\n')} />
     {#each taxonomyDraftCategories as categoryId (categoryId)}
       <input type="hidden" name="category_ids" value={categoryId} />
@@ -85,14 +85,14 @@
     <div class="flex flex-wrap gap-2">
       {#each taxonomyDraftCategories as categoryId (categoryId)}
         {#if categoryById(categoryId)}
-          <button type="button" class="rounded border border-sky-500/40 bg-sky-50 px-2 py-1 text-xs" onclick={() => removeTaxonomyDraft('category', categoryId)}>
+          <button type="button" class="rounded border border-info/40 bg-info-soft px-2 py-1 text-xs" onclick={() => removeTaxonomyDraft('category', categoryId)}>
             {categoryById(categoryId)?.name ?? categoryId} x
           </button>
         {/if}
       {/each}
       {#each taxonomyDraftTags as tagId (tagId)}
         {#if tagById(tagId)}
-          <button type="button" class="rounded border border-emerald-500/40 bg-emerald-50 px-2 py-1 text-xs" onclick={() => removeTaxonomyDraft('tag', tagId)}>
+          <button type="button" class="rounded border border-success/40 bg-success-soft px-2 py-1 text-xs" onclick={() => removeTaxonomyDraft('tag', tagId)}>
             {tagById(tagId)?.name ?? tagId} x
           </button>
         {/if}
@@ -100,9 +100,9 @@
     </div>
 
     <div class="flex flex-wrap items-center gap-2">
-      <button type="button" class="rounded border border-black/20 px-2 py-1 text-xs" onclick={clearTaxonomyDraft}>Clear Draft</button>
+      <button type="button" class="rounded border border-border-strong px-2 py-1 text-xs" onclick={clearTaxonomyDraft}>Clear Draft</button>
       <button
-        class="rounded border border-black/20 px-3 py-1 text-xs uppercase tracking-[0.14em]"
+        class="rounded border border-border-strong px-3 py-1 text-xs uppercase tracking-[0.14em]"
         type="submit"
         disabled={selectedPhotoIds.length === 0 || (taxonomyDraftCategories.length === 0 && taxonomyDraftTags.length === 0)}
       >

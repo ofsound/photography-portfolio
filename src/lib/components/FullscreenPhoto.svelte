@@ -1,7 +1,7 @@
 <script lang="ts">
   import { photoPublicUrl } from '$lib/utils/storage-url';
   import { goto } from '$app/navigation';
-  import { readGalleryReturnState, storeViewTransitionHint, transitionNameForImage } from '$lib/utils/view-transition';
+  import { readGalleryReturnState, storeViewTransitionHint } from '$lib/utils/view-transition';
 
   type Image = {
     id: string;
@@ -11,13 +11,15 @@
     alt_text: string | null;
   };
 
-  let { photoSlug, title, description, currentImage, leadImage, additionalImages } = $props<{
+  let { photoSlug, title, description, currentImage, leadImage, additionalImages, prevGalleryHref, nextGalleryHref } = $props<{
     photoSlug: string;
     title: string;
     description: string | null;
     currentImage: Image;
     leadImage: Image;
     additionalImages: Image[];
+    prevGalleryHref: string | null;
+    nextGalleryHref: string | null;
   }>();
 
   let controlsVisible = $state(true);
@@ -28,21 +30,16 @@
   let touchStartedAt = $state(0);
   let touchActive = $state(false);
 
-  const orderedImages = $derived([leadImage, ...additionalImages].sort((a, b) => a.position - b.position));
-  const currentIndex = $derived(Math.max(0, orderedImages.findIndex((img) => img.id === currentImage.id)));
+  const canCycleGallery = $derived(Boolean(prevGalleryHref && nextGalleryHref));
   const swipeMinDistance = 48;
   const swipeMaxDurationMs = 700;
-  const currentTransitionName = $derived(transitionNameForImage(currentImage.id));
 
   const routeForImage = (image: Image) => {
-    if (image.kind === 'lead') {
+    if (image.id === leadImage.id) {
       return `/photo/${photoSlug}`;
     }
     return `/photo/${photoSlug}/${image.id}`;
   };
-
-  const prevImage = $derived(orderedImages[(currentIndex - 1 + orderedImages.length) % orderedImages.length]);
-  const nextImage = $derived(orderedImages[(currentIndex + 1) % orderedImages.length]);
 
   const scheduleControlsHide = () => {
     if (hideTimer) clearTimeout(hideTimer);
@@ -56,12 +53,12 @@
     scheduleControlsHide();
   };
 
-  const navigateToImage = (image: Image, direction?: 'next' | 'prev') => {
+  const navigateToGallery = (href: string, direction?: 'next' | 'prev') => {
     storeViewTransitionHint({
       kind: 'detail-to-detail',
       direction
     });
-    goto(routeForImage(image), { noScroll: true, keepFocus: true });
+    goto(href, { noScroll: true, keepFocus: true });
   };
 
   const prepareCloseTransition = () => {
@@ -93,12 +90,14 @@
 
   const onKeydown = (event: KeyboardEvent) => {
     if (event.key === 'ArrowLeft') {
+      if (!prevGalleryHref) return;
       event.preventDefault();
-      navigateToImage(prevImage, 'prev');
+      navigateToGallery(prevGalleryHref, 'prev');
     }
     if (event.key === 'ArrowRight') {
+      if (!nextGalleryHref) return;
       event.preventDefault();
-      navigateToImage(nextImage, 'next');
+      navigateToGallery(nextGalleryHref, 'next');
     }
     if (event.key === 'Escape') {
       event.preventDefault();
@@ -130,6 +129,7 @@
   const onTouchEnd = (event: TouchEvent) => {
     if (!touchActive) return;
     touchActive = false;
+    if (!canCycleGallery) return;
 
     const touch = event.changedTouches[0];
     if (!touch) return;
@@ -144,11 +144,11 @@
     if (!isHorizontalSwipe) return;
 
     if (deltaX < 0) {
-      navigateToImage(nextImage, 'next');
+      if (nextGalleryHref) navigateToGallery(nextGalleryHref, 'next');
       return;
     }
 
-    navigateToImage(prevImage, 'prev');
+    if (prevGalleryHref) navigateToGallery(prevGalleryHref, 'prev');
   };
 
   $effect(() => {
@@ -163,41 +163,47 @@
 
 <svelte:window onmousemove={onPointerMove} onkeydown={onKeydown} ontouchstart={onTouchStart} ontouchend={onTouchEnd} />
 
-<section class="relative h-[100dvh] w-full overflow-hidden bg-black text-white">
+<section class="relative h-[calc(100dvh-var(--site-header-height,54px))] w-full overflow-hidden bg-canvas text-canvas-text">
   <img
     src={photoPublicUrl(currentImage.delivery_storage_path, 2400)}
     alt={currentImage.alt_text ?? title}
     class="h-full w-full object-contain"
-    style={currentTransitionName ? `view-transition-name: ${currentTransitionName};` : undefined}
     loading="eager"
   />
 
   {#if controlsVisible}
-    <a href="/gallery" onclick={onCloseClick} class="chrome-panel absolute left-4 top-4 rounded px-3 py-2 text-xs uppercase tracking-[0.15em]">
+    <a
+      href="/gallery"
+      onclick={onCloseClick}
+      class="chrome-panel absolute left-4 top-4 rounded px-3 py-2 text-xs uppercase tracking-[0.15em]"
+      style="view-transition-name: photo-close;"
+    >
       Close
     </a>
 
-    <a
-      href={routeForImage(prevImage)}
-      onclick={() => prepareDetailTransition('prev')}
-      class="chrome-panel absolute left-0 top-1/2 -translate-y-1/2 px-4 py-5 text-lg"
-      aria-label="Previous image"
-    >
-      ←
-    </a>
+    {#if canCycleGallery}
+      <a
+        href={prevGalleryHref ?? '#'}
+        onclick={() => prepareDetailTransition('prev')}
+        class="chrome-panel absolute left-0 top-1/2 -translate-y-1/2 px-4 py-5 text-lg"
+        aria-label="Previous image"
+      >
+        ←
+      </a>
 
-    <a
-      href={routeForImage(nextImage)}
-      onclick={() => prepareDetailTransition('next')}
-      class="chrome-panel absolute right-0 top-1/2 -translate-y-1/2 px-4 py-5 text-lg"
-      aria-label="Next image"
-    >
-      →
-    </a>
+      <a
+        href={nextGalleryHref ?? '#'}
+        onclick={() => prepareDetailTransition('next')}
+        class="chrome-panel absolute right-0 top-1/2 -translate-y-1/2 px-4 py-5 text-lg"
+        aria-label="Next image"
+      >
+        →
+      </a>
+    {/if}
   {/if}
 
-  <aside class="chrome-panel absolute inset-x-0 bottom-0">
-    <button class="w-full border-b border-white/15 px-4 py-2 text-left text-xs uppercase tracking-[0.16em]" onclick={() => (metaMinimized = !metaMinimized)}>
+  <aside class="chrome-panel absolute inset-x-0 bottom-0" style="view-transition-name: photo-drawer;">
+    <button class="w-full border-b border-border px-4 py-2 text-left text-xs uppercase tracking-[0.16em]" onclick={() => (metaMinimized = !metaMinimized)}>
       {#if metaMinimized}
         {title} - Expand
       {:else}
@@ -210,7 +216,7 @@
         <div>
           <h1 class="text-sm uppercase tracking-[0.16em]">{title}</h1>
           {#if description}
-            <p class="mt-2 max-w-[70ch] text-sm text-white/80">{description}</p>
+            <p class="mt-2 max-w-[70ch] text-sm text-canvas-text/80">{description}</p>
           {/if}
         </div>
       </div>
@@ -222,7 +228,7 @@
           <a
             href={`/photo/${photoSlug}/${img.id}`}
             onclick={() => prepareDetailTransition()}
-            class="block shrink-0 overflow-hidden rounded border border-white/20"
+            class="block shrink-0 overflow-hidden rounded border border-border-strong"
           >
             <img src={photoPublicUrl(img.delivery_storage_path, 180)} alt={img.alt_text ?? title} class="h-14 w-20 object-cover" loading="lazy" />
           </a>

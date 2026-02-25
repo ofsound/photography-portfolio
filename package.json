@@ -12,7 +12,7 @@
   "devDependencies": {
     "@sveltejs/adapter-vercel": "^5.6.0",
     "@sveltejs/kit": "^2.53.1",
-    "@sveltejs/vite-plugin-svelte": "^5.1.1",
+    "@sveltejs/vite-plugin-svelte": "^6.2.4",
     "@types/sanitize-html": "^2.16.0",
     "autoprefixer": "^10.4.20",
     "postcss": "^8.4.49",
@@ -20,11 +20,14 @@
     "svelte-check": "^4.1.4",
     "tailwindcss": "^3.4.16",
     "typescript": "^5.7.2",
-    "vite": "^6.0.5"
+    "vite": "^7.3.1"
   },
   "dependencies": {
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.97.0",
     "sanitize-html": "^2.13.1"
+  },
+  "engines": {
+    "node": "22.x"
   }
 }

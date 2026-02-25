@@ -11,4 +11,6 @@
   currentImage={data.photo.currentImage}
   leadImage={data.photo.leadImage}
   additionalImages={data.photo.additionalImages}
+  prevGalleryHref={data.photo.prevGalleryHref}
+  nextGalleryHref={data.photo.nextGalleryHref}
 />

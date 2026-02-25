@@ -9,6 +9,8 @@
   const images = $derived(data.images as HomepageImage[]);
 
   let selectedIds = $state<string[]>([]);
+  let slideDurationMs = $state<number>(4000);
+  let transitionDurationMs = $state<number>(2000);
   let draggingId = $state<string | null>(null);
   let refreshState = $state<'idle' | 'refreshing'>('idle');
   let undoStack = $state<string[][]>([]);
@@ -63,6 +65,8 @@
 
   $effect(() => {
     selectedIds = slides.map((slide) => slide.photo_image_id);
+    slideDurationMs = data.slideDurationMs;
+    transitionDurationMs = data.transitionDurationMs;
     undoStack = [];
     redoStack = [];
   });
@@ -173,26 +177,59 @@
 </script>
 
 <h1 class="text-xl uppercase tracking-[0.15em]">Homepage Curation</h1>
-<p class="mt-2 text-sm text-ink/70">Image-only slides. Add images, drag selected slides to reorder, then save.</p>
+<p class="mt-2 text-sm text-text-muted">Image-only slides. Add images, drag selected slides to reorder, then save.</p>
 <div class="mt-2 flex flex-wrap items-center gap-3 text-xs uppercase tracking-[0.12em]">
-  <span class="rounded border border-black/10 px-2 py-1">Pending conversions: {data.pendingConversionCount}</span>
+  <span class="rounded border border-border px-2 py-1">Pending conversions: {data.pendingConversionCount}</span>
   {#if data.pendingConversionCount > 0}
-    <span class="rounded border border-black/10 px-2 py-1">
+    <span class="rounded border border-border px-2 py-1">
       {refreshState === 'refreshing' ? 'Refreshing...' : 'Auto-refresh every 8s'}
     </span>
   {/if}
 </div>
 
 {#if form?.message}
-  <p class="mt-3 rounded border border-black/10 px-3 py-2 text-sm">{form.message}</p>
+  <p class="mt-3 rounded border border-border px-3 py-2 text-sm">{form.message}</p>
 {/if}
 
+<section class="mt-6 rounded border border-border p-4">
+  <h2 class="text-sm uppercase tracking-[0.14em]">Slideshow Timing</h2>
+  <form method="POST" action="?/saveTiming" class="mt-3 grid gap-3 sm:grid-cols-[minmax(0,220px)_minmax(0,220px)_auto] sm:items-end">
+    <label class="grid gap-1 text-xs uppercase tracking-[0.12em]">
+      Slide Duration (ms)
+      <input
+        class="rounded border border-border-strong bg-transparent px-3 py-2 text-sm normal-case tracking-normal"
+        type="number"
+        min="1000"
+        max="30000"
+        step="100"
+        name="slide_duration_ms"
+        bind:value={slideDurationMs}
+      />
+    </label>
+    <label class="grid gap-1 text-xs uppercase tracking-[0.12em]">
+      Transition Duration (ms)
+      <input
+        class="rounded border border-border-strong bg-transparent px-3 py-2 text-sm normal-case tracking-normal"
+        type="number"
+        min="200"
+        max="10000"
+        step="100"
+        name="transition_duration_ms"
+        bind:value={transitionDurationMs}
+      />
+    </label>
+    <button class="h-[42px] rounded border border-border-strong px-3 py-1 text-xs uppercase tracking-[0.14em]" type="submit">
+      Save Timing
+    </button>
+  </form>
+</section>
+
 <section class="mt-6 grid gap-8 lg:grid-cols-[440px_1fr]">
-  <div class="grid gap-3 rounded border border-black/10 p-4">
+  <div class="grid gap-3 rounded border border-border p-4">
     <div class="flex flex-wrap items-center gap-2">
       <h2 class="text-sm uppercase tracking-[0.14em]">Selected Slides</h2>
       <button
-        class="rounded border border-black/20 px-2 py-1 text-xs uppercase tracking-[0.12em] disabled:opacity-40"
+        class="rounded border border-border-strong px-2 py-1 text-xs uppercase tracking-[0.12em] disabled:opacity-40"
         type="button"
         onclick={undoSelectionChange}
         disabled={undoStack.length === 0}
@@ -200,23 +237,23 @@
         Undo
       </button>
       <button
-        class="rounded border border-black/20 px-2 py-1 text-xs uppercase tracking-[0.12em] disabled:opacity-40"
+        class="rounded border border-border-strong px-2 py-1 text-xs uppercase tracking-[0.12em] disabled:opacity-40"
         type="button"
         onclick={redoSelectionChange}
         disabled={redoStack.length === 0}
       >
         Redo
       </button>
-      <span class="text-xs text-ink/60">Cmd/Ctrl+Z | Cmd/Ctrl+Shift+Z | Ctrl+Y</span>
+      <span class="text-xs text-text-subtle">Cmd/Ctrl+Z | Cmd/Ctrl+Shift+Z | Ctrl+Y</span>
     </div>
 
     {#if selectedSlides.length === 0}
-      <p class="text-sm text-ink/70">No slides selected.</p>
+      <p class="text-sm text-text-muted">No slides selected.</p>
     {:else}
       <ul class="grid gap-2" ondragover={onDragOver} ondrop={onDropToEnd}>
         {#each selectedSlides as slide, index (slide.id)}
           <li
-            class="grid cursor-move gap-2 rounded border border-black/10 p-2 sm:grid-cols-[auto_1fr_auto] sm:items-center"
+            class="grid cursor-move gap-2 rounded border border-border p-2 sm:grid-cols-[auto_1fr_auto] sm:items-center"
             draggable="true"
             ondragstart={(event) => onDragStart(slide.id, event)}
             ondragover={onDragOver}
@@ -226,7 +263,7 @@
             {#if slide.delivery_storage_path}
               <img src={photoPublicUrl(slide.delivery_storage_path, 180)} alt={slide.photo_title} class="h-12 w-16 rounded object-cover" />
             {:else}
-              <div class="grid h-12 w-16 place-items-center rounded border border-black/20 text-[10px] uppercase">pending</div>
+              <div class="grid h-12 w-16 place-items-center rounded border border-border-strong text-[10px] uppercase">pending</div>
             {/if}
 
             <div class="text-xs">
@@ -235,7 +272,7 @@
               <div>{slide.photo_title} ({slide.kind})</div>
             </div>
 
-            <button class="rounded border border-black/20 px-2 py-1 text-xs uppercase tracking-[0.12em]" type="button" onclick={() => removeSlide(slide.id)}>
+            <button class="rounded border border-border-strong px-2 py-1 text-xs uppercase tracking-[0.12em]" type="button" onclick={() => removeSlide(slide.id)}>
               Remove
             </button>
           </li>
@@ -245,19 +282,19 @@
 
     <form method="POST" action="?/save" class="w-fit">
       <input type="hidden" name="ordered_image_ids" value={selectedIds.join('\n')} />
-      <button class="rounded border border-black/20 px-3 py-1 text-xs uppercase tracking-[0.14em]" type="submit">Save Slides</button>
+      <button class="rounded border border-border-strong px-3 py-1 text-xs uppercase tracking-[0.14em]" type="submit">Save Slides</button>
     </form>
   </div>
 
-  <div class="rounded border border-black/10 p-4">
+  <div class="rounded border border-border p-4">
     <h2 class="mb-2 text-sm uppercase tracking-[0.14em]">Available Images</h2>
     <ul class="grid max-h-[620px] gap-2 overflow-auto">
       {#each availableImages as image (image.id)}
-        <li class="grid gap-2 rounded border border-black/10 p-2 sm:grid-cols-[auto_1fr_auto] sm:items-center">
+        <li class="grid gap-2 rounded border border-border p-2 sm:grid-cols-[auto_1fr_auto] sm:items-center">
           {#if image.delivery_storage_path}
             <img src={photoPublicUrl(image.delivery_storage_path, 160)} alt={image.photo_title} class="h-12 w-16 rounded object-cover" />
           {:else}
-            <div class="grid h-12 w-16 place-items-center rounded border border-black/20 text-[10px] uppercase">pending</div>
+            <div class="grid h-12 w-16 place-items-center rounded border border-border-strong text-[10px] uppercase">pending</div>
           {/if}
 
           <div class="text-xs">
@@ -265,7 +302,7 @@
             <div>{image.photo_title} ({image.kind})</div>
           </div>
 
-          <button class="rounded border border-black/20 px-2 py-1 text-xs uppercase tracking-[0.12em]" type="button" onclick={() => addSlide(image.id)}>
+          <button class="rounded border border-border-strong px-2 py-1 text-xs uppercase tracking-[0.12em]" type="button" onclick={() => addSlide(image.id)}>
             Add
           </button>
         </li>

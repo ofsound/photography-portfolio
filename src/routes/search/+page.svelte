@@ -8,20 +8,20 @@
       name="q"
       value={data.q}
       placeholder="Search photographs"
-      class="w-full rounded border border-black/20 bg-transparent px-3 py-2"
+      class="w-full rounded border border-border-strong bg-transparent px-3 py-2"
     />
   </form>
 
   {#if data.q && data.results.length === 0}
-    <p class="text-sm uppercase tracking-[0.14em] text-ink/70">No results.</p>
+    <p class="text-sm uppercase tracking-[0.14em] text-text-muted">No results.</p>
   {/if}
 
   <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
     {#each data.results as result (result.id)}
-      <a href={`/photo/${result.slug}`} class="rounded border border-black/10 p-4 transition hover:border-black/30">
+      <a href={`/photo/${result.slug}`} class="rounded border border-border p-4 transition hover:border-border-strong">
         <h2 class="text-sm uppercase tracking-[0.14em]">{result.title}</h2>
         {#if result.description}
-          <p class="mt-2 text-sm text-ink/70 line-clamp-3">{result.description}</p>
+          <p class="mt-2 text-sm text-text-muted line-clamp-3">{result.description}</p>
         {/if}
       </a>
     {/each}

@@ -11,6 +11,11 @@ export type GalleryPhotoCard = {
   transitionName: string | null;
 };
 
+export type GalleryPhotoNeighbors = {
+  prevSlug: string | null;
+  nextSlug: string | null;
+};
+
 type GalleryLoadOptions = {
   page: number;
   pageSize: number;
@@ -73,4 +78,30 @@ export const loadGalleryPage = async (locals: App.Locals, options: GalleryLoadOp
   });
 
   return { photos, hasMore };
+};
+
+export const loadGalleryPhotoNeighbors = async (locals: App.Locals, photoId: string): Promise<GalleryPhotoNeighbors> => {
+  const { data, error } = await locals.supabase
+    .from('photos')
+    .select('id, slug')
+    .eq('status', 'published')
+    .is('deleted_at', null)
+    .order('capture_date', { ascending: false, nullsFirst: false });
+
+  if (error || !data || data.length <= 1) {
+    return { prevSlug: null, nextSlug: null };
+  }
+
+  const currentIndex = data.findIndex((photo) => photo.id === photoId);
+  if (currentIndex === -1) {
+    return { prevSlug: null, nextSlug: null };
+  }
+
+  const prev = data[(currentIndex - 1 + data.length) % data.length];
+  const next = data[(currentIndex + 1) % data.length];
+
+  return {
+    prevSlug: prev?.slug ?? null,
+    nextSlug: next?.slug ?? null
+  };
 };

@@ -1,7 +1,7 @@
 import { fail, type Actions } from '@sveltejs/kit';
 import { asBoolean, asOptionalDate, asOptionalNumber, asString, toSlug } from '$lib/server/admin-helpers';
 
-type PhotoPayload = {
+export type PhotoPayload = {
   title: string;
   slug: string;
   capture_date: string | null;
@@ -15,7 +15,7 @@ type PhotoPayload = {
   is_searchable: boolean;
 };
 
-const upsertPhotoPayload = (form: FormData): { ok: true; payload: PhotoPayload } | { ok: false; message: string } => {
+export const upsertPhotoPayload = (form: FormData): { ok: true; payload: PhotoPayload } | { ok: false; message: string } => {
   const title = asString(form.get('title')).trim();
   const slugInput = asString(form.get('slug')).trim();
 
@@ -93,4 +93,3 @@ export const photoCoreActions: Actions = {
     return { success: true, message: 'Photo restored.' };
   }
 };
-

@@ -1,14 +1,25 @@
-import { photoPublicUrl } from '$lib/utils/storage-url';
-import { transitionNameForImage } from '$lib/utils/view-transition';
+import { GALLERY_DETAIL_SHARED_WIDTH, photoPublicUrl } from '$lib/utils/storage-url';
+
+export type GalleryPhotoCardImage = {
+  id: string;
+  kind: 'lead' | 'additional';
+  position: number;
+  delivery_storage_path: string;
+  alt_text: string | null;
+  width_px: number | null;
+  height_px: number | null;
+};
 
 export type GalleryPhotoCard = {
   id: string;
   slug: string;
   title: string;
+  description: string | null;
   capture_date: string | null;
   thumb: string | null;
   thumbAlt: string;
-  transitionName: string | null;
+  leadImage: GalleryPhotoCardImage | null;
+  additionalImages: GalleryPhotoCardImage[];
 };
 
 export type GalleryPhotoNeighbors = {
@@ -40,7 +51,7 @@ export const loadGalleryPage = async (locals: App.Locals, options: GalleryLoadOp
   let query = locals.supabase
     .from('photos')
     .select(
-      'id, slug, title, capture_date, photo_images(id, kind, position, delivery_storage_path, alt_text)',
+      'id, slug, title, description, capture_date, photo_images(id, kind, position, delivery_storage_path, alt_text, width_px, height_px)',
       { count: 'exact' }
     )
     .eq('status', 'published')
@@ -62,18 +73,26 @@ export const loadGalleryPage = async (locals: App.Locals, options: GalleryLoadOp
   const pageRows = rows.slice(0, pageSize);
 
   const photos = pageRows.map((photo) => {
-    const lead = [...(photo.photo_images ?? [])]
-      .sort((a, b) => a.position - b.position)
-      .find((image) => image.kind === 'lead');
+    const sortedImages = [...(photo.photo_images ?? [])]
+      .filter((image) => Boolean(image.delivery_storage_path))
+      .map((image) => ({
+        ...image,
+        delivery_storage_path: image.delivery_storage_path as string
+      }))
+      .sort((a, b) => a.position - b.position);
+    const lead = sortedImages.find((image) => image.kind === 'lead');
+    const additionalImages = sortedImages.filter((image) => image.kind === 'additional');
 
     return {
       id: photo.id,
       slug: photo.slug,
       title: photo.title,
+      description: photo.description,
       capture_date: photo.capture_date,
-      thumb: lead?.delivery_storage_path ? photoPublicUrl(lead.delivery_storage_path, 720) : null,
+      thumb: lead?.delivery_storage_path ? photoPublicUrl(lead.delivery_storage_path, GALLERY_DETAIL_SHARED_WIDTH) : null,
       thumbAlt: lead?.alt_text ?? photo.title,
-      transitionName: transitionNameForImage(lead?.id)
+      leadImage: lead ?? null,
+      additionalImages
     };
   });
 

@@ -102,7 +102,27 @@ export type ContentRevision = {
 export type GalleryPhoto = {
   id: string;
   slug: string;
+  title: string;
+  description: string | null;
+  capture_date: string | null;
   thumb: string | null;
   thumbAlt: string;
-  transitionName: string | null;
+  leadImage: {
+    id: string;
+    kind: 'lead' | 'additional';
+    position: number;
+    delivery_storage_path: string;
+    alt_text: string | null;
+    width_px: number | null;
+    height_px: number | null;
+  } | null;
+  additionalImages: Array<{
+    id: string;
+    kind: 'lead' | 'additional';
+    position: number;
+    delivery_storage_path: string;
+    alt_text: string | null;
+    width_px: number | null;
+    height_px: number | null;
+  }>;
 };

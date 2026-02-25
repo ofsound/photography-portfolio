@@ -1,5 +1,7 @@
 import { env as publicEnv } from '$env/dynamic/public';
 
+export const GALLERY_DETAIL_SHARED_WIDTH = 2400;
+
 export const photoPublicUrl = (path: string, width?: number) => {
   const supabaseUrl = publicEnv.PUBLIC_SUPABASE_URL;
   if (!supabaseUrl) {

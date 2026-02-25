@@ -2,10 +2,12 @@
   import '../app.css';
   import { onNavigate } from '$app/navigation';
   import { page } from '$app/state';
-  import { readAndClearViewTransitionHint } from '$lib/utils/view-transition';
+  import type { LayoutData } from './$types';
 
-  let { data, children } = $props();
-  const navPages = $derived(data.navPages as Array<{ id: string; slug: string; title: string; nav_order: number }>);
+  let { data, children } = $props<{ data: LayoutData | null; children: import('svelte').Snippet }>();
+  const navPages = $derived((data?.navPages ?? []) as Array<{ id: string; slug: string; title: string; nav_order: number }>);
+  const siteSettings = $derived(data?.siteSettings ?? null);
+  const hasSession = $derived(Boolean(data?.session));
   let themeMode = $state<'light' | 'dark' | 'system'>('system');
   let transitionPreset = $state<'cinematic' | 'snappy' | 'experimental'>('cinematic');
   let hasHydratedClientPrefs = $state(false);
@@ -13,6 +15,7 @@
 
   const isGalleryRoute = (pathname: string) => pathname === '/gallery' || pathname.startsWith('/gallery/');
   const isDetailRoute = (pathname: string) => /^\/photo\/[^/]+(?:\/[^/]+)?$/.test(pathname);
+  const isViewerRoute = (pathname: string) => isGalleryRoute(pathname) || isDetailRoute(pathname);
 
   const applyTransitionPreset = () => {
     document.documentElement.dataset.vtPreset = transitionPreset;
@@ -22,28 +25,6 @@
     delete document.documentElement.dataset.vt;
     delete document.documentElement.dataset.vtDirection;
     delete document.documentElement.dataset.vtReduced;
-  };
-
-  const resolveTransitionMeta = (fromPath: string, toPath: string) => {
-    const hint = readAndClearViewTransitionHint();
-    let kind: 'default' | 'gallery-to-detail' | 'detail-to-gallery' | 'detail-to-detail' = 'default';
-    let direction: 'next' | 'prev' | null = null;
-
-    if (isGalleryRoute(fromPath) && isDetailRoute(toPath)) {
-      kind = 'gallery-to-detail';
-    } else if (isDetailRoute(fromPath) && isGalleryRoute(toPath)) {
-      kind = 'detail-to-gallery';
-    } else if (isDetailRoute(fromPath) && isDetailRoute(toPath)) {
-      kind = 'detail-to-detail';
-    } else if (hint?.kind) {
-      kind = hint.kind;
-    }
-
-    if (kind === 'detail-to-detail' && hint?.direction) {
-      direction = hint.direction;
-    }
-
-    return { kind, direction };
   };
 
   const applyTheme = (mode: 'light' | 'dark' | 'system') => {
@@ -60,7 +41,7 @@
 
   const updateTransitionPreset = (preset: 'cinematic' | 'snappy' | 'experimental') => {
     transitionPreset = preset;
-    if (data.siteSettings?.allow_transition_toggle) {
+    if (siteSettings?.allow_transition_toggle) {
       localStorage.setItem('transition-preset', preset);
     }
     applyTransitionPreset();
@@ -74,15 +55,15 @@
   $effect(() => {
     if (typeof window === 'undefined' || hasHydratedClientPrefs) return;
 
-    themeMode = data.siteSettings?.theme_default ?? 'system';
-    transitionPreset = data.siteSettings?.transition_preset ?? 'cinematic';
+    themeMode = siteSettings?.theme_default ?? 'system';
+    transitionPreset = siteSettings?.transition_preset ?? 'cinematic';
 
     const storedTheme = localStorage.getItem('theme-mode');
     if (storedTheme === 'light' || storedTheme === 'dark' || storedTheme === 'system') {
       themeMode = storedTheme;
     }
 
-    if (data.siteSettings?.allow_transition_toggle) {
+    if (siteSettings?.allow_transition_toggle) {
       const storedPreset = localStorage.getItem('transition-preset');
       if (storedPreset === 'cinematic' || storedPreset === 'snappy' || storedPreset === 'experimental') {
         transitionPreset = storedPreset;
@@ -111,8 +92,8 @@
 
   $effect(() => {
     if (typeof document === 'undefined') return;
-    if (!data.siteSettings?.allow_transition_toggle) {
-      transitionPreset = data.siteSettings?.transition_preset ?? transitionPreset;
+    if (!siteSettings?.allow_transition_toggle) {
+      transitionPreset = siteSettings?.transition_preset ?? transitionPreset;
     }
     applyTransitionPreset();
   });
@@ -132,7 +113,11 @@
   onNavigate((navigation) => {
     const fromPath = navigation.from?.url.pathname ?? window.location.pathname;
     const toPath = navigation.to?.url.pathname ?? fromPath;
-    const meta = resolveTransitionMeta(fromPath, toPath);
+
+    // Gallery and photo routes use a persistent same-node animator, not View Transitions.
+    if (isViewerRoute(fromPath) || isViewerRoute(toPath)) {
+      return;
+    }
 
     if (!document.startViewTransition) {
       return;
@@ -140,12 +125,8 @@
 
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-    document.documentElement.dataset.vt = meta.kind;
-    if (meta.direction) {
-      document.documentElement.dataset.vtDirection = meta.direction;
-    } else {
-      delete document.documentElement.dataset.vtDirection;
-    }
+    document.documentElement.dataset.vt = 'default';
+    delete document.documentElement.dataset.vtDirection;
     if (reducedMotion) {
       document.documentElement.dataset.vtReduced = '1';
     } else {
@@ -174,8 +155,8 @@
         {#each navPages as navPage (navPage.id)}
           <a href={`/${navPage.slug}`} class:underline={page.url.pathname === `/${navPage.slug}`}>{navPage.title}</a>
         {/each}
-        <a href={data.session ? '/admin' : '/auth'} class:underline={page.url.pathname.startsWith('/admin') || page.url.pathname === '/auth'}>
-          {data.session ? 'CMS' : 'Sign In'}
+        <a href={hasSession ? '/admin' : '/auth'} class:underline={page.url.pathname.startsWith('/admin') || page.url.pathname === '/auth'}>
+          {hasSession ? 'CMS' : 'Sign In'}
         </a>
       </nav>
 
@@ -192,7 +173,7 @@
           <option value="system">System</option>
         </select>
 
-        {#if data.siteSettings?.allow_transition_toggle}
+        {#if siteSettings?.allow_transition_toggle}
           <label for="transition" class="ml-2 text-xs uppercase tracking-[0.12em]">Motion</label>
           <select
             id="transition"
@@ -244,6 +225,11 @@
     --vt-ease: linear;
   }
 
+  /* Let clicks pass through the transition overlay so nav and links work on first click */
+  :global(::view-transition) {
+    pointer-events: none;
+  }
+
   :global(::view-transition-old(root)),
   :global(::view-transition-new(root)) {
     animation: none;
@@ -269,53 +255,6 @@
 
   :global(::view-transition-new(page-main)) {
     animation-name: vt-fade-in;
-  }
-
-  :global(html[data-vt='gallery-to-detail']::view-transition-old(page-main)),
-  :global(html[data-vt='detail-to-gallery']::view-transition-old(page-main)) {
-    animation-name: vt-fade-out-soft;
-  }
-
-  :global(html[data-vt='gallery-to-detail']::view-transition-new(page-main)),
-  :global(html[data-vt='detail-to-gallery']::view-transition-new(page-main)) {
-    animation-name: vt-fade-in-soft;
-  }
-
-  :global(html[data-vt='detail-to-detail'][data-vt-direction='next']::view-transition-old(page-main)) {
-    animation-name: vt-fade-out, vt-slide-out-next;
-  }
-
-  :global(html[data-vt='detail-to-detail'][data-vt-direction='next']::view-transition-new(page-main)) {
-    animation-name: vt-fade-in, vt-slide-in-next;
-  }
-
-  :global(html[data-vt='detail-to-detail'][data-vt-direction='prev']::view-transition-old(page-main)) {
-    animation-name: vt-fade-out, vt-slide-out-prev;
-  }
-
-  :global(html[data-vt='detail-to-detail'][data-vt-direction='prev']::view-transition-new(page-main)) {
-    animation-name: vt-fade-in, vt-slide-in-prev;
-  }
-
-  :global(::view-transition-group(photo-close)),
-  :global(::view-transition-group(photo-drawer)),
-  :global(::view-transition-old(photo-close)),
-  :global(::view-transition-new(photo-close)),
-  :global(::view-transition-old(photo-drawer)),
-  :global(::view-transition-new(photo-drawer)) {
-    animation-duration: var(--vt-duration);
-    animation-timing-function: linear;
-    animation-fill-mode: both;
-  }
-
-  :global(html[data-vt='detail-to-detail']::view-transition-old(photo-close)),
-  :global(html[data-vt='detail-to-detail']::view-transition-old(photo-drawer)) {
-    animation-name: vt-ui-fade-out-early;
-  }
-
-  :global(html[data-vt='detail-to-detail']::view-transition-new(photo-close)),
-  :global(html[data-vt='detail-to-detail']::view-transition-new(photo-drawer)) {
-    animation-name: vt-ui-fade-in-late;
   }
 
   :global(html[data-vt-reduced='1']::view-transition-old(page-main)) {
@@ -344,85 +283,4 @@
     }
   }
 
-  @keyframes vt-fade-in-soft {
-    from {
-      opacity: 0;
-      filter: saturate(0.92);
-    }
-    to {
-      opacity: 1;
-      filter: saturate(1);
-    }
-  }
-
-  @keyframes vt-fade-out-soft {
-    from {
-      opacity: 1;
-      filter: saturate(1);
-    }
-    to {
-      opacity: 0;
-      filter: saturate(0.92);
-    }
-  }
-
-  @keyframes vt-slide-out-next {
-    from {
-      transform: translateX(0);
-    }
-    to {
-      transform: translateX(-6%);
-    }
-  }
-
-  @keyframes vt-slide-in-next {
-    from {
-      transform: translateX(6%);
-    }
-    to {
-      transform: translateX(0);
-    }
-  }
-
-  @keyframes vt-slide-out-prev {
-    from {
-      transform: translateX(0);
-    }
-    to {
-      transform: translateX(6%);
-    }
-  }
-
-  @keyframes vt-slide-in-prev {
-    from {
-      transform: translateX(-6%);
-    }
-    to {
-      transform: translateX(0);
-    }
-  }
-
-  @keyframes vt-ui-fade-out-early {
-    0% {
-      opacity: 1;
-    }
-    22% {
-      opacity: 0;
-    }
-    100% {
-      opacity: 0;
-    }
-  }
-
-  @keyframes vt-ui-fade-in-late {
-    0% {
-      opacity: 0;
-    }
-    78% {
-      opacity: 0;
-    }
-    100% {
-      opacity: 1;
-    }
-  }
 </style>

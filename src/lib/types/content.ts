@@ -34,6 +34,11 @@ export type AdminPhotoImage = {
   alt_text: string | null;
   focal_x: number;
   focal_y: number;
+  width_px: number | null;
+  height_px: number | null;
+  thumb_crop_x: number | null;
+  thumb_crop_y: number | null;
+  thumb_crop_zoom: number | null;
   created_at: string;
 };
 
@@ -115,6 +120,9 @@ export type GalleryPhoto = {
     alt_text: string | null;
     width_px: number | null;
     height_px: number | null;
+    thumb_crop_x: number | null;
+    thumb_crop_y: number | null;
+    thumb_crop_zoom: number | null;
   } | null;
   additionalImages: Array<{
     id: string;
@@ -124,5 +132,8 @@ export type GalleryPhoto = {
     alt_text: string | null;
     width_px: number | null;
     height_px: number | null;
+    thumb_crop_x: number | null;
+    thumb_crop_y: number | null;
+    thumb_crop_zoom: number | null;
   }>;
 };

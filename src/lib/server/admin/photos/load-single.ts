@@ -5,7 +5,7 @@ import { isUuid } from '$lib/server/admin/photos/shared';
 const PHOTO_SELECT =
   'id, slug, title, capture_date, description, width_px, height_px, license_text, og_title, og_description, og_image_path, status, is_searchable, deleted_at, updated_at';
 const IMAGE_SELECT =
-  'id, photo_id, kind, position, source_storage_path, delivery_storage_path, source_mime_type, source_bytes, alt_text, focal_x, focal_y, created_at';
+  'id, photo_id, kind, position, source_storage_path, delivery_storage_path, source_mime_type, source_bytes, alt_text, focal_x, focal_y, width_px, height_px, thumb_crop_x, thumb_crop_y, thumb_crop_zoom, created_at';
 
 type PhotoRow = Database['public']['Tables']['photos']['Row'];
 type CategoryRow = Database['public']['Tables']['categories']['Row'];

@@ -1,6 +1,7 @@
 <script lang="ts">
   import PhotoConversionBadge from '$lib/components/admin/PhotoConversionBadge.svelte';
   import PhotoUploadZone from '$lib/components/admin/PhotoUploadZone.svelte';
+  import ThumbnailCropEditor from '$lib/components/admin/ThumbnailCropEditor.svelte';
   import type { AdminCategory, AdminPhoto, AdminPhotoImage, AdminTag } from '$lib/types/content';
   import { photoPublicUrl } from '$lib/utils/storage-url';
 
@@ -216,6 +217,27 @@
             <button class="rounded border border-danger/60 px-2 py-1 text-xs uppercase tracking-[0.12em] text-danger" type="submit">Delete</button>
           </form>
         </div>
+
+        {#if lead.delivery_storage_path}
+          <details class="rounded border border-border p-3">
+            <summary class="cursor-pointer text-xs uppercase tracking-[0.12em]">Edit thumbnail crop</summary>
+            <div class="mt-3">
+              <ThumbnailCropEditor
+                imageId={lead.id}
+                deliveryStoragePath={lead.delivery_storage_path}
+                altText={lead.alt_text ?? photo.title}
+                widthPx={lead.width_px}
+                heightPx={lead.height_px}
+                initialCrop={{
+                  thumb_crop_x: lead.thumb_crop_x,
+                  thumb_crop_y: lead.thumb_crop_y,
+                  thumb_crop_zoom: lead.thumb_crop_zoom
+                }}
+                photoId={photo.id}
+              />
+            </div>
+          </details>
+        {/if}
       {:else}
         <p class="text-sm text-text-muted">No lead image set.</p>
       {/if}

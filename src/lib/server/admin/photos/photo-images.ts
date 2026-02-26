@@ -212,6 +212,70 @@ export const photoImageActions: Actions = {
     }
 
     return { success: true, message: `Removed ${images.length} selected additional image(s).` };
+  },
+
+  saveThumbCrop: async ({ locals, request }) => {
+    const form = await request.formData();
+    const photoId = asString(form.get('photo_id'));
+    const imageId = asString(form.get('image_id'));
+    const cropX = asOptionalNumber(form.get('thumb_crop_x'));
+    const cropY = asOptionalNumber(form.get('thumb_crop_y'));
+    const cropZoom = asOptionalNumber(form.get('thumb_crop_zoom'));
+
+    if (!photoId || !imageId) return fail(400, { message: 'Missing photo or image id.' });
+
+    const { data: image, error: loadError } = await locals.supabase
+      .from('photo_images')
+      .select('id, kind')
+      .eq('id', imageId)
+      .eq('photo_id', photoId)
+      .maybeSingle();
+
+    if (loadError || !image) return fail(404, { message: 'Image not found.' });
+    if (image.kind !== 'lead') return fail(400, { message: 'Thumbnail crop applies only to lead images.' });
+
+    const updates: Record<string, number | null> = {};
+    if (cropX != null && cropX >= 0 && cropX <= 1) updates.thumb_crop_x = cropX;
+    if (cropY != null && cropY >= 0 && cropY <= 1) updates.thumb_crop_y = cropY;
+    if (cropZoom != null && cropZoom >= 1) updates.thumb_crop_zoom = cropZoom;
+
+    const { error: updateError } = await locals.supabase
+      .from('photo_images')
+      .update(updates)
+      .eq('id', imageId)
+      .eq('photo_id', photoId);
+
+    if (updateError) return fail(400, { message: updateError.message });
+
+    return { success: true, message: 'Thumbnail crop saved.' };
+  },
+
+  clearThumbCrop: async ({ locals, request }) => {
+    const form = await request.formData();
+    const photoId = asString(form.get('photo_id'));
+    const imageId = asString(form.get('image_id'));
+
+    if (!photoId || !imageId) return fail(400, { message: 'Missing photo or image id.' });
+
+    const { data: image, error: loadError } = await locals.supabase
+      .from('photo_images')
+      .select('id, kind')
+      .eq('id', imageId)
+      .eq('photo_id', photoId)
+      .maybeSingle();
+
+    if (loadError || !image) return fail(404, { message: 'Image not found.' });
+    if (image.kind !== 'lead') return fail(400, { message: 'Thumbnail crop applies only to lead images.' });
+
+    const { error: updateError } = await locals.supabase
+      .from('photo_images')
+      .update({ thumb_crop_x: null, thumb_crop_y: null, thumb_crop_zoom: null })
+      .eq('id', imageId)
+      .eq('photo_id', photoId);
+
+    if (updateError) return fail(400, { message: updateError.message });
+
+    return { success: true, message: 'Thumbnail crop cleared.' };
   }
 };
 

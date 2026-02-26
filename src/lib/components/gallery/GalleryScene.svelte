@@ -14,9 +14,11 @@
     };
   };
   import type { GalleryPhoto } from '$lib/types/content';
+  import { thumbCropTransform } from '$lib/utils/thumb-crop';
   import { GALLERY_DETAIL_SHARED_WIDTH, photoPublicUrl } from '$lib/utils/storage-url';
   import {
     computeContainRect,
+    cropToImgTransform,
     demoteTile,
     movePromotedTile,
     promoteTile,
@@ -90,10 +92,64 @@
   const SCALE_MASK_MS = 520;
   const CLOSING_CHROME_MS = 180;
 
+  /** Macromedia Flash-style preloader: only when on gallery grid (no active photo). */
+  const PRELOADER_FADE_MS = 420;
+  const CASCADE_STAGGER_MS = 42;
+  const CASCADE_DURATION_MS = 520;
+
+  let preloadComplete = $state(false);
+  let imagesLoaded = $state(0);
+  let totalImages = $state(0);
+  let preloaderVisible = $state(true);
+  let galleryRevealed = $state(false);
+  let preloadKey = $state('');
+
   let transitionQueue = Promise.resolve();
   let transitionsInFlight = $state(0);
+  let pendingRouteApply = $state(false);
+  const pendingDirectionQueue: Array<'prev' | 'next'> = [];
+  let directionDrainScheduled = false;
 
   const tileRefs = new Map<string, HTMLElement>();
+
+  const flushPendingRouteApply = () => {
+    if (!pendingRouteApply) return;
+    pendingRouteApply = false;
+    void queueTransition(async () => {
+      await applyRouteState(data.active, false);
+    });
+  };
+
+  const drainDirectionQueue = () => {
+    if (!activeSlug) {
+      pendingDirectionQueue.length = 0;
+      directionDrainScheduled = false;
+      return;
+    }
+    if (pendingDirectionQueue.length === 0) {
+      directionDrainScheduled = false;
+      skipNextRouteAnimation = true;
+      void goto(withCurrentSearch(`/photo/${activeSlug}`), { noScroll: true, keepFocus: true });
+      return;
+    }
+    directionDrainScheduled = true;
+    const direction = pendingDirectionQueue.shift()!;
+    const neighbors =
+      direction === 'next'
+        ? localNeighborsFor(activeSlug ?? '').nextGalleryHref
+        : localNeighborsFor(activeSlug ?? '').prevGalleryHref;
+    const targetSlug = parseSlugFromPhotoHref(neighbors);
+    if (!targetSlug) {
+      drainDirectionQueue();
+      return;
+    }
+    void queueTransition(async () => {
+      const localNeighbors = localNeighborsFor(targetSlug);
+      prevGalleryHref = localNeighbors.prevGalleryHref;
+      nextGalleryHref = localNeighbors.nextGalleryHref;
+      await slideToNeighbor(targetSlug, direction);
+    }).then(() => drainDirectionQueue());
+  };
 
   const queueTransition = (work: () => Promise<void>) => {
     transitionQueue = transitionQueue
@@ -103,11 +159,15 @@
           await work();
         } finally {
           transitionsInFlight = Math.max(0, transitionsInFlight - 1);
+          if (transitionsInFlight === 0) {
+            flushPendingRouteApply();
+          }
         }
       })
       .catch((error) => {
         transitionsInFlight = 0;
         console.error('gallery-transition-failed', error);
+        flushPendingRouteApply();
       });
     return transitionQueue;
   };
@@ -264,12 +324,23 @@
     };
   };
 
-  const targetRectFor = (photo: GalleryPhoto, imageId: string | null) => {
+  const targetRectFor = (photo: GalleryPhoto, imageId: string | null, node?: HTMLElement | null) => {
     const image = imageFor(photo, imageId);
-    const baseWidth = image?.width_px ?? Math.max(1, promoted?.currentRect.width ?? 1);
-    const baseHeight = image?.height_px ?? Math.max(1, promoted?.currentRect.height ?? 1);
+    let baseWidth = image?.width_px ?? null;
+    let baseHeight = image?.height_px ?? null;
 
-    return computeContainRect(window.innerWidth, window.innerHeight, baseWidth, baseHeight, readHeaderHeight(), 0, 10, 10);
+    if ((baseWidth == null || baseHeight == null) && node) {
+      const img = node.querySelector('img');
+      if (img?.naturalWidth && img?.naturalHeight) {
+        baseWidth = baseWidth ?? img.naturalWidth;
+        baseHeight = baseHeight ?? img.naturalHeight;
+      }
+    }
+
+    const w = baseWidth ?? promoted?.currentRect.width ?? 1;
+    const h = baseHeight ?? promoted?.currentRect.height ?? 1;
+
+    return computeContainRect(window.innerWidth, window.innerHeight, Math.max(1, w), Math.max(1, h), 0, 0, 0, 0);
   };
 
   const ensurePromotedTile = async (
@@ -288,7 +359,7 @@
       return;
     }
 
-    const nextRect = targetRectFor(photo, imageId);
+    const nextRect = targetRectFor(photo, imageId, node);
     const duration = durationMsOverride ?? (animate ? 520 : 0);
     const baseMotion = {
       reducedMotion: reducedMotion(),
@@ -297,12 +368,20 @@
     };
 
     if (promoted && promoted.slug !== slug) {
-      releasePromotedTile(promoted);
+      releasePromotedTile(promoted, layoutMode === 'uniform' ? { preserveDimensions: true } : undefined);
       promoted = null;
     }
 
     if (!promoted) {
-      promoted = await promoteTile({ slug, node, targetRect: nextRect, ...baseMotion });
+      const imgCrop = imgCropFromForPhoto(photo, imageId, layoutMode === 'uniform' ? uniformRatio : tileAspectRatio(photo));
+      promoted = await promoteTile({
+        slug,
+        node,
+        targetRect: nextRect,
+        ...baseMotion,
+        ...(layoutMode === 'uniform' ? { aspectRatio: uniformRatio } : {}),
+        imgCropFrom: imgCrop ?? undefined
+      });
     } else {
       await movePromotedTile(promoted, nextRect, baseMotion);
     }
@@ -316,6 +395,9 @@
 
   const collapsePromotedTile = async (animate: boolean) => {
     if (!promoted) return;
+
+    pendingDirectionQueue.length = 0;
+    directionDrainScheduled = false;
 
     const session = promoted;
 
@@ -339,13 +421,15 @@
 
     await demoteTile(session, {
       reducedMotion: reducedMotion(),
-      durationMs: animate ? 460 : 0,
-      easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)'
+      durationMs: animate ? SCALE_MASK_MS : 0,
+      easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
+      imgEasing: 'cubic-bezier(0.5, 0, 1, 1)',
+      useCover: layoutMode === 'uniform'
     });
 
     await wait(reducedMotion() ? 150 : SCALE_MASK_MS);
 
-    reinsertPromotedTile(session);
+    reinsertPromotedTile(session, layoutMode === 'uniform' ? { preserveDimensions: true } : undefined);
     promoted = null;
     galleryTransitionPhase.set('idle');
   };
@@ -457,19 +541,22 @@
       return true;
     }
 
-    const incomingFinalRect = targetRectFor(targetPhoto, null);
+    const incomingFinalRect = targetRectFor(targetPhoto, null, targetNode);
     const travel = Math.max(window.innerWidth, incomingFinalRect.width + 72);
     const isNext = direction === 'next';
     const incomingStartRect = offsetRect(incomingFinalRect, isNext ? travel : -travel);
     const outgoingEndRect = offsetRect(promoted.currentRect, isNext ? -travel : travel);
 
     const outgoingSession = promoted;
+    const incomingImgCrop = imgCropFromForPhoto(targetPhoto, null, layoutMode === 'uniform' ? uniformRatio : tileAspectRatio(targetPhoto));
     const incomingSession = await promoteTile({
       slug: targetSlug,
       node: targetNode,
       targetRect: incomingStartRect,
       reducedMotion: true,
-      durationMs: 0
+      durationMs: 0,
+      ...(layoutMode === 'uniform' ? { aspectRatio: uniformRatio } : {}),
+      imgCropFrom: incomingImgCrop ?? undefined
     });
 
     const motion = {
@@ -483,32 +570,21 @@
       movePromotedTile(incomingSession, incomingFinalRect, motion)
     ]);
 
-    releasePromotedTile(outgoingSession);
+    releasePromotedTile(outgoingSession, layoutMode === 'uniform' ? { preserveDimensions: true } : undefined);
     promoted = incomingSession;
     activeSlug = targetSlug;
     activeImageId = null;
     return true;
   };
 
-  const onNeighborNavigate = (event: MouseEvent, href: string | null, direction: 'prev' | 'next') => {
+  const onNeighborNavigate = (event: MouseEvent, _href: string | null, direction: 'prev' | 'next') => {
     event.preventDefault();
-    if (!href) return;
+    if (!canCycleGallery) return;
 
-    const targetSlug = parseSlugFromPhotoHref(href);
-
-    void (async () => {
-      await queueTransition(async () => {
-        if (targetSlug) {
-          const localNeighbors = localNeighborsFor(targetSlug);
-          prevGalleryHref = localNeighbors.prevGalleryHref;
-          nextGalleryHref = localNeighbors.nextGalleryHref;
-          await slideToNeighbor(targetSlug, direction);
-        }
-      });
-
-      skipNextRouteAnimation = true;
-      await goto(withCurrentSearch(href), { noScroll: true, keepFocus: true });
-    })();
+    pendingDirectionQueue.push(direction);
+    if (!directionDrainScheduled) {
+      drainDirectionQueue();
+    }
   };
 
   const onSelectAdditionalImage = (event: MouseEvent, imageId: string) => {
@@ -520,7 +596,7 @@
         activeImageId = imageId;
         const photo = findPhoto(activeSlug);
         if (photo && promoted) {
-          const nextRect = targetRectFor(photo, imageId);
+          const nextRect = targetRectFor(photo, imageId, promoted.node);
           await movePromotedTile(promoted, nextRect, {
             reducedMotion: reducedMotion(),
             durationMs: 260,
@@ -541,7 +617,6 @@
 
   const onKeydown = (event: KeyboardEvent) => {
     if (!activeSlug) return;
-    if (isTransitioning) return;
 
     if (event.key === 'Escape') {
       closeToGallery(event);
@@ -576,7 +651,6 @@
 
   const onTouchEnd = (event: TouchEvent) => {
     if (!touchActive || !canCycleGallery) return;
-    if (isTransitioning) return;
     touchActive = false;
 
     const touch = event.changedTouches[0];
@@ -607,7 +681,7 @@
     void queueTransition(async () => {
       const photo = findPhoto(activeSlug);
       if (!photo || !promoted) return;
-      const nextRect = targetRectFor(photo, activeImageId);
+      const nextRect = targetRectFor(photo, activeImageId, promoted.node);
       await movePromotedTile(promoted, nextRect, {
         reducedMotion: true,
         durationMs: 0
@@ -661,8 +735,97 @@
     return Math.max(0.2, width / height);
   };
 
+  const hasThumbCrop = (img: { thumb_crop_x?: number | null; thumb_crop_y?: number | null; thumb_crop_zoom?: number | null } | null) =>
+    img &&
+    img.thumb_crop_x != null &&
+    img.thumb_crop_y != null &&
+    img.thumb_crop_zoom != null &&
+    img.thumb_crop_zoom >= 1;
+
+  const thumbCropStyle = (img: GalleryImage | null, containerAspect: number) => {
+    if (!img || !hasThumbCrop(img)) return '';
+    const t = thumbCropTransform(
+      img.thumb_crop_x ?? 0.5,
+      img.thumb_crop_y ?? 0.5,
+      img.thumb_crop_zoom ?? 1,
+      img.width_px ?? 1,
+      img.height_px ?? 1,
+      containerAspect
+    );
+    return `object-fit: contain !important; transform: translate(${t.translateX}%, ${t.translateY}%) scale(${t.scale}); transform-origin: ${t.originX * 100}% ${t.originY * 100}%;`;
+  };
+
+  const imgCropFromForPhoto = (photo: GalleryPhoto, imageId: string | null, containerAspect: number) => {
+    const img = imageFor(photo, imageId);
+    if (!img || !hasThumbCrop(img)) return null;
+    const r = (img.width_px ?? 1) / (img.height_px ?? 1);
+    return cropToImgTransform(img.thumb_crop_x!, img.thumb_crop_y!, img.thumb_crop_zoom!, r, containerAspect);
+  };
+
+  const preloadImages = async () => {
+    const toPreload = photos
+      .filter((p) => p.leadImage)
+      .map((p) =>
+        photoPublicUrl(p.leadImage!.delivery_storage_path, GALLERY_DETAIL_SHARED_WIDTH)
+      );
+    if (toPreload.length === 0) {
+      preloadComplete = true;
+      preloaderVisible = false;
+      galleryRevealed = true;
+      return;
+    }
+
+    totalImages = toPreload.length;
+    imagesLoaded = 0;
+    preloadComplete = false;
+    preloaderVisible = true;
+    galleryRevealed = false;
+
+    const loadOne = (url: string) =>
+      new Promise<void>((resolve) => {
+        const img = new Image();
+        img.onload = () => {
+          imagesLoaded += 1;
+          resolve();
+        };
+        img.onerror = () => {
+          imagesLoaded += 1;
+          resolve();
+        };
+        img.src = url;
+      });
+
+    await Promise.all(toPreload.map(loadOne));
+    preloadComplete = true;
+
+    await new Promise((r) => setTimeout(r, PRELOADER_FADE_MS));
+    preloaderVisible = false;
+
+    await new Promise((r) => setTimeout(r, 80));
+    galleryRevealed = true;
+  };
+
+  const shouldShowPreloader = $derived(
+    !data.active && photos.length > 0 && !reducedMotion()
+  );
+
   onMount(() => {
     mounted = true;
+  });
+
+  $effect(() => {
+    if (!mounted) return;
+    if (!shouldShowPreloader) {
+      if (photos.length > 0) {
+        galleryRevealed = true;
+        preloaderVisible = false;
+      }
+      return;
+    }
+    const key = [data.q, data.density, data.layoutMode, data.widthMode, data.pageSize].join('|');
+    if (key === preloadKey) return;
+    preloadKey = key;
+    void preloadImages();
   });
 
   $effect(() => {
@@ -704,6 +867,11 @@
     routeKey = nextRouteKey;
     hasHydratedRoute = true;
 
+    if (transitionsInFlight > 0) {
+      pendingRouteApply = true;
+      return;
+    }
+
     void queueTransition(async () => {
       await applyRouteState(data.active, animate);
     });
@@ -730,13 +898,128 @@
     teardownObserver();
     if (hideTimer) clearTimeout(hideTimer);
     if (promoted) {
-      releasePromotedTile(promoted);
+      releasePromotedTile(promoted, layoutMode === 'uniform' ? { preserveDimensions: true } : undefined);
       promoted = null;
     }
   });
 </script>
 
+<style>
+  .tile-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .tile-img-crop {
+    object-fit: contain !important;
+  }
+
+  :global([data-promoted] .tile-img) {
+    object-fit: contain;
+  }
+
+  .preloader-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--color-bg);
+  }
+
+  .preloader-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    min-width: 280px;
+    max-width: 90vw;
+  }
+
+  .preloader-text {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .preloader-bar-track {
+    width: 100%;
+    height: 8px;
+    background: linear-gradient(
+      to bottom,
+      color-mix(in srgb, var(--color-border) 60%, transparent),
+      color-mix(in srgb, var(--color-border-strong) 80%, transparent)
+    );
+    border: 1px solid var(--color-border-strong);
+    border-radius: 2px;
+    overflow: hidden;
+    box-shadow:
+      inset 0 1px 2px rgba(0, 0, 0, 0.15),
+      0 1px 0 rgba(255, 255, 255, 0.4);
+  }
+
+  .preloader-bar-fill {
+    height: 100%;
+    background: linear-gradient(
+      to bottom,
+      color-mix(in srgb, var(--color-brand) 90%, white),
+      var(--color-brand)
+    );
+    border-radius: 1px;
+    transition: width 0.12s ease-out;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  }
+
+  .tile-cascade {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+
+  .tile-cascade.revealed {
+    animation: cascadeIn 520ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
+
+  .tile-cascade.no-motion.revealed {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+
+  @keyframes cascadeIn {
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+</style>
+
 <svelte:window onresize={onResize} onmousemove={onPointerMove} onkeydown={onKeydown} ontouchstart={onTouchStart} ontouchend={onTouchEnd} />
+
+{#if preloaderVisible && shouldShowPreloader}
+  <div
+    transition:fade={{ duration: PRELOADER_FADE_MS }}
+    class="preloader-overlay"
+    role="status"
+    aria-live="polite"
+    aria-label="Loading gallery"
+  >
+    <div class="preloader-content">
+      <p class="preloader-text">Loading {imagesLoaded} of {totalImages}</p>
+      <div class="preloader-bar-track">
+        <div
+          class="preloader-bar-fill"
+          style="width: {totalImages > 0 ? (imagesLoaded / totalImages) * 100 : 0}%"
+        ></div>
+      </div>
+    </div>
+  </div>
+{/if}
 
 <section class="mx-auto w-full px-4 py-5" style={sectionMaxWidthStyle}>
   <div
@@ -811,24 +1094,32 @@
   {:else}
     {#if layoutMode === 'uniform'}
       <ul class="grid gap-2" style={`grid-template-columns: repeat(${colCount}, minmax(0, 1fr));`}>
-        {#each photos as photo (photo.id)}
+        {#each photos as photo, index (photo.id)}
           <li>
-            <a
-              href={withCurrentSearch(`/photo/${photo.slug}`)}
-              use:registerTile={photo.slug}
-              class="group block overflow-hidden rounded"
-              style={`aspect-ratio: ${uniformRatio};`}
-              onclick={(event) => onOpenPhoto(event, photo.slug)}
+            <div
+              class="tile-cascade"
+              class:revealed={galleryRevealed}
+              class:no-motion={reducedMotion()}
+              style="animation-delay: {galleryRevealed && !reducedMotion() ? index * CASCADE_STAGGER_MS : 0}ms"
             >
-              {#if photo.leadImage}
-                <img
-                  src={photoPublicUrl(photo.leadImage.delivery_storage_path, GALLERY_DETAIL_SHARED_WIDTH)}
-                  alt={photo.leadImage.alt_text ?? photo.title}
-                  class="h-full w-full object-cover transition-transform duration-500 ease-cinematic group-hover:scale-[1.03]"
-                  loading="lazy"
-                />
-              {/if}
-            </a>
+              <a
+                href={withCurrentSearch(`/photo/${photo.slug}`)}
+                use:registerTile={photo.slug}
+                class="group relative block overflow-hidden rounded"
+                style={`aspect-ratio: ${uniformRatio};`}
+                onclick={(event) => onOpenPhoto(event, photo.slug)}
+              >
+                {#if photo.leadImage}
+                  <img
+                    src={photoPublicUrl(photo.leadImage.delivery_storage_path, GALLERY_DETAIL_SHARED_WIDTH)}
+                    alt={photo.leadImage.alt_text ?? photo.title}
+                    class="tile-img transition-transform duration-500 ease-cinematic {hasThumbCrop(photo.leadImage) ? 'tile-img-crop' : 'group-hover:scale-[1.03]'}"
+                    style={thumbCropStyle(photo.leadImage, uniformRatio)}
+                    loading="eager"
+                  />
+                {/if}
+              </a>
+            </div>
           </li>
         {/each}
 
@@ -840,24 +1131,32 @@
       </ul>
     {:else}
       <ul class="columns-2 gap-2 md:columns-4 lg:columns-6" style={`columns: ${colCount};`}>
-        {#each photos as photo (photo.id)}
+        {#each photos as photo, index (photo.id)}
           <li class="mb-2 break-inside-avoid">
-            <a
-              href={withCurrentSearch(`/photo/${photo.slug}`)}
-              use:registerTile={photo.slug}
-              class="group block overflow-hidden rounded"
-              style={`aspect-ratio: ${tileAspectRatio(photo)};`}
-              onclick={(event) => onOpenPhoto(event, photo.slug)}
+            <div
+              class="tile-cascade"
+              class:revealed={galleryRevealed}
+              class:no-motion={reducedMotion()}
+              style="animation-delay: {galleryRevealed && !reducedMotion() ? index * CASCADE_STAGGER_MS : 0}ms"
             >
-              {#if photo.leadImage}
-                <img
-                  src={photoPublicUrl(photo.leadImage.delivery_storage_path, GALLERY_DETAIL_SHARED_WIDTH)}
-                  alt={photo.leadImage.alt_text ?? photo.title}
-                  class="h-full w-full object-cover transition-transform duration-500 ease-cinematic group-hover:scale-[1.02]"
-                  loading="lazy"
-                />
-              {/if}
-            </a>
+              <a
+                href={withCurrentSearch(`/photo/${photo.slug}`)}
+                use:registerTile={photo.slug}
+                class="group relative block overflow-hidden rounded"
+                style={`aspect-ratio: ${tileAspectRatio(photo)};`}
+                onclick={(event) => onOpenPhoto(event, photo.slug)}
+              >
+                {#if photo.leadImage}
+                  <img
+                    src={photoPublicUrl(photo.leadImage.delivery_storage_path, GALLERY_DETAIL_SHARED_WIDTH)}
+                    alt={photo.leadImage.alt_text ?? photo.title}
+                    class="tile-img transition-transform duration-500 ease-cinematic {hasThumbCrop(photo.leadImage) ? 'tile-img-crop' : 'group-hover:scale-[1.02]'}"
+                    style={thumbCropStyle(photo.leadImage, tileAspectRatio(photo))}
+                    loading="eager"
+                  />
+                {/if}
+              </a>
+            </div>
           </li>
         {/each}
 
@@ -914,9 +1213,6 @@
         href={prevGalleryHref ? withCurrentSearch(prevGalleryHref) : '#'}
         onclick={(event) => onNeighborNavigate(event, prevGalleryHref, 'prev')}
         class="chrome-panel pointer-events-auto fixed left-0 top-1/2 -translate-y-1/2 px-4 py-5 text-lg"
-        class:pointer-events-none={isTransitioning}
-        class:opacity-50={isTransitioning}
-        aria-disabled={isTransitioning}
         aria-label="Previous image"
       >
         ←
@@ -926,9 +1222,6 @@
         href={nextGalleryHref ? withCurrentSearch(nextGalleryHref) : '#'}
         onclick={(event) => onNeighborNavigate(event, nextGalleryHref, 'next')}
         class="chrome-panel pointer-events-auto fixed right-0 top-1/2 -translate-y-1/2 px-4 py-5 text-lg"
-        class:pointer-events-none={isTransitioning}
-        class:opacity-50={isTransitioning}
-        aria-disabled={isTransitioning}
         aria-label="Next image"
       >
         →

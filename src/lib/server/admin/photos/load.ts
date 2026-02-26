@@ -49,7 +49,7 @@ export const loadAdminPhotosPage = async ({ locals, url }: { locals: App.Locals;
       locals.supabase
         .from('photo_images')
         .select(
-          'id, photo_id, kind, position, source_storage_path, delivery_storage_path, source_mime_type, source_bytes, alt_text, focal_x, focal_y, created_at'
+          'id, photo_id, kind, position, source_storage_path, delivery_storage_path, source_mime_type, source_bytes, alt_text, focal_x, focal_y, width_px, height_px, thumb_crop_x, thumb_crop_y, thumb_crop_zoom, created_at'
         )
         .in('photo_id', photoIds)
         .order('position', { ascending: true })

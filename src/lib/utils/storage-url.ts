@@ -14,5 +14,5 @@ export const photoPublicUrl = (path: string, width?: number) => {
     return base;
   }
 
-  return `${supabaseUrl}/storage/v1/render/image/public/photos/${path}?width=${width}&quality=82`;
+  return `${supabaseUrl}/storage/v1/render/image/public/photos/${path}?width=${width}&quality=82&resize=contain`;
 };

@@ -274,6 +274,9 @@ export type Database = {
           source_bytes: number;
           source_mime_type: string;
           source_storage_path: string;
+          thumb_crop_x: number | null;
+          thumb_crop_y: number | null;
+          thumb_crop_zoom: number | null;
           updated_at: string;
           updated_by: string | null;
           width_px: number | null;
@@ -297,6 +300,9 @@ export type Database = {
           source_bytes: number;
           source_mime_type: string;
           source_storage_path: string;
+          thumb_crop_x?: number | null;
+          thumb_crop_y?: number | null;
+          thumb_crop_zoom?: number | null;
           updated_at?: string;
           updated_by?: string | null;
           width_px?: number | null;
@@ -320,6 +326,9 @@ export type Database = {
           source_bytes?: number;
           source_mime_type?: string;
           source_storage_path?: string;
+          thumb_crop_x?: number | null;
+          thumb_crop_y?: number | null;
+          thumb_crop_zoom?: number | null;
           updated_at?: string;
           updated_by?: string | null;
           width_px?: number | null;

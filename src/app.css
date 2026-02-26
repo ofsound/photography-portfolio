@@ -102,3 +102,18 @@ button:disabled {
   backdrop-filter: blur(12px);
   background: color-mix(in srgb, var(--color-surface) 78%, transparent);
 }
+
+/* Photo detail: full viewport, centered. Must not inherit any max-width. */
+[data-full-viewport] {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  max-width: none !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}

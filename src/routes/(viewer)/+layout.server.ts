@@ -14,14 +14,6 @@ type ActivePhotoRoute = {
 
 const photoRoutePattern = /^\/photo\/([^/]+)(?:\/([^/]+))?$/;
 
-const asLayoutMode = (value: string | null, fallback: GalleryLayoutMode): GalleryLayoutMode => {
-  return value === 'uniform' || value === 'masonry' ? value : fallback;
-};
-
-const asWidthMode = (value: string | null, fallback: GalleryWidthMode): GalleryWidthMode => {
-  return value === 'full' || value === 'constrained' ? value : fallback;
-};
-
 const readActivePhotoRoute = (pathname: string): Pick<ActivePhotoRoute, 'photoSlug' | 'imageId'> | null => {
   const match = pathname.match(photoRoutePattern);
   if (!match) return null;
@@ -43,11 +35,12 @@ export const load: LayoutServerLoad = async ({ locals, url }) => {
   const defaultDensity = settings?.grid_desktop_default ?? 6;
   const maxDensity = settings?.grid_desktop_max ?? 20;
   const startPage = asPositiveInt(url.searchParams.get('page'), 1);
-  const pageSize = normalizePageSize(asPositiveInt(url.searchParams.get('pageSize'), 60));
-  const density = Math.max(1, Math.min(maxDensity, asPositiveInt(url.searchParams.get('density'), defaultDensity)));
+  const pageSize = normalizePageSize(60);
+  const density = defaultDensity;
+  const gap = 8;
   const q = url.searchParams.get('q')?.trim() ?? '';
-  const layoutMode = asLayoutMode(url.searchParams.get('layout'), settings?.gallery_layout_mode ?? 'uniform');
-  const widthMode = asWidthMode(url.searchParams.get('width'), settings?.max_content_width_px ? 'constrained' : 'full');
+  const layoutMode = (settings?.gallery_layout_mode ?? 'uniform') as GalleryLayoutMode;
+  const widthMode = (settings?.max_content_width_px ? 'constrained' : 'full') as GalleryWidthMode;
 
   const activeRoute = readActivePhotoRoute(url.pathname);
 
@@ -70,8 +63,8 @@ export const load: LayoutServerLoad = async ({ locals, url }) => {
     page += 1;
   }
 
-  const baseParams = new URLSearchParams(url.searchParams);
-  baseParams.delete('page');
+  const baseParams = new URLSearchParams();
+  if (q) baseParams.set('q', q);
 
   let active: ActivePhotoRoute | null = null;
   if (activeRoute) {
@@ -102,6 +95,7 @@ export const load: LayoutServerLoad = async ({ locals, url }) => {
     page,
     pageSize,
     density,
+    gap,
     q,
     layoutMode,
     widthMode,

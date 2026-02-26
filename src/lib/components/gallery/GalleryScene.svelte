@@ -3,10 +3,13 @@
   import { fade } from 'svelte/transition';
   import { onDestroy, onMount } from 'svelte';
   import { galleryTransitionPhase } from '$lib/stores/gallery-transition';
+  import { getGalleryPrefs, setGalleryPrefs } from '$lib/stores/gallery-prefs';
 
   /** Portals the element to document.body so it can stack above the promoted tile (z-70). */
   const portal = (node: HTMLElement) => {
-    document.body.appendChild(node);
+    if (typeof document !== 'undefined' && document.body) {
+      document.body.appendChild(node);
+    }
     return {
       destroy() {
         node.remove();
@@ -17,7 +20,6 @@
   import { thumbCropTransform } from '$lib/utils/thumb-crop';
   import { GALLERY_DETAIL_SHARED_WIDTH, photoPublicUrl } from '$lib/utils/storage-url';
   import {
-    computeContainRect,
     cropToImgTransform,
     demoteTile,
     movePromotedTile,
@@ -40,6 +42,7 @@
     page: number;
     pageSize: number;
     density: number;
+    gap: number;
     q: string;
     layoutMode: 'uniform' | 'masonry';
     widthMode: 'full' | 'constrained';
@@ -56,6 +59,7 @@
   const readInitialData = () => data;
 
   let density = $state(readInitialData().density);
+  let gap = $state(readInitialData().gap);
   let layoutMode = $state<'uniform' | 'masonry'>(readInitialData().layoutMode);
   let widthMode = $state<'full' | 'constrained'>(readInitialData().widthMode);
   let query = $state(readInitialData().q);
@@ -222,38 +226,44 @@
     return Number.isFinite(parsed) ? parsed : 54;
   };
 
-  const buildBaseParams = () => {
+  const buildUrlParams = (includePage = false) => {
     const params = new URLSearchParams();
-    params.set('density', String(density));
-    params.set('layout', layoutMode);
-    params.set('width', widthMode);
-    params.set('pageSize', String(pageSize));
-    if (query.trim()) {
-      params.set('q', query.trim());
-    }
+    if (query.trim()) params.set('q', query.trim());
+    if (includePage && currentPage > 1) params.set('page', String(currentPage));
     return params;
   };
 
-  const withCurrentSearch = (href: string) => {
-    const base = buildBaseParams().toString();
+  const buildFeedParams = () => {
+    const params = new URLSearchParams();
+    params.set('page', String(currentPage + 1));
+    params.set('pageSize', String(pageSize));
+    if (query.trim()) params.set('q', query.trim());
+    return params;
+  };
+
+  const withCurrentSearch = (href: string, includePage = false) => {
+    const base = buildUrlParams(includePage).toString();
     return base ? `${href}?${base}` : href;
   };
 
   const navigateGalleryWithParams = (mutate: (params: URLSearchParams) => void) => {
-    const params = buildBaseParams();
+    const params = new URLSearchParams();
+    if (query.trim()) params.set('q', query.trim());
+    if (currentPage > 1) params.set('page', String(currentPage));
     mutate(params);
 
-    const nextDensity = Number.parseInt(params.get('density') ?? String(density), 10);
-    density = Number.isFinite(nextDensity) ? nextDensity : density;
-    const nextLayout = params.get('layout');
-    layoutMode = nextLayout === 'masonry' ? 'masonry' : 'uniform';
-    const nextWidth = params.get('width');
-    widthMode = nextWidth === 'constrained' ? 'constrained' : 'full';
     query = params.get('q')?.trim() ?? '';
-    const nextPageSize = Number.parseInt(params.get('pageSize') ?? String(pageSize), 10);
-    pageSize = Number.isFinite(nextPageSize) ? nextPageSize : pageSize;
+    const pageParam = params.get('page');
+    currentPage =
+      pageParam !== null && Number.isFinite(Number.parseInt(pageParam, 10))
+        ? Number.parseInt(pageParam, 10)
+        : 1;
 
-    goto(`/gallery?${params.toString()}`, { replaceState: true, noScroll: true, keepFocus: true });
+    goto(params.toString() ? `/gallery?${params.toString()}` : '/gallery', {
+      replaceState: true,
+      noScroll: true,
+      keepFocus: true
+    });
   };
 
   const colCount = $derived(Math.max(1, Math.min(data.maxDensity ?? 20, Number(density) || 6)));
@@ -324,23 +334,24 @@
     };
   };
 
+  /** Full browser window size for detail view (body overflow hidden when open = stable). */
+  const getViewportSize = () => {
+    if (typeof window === 'undefined') return { width: 0, height: 0 };
+    return {
+      width: window.innerWidth,
+      height: window.innerHeight
+    };
+  };
+
+  /** Target rect for promoted photo: full viewport. The img uses object-fit:contain so it fills height or width and centers. */
   const targetRectFor = (photo: GalleryPhoto, imageId: string | null, node?: HTMLElement | null) => {
-    const image = imageFor(photo, imageId);
-    let baseWidth = image?.width_px ?? null;
-    let baseHeight = image?.height_px ?? null;
-
-    if ((baseWidth == null || baseHeight == null) && node) {
-      const img = node.querySelector('img');
-      if (img?.naturalWidth && img?.naturalHeight) {
-        baseWidth = baseWidth ?? img.naturalWidth;
-        baseHeight = baseHeight ?? img.naturalHeight;
-      }
-    }
-
-    const w = baseWidth ?? promoted?.currentRect.width ?? 1;
-    const h = baseHeight ?? promoted?.currentRect.height ?? 1;
-
-    return computeContainRect(window.innerWidth, window.innerHeight, Math.max(1, w), Math.max(1, h), 0, 0, 0, 0);
+    const { width: vw, height: vh } = getViewportSize();
+    return {
+      top: 0,
+      left: 0,
+      width: vw,
+      height: vh
+    };
   };
 
   const ensurePromotedTile = async (
@@ -368,18 +379,19 @@
     };
 
     if (promoted && promoted.slug !== slug) {
-      releasePromotedTile(promoted, layoutMode === 'uniform' ? { preserveDimensions: true } : undefined);
+      releasePromotedTile(promoted);
       promoted = null;
     }
 
     if (!promoted) {
-      const imgCrop = imgCropFromForPhoto(photo, imageId, layoutMode === 'uniform' ? uniformRatio : tileAspectRatio(photo));
+      const containerAspect = layoutMode === 'uniform' ? uniformRatio : tileAspectRatio(photo);
+      const imgCrop = imgCropFromForPhoto(photo, imageId, containerAspect);
       promoted = await promoteTile({
         slug,
         node,
         targetRect: nextRect,
         ...baseMotion,
-        ...(layoutMode === 'uniform' ? { aspectRatio: uniformRatio } : {}),
+        aspectRatio: containerAspect,
         imgCropFrom: imgCrop ?? undefined
       });
     } else {
@@ -419,6 +431,8 @@
     activeSlug = null;
     activeImageId = null;
 
+    if (typeof document !== 'undefined') document.body.style.overflow = '';
+
     await demoteTile(session, {
       reducedMotion: reducedMotion(),
       durationMs: animate ? SCALE_MASK_MS : 0,
@@ -429,19 +443,21 @@
 
     await wait(reducedMotion() ? 150 : SCALE_MASK_MS);
 
-    reinsertPromotedTile(session, layoutMode === 'uniform' ? { preserveDimensions: true } : undefined);
+    reinsertPromotedTile(session);
     promoted = null;
     galleryTransitionPhase.set('idle');
   };
 
   const applyRouteState = async (route: ActiveRoute | null, animate: boolean) => {
     if (!route) {
+      if (typeof document !== 'undefined') document.body.style.overflow = '';
       await collapsePromotedTile(animate);
       prevGalleryHref = null;
       nextGalleryHref = null;
       return;
     }
 
+    if (typeof document !== 'undefined') document.body.style.overflow = 'hidden';
     galleryTransitionPhase.set('open');
     const switchingPhotos = Boolean(activeSlug && activeSlug !== route.photoSlug);
     await ensurePromotedTile(route.photoSlug, route.imageId, animate && !switchingPhotos);
@@ -453,26 +469,29 @@
   };
 
   const updateDensity = (next: number) => {
-    navigateGalleryWithParams((params) => {
-      params.set('density', String(next));
-    });
+    density = next;
+    setGalleryPrefs({ density }, data.maxDensity ?? 20);
+  };
+
+  const updateGap = (next: number) => {
+    gap = Math.max(0, Math.min(20, next));
+    setGalleryPrefs({ gap }, data.maxDensity ?? 20);
   };
 
   const updateLayoutMode = (next: 'uniform' | 'masonry') => {
-    navigateGalleryWithParams((params) => {
-      params.set('layout', next);
-    });
+    layoutMode = next;
+    setGalleryPrefs({ layoutMode }, data.maxDensity ?? 20);
   };
 
   const updateWidthMode = (next: 'full' | 'constrained') => {
-    navigateGalleryWithParams((params) => {
-      params.set('width', next);
-    });
+    widthMode = next;
+    setGalleryPrefs({ widthMode }, data.maxDensity ?? 20);
   };
 
   const onSearchSubmit = (event: SubmitEvent) => {
     event.preventDefault();
     navigateGalleryWithParams((params) => {
+      params.delete('page');
       if (!query.trim()) {
         params.delete('q');
         return;
@@ -496,6 +515,7 @@
         if (reducedMotion()) {
           activeSlug = slug;
           activeImageId = null;
+          if (typeof document !== 'undefined') document.body.style.overflow = 'hidden';
           await ensurePromotedTile(slug, null, true);
           galleryTransitionPhase.set('open');
           return;
@@ -507,6 +527,14 @@
         galleryTransitionPhase.set('scale-and-mask');
         activeSlug = slug;
         activeImageId = null;
+
+        // Lock body scroll immediately so viewport is stable before computing rect
+        if (typeof document !== 'undefined') document.body.style.overflow = 'hidden';
+
+        // Wait for overlay to render and layout to settle before computing target rect
+        await new Promise<void>((r) => {
+          requestAnimationFrame(() => requestAnimationFrame(() => r()));
+        });
 
         await ensurePromotedTile(slug, null, true, SCALE_MASK_MS);
 
@@ -527,7 +555,7 @@
       });
 
       skipNextRouteAnimation = true;
-      await goto(`/gallery?${buildBaseParams().toString()}`, { noScroll: true, keepFocus: true });
+      await goto(withCurrentSearch('/gallery', true), { noScroll: true, keepFocus: true });
     })();
   };
 
@@ -542,20 +570,22 @@
     }
 
     const incomingFinalRect = targetRectFor(targetPhoto, null, targetNode);
-    const travel = Math.max(window.innerWidth, incomingFinalRect.width + 72);
+    const { width: vw } = getViewportSize();
+    const travel = Math.max(vw, incomingFinalRect.width + 72);
     const isNext = direction === 'next';
     const incomingStartRect = offsetRect(incomingFinalRect, isNext ? travel : -travel);
     const outgoingEndRect = offsetRect(promoted.currentRect, isNext ? -travel : travel);
 
     const outgoingSession = promoted;
-    const incomingImgCrop = imgCropFromForPhoto(targetPhoto, null, layoutMode === 'uniform' ? uniformRatio : tileAspectRatio(targetPhoto));
+    const incomingContainerAspect = layoutMode === 'uniform' ? uniformRatio : tileAspectRatio(targetPhoto);
+    const incomingImgCrop = imgCropFromForPhoto(targetPhoto, null, incomingContainerAspect);
     const incomingSession = await promoteTile({
       slug: targetSlug,
       node: targetNode,
       targetRect: incomingStartRect,
       reducedMotion: true,
       durationMs: 0,
-      ...(layoutMode === 'uniform' ? { aspectRatio: uniformRatio } : {}),
+      aspectRatio: incomingContainerAspect,
       imgCropFrom: incomingImgCrop ?? undefined
     });
 
@@ -570,10 +600,11 @@
       movePromotedTile(incomingSession, incomingFinalRect, motion)
     ]);
 
-    releasePromotedTile(outgoingSession, layoutMode === 'uniform' ? { preserveDimensions: true } : undefined);
+    releasePromotedTile(outgoingSession);
     promoted = incomingSession;
     activeSlug = targetSlug;
     activeImageId = null;
+
     return true;
   };
 
@@ -689,6 +720,20 @@
     });
   };
 
+  const setupViewportListeners = () => {
+    if (typeof window === 'undefined') return () => {};
+    const vv = window.visualViewport;
+    if (vv) {
+      vv.addEventListener('resize', onResize);
+      vv.addEventListener('scroll', onResize);
+      return () => {
+        vv.removeEventListener('resize', onResize);
+        vv.removeEventListener('scroll', onResize);
+      };
+    }
+    return () => {};
+  };
+
   const loadNextPage = async () => {
     if (isLoadingMore || !hasMore || activeSlug) return;
 
@@ -696,8 +741,7 @@
     loadError = null;
 
     try {
-      const params = buildBaseParams();
-      params.set('page', String(currentPage + 1));
+      const params = buildFeedParams();
 
       const response = await fetch(`/gallery/feed?${params.toString()}`);
       if (!response.ok) {
@@ -811,6 +855,14 @@
 
   onMount(() => {
     mounted = true;
+    const prefs = getGalleryPrefs(data.maxDensity ?? 20);
+    if (prefs) {
+      density = prefs.density;
+      gap = prefs.gap;
+      layoutMode = prefs.layoutMode;
+      widthMode = prefs.widthMode;
+      pageSize = prefs.pageSize;
+    }
   });
 
   $effect(() => {
@@ -822,7 +874,7 @@
       }
       return;
     }
-    const key = [data.q, data.density, data.layoutMode, data.widthMode, data.pageSize].join('|');
+    const key = (data.q ?? '') || '\0';
     if (key === preloadKey) return;
     preloadKey = key;
     void preloadImages();
@@ -831,14 +883,10 @@
   $effect(() => {
     if (!mounted) return;
 
-    const nextQuerySignature = [data.q, data.density, data.layoutMode, data.widthMode, data.pageSize].join('|');
+    const nextQuerySignature = [data.q, data.page].join('|');
     if (nextQuerySignature !== querySignature) {
       querySignature = nextQuerySignature;
-      density = data.density;
-      layoutMode = data.layoutMode;
-      widthMode = data.widthMode;
       query = data.q;
-      pageSize = data.pageSize;
       photos = data.photos;
       currentPage = data.page;
       hasMore = data.hasMore;
@@ -878,6 +926,28 @@
   });
 
   $effect(() => {
+    if (!activeSlug) return;
+    const teardown = setupViewportListeners();
+    return teardown;
+  });
+
+  $effect(() => {
+    if (!activeSlug || typeof document === 'undefined') return;
+    const el = document.querySelector('[data-full-viewport]');
+    if (el) {
+      const rect = el.getBoundingClientRect();
+      const computed = getComputedStyle(el);
+      console.debug('[gallery] data-full-viewport', {
+        rect: { width: rect.width, height: rect.height, left: rect.left, top: rect.top },
+        width: computed.width,
+        maxWidth: computed.maxWidth,
+        position: computed.position,
+        viewport: { w: window.innerWidth, h: window.innerHeight }
+      });
+    }
+  });
+
+  $effect(() => {
     teardownObserver();
     if (!loadSentinel || !hasMore || Boolean(activeSlug)) return;
 
@@ -897,8 +967,9 @@
   onDestroy(() => {
     teardownObserver();
     if (hideTimer) clearTimeout(hideTimer);
+    if (typeof document !== 'undefined') document.body.style.overflow = '';
     if (promoted) {
-      releasePromotedTile(promoted, layoutMode === 'uniform' ? { preserveDimensions: true } : undefined);
+      releasePromotedTile(promoted);
       promoted = null;
     }
   });
@@ -920,10 +991,31 @@
     object-fit: contain;
   }
 
+  :global([data-full-viewport] > *) {
+    width: 100%;
+    height: 100%;
+    max-width: 100%;
+    max-height: 100%;
+    min-width: 0;
+    min-height: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  :global([data-full-viewport] .tile-img) {
+    max-width: 100%;
+    max-height: 100%;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+  }
+
   .preloader-overlay {
     position: fixed;
     inset: 0;
     z-index: 50;
+    pointer-events: none;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1049,6 +1141,18 @@
         <span class="tabular-nums">{colCount}</span>
       </label>
 
+      <label class="flex items-center gap-2">
+        Gap
+        <input
+          type="range"
+          min="0"
+          max="20"
+          value={gap}
+          oninput={(e) => updateGap(Number((e.currentTarget as HTMLInputElement).value))}
+        />
+        <span class="tabular-nums">{gap}px</span>
+      </label>
+
       <div class="flex items-center gap-1">
         <button
           type="button"
@@ -1093,7 +1197,7 @@
     <p class="py-16 text-center text-sm uppercase tracking-[0.14em] text-text-muted">No photos found.</p>
   {:else}
     {#if layoutMode === 'uniform'}
-      <ul class="grid gap-2" style={`grid-template-columns: repeat(${colCount}, minmax(0, 1fr));`}>
+      <ul class="grid" style={`grid-template-columns: repeat(${colCount}, minmax(0, 1fr)); gap: ${gap}px;`}>
         {#each photos as photo, index (photo.id)}
           <li>
             <div
@@ -1130,9 +1234,9 @@
         {/if}
       </ul>
     {:else}
-      <ul class="columns-2 gap-2 md:columns-4 lg:columns-6" style={`columns: ${colCount};`}>
+      <ul class="columns-2 md:columns-4 lg:columns-6" style={`columns: ${colCount}; column-gap: ${gap}px;`}>
         {#each photos as photo, index (photo.id)}
-          <li class="mb-2 break-inside-avoid">
+          <li class="break-inside-avoid" style="margin-bottom: {gap}px">
             <div
               class="tile-cascade"
               class:revealed={galleryRevealed}
@@ -1162,7 +1266,7 @@
 
         {#if isLoadingMore}
           {#each Array.from({ length: placeholderCount }) as _, index (index)}
-            <li class="mb-2 break-inside-avoid animate-pulse rounded bg-surface-muted" style={`height: ${120 + (index % 5) * 34}px;`}></li>
+            <li class="break-inside-avoid animate-pulse rounded bg-surface-muted" style={`height: ${120 + (index % 5) * 34}px; margin-bottom: ${gap}px;`}></li>
           {/each}
         {/if}
       </ul>
@@ -1188,7 +1292,22 @@
 </section>
 
 {#if activePhoto && currentImage}
-  <div use:portal transition:fade={{ duration: SCALE_MASK_MS }} class="fixed inset-0 z-[60] bg-black"></div>
+  <div use:portal transition:fade={{ duration: SCALE_MASK_MS }} class="fixed inset-0 z-[60] pointer-events-none bg-black"></div>
+
+  {#if !promoted}
+    <div
+      use:portal
+      data-full-viewport
+      class="fixed inset-0 z-[65] pointer-events-none flex items-center justify-center p-0 m-0"
+      aria-hidden="true"
+    >
+      <img
+        src={photoPublicUrl(currentImage.delivery_storage_path, GALLERY_DETAIL_SHARED_WIDTH)}
+        alt={currentImage.alt_text ?? activePhoto.title}
+        class="max-h-full max-w-full w-auto h-auto object-contain"
+      />
+    </div>
+  {/if}
 
   {#if controlsVisible}
     <div

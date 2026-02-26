@@ -26,6 +26,8 @@ export type TileAnimationSession = {
   originalNextSibling: Node | null;
   currentRect: TileRect;
   imgCrop: ImgCropTransform | null;
+  /** Grid aspect ratio to restore when reinserting (so tile responds to density changes) */
+  gridAspectRatio?: number;
 };
 
 type AnimationConfig = {
@@ -81,16 +83,37 @@ const clearFixedRect = (node: HTMLElement) => {
 /** Apply rect to a wrapper; the child node fills it. Wrapper has no aspect-ratio. */
 const applyRectToWrapper = (wrapper: HTMLElement, rect: TileRect, zIndex = 70) => {
   wrapper.style.position = 'fixed';
-  wrapper.style.top = `${rect.top}px`;
-  wrapper.style.left = `${rect.left}px`;
-  wrapper.style.width = `${rect.width}px`;
-  wrapper.style.height = `${rect.height}px`;
   wrapper.style.margin = '0';
   wrapper.style.zIndex = String(zIndex);
   wrapper.style.overflow = 'hidden';
   wrapper.style.pointerEvents = 'none';
   wrapper.style.contain = 'layout paint style';
   wrapper.style.opacity = '1';
+
+  const isFullViewport = rect.top === 0 && rect.left === 0;
+  if (isFullViewport) {
+    wrapper.dataset.fullViewport = 'true';
+    wrapper.style.top = '0';
+    wrapper.style.left = '0';
+    wrapper.style.right = '0';
+    wrapper.style.bottom = '0';
+    wrapper.style.width = '';
+    wrapper.style.height = '';
+    wrapper.style.display = 'flex';
+    wrapper.style.alignItems = 'center';
+    wrapper.style.justifyContent = 'center';
+  } else {
+    delete wrapper.dataset.fullViewport;
+    wrapper.style.removeProperty('right');
+    wrapper.style.removeProperty('bottom');
+    wrapper.style.removeProperty('display');
+    wrapper.style.removeProperty('align-items');
+    wrapper.style.removeProperty('justify-content');
+    wrapper.style.top = `${rect.top}px`;
+    wrapper.style.left = `${rect.left}px`;
+    wrapper.style.width = `${rect.width}px`;
+    wrapper.style.height = `${rect.height}px`;
+  }
 };
 
 const animateRect = async (node: HTMLElement, fromRect: TileRect, toRect: TileRect, options?: AnimationConfig) => {
@@ -197,7 +220,7 @@ export const promoteTile = async ({
 
   const placeholder = document.createElement('div');
   placeholder.dataset.tilePlaceholder = slug;
-  if (aspectRatio != null && parent) {
+  if (aspectRatio != null && parent instanceof Element) {
     const cellRect = rectFromElement(parent);
     const size = Math.min(cellRect.width, cellRect.height);
     placeholder.style.width = `${size}px`;
@@ -290,7 +313,8 @@ export const promoteTile = async ({
     originalParent: parent,
     originalNextSibling: nextSibling,
     currentRect: targetRect,
-    imgCrop: imgCropFrom ?? null
+    imgCrop: imgCropFrom ?? null,
+    gridAspectRatio: aspectRatio
   };
 };
 
@@ -368,6 +392,8 @@ export const reinsertPromotedTile = (
     session.node.style.width = `${rect.width}px`;
     session.node.style.height = `${rect.height}px`;
     session.node.style.aspectRatio = 'auto';
+  } else if (session.gridAspectRatio != null) {
+    session.node.style.aspectRatio = String(session.gridAspectRatio);
   }
   const parent = session.placeholder.parentNode;
   if (parent) {
@@ -392,6 +418,8 @@ export const releasePromotedTile = (
     session.node.style.width = `${rect.width}px`;
     session.node.style.height = `${rect.height}px`;
     session.node.style.aspectRatio = 'auto';
+  } else if (session.gridAspectRatio != null) {
+    session.node.style.aspectRatio = String(session.gridAspectRatio);
   }
   // Restore img crop transform when reinserting into grid
   if (session.imgCrop) {
@@ -436,6 +464,10 @@ export const cropToImgTransform = (
   };
 };
 
+/**
+ * Compute rect for photo detail view: image scales to fill full viewport height OR width
+ * (whichever fits while maintaining aspect ratio), centered horizontally and vertically.
+ */
 export const computeContainRect = (
   viewportWidth: number,
   viewportHeight: number,
@@ -443,8 +475,8 @@ export const computeContainRect = (
   imageHeight: number,
   chromeTopOffset: number,
   chromeBottomOffset: number,
-  horizontalPadding = 12,
-  verticalPadding = 12
+  horizontalPadding = 0,
+  verticalPadding = 0
 ): TileRect => {
   const safeImageWidth = Math.max(1, imageWidth);
   const safeImageHeight = Math.max(1, imageHeight);
@@ -463,10 +495,13 @@ export const computeContainRect = (
     width = height * imageRatio;
   }
 
+  const top = chromeTopOffset + verticalPadding + (availableHeight - height) / 2;
+  const left = horizontalPadding + (availableWidth - width) / 2;
+
   return {
-    top: chromeTopOffset + verticalPadding + (availableHeight - height) / 2,
-    left: horizontalPadding + (availableWidth - width) / 2,
-    width,
-    height
+    top: Math.round(top),
+    left: Math.round(left),
+    width: Math.round(width),
+    height: Math.round(height)
   };
 };

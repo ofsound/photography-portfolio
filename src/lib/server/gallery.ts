@@ -6,8 +6,7 @@ export type GalleryPhotoCardImage = {
   position: number;
   delivery_storage_path: string;
   alt_text: string | null;
-  width_px: number | null;
-  height_px: number | null;
+  dimensions: string | null;
   thumb_crop_x: number | null;
   thumb_crop_y: number | null;
   thumb_crop_zoom: number | null;
@@ -54,7 +53,7 @@ export const loadGalleryPage = async (locals: App.Locals, options: GalleryLoadOp
   let query = locals.supabase
     .from('photos')
     .select(
-      'id, slug, title, description, capture_date, photo_images(id, kind, position, delivery_storage_path, alt_text, width_px, height_px, thumb_crop_x, thumb_crop_y, thumb_crop_zoom)',
+      'id, slug, title, description, capture_date, photo_images(id, kind, position, delivery_storage_path, alt_text, dimensions, thumb_crop_x, thumb_crop_y, thumb_crop_zoom)',
       { count: 'exact' }
     )
     .eq('status', 'published')

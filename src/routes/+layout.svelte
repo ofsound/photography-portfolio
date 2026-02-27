@@ -1,6 +1,6 @@
 <script lang="ts">
   import '../app.css';
-  import { onNavigate } from '$app/navigation';
+  import { invalidateAll, onNavigate } from '$app/navigation';
   import { page } from '$app/state';
   import { galleryTransitionPhase } from '$lib/stores/gallery-transition';
   import type { LayoutData } from './$types';
@@ -23,6 +23,7 @@
   const navPages = $derived((data?.navPages ?? []) as Array<{ id: string; slug: string; title: string; nav_order: number }>);
   const siteSettings = $derived(data?.siteSettings ?? null);
   const hasSession = $derived(Boolean(data?.session));
+  const pendingConversionCount = $derived((data?.pendingConversionCount as number) ?? 0);
   let themeMode = $state<'light' | 'dark' | 'system'>('system');
   let transitionPreset = $state<'cinematic' | 'snappy' | 'experimental'>('cinematic');
   let hasHydratedClientPrefs = $state(false);
@@ -90,6 +91,17 @@
     applyTransitionPreset();
     applyTheme(themeMode);
     hasHydratedClientPrefs = true;
+  });
+
+  $effect(() => {
+    if (typeof window === 'undefined') return;
+    if (!hasSession || pendingConversionCount <= 0) return;
+
+    const timer = setInterval(() => {
+      invalidateAll();
+    }, 8000);
+
+    return () => clearInterval(timer);
   });
 
   $effect(() => {
@@ -177,6 +189,11 @@
         <a href={hasSession ? '/admin' : '/auth'} class:underline={page.url.pathname.startsWith('/admin') || page.url.pathname === '/auth'}>
           {hasSession ? 'CMS' : 'Sign In'}
         </a>
+        {#if hasSession}
+          <span class="rounded border border-border px-2 py-1 text-xs uppercase tracking-[0.12em]"
+            >PENDING CONVERSIONS: {pendingConversionCount}</span
+          >
+        {/if}
       </nav>
 
       <div class="flex items-center gap-2">

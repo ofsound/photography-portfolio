@@ -1,4 +1,5 @@
 <script lang="ts">
+  import AdminButton from '$lib/components/admin/AdminButton.svelte';
   import PhotoTaxonomyEditor from '$lib/components/admin/PhotoTaxonomyEditor.svelte';
   import type { AdminCategory, AdminTag } from '$lib/types/content';
 
@@ -50,46 +51,34 @@
 <section class="mt-4 grid gap-3 rounded border border-border p-3">
   <div class="flex flex-wrap items-center gap-2 text-xs uppercase tracking-[0.12em]">
     <span>Selected photos: {selectedPhotoIds.length}</span>
-    <button class="rounded border border-border-strong px-2 py-1" type="button" onclick={selectAllVisiblePhotos}>Select all visible</button>
-    <button class="rounded border border-border-strong px-2 py-1" type="button" onclick={clearSelectedPhotos}>Clear</button>
-    <button class="rounded border border-border-strong px-2 py-1 disabled:opacity-40" type="button" onclick={undoDraftChange} disabled={undoCount === 0}>
-      Undo
-    </button>
-    <button class="rounded border border-border-strong px-2 py-1 disabled:opacity-40" type="button" onclick={redoDraftChange} disabled={redoCount === 0}>
-      Redo
-    </button>
+    <AdminButton size="chip" type="button" onclick={selectAllVisiblePhotos}>Select all visible</AdminButton>
+    <AdminButton size="chip" type="button" onclick={clearSelectedPhotos}>Clear</AdminButton>
+    <AdminButton size="chip" type="button" onclick={undoDraftChange} disabled={undoCount === 0}>Undo</AdminButton>
+    <AdminButton size="chip" type="button" onclick={redoDraftChange} disabled={redoCount === 0}>Redo</AdminButton>
     <span class="text-text-subtle">Cmd/Ctrl+Z | Cmd/Ctrl+Shift+Z | Ctrl+Y</span>
   </div>
 
   <div class="flex flex-wrap items-center gap-2">
     <form method="POST" action="?/bulkArchivePhotos">
       <input type="hidden" name="selected_photo_ids" value={selectedPhotoIds.join('\n')} />
-      <button class="rounded border border-border-strong px-3 py-1 text-xs uppercase tracking-[0.14em]" type="submit" disabled={selectedPhotoIds.length === 0}>
-        Archive Selected
-      </button>
+      <AdminButton type="submit" disabled={selectedPhotoIds.length === 0}>Archive Selected</AdminButton>
     </form>
 
     <form method="POST" action="?/bulkRestorePhotos">
       <input type="hidden" name="selected_photo_ids" value={selectedPhotoIds.join('\n')} />
-      <button class="rounded border border-border-strong px-3 py-1 text-xs uppercase tracking-[0.14em]" type="submit" disabled={selectedPhotoIds.length === 0}>
-        Restore Selected
-      </button>
+      <AdminButton type="submit" disabled={selectedPhotoIds.length === 0}>Restore Selected</AdminButton>
     </form>
 
     <form method="POST" action="?/bulkSetSearchable">
       <input type="hidden" name="selected_photo_ids" value={selectedPhotoIds.join('\n')} />
       <input type="hidden" name="searchable" value="true" />
-      <button class="rounded border border-border-strong px-3 py-1 text-xs uppercase tracking-[0.14em]" type="submit" disabled={selectedPhotoIds.length === 0}>
-        Set Searchable
-      </button>
+      <AdminButton type="submit" disabled={selectedPhotoIds.length === 0}>Set Searchable</AdminButton>
     </form>
 
     <form method="POST" action="?/bulkSetSearchable">
       <input type="hidden" name="selected_photo_ids" value={selectedPhotoIds.join('\n')} />
       <input type="hidden" name="searchable" value="false" />
-      <button class="rounded border border-border-strong px-3 py-1 text-xs uppercase tracking-[0.14em]" type="submit" disabled={selectedPhotoIds.length === 0}>
-        Unset Searchable
-      </button>
+      <AdminButton type="submit" disabled={selectedPhotoIds.length === 0}>Unset Searchable</AdminButton>
     </form>
   </div>
 

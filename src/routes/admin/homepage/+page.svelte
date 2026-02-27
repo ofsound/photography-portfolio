@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { invalidateAll } from '$app/navigation';
+  import AdminButton from '$lib/components/admin/AdminButton.svelte';
   import { photoPublicUrl } from '$lib/utils/storage-url';
   import type { HomepageImage, HomepageSlide } from '$lib/types/content';
 
@@ -12,7 +12,6 @@
   let slideDurationMs = $state<number>(4000);
   let transitionDurationMs = $state<number>(2000);
   let draggingId = $state<string | null>(null);
-  let refreshState = $state<'idle' | 'refreshing'>('idle');
   let undoStack = $state<string[][]>([]);
   let redoStack = $state<string[][]>([]);
   const historyLimit = 100;
@@ -69,22 +68,6 @@
     transitionDurationMs = data.transitionDurationMs;
     undoStack = [];
     redoStack = [];
-  });
-
-  $effect(() => {
-    if (typeof window === 'undefined') return;
-    if (data.pendingConversionCount <= 0) {
-      refreshState = 'idle';
-      return;
-    }
-
-    const timer = setInterval(async () => {
-      refreshState = 'refreshing';
-      await invalidateAll();
-      refreshState = 'idle';
-    }, 8000);
-
-    return () => clearInterval(timer);
   });
 
   $effect(() => {
@@ -178,14 +161,6 @@
 
 <h1 class="text-xl uppercase tracking-[0.15em]">Homepage Curation</h1>
 <p class="mt-2 text-sm text-text-muted">Image-only slides. Add images, drag selected slides to reorder, then save.</p>
-<div class="mt-2 flex flex-wrap items-center gap-3 text-xs uppercase tracking-[0.12em]">
-  <span class="rounded border border-border px-2 py-1">Pending conversions: {data.pendingConversionCount}</span>
-  {#if data.pendingConversionCount > 0}
-    <span class="rounded border border-border px-2 py-1">
-      {refreshState === 'refreshing' ? 'Refreshing...' : 'Auto-refresh every 8s'}
-    </span>
-  {/if}
-</div>
 
 {#if form?.message}
   <p class="mt-3 rounded border border-border px-3 py-2 text-sm">{form.message}</p>
@@ -218,9 +193,7 @@
         bind:value={transitionDurationMs}
       />
     </label>
-    <button class="h-[42px] rounded border border-border-strong px-3 py-1 text-xs uppercase tracking-[0.14em]" type="submit">
-      Save Timing
-    </button>
+    <AdminButton size="md-tall" type="submit">Save Timing</AdminButton>
   </form>
 </section>
 
@@ -228,22 +201,22 @@
   <div class="grid gap-3 rounded border border-border p-4">
     <div class="flex flex-wrap items-center gap-2">
       <h2 class="text-sm uppercase tracking-[0.14em]">Selected Slides</h2>
-      <button
-        class="rounded border border-border-strong px-2 py-1 text-xs uppercase tracking-[0.12em] disabled:opacity-40"
+      <AdminButton
+        size="sm"
         type="button"
         onclick={undoSelectionChange}
         disabled={undoStack.length === 0}
       >
         Undo
-      </button>
-      <button
-        class="rounded border border-border-strong px-2 py-1 text-xs uppercase tracking-[0.12em] disabled:opacity-40"
+      </AdminButton>
+      <AdminButton
+        size="sm"
         type="button"
         onclick={redoSelectionChange}
         disabled={redoStack.length === 0}
       >
         Redo
-      </button>
+      </AdminButton>
       <span class="text-xs text-text-subtle">Cmd/Ctrl+Z | Cmd/Ctrl+Shift+Z | Ctrl+Y</span>
     </div>
 
@@ -272,9 +245,7 @@
               <div>{slide.photo_title} ({slide.kind})</div>
             </div>
 
-            <button class="rounded border border-border-strong px-2 py-1 text-xs uppercase tracking-[0.12em]" type="button" onclick={() => removeSlide(slide.id)}>
-              Remove
-            </button>
+            <AdminButton size="sm" type="button" onclick={() => removeSlide(slide.id)}>Remove</AdminButton>
           </li>
         {/each}
       </ul>
@@ -282,7 +253,7 @@
 
     <form method="POST" action="?/save" class="w-fit">
       <input type="hidden" name="ordered_image_ids" value={selectedIds.join('\n')} />
-      <button class="rounded border border-border-strong px-3 py-1 text-xs uppercase tracking-[0.14em]" type="submit">Save Slides</button>
+      <AdminButton type="submit">Save Slides</AdminButton>
     </form>
   </div>
 
@@ -302,9 +273,7 @@
             <div>{image.photo_title} ({image.kind})</div>
           </div>
 
-          <button class="rounded border border-border-strong px-2 py-1 text-xs uppercase tracking-[0.12em]" type="button" onclick={() => addSlide(image.id)}>
-            Add
-          </button>
+          <AdminButton size="sm" type="button" onclick={() => addSlide(image.id)}>Add</AdminButton>
         </li>
       {/each}
     </ul>

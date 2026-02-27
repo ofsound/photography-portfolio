@@ -17,6 +17,7 @@
     };
   };
   import type { GalleryPhoto } from '$lib/types/content';
+  import { parseDimensions } from '$lib/utils/parse-dimensions';
   import { thumbCropTransform } from '$lib/utils/thumb-crop';
   import { GALLERY_DETAIL_SHARED_WIDTH, photoPublicUrl } from '$lib/utils/storage-url';
   import {
@@ -773,10 +774,9 @@
   };
 
   const tileAspectRatio = (photo: GalleryPhoto) => {
-    const width = photo.leadImage?.width_px;
-    const height = photo.leadImage?.height_px;
-    if (!width || !height) return uniformRatio;
-    return Math.max(0.2, width / height);
+    const parsed = parseDimensions(photo.leadImage?.dimensions);
+    if (!parsed) return uniformRatio;
+    return Math.max(0.2, parsed.width / parsed.height);
   };
 
   const hasThumbCrop = (img: { thumb_crop_x?: number | null; thumb_crop_y?: number | null; thumb_crop_zoom?: number | null } | null) =>
@@ -788,12 +788,15 @@
 
   const thumbCropStyle = (img: GalleryImage | null, containerAspect: number) => {
     if (!img || !hasThumbCrop(img)) return '';
+    const parsed = parseDimensions(img.dimensions);
+    const w = parsed?.width ?? 1;
+    const h = parsed?.height ?? 1;
     const t = thumbCropTransform(
       img.thumb_crop_x ?? 0.5,
       img.thumb_crop_y ?? 0.5,
       img.thumb_crop_zoom ?? 1,
-      img.width_px ?? 1,
-      img.height_px ?? 1,
+      w,
+      h,
       containerAspect
     );
     return `object-fit: contain !important; transform: translate(${t.translateX}%, ${t.translateY}%) scale(${t.scale}); transform-origin: ${t.originX * 100}% ${t.originY * 100}%;`;
@@ -802,7 +805,8 @@
   const imgCropFromForPhoto = (photo: GalleryPhoto, imageId: string | null, containerAspect: number) => {
     const img = imageFor(photo, imageId);
     if (!img || !hasThumbCrop(img)) return null;
-    const r = (img.width_px ?? 1) / (img.height_px ?? 1);
+    const parsed = parseDimensions(img.dimensions);
+    const r = parsed ? parsed.width / parsed.height : 1;
     return cropToImgTransform(img.thumb_crop_x!, img.thumb_crop_y!, img.thumb_crop_zoom!, r, containerAspect);
   };
 

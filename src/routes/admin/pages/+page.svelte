@@ -1,4 +1,6 @@
 <script lang="ts">
+  import AdminButton from '$lib/components/admin/AdminButton.svelte';
+
   let { data, form } = $props();
   const pages = $derived(
     data.pages as Array<{ id: string; slug: string; title: string; status: 'published' | 'archived'; updated_at: string }>
@@ -48,7 +50,7 @@
       <label class="flex items-center gap-2 text-sm"
         >Nav order <input type="number" name="nav_order" value="0" class="w-24 rounded border border-border-strong px-2 py-1" /></label
       >
-      <button class="rounded border border-border-strong px-3 py-1 text-xs uppercase tracking-[0.14em]" type="submit">Create</button>
+      <AdminButton type="submit">Create</AdminButton>
     </div>
   </form>
 

@@ -64,8 +64,6 @@ export const photoImageActions: Actions = {
     const photoId = asString(form.get('photo_id'));
     const kind = asString(form.get('kind'), 'additional') as 'lead' | 'additional';
     const altText = asString(form.get('alt_text')).trim() || null;
-    const focalX = asOptionalNumber(form.get('focal_x')) ?? 0.5;
-    const focalY = asOptionalNumber(form.get('focal_y')) ?? 0.5;
     const imageFile = form.get('image_file');
 
     if (!photoId) return fail(400, { message: 'Missing photo id.' });
@@ -108,9 +106,7 @@ export const photoImageActions: Actions = {
       p_source_bytes: imageFile.size,
       p_kind: kind,
       p_position: nextPosition,
-      p_alt_text: altText,
-      p_focal_x: focalX,
-      p_focal_y: focalY
+      p_alt_text: altText
     });
 
     if (rowError) {

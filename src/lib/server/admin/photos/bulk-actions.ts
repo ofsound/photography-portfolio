@@ -43,6 +43,23 @@ export const bulkPhotoActions: Actions = {
       success: true,
       message: `${searchable ? 'Enabled' : 'Disabled'} search for ${photoIds.length} photo(s).`
     };
+  },
+
+  reorderPhotos: async ({ locals, request }) => {
+    const form = await request.formData();
+    const orderedIds = parseUuidList(asString(form.get('ordered_photo_ids')));
+    if (!orderedIds.length) return fail(400, { message: 'No photo IDs provided.' });
+
+    const updates = orderedIds.map((id, idx) =>
+      locals.supabase.from('photos').update({ admin_sort_order: idx }).eq('id', id)
+    );
+
+    for (const update of updates) {
+      const { error } = await update;
+      if (error) return fail(400, { message: error.message });
+    }
+
+    return { success: true, message: 'Photo order saved.' };
   }
 };
 

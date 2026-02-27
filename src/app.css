@@ -62,42 +62,6 @@ body {
   font-family: var(--font-sans);
 }
 
-input,
-button,
-textarea,
-select {
-  font: inherit;
-  color: var(--color-text);
-}
-
-input,
-textarea,
-select {
-  background: var(--color-surface);
-  border-color: var(--color-border);
-}
-
-input::placeholder,
-textarea::placeholder {
-  color: var(--color-text-subtle);
-}
-
-select option {
-  background: var(--color-surface);
-  color: var(--color-text);
-}
-
-input:disabled,
-textarea:disabled,
-select:disabled,
-button:disabled {
-  opacity: 0.6;
-}
-
-* {
-  box-sizing: border-box;
-}
-
 .chrome-panel {
   backdrop-filter: blur(12px);
   background: color-mix(in srgb, var(--color-surface) 78%, transparent);

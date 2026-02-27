@@ -3,14 +3,37 @@
   import AdminPhotoCard from '$lib/components/admin/photos/AdminPhotoCard.svelte';
   import type { AdminCategory, AdminPhoto, AdminPhotoImage, AdminTag } from '$lib/types/content';
 
+  async function persistAdditionalOrder(photoId: string, orderedIds: string[]) {
+    const formData = new FormData();
+    formData.append('photo_id', photoId);
+    formData.append('ordered_image_ids', orderedIds.join('\n'));
+    const res = await fetch(`${window.location.pathname}?/reorderAdditionalImages`, {
+      method: 'POST',
+      body: formData
+    });
+    if (res.ok) invalidateAll();
+  }
+
+  async function persistTaxonomy(photoId: string, categoryIds: string[], tagIds: string[]) {
+    const formData = new FormData();
+    formData.append('photo_id', photoId);
+    for (const id of categoryIds) formData.append('category_ids', id);
+    for (const id of tagIds) formData.append('tag_ids', id);
+    const res = await fetch(`${window.location.pathname}?/saveRelations`, {
+      method: 'POST',
+      body: formData
+    });
+    if (res.ok) invalidateAll();
+  }
+
   let { data, form } = $props();
 
   const photo = $derived(data.photo as AdminPhoto);
   const categories = $derived(data.categories as AdminCategory[]);
   const tags = $derived(data.tags as AdminTag[]);
   const images = $derived(data.images as AdminPhotoImage[]);
-  const selectedCategoryIds = $derived(data.selectedCategoryIds as string[]);
-  const selectedTagIds = $derived(data.selectedTagIds as string[]);
+  const serverCategoryIds = $derived(data.selectedCategoryIds as string[]);
+  const serverTagIds = $derived(data.selectedTagIds as string[]);
   const photoConversionState = $derived(data.photoConversionState as 'no-images' | 'pending' | 'ready' | 'mixed');
 
   const baseAdditionalOrder = () =>
@@ -22,29 +45,16 @@
   let selectedPhotoIds = $state<string[]>([]);
   let orderedAdditional = $state<string[]>([]);
   let selectedAdditional = $state<string[]>([]);
+  let selectedCategoryIds = $state<string[]>([]);
+  let selectedTagIds = $state<string[]>([]);
   let draggingId = $state<string | null>(null);
-  let refreshState = $state<'idle' | 'refreshing'>('idle');
 
   $effect(() => {
     orderedAdditional = baseAdditionalOrder();
     selectedAdditional = [];
     selectedPhotoIds = [];
-  });
-
-  $effect(() => {
-    if (typeof window === 'undefined') return;
-    if (data.pendingConversionCount <= 0) {
-      refreshState = 'idle';
-      return;
-    }
-
-    const timer = setInterval(async () => {
-      refreshState = 'refreshing';
-      await invalidateAll();
-      refreshState = 'idle';
-    }, 8000);
-
-    return () => clearInterval(timer);
+    selectedCategoryIds = serverCategoryIds;
+    selectedTagIds = serverTagIds;
   });
 
   const moveItem = (arr: string[], from: number, to: number) => {
@@ -91,7 +101,9 @@
     const to = orderedAdditional.indexOf(targetId);
     if (from < 0 || to < 0 || from === to) return;
 
-    orderedAdditional = moveItem(orderedAdditional, from, to);
+    const next = moveItem(orderedAdditional, from, to);
+    orderedAdditional = next;
+    persistAdditionalOrder(photo.id, next);
   };
 
   const onAdditionalDropToEnd = (_photoId: string, event: DragEvent) => {
@@ -105,24 +117,23 @@
     const [item] = next.splice(from, 1);
     next.push(item);
     orderedAdditional = next;
+    persistAdditionalOrder(photo.id, next);
   };
 
   const onAdditionalDragEnd = () => {
     draggingId = null;
   };
+
+  const onTaxonomyChange = (photoId: string, categoryIds: string[], tagIds: string[]) => {
+    selectedCategoryIds = categoryIds;
+    selectedTagIds = tagIds;
+    persistTaxonomy(photoId, categoryIds, tagIds);
+  };
 </script>
 
-<div class="flex flex-wrap items-center justify-between gap-3">
+<div class="flex flex-col gap-3">
+  <a href="/admin/photos" class="rounded border border-border-strong px-3 py-1 text-xs uppercase tracking-[0.14em] w-fit">Back to Photos</a>
   <h1 class="text-xl uppercase tracking-[0.15em]">Edit Photo</h1>
-  <a href="/admin/photos" class="rounded border border-border-strong px-3 py-1 text-xs uppercase tracking-[0.14em]">Back to Photos</a>
-</div>
-<div class="mt-2 flex flex-wrap items-center gap-3 text-xs uppercase tracking-[0.12em]">
-  <span class="rounded border border-border px-2 py-1">Pending conversions: {data.pendingConversionCount}</span>
-  {#if data.pendingConversionCount > 0}
-    <span class="rounded border border-border px-2 py-1">
-      {refreshState === 'refreshing' ? 'Refreshing...' : 'Auto-refresh every 8s'}
-    </span>
-  {/if}
 </div>
 
 {#if form?.message}
@@ -141,6 +152,7 @@
     {selectedPhotoIds}
     {selectedCategoryIds}
     {selectedTagIds}
+    {onTaxonomyChange}
     {photoConversionState}
     additionalOrder={orderedAdditional}
     selectedAdditional={selectedAdditional}
@@ -152,5 +164,6 @@
     {onAdditionalDropToEnd}
     {onAdditionalDragEnd}
     initialExpanded={true}
+    editorOnly={true}
   />
 </section>

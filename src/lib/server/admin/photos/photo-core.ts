@@ -1,13 +1,12 @@
 import { fail, type Actions } from '@sveltejs/kit';
-import { asBoolean, asOptionalDate, asOptionalNumber, asString, toSlug } from '$lib/server/admin-helpers';
+import { asBoolean, asOptionalDate, asString, toSlug } from '$lib/server/admin-helpers';
 
 export type PhotoPayload = {
   title: string;
   slug: string;
   capture_date: string | null;
   description: string | null;
-  width_px: number | null;
-  height_px: number | null;
+  dimensions: string | null;
   license_text: string | null;
   og_title: string | null;
   og_description: string | null;
@@ -30,8 +29,7 @@ export const upsertPhotoPayload = (form: FormData): { ok: true; payload: PhotoPa
       slug: toSlug(slugInput || title, 'photo'),
       capture_date: asOptionalDate(form.get('capture_date')),
       description: asString(form.get('description')).trim() || null,
-      width_px: asOptionalNumber(form.get('width_px')),
-      height_px: asOptionalNumber(form.get('height_px')),
+      dimensions: asString(form.get('dimensions')).trim() || null,
       license_text: asString(form.get('license_text')).trim() || null,
       og_title: asString(form.get('og_title')).trim() || null,
       og_description: asString(form.get('og_description')).trim() || null,

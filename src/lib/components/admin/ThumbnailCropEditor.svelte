@@ -1,4 +1,6 @@
 <script lang="ts">
+  import AdminButton from '$lib/components/admin/AdminButton.svelte';
+  import { parseDimensions } from '$lib/utils/parse-dimensions';
   import { photoPublicUrl } from '$lib/utils/storage-url';
 
   type ThumbCrop = {
@@ -11,19 +13,19 @@
     imageId,
     deliveryStoragePath,
     altText,
-    widthPx = null,
-    heightPx = null,
+    dimensions = null,
     initialCrop = null,
     photoId
   } = $props<{
     imageId: string;
     deliveryStoragePath: string;
     altText: string | null;
-    widthPx?: number | null;
-    heightPx?: number | null;
+    dimensions?: string | null;
     initialCrop?: ThumbCrop | null;
     photoId: string;
   }>();
+
+  const parsedDims = $derived(parseDimensions(dimensions));
 
   const EDITOR_SIZE = 360;
   const ZOOM_MIN = 1;
@@ -59,8 +61,8 @@
   let dragStartCropX = 0;
   let dragStartCropY = 0;
 
-  const imgWidth = $derived(imgNaturalWidth ?? widthPx ?? 1);
-  const imgHeight = $derived(imgNaturalHeight ?? heightPx ?? 1);
+  const imgWidth = $derived(imgNaturalWidth ?? parsedDims?.width ?? 1);
+  const imgHeight = $derived(imgNaturalHeight ?? parsedDims?.height ?? 1);
   const imgAspect = $derived(imgWidth / imgHeight);
 
   // Image display rect when contained in EDITOR_SIZE x EDITOR_SIZE
@@ -212,13 +214,7 @@
       />
       <span class="tabular-nums">{cropZoom.toFixed(1)}x</span>
     </label>
-    <button
-      type="button"
-      class="rounded border border-border-strong px-2 py-1 text-xs uppercase tracking-[0.12em]"
-      onclick={resetToDefault}
-    >
-      Reset to default
-    </button>
+    <AdminButton size="sm" type="button" onclick={resetToDefault}>Reset to default</AdminButton>
   </div>
 
   <form method="POST" action="?/saveThumbCrop" class="flex flex-wrap items-center gap-2">
@@ -227,22 +223,14 @@
     <input type="hidden" name="thumb_crop_x" value={cropX} />
     <input type="hidden" name="thumb_crop_y" value={cropY} />
     <input type="hidden" name="thumb_crop_zoom" value={cropZoom} />
-    <button
-      type="submit"
-      class="rounded border border-border-strong px-3 py-1 text-xs uppercase tracking-[0.14em] disabled:opacity-50"
-      disabled={!hasChanges}
-    >
-      Save thumbnail crop
-    </button>
+    <AdminButton type="submit" disabled={!hasChanges} class="disabled:opacity-50">Save thumbnail crop</AdminButton>
   </form>
 
   {#if hasCustomCrop}
     <form method="POST" action="?/clearThumbCrop" class="inline">
       <input type="hidden" name="photo_id" value={photoId} />
       <input type="hidden" name="image_id" value={imageId} />
-      <button type="submit" class="text-xs text-text-muted underline">
-        Clear custom crop (use default)
-      </button>
+      <AdminButton variant="link" type="submit">Clear custom crop (use default)</AdminButton>
     </form>
   {/if}
 </div>

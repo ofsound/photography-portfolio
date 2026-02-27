@@ -15,8 +15,9 @@ export const loadAdminPhotosPage = async ({ locals, url }: { locals: App.Locals;
   let photoQuery = locals.supabase
     .from('photos')
     .select(
-      'id, slug, title, capture_date, description, width_px, height_px, license_text, og_title, og_description, og_image_path, status, is_searchable, deleted_at, updated_at'
+      'id, slug, title, capture_date, description, dimensions, license_text, og_title, og_description, og_image_path, status, is_searchable, deleted_at, updated_at, admin_sort_order'
     )
+    .order('admin_sort_order', { ascending: true, nullsFirst: false })
     .order('updated_at', { ascending: false })
     .limit(120);
 
@@ -29,11 +30,18 @@ export const loadAdminPhotosPage = async ({ locals, url }: { locals: App.Locals;
     photoQuery = photoQuery.or(`title.ilike.${searchPattern},description.ilike.${searchPattern},slug.ilike.${searchPattern}`);
   }
 
-  const [{ data: photos }, { data: categories }, { data: tags }, pendingQuery] = await Promise.all([
+  const [
+    { data: photos },
+    { data: categories },
+    { data: tags },
+    pendingQuery,
+    { data: settings }
+  ] = await Promise.all([
     photoQuery,
     locals.supabase.from('categories').select('id, name, slug, is_active').order('name', { ascending: true }),
     locals.supabase.from('tags').select('id, name, slug, is_active').order('name', { ascending: true }),
-    locals.supabase.from('photo_images').select('id', { count: 'exact', head: true }).eq('is_active', true).is('delivery_storage_path', null)
+    locals.supabase.from('photo_images').select('id', { count: 'exact', head: true }).eq('is_active', true).is('delivery_storage_path', null),
+    locals.supabase.from('site_settings').select('grid_desktop_max, max_content_width_px').eq('singleton_id', 1).maybeSingle()
   ]);
 
   const photoIds = (photos ?? []).map((photo: { id: string }) => photo.id);
@@ -49,7 +57,7 @@ export const loadAdminPhotosPage = async ({ locals, url }: { locals: App.Locals;
       locals.supabase
         .from('photo_images')
         .select(
-          'id, photo_id, kind, position, source_storage_path, delivery_storage_path, source_mime_type, source_bytes, alt_text, focal_x, focal_y, width_px, height_px, thumb_crop_x, thumb_crop_y, thumb_crop_zoom, created_at'
+          'id, photo_id, kind, position, source_storage_path, delivery_storage_path, source_mime_type, source_bytes, alt_text, dimensions, thumb_crop_x, thumb_crop_y, thumb_crop_zoom, created_at'
         )
         .in('photo_id', photoIds)
         .order('position', { ascending: true })
@@ -128,7 +136,9 @@ export const loadAdminPhotosPage = async ({ locals, url }: { locals: App.Locals;
     filterCategoryId,
     filterTagId,
     filterConversion,
-    pendingConversionCount: pendingQuery.count ?? 0
+    pendingConversionCount: pendingQuery.count ?? 0,
+    maxDensity: settings?.grid_desktop_max ?? 20,
+    maxContentWidthPx: settings?.max_content_width_px ?? null
   };
 };
 

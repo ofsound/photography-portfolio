@@ -1,4 +1,6 @@
 <script lang="ts">
+  import AdminButton from '$lib/components/admin/AdminButton.svelte';
+
   let { data, form } = $props();
 
   const settings = $derived(
@@ -98,5 +100,5 @@
     >{palettePretty}</textarea>
   </label>
 
-  <button class="w-fit rounded border border-border-strong px-3 py-1 text-xs uppercase tracking-[0.14em]" type="submit">Save Settings</button>
+  <AdminButton wFit type="submit">Save Settings</AdminButton>
 </form>

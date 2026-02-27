@@ -1,4 +1,5 @@
 <script lang="ts">
+  import AdminButton from '$lib/components/admin/AdminButton.svelte';
   import type { ContentRevision } from '$lib/types/content';
 
   let { data, form } = $props();
@@ -40,13 +41,9 @@
   <div class="flex flex-wrap items-center gap-3">
     <label class="flex items-center gap-2 text-sm"><input name="show_in_nav" type="checkbox" checked={page.show_in_nav} /> Show in nav</label>
     <label class="flex items-center gap-2 text-sm">Nav order <input type="number" name="nav_order" value={page.nav_order} class="w-24 rounded border border-border-strong px-2 py-1" /></label>
-    <button class="rounded border border-border-strong px-3 py-1 text-xs uppercase tracking-[0.14em]" type="submit">Save and Return</button>
-    <button class="rounded border border-border-strong px-3 py-1 text-xs uppercase tracking-[0.14em]" type="submit" formaction="?/archive" formmethod="POST">
-      Archive and Return
-    </button>
-    <button class="rounded border border-border-strong px-3 py-1 text-xs uppercase tracking-[0.14em]" type="submit" formaction="?/restore" formmethod="POST">
-      Restore and Return
-    </button>
+    <AdminButton type="submit">Save and Return</AdminButton>
+    <AdminButton type="submit" formaction="?/archive" formmethod="POST">Archive and Return</AdminButton>
+    <AdminButton type="submit" formaction="?/restore" formmethod="POST">Restore and Return</AdminButton>
   </div>
 
   {#if revisions.length}
@@ -56,16 +53,16 @@
         {#each revisions.slice(0, 10) as rev (rev.id)}
           <div class="flex flex-wrap items-center justify-between gap-2 text-xs">
             <span>v{rev.version_no} - {new Date(rev.changed_at).toLocaleString()}</span>
-            <button
+            <AdminButton
               type="submit"
               name="revision_id"
               value={rev.id}
               formaction="?/rollback"
               formmethod="POST"
-              class="rounded border border-border-strong px-2 py-1 uppercase tracking-[0.12em]"
+              size="sm"
             >
               Rollback and Return
-            </button>
+            </AdminButton>
           </div>
         {/each}
       </div>

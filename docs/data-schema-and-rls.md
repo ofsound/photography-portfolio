@@ -8,7 +8,7 @@ Migration file: [`supabase/migrations/20260224_portfolio_v1.sql`](/Users/ben/Dev
 - `categories`: flat taxonomy set, editable.
 - `tags`: editable mixed taxonomy.
 - `photos`: primary photograph records (metadata, SEO fields, soft archive, search vectors).
-- `photo_images`: lead/additional image assets for each photo (ordered, focal point, EXIF, source asset + browser-delivery asset paths).
+- `photo_images`: lead/additional image assets for each photo (ordered, EXIF, source asset + browser-delivery asset paths).
 - `photo_categories`: many-to-many photo/category links.
 - `photo_tags`: many-to-many photo/tag links.
 - `homepage_slides`: ordered homepage slideshow source from existing `photo_images`.

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import AdminButton from '$lib/components/admin/AdminButton.svelte';
   import type { AdminCategory, AdminTag } from '$lib/types/content';
 
   let {
@@ -61,7 +62,7 @@
     <label class="flex items-center gap-2 text-sm">
       <input type="checkbox" name="showArchived" value="1" checked={showArchived} /> Show archived
     </label>
-    <button class="rounded border border-border-strong px-3 py-1 text-xs uppercase tracking-[0.14em]" type="submit">Apply</button>
+    <AdminButton type="submit">Apply</AdminButton>
   </div>
 </form>
 

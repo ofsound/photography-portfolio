@@ -19,9 +19,18 @@ export const load: LayoutServerLoad = async ({ locals }) => {
       .order('title', { ascending: true })
   ]);
 
+  const pendingQuery =
+    session &&
+    (await locals.supabase
+      .from('photo_images')
+      .select('id', { count: 'exact', head: true })
+      .eq('is_active', true)
+      .is('delivery_storage_path', null));
+
   return {
     session,
     siteSettings: settingsResult.data ?? null,
-    navPages: navPagesResult.data ?? []
+    navPages: navPagesResult.data ?? [],
+    pendingConversionCount: pendingQuery?.count ?? 0
   };
 };

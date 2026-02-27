@@ -1,4 +1,5 @@
 <script lang="ts">
+  import AdminButton from '$lib/components/admin/AdminButton.svelte';
   import type { AdminCategory, AdminTag } from '$lib/types/content';
 
   let {
@@ -39,16 +40,16 @@
     <p class="text-xs uppercase tracking-[0.12em]">Drag Category Chips</p>
     <div class="flex flex-wrap gap-2">
       {#each categories as category (category.id)}
-        <button
+        <AdminButton
+          size="chip"
           type="button"
           draggable="true"
-          ondragstart={(event) => onTaxChipDragStart('category', category.id, event)}
+          ondragstart={(event: DragEvent) => onTaxChipDragStart('category', category.id, event)}
           ondragend={onTaxDragEnd}
           onclick={() => addTaxonomyDraft('category', category.id)}
-          class="rounded border border-border-strong px-2 py-1 text-xs"
         >
           {category.name}
-        </button>
+        </AdminButton>
       {/each}
     </div>
   </div>
@@ -57,16 +58,16 @@
     <p class="text-xs uppercase tracking-[0.12em]">Drag Tag Chips</p>
     <div class="flex flex-wrap gap-2">
       {#each tags as tag (tag.id)}
-        <button
+        <AdminButton
+          size="chip"
           type="button"
           draggable="true"
-          ondragstart={(event) => onTaxChipDragStart('tag', tag.id, event)}
+          ondragstart={(event: DragEvent) => onTaxChipDragStart('tag', tag.id, event)}
           ondragend={onTaxDragEnd}
           onclick={() => addTaxonomyDraft('tag', tag.id)}
-          class="rounded border border-border-strong px-2 py-1 text-xs"
         >
           {tag.name}
-        </button>
+        </AdminButton>
       {/each}
     </div>
   </div>
@@ -85,29 +86,28 @@
     <div class="flex flex-wrap gap-2">
       {#each taxonomyDraftCategories as categoryId (categoryId)}
         {#if categoryById(categoryId)}
-          <button type="button" class="rounded border border-info/40 bg-info-soft px-2 py-1 text-xs" onclick={() => removeTaxonomyDraft('category', categoryId)}>
+          <AdminButton variant="info" size="chip" type="button" onclick={() => removeTaxonomyDraft('category', categoryId)}>
             {categoryById(categoryId)?.name ?? categoryId} x
-          </button>
+          </AdminButton>
         {/if}
       {/each}
       {#each taxonomyDraftTags as tagId (tagId)}
         {#if tagById(tagId)}
-          <button type="button" class="rounded border border-success/40 bg-success-soft px-2 py-1 text-xs" onclick={() => removeTaxonomyDraft('tag', tagId)}>
+          <AdminButton variant="success-soft" size="chip" type="button" onclick={() => removeTaxonomyDraft('tag', tagId)}>
             {tagById(tagId)?.name ?? tagId} x
-          </button>
+          </AdminButton>
         {/if}
       {/each}
     </div>
 
     <div class="flex flex-wrap items-center gap-2">
-      <button type="button" class="rounded border border-border-strong px-2 py-1 text-xs" onclick={clearTaxonomyDraft}>Clear Draft</button>
-      <button
-        class="rounded border border-border-strong px-3 py-1 text-xs uppercase tracking-[0.14em]"
+      <AdminButton size="chip" type="button" onclick={clearTaxonomyDraft}>Clear Draft</AdminButton>
+      <AdminButton
         type="submit"
         disabled={selectedPhotoIds.length === 0 || (taxonomyDraftCategories.length === 0 && taxonomyDraftTags.length === 0)}
       >
         Apply Draft Taxonomy
-      </button>
+      </AdminButton>
     </div>
   </form>
 </div>

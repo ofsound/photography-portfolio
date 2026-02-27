@@ -1,4 +1,6 @@
 <script lang="ts">
+  import AdminButton from '$lib/components/admin/AdminButton.svelte';
+
   let { data, form } = $props();
 </script>
 
@@ -18,7 +20,7 @@
     <label class="flex items-center gap-2 text-sm">
       <input name="is_active" type="checkbox" checked /> Active
     </label>
-    <button class="w-fit rounded border border-border-strong px-3 py-1 text-xs uppercase tracking-[0.14em]" type="submit">Create</button>
+    <AdminButton wFit type="submit">Create</AdminButton>
   </form>
 
   <div class="grid gap-3">
@@ -35,8 +37,8 @@
           <label class="flex items-center gap-2 text-sm">
             <input name="is_active" type="checkbox" checked={category.is_active} /> Active
           </label>
-          <button class="rounded border border-border-strong px-3 py-1 text-xs uppercase tracking-[0.14em]" type="submit">Save</button>
-          <button class="rounded border border-danger/60 px-3 py-1 text-xs uppercase tracking-[0.14em] text-danger" type="submit" formaction="?/remove" formmethod="POST">Delete</button>
+          <AdminButton type="submit">Save</AdminButton>
+          <AdminButton variant="danger-outline" type="submit" formaction="?/remove" formmethod="POST">Delete</AdminButton>
         </div>
       </form>
     {/each}

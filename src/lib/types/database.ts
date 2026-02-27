@@ -262,10 +262,8 @@ export type Database = {
           delivery_bytes: number | null;
           delivery_mime_type: string | null;
           delivery_storage_path: string | null;
+          dimensions: string | null;
           exif: Json;
-          focal_x: number;
-          focal_y: number;
-          height_px: number | null;
           id: string;
           is_active: boolean;
           kind: Database['public']['Enums']['asset_kind'];
@@ -279,7 +277,6 @@ export type Database = {
           thumb_crop_zoom: number | null;
           updated_at: string;
           updated_by: string | null;
-          width_px: number | null;
         };
         Insert: {
           alt_text?: string | null;
@@ -288,10 +285,8 @@ export type Database = {
           delivery_bytes?: number | null;
           delivery_mime_type?: string | null;
           delivery_storage_path?: string | null;
+          dimensions?: string | null;
           exif?: Json;
-          focal_x?: number;
-          focal_y?: number;
-          height_px?: number | null;
           id?: string;
           is_active?: boolean;
           kind: Database['public']['Enums']['asset_kind'];
@@ -305,7 +300,6 @@ export type Database = {
           thumb_crop_zoom?: number | null;
           updated_at?: string;
           updated_by?: string | null;
-          width_px?: number | null;
         };
         Update: {
           alt_text?: string | null;
@@ -314,10 +308,8 @@ export type Database = {
           delivery_bytes?: number | null;
           delivery_mime_type?: string | null;
           delivery_storage_path?: string | null;
+          dimensions?: string | null;
           exif?: Json;
-          focal_x?: number;
-          focal_y?: number;
-          height_px?: number | null;
           id?: string;
           is_active?: boolean;
           kind?: Database['public']['Enums']['asset_kind'];
@@ -331,7 +323,6 @@ export type Database = {
           thumb_crop_zoom?: number | null;
           updated_at?: string;
           updated_by?: string | null;
-          width_px?: number | null;
         };
         Relationships: [
           {
@@ -381,12 +372,13 @@ export type Database = {
       };
       photos: {
         Row: {
+          admin_sort_order: number | null;
           capture_date: string | null;
           created_at: string;
           created_by: string | null;
           deleted_at: string | null;
           description: string | null;
-          height_px: number | null;
+          dimensions: string | null;
           id: string;
           is_searchable: boolean;
           license_text: string | null;
@@ -400,15 +392,15 @@ export type Database = {
           title: string;
           updated_at: string;
           updated_by: string | null;
-          width_px: number | null;
         };
         Insert: {
+          admin_sort_order?: number | null;
           capture_date?: string | null;
           created_at?: string;
           created_by?: string | null;
           deleted_at?: string | null;
           description?: string | null;
-          height_px?: number | null;
+          dimensions?: string | null;
           id?: string;
           is_searchable?: boolean;
           license_text?: string | null;
@@ -422,15 +414,15 @@ export type Database = {
           title: string;
           updated_at?: string;
           updated_by?: string | null;
-          width_px?: number | null;
         };
         Update: {
+          admin_sort_order?: number | null;
           capture_date?: string | null;
           created_at?: string;
           created_by?: string | null;
           deleted_at?: string | null;
           description?: string | null;
-          height_px?: number | null;
+          dimensions?: string | null;
           id?: string;
           is_searchable?: boolean;
           license_text?: string | null;
@@ -444,7 +436,6 @@ export type Database = {
           title?: string;
           updated_at?: string;
           updated_by?: string | null;
-          width_px?: number | null;
         };
         Relationships: [];
       };
@@ -584,8 +575,6 @@ export type Database = {
           p_kind: Database['public']['Enums']['asset_kind'];
           p_position: number;
           p_alt_text?: string | null;
-          p_focal_x?: number;
-          p_focal_y?: number;
         };
         Returns: string;
       };

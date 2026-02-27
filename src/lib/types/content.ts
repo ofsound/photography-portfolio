@@ -2,10 +2,7 @@ export type PhotoImage = {
   id: string;
   kind: 'lead' | 'additional';
   delivery_storage_path: string;
-  width_px: number | null;
-  height_px: number | null;
-  focal_x: number;
-  focal_y: number;
+  dimensions: string | null;
   position: number;
   alt_text: string | null;
 };
@@ -16,8 +13,7 @@ export type PhotoWithImages = {
   title: string;
   description: string | null;
   capture_date: string | null;
-  width_px: number | null;
-  height_px: number | null;
+  dimensions: string | null;
   photo_images: PhotoImage[];
 };
 
@@ -32,10 +28,7 @@ export type AdminPhotoImage = {
   source_mime_type: string;
   source_bytes: number;
   alt_text: string | null;
-  focal_x: number;
-  focal_y: number;
-  width_px: number | null;
-  height_px: number | null;
+  dimensions: string | null;
   thumb_crop_x: number | null;
   thumb_crop_y: number | null;
   thumb_crop_zoom: number | null;
@@ -62,8 +55,7 @@ export type AdminPhoto = {
   title: string;
   capture_date: string | null;
   description: string | null;
-  width_px: number | null;
-  height_px: number | null;
+  dimensions: string | null;
   license_text: string | null;
   og_title: string | null;
   og_description: string | null;
@@ -118,8 +110,7 @@ export type GalleryPhoto = {
     position: number;
     delivery_storage_path: string;
     alt_text: string | null;
-    width_px: number | null;
-    height_px: number | null;
+    dimensions: string | null;
     thumb_crop_x: number | null;
     thumb_crop_y: number | null;
     thumb_crop_zoom: number | null;
@@ -130,8 +121,7 @@ export type GalleryPhoto = {
     position: number;
     delivery_storage_path: string;
     alt_text: string | null;
-    width_px: number | null;
-    height_px: number | null;
+    dimensions: string | null;
     thumb_crop_x: number | null;
     thumb_crop_y: number | null;
     thumb_crop_zoom: number | null;

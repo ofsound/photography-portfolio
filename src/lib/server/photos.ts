@@ -6,16 +6,14 @@ export type LoadedPhoto = {
   title: string;
   description: string | null;
   capture_date: string | null;
-  width_px: number | null;
-  height_px: number | null;
+  dimensions: string | null;
   photo_images: Array<{
     id: string;
     kind: 'lead' | 'additional';
     position: number;
     delivery_storage_path: string;
     alt_text: string | null;
-    width_px: number | null;
-    height_px: number | null;
+    dimensions: string | null;
   }>;
 };
 
@@ -23,7 +21,7 @@ export const loadPhotoBySlug = async (locals: App.Locals, slug: string): Promise
   const { data, error: photoError } = await locals.supabase
     .from('photos')
     .select(
-      'id, slug, title, description, capture_date, width_px, height_px, photo_images(id, kind, position, delivery_storage_path, alt_text, width_px, height_px)'
+      'id, slug, title, description, capture_date, dimensions, photo_images(id, kind, position, delivery_storage_path, alt_text, dimensions)'
     )
     .eq('slug', slug)
     .eq('status', 'published')

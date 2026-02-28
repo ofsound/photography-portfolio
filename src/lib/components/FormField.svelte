@@ -11,7 +11,7 @@
   let { label, id, helper, children }: Props = $props();
 </script>
 
-<div class="grid gap-1">
+<div class="flex flex-col gap-1">
   <label for={id} class="text-sm font-medium text-text">
     {label}
   </label>

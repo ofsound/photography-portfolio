@@ -1,6 +1,33 @@
 import { fail, type Actions } from '@sveltejs/kit';
 import { asOptionalDate, asString, toSlug } from '$lib/server/admin-helpers';
 
+/** Creates a minimal photo row for draft (e.g. on first upload). Returns the new id or throws. */
+export async function createMinimalDraftPhoto(locals: App.Locals): Promise<{ id: string }> {
+  const draftSlug = `new-photo-${Date.now().toString(36)}`;
+  const insertResult = await locals.supabase
+    .from('photos')
+    .insert({
+      title: 'New Photo',
+      slug: draftSlug,
+      capture_date: null,
+      description: null,
+      dimensions: null,
+      license_text: null,
+      og_title: null,
+      og_description: null,
+      og_image_path: null,
+      status: 'published',
+      deleted_at: null
+    })
+    .select('id')
+    .single();
+
+  if (insertResult.error || !insertResult.data) {
+    throw new Error(insertResult.error?.message ?? 'Failed to create draft photo.');
+  }
+  return { id: insertResult.data.id };
+}
+
 export type PhotoPayload = {
   title: string;
   slug: string;
@@ -62,7 +89,10 @@ export const photoCoreActions: Actions = {
     const result = upsertPhotoPayload(form);
     if (!result.ok) return fail(400, { message: result.message });
 
-    const { error } = await locals.supabase.from('photos').update(result.payload).eq('id', id);
+    const { error } = await locals.supabase
+      .from('photos')
+      .update({ ...result.payload, updated_at: new Date().toISOString() })
+      .eq('id', id);
 
     if (error) return fail(400, { message: error.message });
     return { success: true, message: 'Photo updated.' };

@@ -29,7 +29,7 @@
 
   let { data, form } = $props();
 
-  const photo = $derived(data.photo as AdminPhoto);
+  const photo = $derived(data.photo as AdminPhoto | (Omit<AdminPhoto, 'id'> & { id: null }));
   const categories = $derived(data.categories as AdminCategory[]);
   const tags = $derived(data.tags as AdminTag[]);
   const images = $derived(data.images as AdminPhotoImage[]);
@@ -93,7 +93,7 @@
 
     const next = moveItem(orderedAdditional, from, to);
     orderedAdditional = next;
-    persistAdditionalOrder(photo.id, next);
+    if (photo.id) persistAdditionalOrder(photo.id, next);
   };
 
   const onAdditionalDropToEnd = (_photoId: string, event: DragEvent) => {
@@ -107,7 +107,7 @@
     const [item] = next.splice(from, 1);
     next.push(item);
     orderedAdditional = next;
-    persistAdditionalOrder(photo.id, next);
+    if (photo.id) persistAdditionalOrder(photo.id, next);
   };
 
   const onAdditionalDragEnd = () => {
@@ -125,10 +125,10 @@
   <h1 class="text-xl uppercase tracking-[var(--tracking-heading)]">New Photo</h1>
   <AdminButton href="/admin/photos">Back to Photos</AdminButton>
 </div>
-<p class="mt-2 text-sm text-text-muted">This page opens with all photo fields, taxonomy, and upload controls ready to edit.</p>
+<p class="mt-2 text-sm text-text-muted">You can upload images below; the first upload will create the photo. Use Save to set title and metadata. After saving, you can add categories.</p>
 
 {#if form?.message}
-  <p class={`mt-3 rounded border px-3 py-2 text-sm ${form?.success ? 'border-success/40 bg-success-soft text-success' : 'border-danger/40 bg-danger-soft text-danger'}`}>
+  <p class={`mt-3 rounded border px-3 py-2 text-sm ${(form as { success?: boolean })?.success ? 'border-success/40 bg-success-soft text-success' : 'border-danger/40 bg-danger-soft text-danger'}`}>
     {form.message}
   </p>
 {/if}

@@ -4,7 +4,7 @@
   import FormInput from '$lib/components/FormInput.svelte';
   import type { AdminCategory, AdminTag } from '$lib/types/content';
 
-  const selectClass = 'w-full rounded border border-border-strong bg-surface px-3 py-2 text-sm';
+  const selectClass = 'w-full max-w-[180px] rounded border border-border-strong bg-surface px-3 py-2 text-sm';
 
   let {
     q,
@@ -12,24 +12,47 @@
     tags,
     filterCategoryId,
     filterTagId,
-    filterConversion,
-    showArchived
+    showArchived,
+    densityVisible = false,
+    densityColCount = 6,
+    densityMax = 20,
+    onDensityChange
   } = $props<{
     q: string;
     categories: AdminCategory[];
     tags: AdminTag[];
     filterCategoryId: string;
     filterTagId: string;
-    filterConversion: 'all' | 'pending' | 'ready' | 'mixed' | 'no-images';
     showArchived: boolean;
+    densityVisible?: boolean;
+    densityColCount?: number;
+    densityMax?: number;
+    onDensityChange?: (value: number) => void;
   }>();
 </script>
 
-<form method="GET" class="mt-4 grid gap-3 rounded border border-border p-3 lg:grid-cols-6 lg:items-end">
-  <div class="lg:col-span-2">
-    <FormField label="Search" id="filter-q">
-      <FormInput id="filter-q" name="q" value={q} placeholder="Search photos" />
-    </FormField>
+<form method="GET" class="mt-4 flex flex-wrap items-end gap-3 rounded border border-border p-3">
+  <div class="flex flex-wrap items-end gap-3">
+    {#if densityVisible && onDensityChange}
+      <FormField label="Density" id="filter-density">
+        <div class="flex items-center gap-2">
+          <input
+            id="filter-density"
+            type="range"
+            min="1"
+            max={String(densityMax)}
+            value={densityColCount}
+            oninput={(e) => onDensityChange(Number((e.currentTarget as HTMLInputElement).value))}
+          />
+          <span class="tabular-nums">{densityColCount}</span>
+        </div>
+      </FormField>
+    {/if}
+    <div class="min-w-0 max-w-[230px] flex-1">
+      <FormField label="Search" id="filter-q">
+        <FormInput id="filter-q" name="q" value={q} placeholder="Search photos" />
+      </FormField>
+    </div>
   </div>
   <FormField label="Category" id="filter-category">
     <select id="filter-category" name="category" class={selectClass}>
@@ -47,20 +70,8 @@
       {/each}
     </select>
   </FormField>
-  <FormField label="Conversion" id="filter-conversion">
-    <select id="filter-conversion" name="conversion" class={selectClass}>
-      <option value="all" selected={filterConversion === 'all'}>all</option>
-      <option value="pending" selected={filterConversion === 'pending'}>pending</option>
-      <option value="ready" selected={filterConversion === 'ready'}>ready</option>
-      <option value="mixed" selected={filterConversion === 'mixed'}>mixed</option>
-      <option value="no-images" selected={filterConversion === 'no-images'}>no images</option>
-    </select>
-  </FormField>
 
   <div class="flex flex-wrap items-center gap-2">
-    <label class="flex items-center gap-2 text-sm">
-      <input type="checkbox" name="showArchived" value="1" checked={showArchived} /> Archived only
-    </label>
     <AdminButton type="submit">Apply</AdminButton>
   </div>
 </form>

@@ -37,45 +37,12 @@
     selectedIds = [...next];
   };
 
-  const isTypingTarget = (target: EventTarget | null) => {
-    if (!(target instanceof HTMLElement)) return false;
-    if (target.isContentEditable) return true;
-    const tag = target.tagName.toLowerCase();
-    return tag === 'input' || tag === 'textarea' || tag === 'select';
-  };
-
-  const onHistoryKeydown = (event: KeyboardEvent) => {
-    if (isTypingTarget(event.target)) return;
-    if (!event.metaKey && !event.ctrlKey) return;
-
-    const key = event.key.toLowerCase();
-    const redoCombo = (key === 'z' && event.shiftKey) || (key === 'y' && event.ctrlKey && !event.metaKey);
-    if (redoCombo) {
-      event.preventDefault();
-      redoSelectionChange();
-      return;
-    }
-
-    if (key === 'z' && !event.shiftKey) {
-      event.preventDefault();
-      undoSelectionChange();
-    }
-  };
-
   $effect(() => {
     selectedIds = slides.map((slide) => slide.photo_image_id);
     slideDurationMs = data.slideDurationMs;
     transitionDurationMs = data.transitionDurationMs;
     undoStack = [];
     redoStack = [];
-  });
-
-  $effect(() => {
-    if (typeof window === 'undefined') return;
-    window.addEventListener('keydown', onHistoryKeydown);
-    return () => {
-      window.removeEventListener('keydown', onHistoryKeydown);
-    };
   });
 
   const imageForId = (id: string) => {
@@ -217,7 +184,6 @@
       >
         Redo
       </AdminButton>
-      <span class="text-xs text-text-subtle">Cmd/Ctrl+Z | Cmd/Ctrl+Shift+Z | Ctrl+Y</span>
     </div>
 
     {#if selectedSlides.length === 0}

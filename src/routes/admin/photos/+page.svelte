@@ -68,7 +68,6 @@
   let dragging = $state<{ photoId: string; imageId: string } | null>(null);
   let draggingTaxonomy = $state<{ type: 'category' | 'tag'; id: string } | null>(null);
   let orderedPhotoIds = $state<string[]>([]);
-  let showSearch = $state(false);
   let showMeta = $state(false);
 
   const maxDensity = $derived((data as { maxDensity?: number }).maxDensity ?? 20);
@@ -351,7 +350,11 @@
 <div class="flex items-baseline justify-between gap-4">
   <div class="flex items-baseline gap-3">
     <h1 class="text-xl uppercase tracking-[var(--tracking-heading)]">Photos</h1>
-    <AdminButton size="sm" type="button" onclick={() => (showSearch = !showSearch)}>Toggle Search</AdminButton>
+    {#if data.showArchived}
+      <AdminButton size="sm" href="/admin/photos">Published only</AdminButton>
+    {:else}
+      <AdminButton size="sm" href="/admin/photos?showArchived=1">Archived only</AdminButton>
+    {/if}
     <AdminButton size="sm" type="button" onclick={() => (showMeta = !showMeta)}>Toggle Meta</AdminButton>
   </div>
   <AdminButton href="/admin/photos/create" variant="success">Add New Photo</AdminButton>
@@ -361,17 +364,18 @@
   <p class="mt-3 rounded border border-border px-3 py-2 text-sm">{form.message}</p>
 {/if}
 
-{#if showSearch}
-  <AdminPhotosFilterForm
-    q={data.q}
-    {categories}
-    {tags}
-    filterCategoryId={data.filterCategoryId}
-    filterTagId={data.filterTagId}
-    filterConversion={data.filterConversion as 'all' | 'pending' | 'ready' | 'mixed' | 'no-images'}
-    showArchived={data.showArchived}
-  />
-{/if}
+<AdminPhotosFilterForm
+  q={data.q}
+  {categories}
+  {tags}
+  filterCategoryId={data.filterCategoryId}
+  filterTagId={data.filterTagId}
+  showArchived={data.showArchived}
+  densityVisible={mounted}
+  densityColCount={colCount}
+  densityMax={maxDensity}
+  onDensityChange={updateDensity}
+/>
 
 {#if showMeta}
   <AdminPhotosBulkPanel
@@ -400,27 +404,6 @@
 {/if}
 
 <section class="mt-6">
-  <h2 class="text-sm uppercase tracking-[var(--tracking-label)]">Existing Photos</h2>
-  <p class="mt-1 text-xs uppercase tracking-[var(--tracking-tight)] text-text-subtle">Click a photo to open it for editing. Drag to reorder.</p>
-
-  {#if mounted}
-    <div
-      class="sticky top-[var(--sticky-offset)] z-20 mb-4 mt-3 ml-auto w-fit flex items-center rounded border border-border bg-surface px-3 py-2 text-xs uppercase tracking-[var(--tracking-heading)]"
-    >
-      <label class="flex items-center gap-2">
-        Density
-        <input
-          type="range"
-          min="1"
-          max={String(maxDensity)}
-          value={colCount}
-          oninput={(e) => updateDensity(Number((e.currentTarget as HTMLInputElement).value))}
-        />
-        <span class="tabular-nums">{colCount}</span>
-      </label>
-    </div>
-  {/if}
-
   <div class="mx-auto w-full" style={sectionMaxWidthStyle}>
     <DragDropProvider onDragEnd={onPhotoDragEnd}>
       <ul class="grid" style="grid-template-columns: repeat({colCount}, minmax(0, 1fr)); gap: {gap}px;">

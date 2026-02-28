@@ -38,8 +38,8 @@
       variant === 'toggle' && selected ? 'bg-border' : '',
       variant === 'toggle' && !selected ? 'opacity-40' : '',
       baseClasses,
+      'cursor-pointer',
       wFit || isLink ? 'w-fit' : '',
-      isLabel ? 'cursor-pointer' : '',
       className
     ]
       .filter(Boolean)

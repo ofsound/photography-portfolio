@@ -7,10 +7,6 @@ export const loadAdminPhotosPage = async ({ locals, url }: { locals: App.Locals;
   const q = asString(url.searchParams.get('q')).trim();
   const filterCategoryId = isUuid(asString(url.searchParams.get('category'))) ? asString(url.searchParams.get('category')) : '';
   const filterTagId = isUuid(asString(url.searchParams.get('tag'))) ? asString(url.searchParams.get('tag')) : '';
-  const requestedConversion = asString(url.searchParams.get('conversion'), 'all');
-  const filterConversion = ['all', 'pending', 'ready', 'mixed', 'no-images'].includes(requestedConversion)
-    ? requestedConversion
-    : 'all';
 
   let photoQuery = locals.supabase
     .from('photos')
@@ -118,10 +114,6 @@ export const loadAdminPhotosPage = async ({ locals, url }: { locals: App.Locals;
       if (!tagIds.includes(filterTagId)) return false;
     }
 
-    if (filterConversion !== 'all') {
-      if (photoConversionStateMap[photo.id] !== filterConversion) return false;
-    }
-
     return true;
   });
 
@@ -137,7 +129,6 @@ export const loadAdminPhotosPage = async ({ locals, url }: { locals: App.Locals;
     q,
     filterCategoryId,
     filterTagId,
-    filterConversion,
     pendingConversionCount: pendingQuery.count ?? 0,
     maxDensity: settings?.grid_desktop_max ?? 20,
     maxContentWidthPx: settings?.max_content_width_px ?? null

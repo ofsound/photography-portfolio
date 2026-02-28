@@ -9,6 +9,66 @@ import {
 } from '$lib/server/admin-helpers';
 import { normalizePhotoImagePositions } from '$lib/server/admin/photos/shared';
 
+export async function uploadImageWithForm(
+  locals: App.Locals,
+  form: FormData
+): Promise<{ success: true; message: string } | ReturnType<typeof fail>> {
+  const photoId = asString(form.get('photo_id'));
+  const kind = asString(form.get('kind'), 'additional') as 'lead' | 'additional';
+  const altText = asString(form.get('alt_text')).trim() || null;
+  const imageFile = form.get('image_file');
+
+  if (!photoId) return fail(400, { message: 'Missing photo id.' });
+  if (!(imageFile instanceof File) || !imageFile.size) {
+    return fail(400, { message: 'Select an image file.' });
+  }
+
+  const mimeType = imageFile.type || 'image/jpeg';
+  if (!allowedUploadMimes.has(mimeType)) {
+    return fail(400, { message: `Unsupported image type: ${mimeType}` });
+  }
+
+  const ext = mimeToExtension(mimeType);
+  const filename = imageFile.name?.includes('.') ? imageFile.name : `upload.${ext}`;
+  const sourcePath = storageSourcePath(photoId, filename);
+
+  const { data: lastImage } = await locals.supabase
+    .from('photo_images')
+    .select('position')
+    .eq('photo_id', photoId)
+    .order('position', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  const nextPosition = (lastImage?.position ?? -1) + 1;
+
+  const { error: uploadError } = await locals.supabase.storage.from('photos').upload(sourcePath, imageFile, {
+    contentType: mimeType,
+    upsert: false
+  });
+
+  if (uploadError) {
+    return fail(400, { message: uploadError.message });
+  }
+
+  const { error: rowError } = await locals.supabase.rpc('insert_photo_image', {
+    p_photo_id: photoId,
+    p_source_path: sourcePath,
+    p_source_mime: mimeType,
+    p_source_bytes: imageFile.size,
+    p_kind: kind,
+    p_position: nextPosition,
+    p_alt_text: altText
+  });
+
+  if (rowError) {
+    await locals.supabase.storage.from('photos').remove([sourcePath]);
+    return fail(400, { message: rowError.message });
+  }
+
+  return { success: true, message: 'Image uploaded. Conversion runs asynchronously.' };
+}
+
 export const photoImageActions: Actions = {
   reorderAdditionalImages: async ({ locals, request }) => {
     const form = await request.formData();
@@ -61,60 +121,7 @@ export const photoImageActions: Actions = {
 
   uploadImage: async ({ locals, request }) => {
     const form = await request.formData();
-    const photoId = asString(form.get('photo_id'));
-    const kind = asString(form.get('kind'), 'additional') as 'lead' | 'additional';
-    const altText = asString(form.get('alt_text')).trim() || null;
-    const imageFile = form.get('image_file');
-
-    if (!photoId) return fail(400, { message: 'Missing photo id.' });
-    if (!(imageFile instanceof File) || !imageFile.size) {
-      return fail(400, { message: 'Select an image file.' });
-    }
-
-    const mimeType = imageFile.type || 'image/jpeg';
-    if (!allowedUploadMimes.has(mimeType)) {
-      return fail(400, { message: `Unsupported image type: ${mimeType}` });
-    }
-
-    const ext = mimeToExtension(mimeType);
-    const filename = imageFile.name?.includes('.') ? imageFile.name : `upload.${ext}`;
-    const sourcePath = storageSourcePath(photoId, filename);
-
-    const { data: lastImage } = await locals.supabase
-      .from('photo_images')
-      .select('position')
-      .eq('photo_id', photoId)
-      .order('position', { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    const nextPosition = (lastImage?.position ?? -1) + 1;
-
-    const { error: uploadError } = await locals.supabase.storage.from('photos').upload(sourcePath, imageFile, {
-      contentType: mimeType,
-      upsert: false
-    });
-
-    if (uploadError) {
-      return fail(400, { message: uploadError.message });
-    }
-
-    const { error: rowError } = await locals.supabase.rpc('insert_photo_image', {
-      p_photo_id: photoId,
-      p_source_path: sourcePath,
-      p_source_mime: mimeType,
-      p_source_bytes: imageFile.size,
-      p_kind: kind,
-      p_position: nextPosition,
-      p_alt_text: altText
-    });
-
-    if (rowError) {
-      await locals.supabase.storage.from('photos').remove([sourcePath]);
-      return fail(400, { message: rowError.message });
-    }
-
-    return { success: true, message: 'Image uploaded. Conversion runs asynchronously.' };
+    return uploadImageWithForm(locals, form);
   },
 
   setLead: async ({ locals, request }) => {

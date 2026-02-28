@@ -76,6 +76,7 @@
   let mounted = $state(false);
   let hasHydratedRoute = false;
   let skipNextRouteAnimation = false;
+  let expectedRouteKeyFromGoto: string | null = null;
 
   let hideTimer: ReturnType<typeof setTimeout> | undefined;
   let touchStartX = $state(0);
@@ -126,6 +127,7 @@
     if (pendingDirectionQueue.length === 0) {
       directionDrainScheduled = false;
       skipNextRouteAnimation = true;
+      expectedRouteKeyFromGoto = `${activeSlug}:`;
       void goto(withCurrentSearch(`/photo/${activeSlug}`), {noScroll: true, keepFocus: true});
       return;
     }
@@ -528,6 +530,7 @@
       });
 
       skipNextRouteAnimation = true;
+      expectedRouteKeyFromGoto = `${slug}:`;
       await goto(withCurrentSearch(`/photo/${slug}`), {noScroll: true, keepFocus: true});
     })();
   };
@@ -541,6 +544,7 @@
       });
 
       skipNextRouteAnimation = true;
+      expectedRouteKeyFromGoto = "";
       await goto(withCurrentSearch("/gallery", true), {noScroll: true, keepFocus: true});
     })();
   };
@@ -621,6 +625,7 @@
       });
 
       skipNextRouteAnimation = true;
+      expectedRouteKeyFromGoto = `${activeSlug}:${imageId}`;
       await goto(withCurrentSearch(`/photo/${activeSlug}/${imageId}`), {noScroll: true, keepFocus: true});
     })();
   };
@@ -889,6 +894,16 @@
 
     const nextRouteKey = data.active ? `${data.active.photoSlug}:${data.active.imageId ?? ""}` : "";
     if (nextRouteKey === routeKey) return;
+
+    if (expectedRouteKeyFromGoto !== null) {
+      const match = nextRouteKey === expectedRouteKeyFromGoto || (expectedRouteKeyFromGoto.endsWith(":") && nextRouteKey.startsWith(expectedRouteKeyFromGoto));
+      if (match) {
+        expectedRouteKeyFromGoto = null;
+        routeKey = nextRouteKey;
+        hasHydratedRoute = true;
+        return;
+      }
+    }
 
     const animate = hasHydratedRoute && !skipNextRouteAnimation;
     skipNextRouteAnimation = false;

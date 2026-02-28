@@ -1,31 +1,30 @@
 <script lang="ts">
-  import '../app.css';
-  import { invalidateAll, onNavigate } from '$app/navigation';
-  import { page } from '$app/state';
-  import { setGalleryTransitionContext } from '$lib/context/gallery-transition';
-  import type { LayoutData } from './$types';
+  import "../app.css";
+  import {invalidateAll, onNavigate} from "$app/navigation";
+  import {page} from "$app/state";
+  import {setGalleryTransitionContext} from "$lib/context/gallery-transition";
+  import type {LayoutData} from "./$types";
 
-  let { data, children } = $props<{ data: LayoutData | null; children: import('svelte').Snippet }>();
+  let {data, children} = $props<{data: LayoutData | null; children: import("svelte").Snippet}>();
 
-  let phase = $state<import('$lib/context/gallery-transition').GalleryTransitionPhase>('idle');
-  setGalleryTransitionContext(phase, (p) => { phase = p; });
-  const chromeHidden = $derived(
-    phase === 'fade-out-chrome' ||
-      phase === 'scale-and-mask' ||
-      phase === 'open' ||
-      phase === 'closing-chrome' ||
-      phase === 'closing-scale'
+  let phase = $state<import("$lib/context/gallery-transition").GalleryTransitionPhase>("idle");
+  setGalleryTransitionContext(
+    () => phase,
+    (p) => {
+      phase = p;
+    },
   );
-  const navPages = $derived((data?.navPages ?? []) as Array<{ id: string; slug: string; title: string; nav_order: number }>);
+  const chromeHidden = $derived(phase === "fade-out-chrome" || phase === "scale-and-mask" || phase === "open" || phase === "closing-chrome" || phase === "closing-scale");
+  const navPages = $derived((data?.navPages ?? []) as Array<{id: string; slug: string; title: string; nav_order: number}>);
   const siteSettings = $derived(data?.siteSettings ?? null);
   const hasSession = $derived(Boolean(data?.session));
   const pendingConversionCount = $derived((data?.pendingConversionCount as number) ?? 0);
-  let themeMode = $state<'light' | 'dark' | 'system'>('system');
-  let transitionPreset = $state<'cinematic' | 'snappy' | 'experimental'>('cinematic');
+  let themeMode = $state<"light" | "dark" | "system">("system");
+  let transitionPreset = $state<"cinematic" | "snappy" | "experimental">("cinematic");
   let hasHydratedClientPrefs = $state(false);
   let siteHeaderEl: HTMLElement | null = null;
 
-  const isGalleryRoute = (pathname: string) => pathname === '/gallery' || pathname.startsWith('/gallery/');
+  const isGalleryRoute = (pathname: string) => pathname === "/gallery" || pathname.startsWith("/gallery/");
   const isDetailRoute = (pathname: string) => /^\/photo\/[^/]+(?:\/[^/]+)?$/.test(pathname);
   const isViewerRoute = (pathname: string) => isGalleryRoute(pathname) || isDetailRoute(pathname);
 
@@ -39,49 +38,49 @@
     delete document.documentElement.dataset.vtReduced;
   };
 
-  const applyTheme = (mode: 'light' | 'dark' | 'system') => {
-    const isDarkSystem = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    const active = mode === 'system' ? (isDarkSystem ? 'dark' : 'light') : mode;
+  const applyTheme = (mode: "light" | "dark" | "system") => {
+    const isDarkSystem = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    const active = mode === "system" ? (isDarkSystem ? "dark" : "light") : mode;
     document.documentElement.dataset.theme = active;
   };
 
-  const updateTheme = (mode: 'light' | 'dark' | 'system') => {
+  const updateTheme = (mode: "light" | "dark" | "system") => {
     themeMode = mode;
-    localStorage.setItem('theme-mode', mode);
+    localStorage.setItem("theme-mode", mode);
     applyTheme(mode);
   };
 
-  const updateTransitionPreset = (preset: 'cinematic' | 'snappy' | 'experimental') => {
+  const updateTransitionPreset = (preset: "cinematic" | "snappy" | "experimental") => {
     transitionPreset = preset;
     if (siteSettings?.allow_transition_toggle) {
-      localStorage.setItem('transition-preset', preset);
+      localStorage.setItem("transition-preset", preset);
     }
     applyTransitionPreset();
   };
 
   const syncSiteHeaderHeight = () => {
-    if (typeof document === 'undefined' || !siteHeaderEl) return;
-    document.documentElement.style.setProperty('--site-header-height', `${siteHeaderEl.getBoundingClientRect().height}px`);
+    if (typeof document === "undefined" || !siteHeaderEl) return;
+    document.documentElement.style.setProperty("--site-header-height", `${siteHeaderEl.getBoundingClientRect().height}px`);
   };
 
   $effect(() => {
-    if (typeof window === 'undefined' || hasHydratedClientPrefs) return;
+    if (typeof window === "undefined" || hasHydratedClientPrefs) return;
 
-    themeMode = siteSettings?.theme_default ?? 'system';
-    transitionPreset = siteSettings?.transition_preset ?? 'cinematic';
+    themeMode = siteSettings?.theme_default ?? "system";
+    transitionPreset = siteSettings?.transition_preset ?? "cinematic";
 
-    const storedTheme = localStorage.getItem('theme-mode');
-    if (storedTheme === 'light' || storedTheme === 'dark' || storedTheme === 'system') {
+    const storedTheme = localStorage.getItem("theme-mode");
+    if (storedTheme === "light" || storedTheme === "dark" || storedTheme === "system") {
       themeMode = storedTheme;
     }
 
     if (siteSettings?.allow_transition_toggle) {
-      const storedPreset = localStorage.getItem('transition-preset');
-      if (storedPreset === 'cinematic' || storedPreset === 'snappy' || storedPreset === 'experimental') {
+      const storedPreset = localStorage.getItem("transition-preset");
+      if (storedPreset === "cinematic" || storedPreset === "snappy" || storedPreset === "experimental") {
         transitionPreset = storedPreset;
       }
     } else {
-      localStorage.removeItem('transition-preset');
+      localStorage.removeItem("transition-preset");
     }
 
     applyTransitionPreset();
@@ -90,7 +89,7 @@
   });
 
   $effect(() => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === "undefined") return;
     if (!hasSession || pendingConversionCount <= 0) return;
 
     const timer = setInterval(() => {
@@ -101,20 +100,20 @@
   });
 
   $effect(() => {
-    if (typeof window === 'undefined') return;
-    const media = window.matchMedia('(prefers-color-scheme: dark)');
+    if (typeof window === "undefined") return;
+    const media = window.matchMedia("(prefers-color-scheme: dark)");
     const listener = () => {
-      if (themeMode === 'system') {
-        applyTheme('system');
+      if (themeMode === "system") {
+        applyTheme("system");
       }
     };
 
-    media.addEventListener('change', listener);
-    return () => media.removeEventListener('change', listener);
+    media.addEventListener("change", listener);
+    return () => media.removeEventListener("change", listener);
   });
 
   $effect(() => {
-    if (typeof document === 'undefined') return;
+    if (typeof document === "undefined") return;
     if (!siteSettings?.allow_transition_toggle) {
       transitionPreset = siteSettings?.transition_preset ?? transitionPreset;
     }
@@ -122,14 +121,14 @@
   });
 
   $effect(() => {
-    if (typeof window === 'undefined' || !siteHeaderEl) return;
+    if (typeof window === "undefined" || !siteHeaderEl) return;
     syncSiteHeaderHeight();
     const observer = new ResizeObserver(syncSiteHeaderHeight);
     observer.observe(siteHeaderEl);
-    window.addEventListener('resize', syncSiteHeaderHeight);
+    window.addEventListener("resize", syncSiteHeaderHeight);
     return () => {
       observer.disconnect();
-      window.removeEventListener('resize', syncSiteHeaderHeight);
+      window.removeEventListener("resize", syncSiteHeaderHeight);
     };
   });
 
@@ -146,12 +145,12 @@
       return;
     }
 
-    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-    document.documentElement.dataset.vt = 'default';
+    document.documentElement.dataset.vt = "default";
     delete document.documentElement.dataset.vtDirection;
     if (reducedMotion) {
-      document.documentElement.dataset.vtReduced = '1';
+      document.documentElement.dataset.vtReduced = "1";
     } else {
       delete document.documentElement.dataset.vtReduced;
     }
@@ -170,34 +169,23 @@
 </script>
 
 <div class="min-h-screen bg-bg text-text">
-  <header
-    bind:this={siteHeaderEl}
-    class="chrome-panel sticky top-0 z-40 border-b border-border px-4 py-3 transition-opacity duration-[var(--duration-chrome)] ease-out"
-    class:opacity-0={chromeHidden}
-  >
+  <header bind:this={siteHeaderEl} class="chrome-panel sticky top-0 z-40 border-b border-border px-4 py-3 transition-opacity duration-[var(--duration-chrome)] ease-out" class:opacity-0={chromeHidden}>
     <div class="mx-auto flex w-full max-w-[var(--max-width-site)] items-center justify-between gap-3">
       <nav class="flex items-center gap-4 text-sm tracking-[var(--tracking-nav)] uppercase">
-        <a href="/" class:underline={page.url.pathname === '/'}>Home</a>
-        <a href="/gallery" class:underline={page.url.pathname.startsWith('/gallery')}>Gallery</a>
+        <a href="/" class:underline={page.url.pathname === "/"}>Home</a>
+        <a href="/gallery" class:underline={page.url.pathname.startsWith("/gallery")}>Gallery</a>
         {#each navPages as navPage (navPage.id)}
           <a href={`/${navPage.slug}`} class:underline={page.url.pathname === `/${navPage.slug}`}>{navPage.title}</a>
         {/each}
         {#if hasSession}
-          <a href="/admin/photos" class:underline={page.url.pathname.startsWith('/admin')}>Admin</a>
-          <span class="rounded border border-border px-2 py-1 text-xs uppercase tracking-[var(--tracking-tight)]"
-            >PENDING CONVERSIONS: {pendingConversionCount}</span
-          >
+          <a href="/admin/photos" class:underline={page.url.pathname.startsWith("/admin")}>Admin</a>
+          <span class="rounded border border-border px-2 py-1 text-xs uppercase tracking-[var(--tracking-tight)]">PENDING CONVERSIONS: {pendingConversionCount}</span>
         {/if}
       </nav>
 
       <div class="flex items-center gap-2">
         <label for="theme" class="text-xs uppercase tracking-[var(--tracking-tight)]">Theme</label>
-        <select
-          id="theme"
-          class="rounded border border-border-strong bg-transparent px-2 py-1 text-xs"
-          bind:value={themeMode}
-          onchange={(event) => updateTheme((event.currentTarget as HTMLSelectElement).value as typeof themeMode)}
-        >
+        <select id="theme" class="rounded border border-border-strong bg-transparent px-2 py-1 text-xs" bind:value={themeMode} onchange={(event) => updateTheme((event.currentTarget as HTMLSelectElement).value as typeof themeMode)}>
           <option value="light">Light</option>
           <option value="dark">Dark</option>
           <option value="system">System</option>
@@ -205,13 +193,7 @@
 
         {#if siteSettings?.allow_transition_toggle}
           <label for="transition" class="ml-2 text-xs uppercase tracking-[var(--tracking-tight)]">Motion</label>
-          <select
-            id="transition"
-            class="rounded border border-border-strong bg-transparent px-2 py-1 text-xs"
-            bind:value={transitionPreset}
-            onchange={(event) =>
-              updateTransitionPreset((event.currentTarget as HTMLSelectElement).value as typeof transitionPreset)}
-          >
+          <select id="transition" class="rounded border border-border-strong bg-transparent px-2 py-1 text-xs" bind:value={transitionPreset} onchange={(event) => updateTransitionPreset((event.currentTarget as HTMLSelectElement).value as typeof transitionPreset)}>
             <option value="cinematic">Cinematic</option>
             <option value="snappy">Snappy</option>
             <option value="experimental">Experimental</option>
@@ -235,22 +217,22 @@
     --vt-ease: cubic-bezier(0.22, 1, 0.36, 1);
   }
 
-  :global(html[data-vt-preset='cinematic']) {
+  :global(html[data-vt-preset="cinematic"]) {
     --vt-duration: 560ms;
     --vt-ease: cubic-bezier(0.16, 1, 0.3, 1);
   }
 
-  :global(html[data-vt-preset='snappy']) {
+  :global(html[data-vt-preset="snappy"]) {
     --vt-duration: 240ms;
     --vt-ease: cubic-bezier(0.32, 0.72, 0, 1);
   }
 
-  :global(html[data-vt-preset='experimental']) {
+  :global(html[data-vt-preset="experimental"]) {
     --vt-duration: 720ms;
     --vt-ease: cubic-bezier(0.22, 1, 0.36, 1);
   }
 
-  :global(html[data-vt-reduced='1']) {
+  :global(html[data-vt-reduced="1"]) {
     --vt-duration: 140ms;
     --vt-ease: linear;
   }
@@ -287,11 +269,11 @@
     animation-name: vt-fade-in;
   }
 
-  :global(html[data-vt-reduced='1']::view-transition-old(page-main)) {
+  :global(html[data-vt-reduced="1"]::view-transition-old(page-main)) {
     animation-name: vt-fade-out;
   }
 
-  :global(html[data-vt-reduced='1']::view-transition-new(page-main)) {
+  :global(html[data-vt-reduced="1"]::view-transition-new(page-main)) {
     animation-name: vt-fade-in;
   }
 
@@ -312,5 +294,4 @@
       opacity: 0;
     }
   }
-
 </style>

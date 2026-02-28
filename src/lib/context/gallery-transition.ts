@@ -11,13 +11,16 @@ export type GalleryTransitionPhase =
 const GALLERY_TRANSITION_KEY = Symbol('gallery-transition');
 
 export type GalleryTransitionContext = {
-  phase: GalleryTransitionPhase;
+  get phase(): GalleryTransitionPhase;
   setPhase: (phase: GalleryTransitionPhase) => void;
 };
 
 /** Call from a Svelte component that has created phase with $state. Provides the context to descendants. */
-export function setGalleryTransitionContext(phase: GalleryTransitionPhase, setPhase: (p: GalleryTransitionPhase) => void): GalleryTransitionContext {
-  const context: GalleryTransitionContext = { phase, setPhase };
+export function setGalleryTransitionContext(getPhase: () => GalleryTransitionPhase, setPhase: (p: GalleryTransitionPhase) => void): GalleryTransitionContext {
+  const context: GalleryTransitionContext = {
+    get phase() { return getPhase(); },
+    setPhase
+  };
   setContext(GALLERY_TRANSITION_KEY, context);
   return context;
 }

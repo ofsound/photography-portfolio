@@ -90,30 +90,17 @@ const applyRectToWrapper = (wrapper: HTMLElement, rect: TileRect, zIndex = 70) =
   wrapper.style.contain = 'layout paint style';
   wrapper.style.opacity = '1';
 
-  const isFullViewport = rect.top === 0 && rect.left === 0;
-  if (isFullViewport) {
-    wrapper.dataset.fullViewport = 'true';
-    wrapper.style.top = '0';
-    wrapper.style.left = '0';
-    wrapper.style.right = '0';
-    wrapper.style.bottom = '0';
-    wrapper.style.width = '';
-    wrapper.style.height = '';
-    wrapper.style.display = 'flex';
-    wrapper.style.alignItems = 'center';
-    wrapper.style.justifyContent = 'center';
-  } else {
-    delete wrapper.dataset.fullViewport;
-    wrapper.style.removeProperty('right');
-    wrapper.style.removeProperty('bottom');
-    wrapper.style.removeProperty('display');
-    wrapper.style.removeProperty('align-items');
-    wrapper.style.removeProperty('justify-content');
-    wrapper.style.top = `${rect.top}px`;
-    wrapper.style.left = `${rect.left}px`;
-    wrapper.style.width = `${rect.width}px`;
-    wrapper.style.height = `${rect.height}px`;
-  }
+  delete wrapper.dataset.fullViewport;
+  wrapper.style.removeProperty('right');
+  wrapper.style.removeProperty('bottom');
+  wrapper.style.removeProperty('display');
+  wrapper.style.removeProperty('align-items');
+  wrapper.style.removeProperty('justify-content');
+
+  wrapper.style.top = `${rect.top}px`;
+  wrapper.style.left = `${rect.left}px`;
+  wrapper.style.width = `${rect.width}px`;
+  wrapper.style.height = `${rect.height}px`;
 };
 
 const animateRect = async (node: HTMLElement, fromRect: TileRect, toRect: TileRect, options?: AnimationConfig) => {
@@ -282,10 +269,18 @@ export const promoteTile = async ({
         rectTiming
       );
       const imgAnim = img.animate(
-        [{ transform: `${base} scale(${imgCropFrom.scale})` }, { transform: `${base} scale(1)` }],
+        [
+          { transform: `translate(${tx}%, ${ty}%) scale(${imgCropFrom.scale})` },
+          { transform: `translate(0%, 0%) scale(1)` }
+        ],
         imgTiming
       );
       await Promise.all([rectAnim.finished, imgAnim.finished]);
+
+      // Clear persistence to avoid overriding inline styles
+      rectAnim.cancel();
+      imgAnim.cancel();
+
       applyRectToWrapper(wrapper, targetRect);
       img.style.transform = '';
       img.style.objectFit = 'contain';
@@ -364,12 +359,19 @@ export const demoteTile = async (session: TileAnimationSession, options?: Demote
         timing
       );
       const imgAnim = img.animate(
-        [{ transform: `${base} scale(1)` }, { transform: `${base} scale(${session.imgCrop.scale})` }],
+        [
+          { transform: `translate(0, 0) scale(1)` },
+          { transform: `translate(${tx}%, ${ty}%) scale(${session.imgCrop.scale})` }
+        ],
         timing
       );
       await Promise.all([rectAnim.finished, imgAnim.finished]);
+
+      rectAnim.cancel();
+      imgAnim.cancel();
+
       applyRectToWrapper(rectEl, targetRect, DEMOTE_Z_INDEX);
-      img.style.transform = `scale(${session.imgCrop.scale})`;
+      img.style.transform = `translate(${tx}%, ${ty}%) scale(${session.imgCrop.scale})`;
     }
   } else {
     await animateRect(rectEl, session.currentRect, targetRect, options);

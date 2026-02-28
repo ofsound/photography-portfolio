@@ -179,7 +179,6 @@
         {/each}
         {#if hasSession}
           <a href="/admin/photos" class:underline={page.url.pathname.startsWith("/admin")}>Admin</a>
-          <span class="rounded border border-border px-2 py-1 text-xs uppercase tracking-[var(--tracking-tight)]">PENDING CONVERSIONS: {pendingConversionCount}</span>
         {/if}
       </nav>
 

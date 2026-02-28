@@ -68,27 +68,18 @@
   let showMeta = $state(false);
 
   const maxDensity = $derived((data as { maxDensity?: number }).maxDensity ?? 20);
-  const maxContentWidthPx = $derived((data as { maxContentWidthPx?: number | null }).maxContentWidthPx ?? null);
 
   let density = $state(6);
-  let gap = $state(8);
-  let layoutMode = $state<'uniform' | 'masonry'>('uniform');
-  let widthMode = $state<'full' | 'constrained'>('full');
+  const gap = 8;
   let mounted = $state(false);
 
   const colCount = $derived(Math.max(1, Math.min(maxDensity, Number(density) || 6)));
-  const constrainedMax = $derived(maxContentWidthPx ?? 1600);
-  const sectionMaxWidthStyle = $derived(widthMode === 'constrained' ? `max-width: min(100%, ${constrainedMax}px);` : 'max-width: 100%;');
+  const sectionMaxWidthStyle = 'max-width: 100%;';
 
   onMount(() => {
     mounted = true;
     const prefs = getAdminPhotosPrefs(maxDensity);
-    if (prefs) {
-      density = prefs.density;
-      gap = prefs.gap;
-      layoutMode = prefs.layoutMode;
-      widthMode = prefs.widthMode;
-    }
+    if (prefs) density = prefs.density;
   });
 
   const historyLimit = 100;
@@ -371,21 +362,6 @@
     density = next;
     setAdminPhotosPrefs({ density }, maxDensity);
   };
-
-  const updateGap = (next: number) => {
-    gap = Math.max(0, Math.min(20, next));
-    setAdminPhotosPrefs({ gap }, maxDensity);
-  };
-
-  const updateLayoutMode = (next: 'uniform' | 'masonry') => {
-    layoutMode = next;
-    setAdminPhotosPrefs({ layoutMode }, maxDensity);
-  };
-
-  const updateWidthMode = (next: 'full' | 'constrained') => {
-    widthMode = next;
-    setAdminPhotosPrefs({ widthMode }, maxDensity);
-  };
 </script>
 
 <div class="flex items-baseline justify-between gap-4">
@@ -444,143 +420,54 @@
 
   {#if mounted}
     <div
-      class="sticky top-[var(--sticky-offset)] z-20 mb-4 mt-3 grid gap-2 rounded border border-border bg-surface px-3 py-2 text-xs uppercase tracking-[var(--tracking-heading)] lg:grid-cols-[1fr_auto] lg:items-center"
+      class="sticky top-[var(--sticky-offset)] z-20 mb-4 mt-3 ml-auto w-fit flex items-center rounded border border-border bg-surface px-3 py-2 text-xs uppercase tracking-[var(--tracking-heading)]"
     >
-      <span class="text-text-muted">Grid layout</span>
-      <div class="flex flex-wrap items-center justify-end gap-3">
-        <label class="flex items-center gap-2">
-          Density
-          <input
-            type="range"
-            min="1"
-            max={String(maxDensity)}
-            value={colCount}
-            oninput={(e) => updateDensity(Number((e.currentTarget as HTMLInputElement).value))}
-          />
-          <span class="tabular-nums">{colCount}</span>
-        </label>
-        <label class="flex items-center gap-2">
-          Gap
-          <input
-            type="range"
-            min="0"
-            max="20"
-            value={gap}
-            oninput={(e) => updateGap(Number((e.currentTarget as HTMLInputElement).value))}
-          />
-          <span class="tabular-nums">{gap}px</span>
-        </label>
-        <div class="flex items-center gap-1">
-          <AdminButton
-            variant="toggle"
-            type="button"
-            selected={layoutMode === 'uniform'}
-            onclick={() => updateLayoutMode('uniform')}
-            disabled={layoutMode === 'uniform'}
-          >
-            Uniform
-          </AdminButton>
-          <AdminButton
-            variant="toggle"
-            type="button"
-            selected={layoutMode === 'masonry'}
-            onclick={() => updateLayoutMode('masonry')}
-            disabled={layoutMode === 'masonry'}
-          >
-            Masonry
-          </AdminButton>
-        </div>
-        <div class="flex items-center gap-1">
-          <AdminButton
-            variant="toggle"
-            type="button"
-            selected={widthMode === 'full'}
-            onclick={() => updateWidthMode('full')}
-            disabled={widthMode === 'full'}
-          >
-            Full
-          </AdminButton>
-          <AdminButton
-            variant="toggle"
-            type="button"
-            selected={widthMode === 'constrained'}
-            onclick={() => updateWidthMode('constrained')}
-            disabled={widthMode === 'constrained'}
-          >
-            Constrained
-          </AdminButton>
-        </div>
-      </div>
+      <label class="flex items-center gap-2">
+        Density
+        <input
+          type="range"
+          min="1"
+          max={String(maxDensity)}
+          value={colCount}
+          oninput={(e) => updateDensity(Number((e.currentTarget as HTMLInputElement).value))}
+        />
+        <span class="tabular-nums">{colCount}</span>
+      </label>
     </div>
   {/if}
 
   <div class="mx-auto w-full" style={sectionMaxWidthStyle}>
-    {#if layoutMode === 'uniform'}
-      <ul class="grid" style="grid-template-columns: repeat({colCount}, minmax(0, 1fr)); gap: {gap}px;">
-        {#each photos as photo, i (photo.id)}
-          <li>
-            <AdminPhotoCard
-              index={i}
-              {photo}
-              editHref={`/admin/photos/edit/${photo.id}`}
-              images={imagesForPhoto(photo.id)}
-              {categories}
-              {tags}
-              {selectedPhotoIds}
-              selectedCategoryIds={selectedCategoryIds(photo.id)}
-              selectedTagIds={selectedTagIds(photo.id)}
-              onTaxonomyChange={onTaxonomyChange}
-              photoConversionState={photoConversionState(photo.id)}
-              additionalOrder={additionalOrder(photo.id)}
-              onTogglePhotoSelected={togglePhotoSelected}
-              {onAdditionalDragStart}
-              {onAdditionalDragOver}
-              {onAdditionalDropBefore}
-              {onAdditionalDropToEnd}
-              {onAdditionalDragEnd}
-              gridMode={true}
-              onPhotoDragStart={onPhotoDragStart}
-              onPhotoDragOver={onPhotoDragOver}
-              onPhotoDrop={onPhotoDrop}
-              onPhotoDragEnd={onPhotoDragEnd}
-              isDraggingPhoto={draggingPhotoId === photo.id}
-            />
-          </li>
-        {/each}
-      </ul>
-    {:else}
-      <ul class="columns-2 md:columns-4 lg:columns-6" style="columns: {colCount}; column-gap: {gap}px;">
-        {#each photos as photo, i (photo.id)}
-          <li class="break-inside-avoid" style="margin-bottom: {gap}px">
-            <AdminPhotoCard
-              index={i}
-              {photo}
-              editHref={`/admin/photos/edit/${photo.id}`}
-              images={imagesForPhoto(photo.id)}
-              {categories}
-              {tags}
-              {selectedPhotoIds}
-              selectedCategoryIds={selectedCategoryIds(photo.id)}
-              selectedTagIds={selectedTagIds(photo.id)}
-              onTaxonomyChange={onTaxonomyChange}
-              photoConversionState={photoConversionState(photo.id)}
-              additionalOrder={additionalOrder(photo.id)}
-              onTogglePhotoSelected={togglePhotoSelected}
-              {onAdditionalDragStart}
-              {onAdditionalDragOver}
-              {onAdditionalDropBefore}
-              {onAdditionalDropToEnd}
-              {onAdditionalDragEnd}
-              gridMode={true}
-              onPhotoDragStart={onPhotoDragStart}
-              onPhotoDragOver={onPhotoDragOver}
-              onPhotoDrop={onPhotoDrop}
-              onPhotoDragEnd={onPhotoDragEnd}
-              isDraggingPhoto={draggingPhotoId === photo.id}
-            />
-          </li>
-        {/each}
-      </ul>
-    {/if}
+    <ul class="grid" style="grid-template-columns: repeat({colCount}, minmax(0, 1fr)); gap: {gap}px;">
+      {#each photos as photo, i (photo.id)}
+        <li>
+          <AdminPhotoCard
+            index={i}
+            {photo}
+            editHref={`/admin/photos/edit/${photo.id}`}
+            images={imagesForPhoto(photo.id)}
+            {categories}
+            {tags}
+            {selectedPhotoIds}
+            selectedCategoryIds={selectedCategoryIds(photo.id)}
+            selectedTagIds={selectedTagIds(photo.id)}
+            onTaxonomyChange={onTaxonomyChange}
+            photoConversionState={photoConversionState(photo.id)}
+            additionalOrder={additionalOrder(photo.id)}
+            onTogglePhotoSelected={togglePhotoSelected}
+            {onAdditionalDragStart}
+            {onAdditionalDragOver}
+            {onAdditionalDropBefore}
+            {onAdditionalDropToEnd}
+            {onAdditionalDragEnd}
+            gridMode={true}
+            onPhotoDragStart={onPhotoDragStart}
+            onPhotoDragOver={onPhotoDragOver}
+            onPhotoDrop={onPhotoDrop}
+            onPhotoDragEnd={onPhotoDragEnd}
+            isDraggingPhoto={draggingPhotoId === photo.id}
+          />
+        </li>
+      {/each}
+    </ul>
   </div>
 </section>

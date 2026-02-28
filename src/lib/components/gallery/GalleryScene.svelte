@@ -763,8 +763,21 @@
 
   const tileAspectRatio = (photo: GalleryPhoto) => {
     const parsed = parseDimensions(photo.leadImage?.dimensions);
-    if (!parsed) return uniformRatio;
-    return Math.max(0.2, parsed.width / parsed.height);
+    if (parsed) return Math.max(0.2, parsed.width / parsed.height);
+    // Fallback: read from the DOM img element's natural dimensions
+    const node = tileRefs.get(photo.slug);
+    const imgEl = node?.querySelector("img");
+    if (imgEl && imgEl.naturalWidth && imgEl.naturalHeight) {
+      return Math.max(0.2, imgEl.naturalWidth / imgEl.naturalHeight);
+    }
+    return uniformRatio;
+  };
+
+  /** Compute the tile aspect ratio for a given slug — used at animation time to get the real ratio from the DOM. */
+  const tileAspectRatioForSlug = (slug: string) => {
+    const photo = findPhoto(slug);
+    if (!photo) return uniformRatio;
+    return tileAspectRatio(photo);
   };
 
   const hasThumbCrop = (img: {thumb_crop_x?: number | null; thumb_crop_y?: number | null; thumb_crop_zoom?: number | null} | null) => img && img.thumb_crop_x != null && img.thumb_crop_y != null && img.thumb_crop_zoom != null && img.thumb_crop_zoom >= 1;
@@ -1047,21 +1060,32 @@
     {:else}
       <ul class="columns-2 md:columns-4 lg:columns-6" style={`columns: ${colCount}; column-gap: ${gap}px;`}>
         {#each photos as photo, index (photo.id)}
-          <li class="break-inside-avoid" style="margin-bottom: {gap}px">
-            <div class="tile-cascade" class:revealed={galleryRevealed} class:no-motion={reducedMotion()} style="animation-delay: {galleryRevealed && !reducedMotion() ? index * CASCADE_STAGGER_MS : 0}ms">
-              <a href={withCurrentSearch(`/photo/${photo.slug}`)} use:registerTile={photo.slug} class="group relative block overflow-hidden rounded" style={`aspect-ratio: ${tileAspectRatio(photo)};`} onclick={(event) => onOpenPhoto(event, photo.slug)}>
-                {#if photo.leadImage}
+          {#if photo.leadImage}
+            {@const knownRatio = parseDimensions(photo.leadImage.dimensions)}
+            <li class="break-inside-avoid" style="margin-bottom: {gap}px">
+              <div class="tile-cascade" class:revealed={galleryRevealed} class:no-motion={reducedMotion()} style="animation-delay: {galleryRevealed && !reducedMotion() ? index * CASCADE_STAGGER_MS : 0}ms">
+                <a href={withCurrentSearch(`/photo/${photo.slug}`)} use:registerTile={photo.slug} class="group relative block overflow-hidden rounded" style={knownRatio ? `aspect-ratio: ${knownRatio.width / knownRatio.height};` : ""} onclick={(event) => onOpenPhoto(event, photo.slug)}>
                   <img
                     src={photoPublicUrl(photo.leadImage.delivery_storage_path, GALLERY_DETAIL_SHARED_WIDTH)}
                     alt={photo.leadImage.alt_text ?? photo.title}
-                    class="tile-img transition-transform duration-500 ease-cinematic {hasThumbCrop(photo.leadImage) ? 'tile-img-crop' : 'group-hover:scale-[1.02]'}"
+                    class="tile-img tile-img-masonry transition-transform duration-500 ease-cinematic {hasThumbCrop(photo.leadImage) ? 'tile-img-crop' : 'group-hover:scale-[1.02]'}"
                     style={thumbCropStyle(photo.leadImage, tileAspectRatio(photo))}
                     loading="eager"
+                    onload={(e) => {
+                      // After load, update the anchor's aspect-ratio if it wasn't set from data
+                      if (!knownRatio && e.currentTarget instanceof HTMLImageElement) {
+                        const img = e.currentTarget;
+                        const anchor = img.closest("a");
+                        if (anchor && img.naturalWidth && img.naturalHeight) {
+                          anchor.style.aspectRatio = String(img.naturalWidth / img.naturalHeight);
+                        }
+                      }
+                    }}
                   />
-                {/if}
-              </a>
-            </div>
-          </li>
+                </a>
+              </div>
+            </li>
+          {/if}
         {/each}
 
         {#if isLoadingMore}
@@ -1100,15 +1124,7 @@
 
   {#if controlsVisible}
     <div use:portal class="fixed inset-0 z-[80] pointer-events-none transition-opacity ease-out" class:opacity-0={overlayChromeHidden} style="transition-duration: {CLOSING_CHROME_MS}ms" aria-hidden="true">
-      <a
-        href={withCurrentSearch("/gallery")}
-        onclick={closeToGallery}
-        class="chrome-panel pointer-events-auto fixed left-5 top-5 rounded px-3 py-2 text-xs uppercase tracking-[var(--tracking-heading)]"
-        class:pointer-events-none={isTransitioning}
-        class:opacity-50={isTransitioning}
-      >
-        Close
-      </a>
+      <a href={withCurrentSearch("/gallery")} onclick={closeToGallery} class="chrome-panel pointer-events-auto fixed left-5 top-5 rounded px-3 py-2 text-xs uppercase tracking-[var(--tracking-heading)]" class:pointer-events-none={isTransitioning} class:opacity-50={isTransitioning}>Close</a>
 
       {#if canCycleGallery}
         <a href={prevGalleryHref ? withCurrentSearch(prevGalleryHref) : "#"} onclick={(event) => onNeighborNavigate(event, prevGalleryHref, "prev")} class="chrome-panel pointer-events-auto fixed left-0 top-1/2 -translate-y-1/2 px-4 py-5 text-lg" aria-label="Previous image">←</a>
@@ -1153,12 +1169,18 @@
     display: block;
   }
 
+  /* Masonry tiles: natural height flow — the img drives the tile height */
+  .tile-img-masonry {
+    height: auto;
+  }
+
   .tile-img-crop {
     object-fit: contain !important;
   }
 
   :global([data-promoted] .tile-img) {
     object-fit: contain;
+    height: 100%;
   }
 
   .preloader-overlay {

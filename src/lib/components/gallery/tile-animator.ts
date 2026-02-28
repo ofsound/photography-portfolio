@@ -207,7 +207,11 @@ export const promoteTile = async ({
 
   const placeholder = document.createElement('div');
   placeholder.dataset.tilePlaceholder = slug;
-  if (aspectRatio != null && parent instanceof Element) {
+  // For uniform (square) tiles, anchor via the cell's min-dimension + aspect-ratio so
+  // the placeholder responds to density changes correctly. For masonry tiles (non-square
+  // aspect ratio), use the tile's exact rendered rect so the demote animation returns to
+  // the correct position regardless of column reflow.
+  if (aspectRatio != null && Math.abs(aspectRatio - 1) < 0.01 && parent instanceof Element) {
     const cellRect = rectFromElement(parent);
     const size = Math.min(cellRect.width, cellRect.height);
     placeholder.style.width = `${size}px`;

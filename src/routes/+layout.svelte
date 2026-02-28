@@ -186,10 +186,8 @@
         {#each navPages as navPage (navPage.id)}
           <a href={`/${navPage.slug}`} class:underline={page.url.pathname === `/${navPage.slug}`}>{navPage.title}</a>
         {/each}
-        <a href={hasSession ? '/admin' : '/auth'} class:underline={page.url.pathname.startsWith('/admin') || page.url.pathname === '/auth'}>
-          {hasSession ? 'CMS' : 'Sign In'}
-        </a>
         {#if hasSession}
+          <a href="/admin/photos" class:underline={page.url.pathname.startsWith('/admin')}>Admin</a>
           <span class="rounded border border-border px-2 py-1 text-xs uppercase tracking-[0.12em]"
             >PENDING CONVERSIONS: {pendingConversionCount}</span
           >

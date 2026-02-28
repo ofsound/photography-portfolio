@@ -7,8 +7,8 @@
     { href: '/admin/photos', label: 'Photos' },
     { href: '/admin/categories', label: 'Categories' },
     { href: '/admin/tags', label: 'Tags' },
-    { href: '/admin/pages', label: 'Pages' },
     { href: '/admin/homepage', label: 'Homepage' },
+    { href: '/admin/pages', label: 'Pages' },
     { href: '/admin/settings', label: 'Settings' },
     { href: '/admin/audit', label: 'Audit' }
   ];
@@ -23,7 +23,7 @@
 
 <div class="grid min-h-[calc(100vh-64px)] grid-cols-[240px_1fr]">
   <aside class="border-r border-border p-4">
-    <p class="mb-5 text-xs uppercase tracking-[0.15em]">CMS ({data.role})</p>
+    <p class="mb-5 text-xs uppercase tracking-[0.15em]">({data.role})</p>
     <nav class="grid gap-2 text-sm">
       {#each links as link}
         <a href={link.href} class:underline={isActiveLink(link.href)}>{link.label}</a>

@@ -9,10 +9,12 @@ const ACTIVE_CREATE_PHOTO_COOKIE = 'admin_create_photo_id';
 
 export const load: PageServerLoad = async ({ locals, url, cookies }) => {
   const requestedPhotoId = url.searchParams.get('photo');
-  const cookiePhotoId = cookies.get(ACTIVE_CREATE_PHOTO_COOKIE);
-  const existingPhotoId = requestedPhotoId ?? cookiePhotoId ?? null;
+  // Only use URL param. When user navigates to /admin/photos/create without ?photo=,
+  // they want a new photo — don't resume from cookie.
+  const existingPhotoId = requestedPhotoId ?? null;
 
   if (!existingPhotoId) {
+    cookies.delete(ACTIVE_CREATE_PHOTO_COOKIE, { path: '/admin/photos' });
     const draftSlug = `new-photo-${Date.now().toString(36)}`;
     const insertResult = await locals.supabase
       .from('photos')

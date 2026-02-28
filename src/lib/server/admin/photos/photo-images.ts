@@ -176,40 +176,6 @@ export const photoImageActions: Actions = {
     return { success: true, message: 'Image removed.' };
   },
 
-  removeSelectedImages: async ({ locals, request }) => {
-    const form = await request.formData();
-    const photoId = asString(form.get('photo_id'));
-    const imageIds = parseUuidList(asString(form.get('selected_image_ids')));
-
-    if (!photoId) return fail(400, { message: 'Missing photo id.' });
-    if (!imageIds.length) return fail(400, { message: 'Select at least one additional image.' });
-
-    const { data: images, error: loadError } = await locals.supabase
-      .from('photo_images')
-      .select('id, kind, source_storage_path, delivery_storage_path')
-      .eq('photo_id', photoId)
-      .in('id', imageIds);
-
-    if (loadError || !images) return fail(400, { message: loadError?.message ?? 'Failed to load selected images.' });
-    if (!images.length) return fail(400, { message: 'No matching images found.' });
-    if (images.some((image) => image.kind === 'lead')) return fail(400, { message: 'Lead image cannot be removed in bulk.' });
-
-    const { error: deleteError } = await locals.supabase.from('photo_images').delete().eq('photo_id', photoId).in('id', imageIds);
-    if (deleteError) return fail(400, { message: deleteError.message });
-
-    const storagePaths = images.flatMap((image) => [image.source_storage_path, image.delivery_storage_path].filter(Boolean) as string[]);
-    if (storagePaths.length) {
-      await locals.supabase.storage.from('photos').remove(storagePaths);
-    }
-
-    const normalizeResult = await normalizePhotoImagePositions(locals, photoId);
-    if (!normalizeResult.ok) {
-      return fail(400, { message: normalizeResult.message });
-    }
-
-    return { success: true, message: `Removed ${images.length} selected additional image(s).` };
-  },
-
   saveThumbCrop: async ({ locals, request }) => {
     const form = await request.formData();
     const photoId = asString(form.get('photo_id'));

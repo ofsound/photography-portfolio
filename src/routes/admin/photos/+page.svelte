@@ -53,7 +53,6 @@
   const tagById = (id: string) => tags.find((tag) => tag.id === id) ?? null;
 
   let orderedAdditionalByPhoto = $state<Record<string, string[]>>({});
-  let selectedAdditionalByPhoto = $state<Record<string, string[]>>({});
   let selectedCategoryIdsByPhoto = $state<Record<string, string[]>>({});
   let selectedTagIdsByPhoto = $state<Record<string, string[]>>({});
   let selectedPhotoIds = $state<string[]>([]);
@@ -165,19 +164,16 @@
 
   $effect(() => {
     const nextOrder: Record<string, string[]> = {};
-    const nextSelected: Record<string, string[]> = {};
     const nextCategoryIds: Record<string, string[]> = {};
     const nextTagIds: Record<string, string[]> = {};
 
     for (const photo of photos) {
       nextOrder[photo.id] = baseAdditionalOrder(photo.id);
-      nextSelected[photo.id] = [];
       nextCategoryIds[photo.id] = serverCategoryIds(photo.id);
       nextTagIds[photo.id] = serverTagIds(photo.id);
     }
 
     orderedAdditionalByPhoto = nextOrder;
-    selectedAdditionalByPhoto = nextSelected;
     selectedCategoryIdsByPhoto = nextCategoryIds;
     selectedTagIdsByPhoto = nextTagIds;
     undoStack = [];
@@ -193,7 +189,6 @@
   });
 
   const additionalOrder = (photoId: string) => orderedAdditionalByPhoto[photoId] ?? baseAdditionalOrder(photoId);
-  const selectedAdditional = (photoId: string) => selectedAdditionalByPhoto[photoId] ?? [];
   const selectedCategoryIds = (photoId: string) => selectedCategoryIdsByPhoto[photoId] ?? serverCategoryIds(photoId);
   const selectedTagIds = (photoId: string) => selectedTagIdsByPhoto[photoId] ?? serverTagIds(photoId);
 
@@ -265,23 +260,6 @@
 
   const clearSelectedPhotos = () => {
     selectedPhotoIds = [];
-  };
-
-  const toggleAdditionalSelected = (photoId: string, imageId: string, checked: boolean) => {
-    const current = selectedAdditional(photoId);
-    if (checked) {
-      if (current.includes(imageId)) return;
-      selectedAdditionalByPhoto = {
-        ...selectedAdditionalByPhoto,
-        [photoId]: [...current, imageId]
-      };
-      return;
-    }
-
-    selectedAdditionalByPhoto = {
-      ...selectedAdditionalByPhoto,
-      [photoId]: current.filter((id) => id !== imageId)
-    };
   };
 
   const photoConversionState = (photoId: string) => data.photoConversionStateMap[photoId] ?? 'no-images';
@@ -495,7 +473,7 @@
         <div class="flex items-center gap-1">
           <button
             type="button"
-            class="rounded border border-border-strong px-2 py-1 disabled:opacity-40"
+            class="rounded border border-border-strong px-2 py-1 {layoutMode === 'uniform' ? 'bg-border' : 'opacity-40'}"
             onclick={() => updateLayoutMode('uniform')}
             disabled={layoutMode === 'uniform'}
           >
@@ -503,7 +481,7 @@
           </button>
           <button
             type="button"
-            class="rounded border border-border-strong px-2 py-1 disabled:opacity-40"
+            class="rounded border border-border-strong px-2 py-1 {layoutMode === 'masonry' ? 'bg-border' : 'opacity-40'}"
             onclick={() => updateLayoutMode('masonry')}
             disabled={layoutMode === 'masonry'}
           >
@@ -513,7 +491,7 @@
         <div class="flex items-center gap-1">
           <button
             type="button"
-            class="rounded border border-border-strong px-2 py-1 disabled:opacity-40"
+            class="rounded border border-border-strong px-2 py-1 {widthMode === 'full' ? 'bg-border' : 'opacity-40'}"
             onclick={() => updateWidthMode('full')}
             disabled={widthMode === 'full'}
           >
@@ -521,7 +499,7 @@
           </button>
           <button
             type="button"
-            class="rounded border border-border-strong px-2 py-1 disabled:opacity-40"
+            class="rounded border border-border-strong px-2 py-1 {widthMode === 'constrained' ? 'bg-border' : 'opacity-40'}"
             onclick={() => updateWidthMode('constrained')}
             disabled={widthMode === 'constrained'}
           >
@@ -550,9 +528,7 @@
               onTaxonomyChange={onTaxonomyChange}
               photoConversionState={photoConversionState(photo.id)}
               additionalOrder={additionalOrder(photo.id)}
-              selectedAdditional={selectedAdditional(photo.id)}
               onTogglePhotoSelected={togglePhotoSelected}
-              onToggleAdditionalSelected={toggleAdditionalSelected}
               {onAdditionalDragStart}
               {onAdditionalDragOver}
               {onAdditionalDropBefore}
@@ -585,9 +561,7 @@
               onTaxonomyChange={onTaxonomyChange}
               photoConversionState={photoConversionState(photo.id)}
               additionalOrder={additionalOrder(photo.id)}
-              selectedAdditional={selectedAdditional(photo.id)}
               onTogglePhotoSelected={togglePhotoSelected}
-              onToggleAdditionalSelected={toggleAdditionalSelected}
               {onAdditionalDragStart}
               {onAdditionalDragOver}
               {onAdditionalDropBefore}

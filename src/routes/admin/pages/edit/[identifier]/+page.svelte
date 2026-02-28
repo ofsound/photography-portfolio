@@ -1,15 +1,42 @@
 <script lang="ts">
   import AdminButton from '$lib/components/admin/AdminButton.svelte';
+  import FormField from '$lib/components/FormField.svelte';
+  import FormInput from '$lib/components/FormInput.svelte';
+  import FormTextarea from '$lib/components/FormTextarea.svelte';
   import type { ContentRevision } from '$lib/types/content';
 
   let { data, form } = $props();
   const page = $derived(data.page);
   const revisions = $derived(data.revisions as ContentRevision[]);
+
+  let formTitle = $state('');
+  let formSlug = $state('');
+  let formStatus = $state<'published' | 'archived'>('published');
+  let formSeoTitle = $state('');
+  let formHtmlContent = $state('');
+  let formCssModule = $state('');
+  let formSeoDescription = $state('');
+  let formOgImagePath = $state('');
+  let prevPageId = $state<string | null>(null);
+  $effect(() => {
+    const p = page;
+    if (prevPageId !== p.id) {
+      prevPageId = p.id;
+      formTitle = p.title;
+      formSlug = p.slug;
+      formStatus = p.status;
+      formSeoTitle = p.seo_title ?? '';
+      formHtmlContent = p.html_content ?? '';
+      formCssModule = p.css_module ?? '';
+      formSeoDescription = p.seo_description ?? '';
+      formOgImagePath = p.og_image_path ?? '';
+    }
+  });
 </script>
 
 <div class="flex flex-wrap items-center justify-between gap-3">
   <h1 class="text-xl uppercase tracking-[0.15em]">Edit Page</h1>
-  <a href="/admin/pages" class="rounded border border-border-strong px-3 py-1 text-xs uppercase tracking-[0.14em]">Back to Pages</a>
+  <a href="/admin/pages" class="rounded border border-admin-btn-border bg-admin-btn-bg px-3 py-1 text-xs uppercase tracking-[0.14em] hover:bg-border">Back to Pages</a>
 </div>
 <p class="mt-2 text-sm text-text-muted">Editing `/{page.slug}`</p>
 
@@ -20,23 +47,39 @@
 <form method="POST" action="?/update" class="mt-6 grid gap-3 rounded border border-border p-4">
   <input type="hidden" name="id" value={page.id} />
 
-  <div class="grid gap-2 sm:grid-cols-2">
-    <input name="title" value={page.title} class="rounded border border-border-strong px-3 py-2" required />
-    <input name="slug" value={page.slug} class="rounded border border-border-strong px-3 py-2" />
+  <div class="grid gap-3 sm:grid-cols-2">
+    <FormField label="Title" id="page-edit-title">
+      <FormInput id="page-edit-title" name="title" bind:value={formTitle} required />
+    </FormField>
+    <FormField label="Slug" id="page-edit-slug">
+      <FormInput id="page-edit-slug" name="slug" bind:value={formSlug} />
+    </FormField>
   </div>
 
-  <div class="grid gap-2 sm:grid-cols-2">
-    <select name="status" class="rounded border border-border-strong px-3 py-2">
-      <option selected={page.status === 'published'} value="published">published</option>
-      <option selected={page.status === 'archived'} value="archived">archived</option>
-    </select>
-    <input name="seo_title" value={page.seo_title ?? ''} placeholder="SEO title" class="rounded border border-border-strong px-3 py-2" />
+  <div class="grid gap-3 sm:grid-cols-2">
+    <FormField label="Status" id="page-edit-status">
+      <select name="status" id="page-edit-status" bind:value={formStatus} class="w-full rounded border border-border-strong bg-surface px-3 py-2 text-sm">
+        <option value="published">published</option>
+        <option value="archived">archived</option>
+      </select>
+    </FormField>
+    <FormField label="SEO title" id="page-edit-seo_title">
+      <FormInput id="page-edit-seo_title" name="seo_title" bind:value={formSeoTitle} placeholder="SEO title" />
+    </FormField>
   </div>
 
-  <textarea name="html_content" rows="8" class="rounded border border-border-strong px-3 py-2 font-mono text-xs">{page.html_content ?? ''}</textarea>
-  <textarea name="css_module" rows="4" class="rounded border border-border-strong px-3 py-2 font-mono text-xs">{page.css_module ?? ''}</textarea>
-  <textarea name="seo_description" rows="2" class="rounded border border-border-strong px-3 py-2">{page.seo_description ?? ''}</textarea>
-  <input name="og_image_path" value={page.og_image_path ?? ''} class="rounded border border-border-strong px-3 py-2" placeholder="OG image path" />
+  <FormField label="HTML" id="page-edit-html_content">
+    <FormTextarea id="page-edit-html_content" name="html_content" bind:value={formHtmlContent} rows={8} class="font-mono text-xs" />
+  </FormField>
+  <FormField label="Scoped CSS" id="page-edit-css_module">
+    <FormTextarea id="page-edit-css_module" name="css_module" bind:value={formCssModule} rows={4} class="font-mono text-xs" />
+  </FormField>
+  <FormField label="SEO description" id="page-edit-seo_description">
+    <FormTextarea id="page-edit-seo_description" name="seo_description" bind:value={formSeoDescription} rows={2} />
+  </FormField>
+  <FormField label="OG image path" id="page-edit-og_image_path">
+    <FormInput id="page-edit-og_image_path" name="og_image_path" bind:value={formOgImagePath} placeholder="OG image path" />
+  </FormField>
 
   <div class="flex flex-wrap items-center gap-3">
     <label class="flex items-center gap-2 text-sm"><input name="show_in_nav" type="checkbox" checked={page.show_in_nav} /> Show in nav</label>

@@ -30,10 +30,10 @@
   };
 
   const variantClasses: Record<Variant, string> = {
-    default: 'rounded border border-border-strong hover:bg-border',
+    default: 'rounded border border-admin-btn-border bg-admin-btn-bg hover:bg-border',
     success: 'rounded border border-success/40 bg-success text-white',
     danger: 'rounded border border-danger/60 bg-danger text-white',
-    'danger-outline': 'rounded border border-danger/60 text-danger',
+    'danger-outline': 'rounded border border-danger/60 bg-danger-soft text-danger',
     info: 'rounded border border-info/40 bg-info-soft',
     'success-soft': 'rounded border border-success/40 bg-success-soft',
     link: 'text-[10px] text-text-muted underline'

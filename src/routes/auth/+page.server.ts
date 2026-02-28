@@ -28,7 +28,7 @@ export const actions: Actions = {
       return fail(400, { message: error.message });
     }
 
-    throw redirect(303, '/admin');
+    throw redirect(303, '/admin/photos');
   },
 
   logout: async ({ locals }) => {

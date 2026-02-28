@@ -3,6 +3,9 @@
   import { fade, slide } from 'svelte/transition';
   import { quintOut } from 'svelte/easing';
   import AdminButton from '$lib/components/admin/AdminButton.svelte';
+  import FormField from '$lib/components/FormField.svelte';
+  import FormInput from '$lib/components/FormInput.svelte';
+  import FormTextarea from '$lib/components/FormTextarea.svelte';
   import PhotoConversionBadge from '$lib/components/admin/PhotoConversionBadge.svelte';
   import PhotoUploadZone from '$lib/components/admin/PhotoUploadZone.svelte';
   import ThumbnailCropEditor from '$lib/components/admin/ThumbnailCropEditor.svelte';
@@ -24,9 +27,7 @@
     onTaxonomyChange,
     photoConversionState,
     additionalOrder,
-    selectedAdditional,
     onTogglePhotoSelected,
-    onToggleAdditionalSelected,
     onAdditionalDragStart,
     onAdditionalDragOver,
     onAdditionalDropBefore,
@@ -53,9 +54,7 @@
     onTaxonomyChange: (photoId: string, categoryIds: string[], tagIds: string[]) => void;
     photoConversionState: 'no-images' | 'pending' | 'ready' | 'mixed';
     additionalOrder: string[];
-    selectedAdditional: string[];
     onTogglePhotoSelected: (photoId: string, checked: boolean) => void;
-    onToggleAdditionalSelected: (photoId: string, imageId: string, checked: boolean) => void;
     onAdditionalDragStart: (photoId: string, imageId: string, event: DragEvent) => void;
     onAdditionalDragOver: (event: DragEvent) => void;
     onAdditionalDropBefore: (photoId: string, targetId: string, event: DragEvent) => void;
@@ -85,9 +84,35 @@
     return 'unknown';
   };
 
+  // Local form state to avoid overwriting user edits on re-renders (e.g. taxonomy checkbox changes)
+  let formTitle = $state('');
+  let formSlug = $state('');
+  let formDescription = $state('');
+  let formCaptureDate = $state('');
+  let formDimensions = $state('');
+  let formLicenseText = $state('');
+  let formOgTitle = $state('');
+  let formOgDescription = $state('');
+  let formOgImagePath = $state('');
+  let prevPhotoId = $state<string | null>(null);
+  $effect(() => {
+    const p = photo;
+    if (prevPhotoId !== p.id) {
+      prevPhotoId = p.id;
+      formTitle = p.title;
+      formSlug = p.slug;
+      formDescription = p.description ?? '';
+      formCaptureDate = p.capture_date ?? '';
+      formDimensions = p.dimensions ?? '';
+      formLicenseText = p.license_text ?? '';
+      formOgTitle = p.og_title ?? '';
+      formOgDescription = p.og_description ?? '';
+      formOgImagePath = p.og_image_path ?? '';
+    }
+  });
+
   let hasUserToggled = $state(false);
   let toggledExpanded = $state(false);
-  let showAdvanced = $state(false);
   const isExpanded = $derived(
     editHref ? false : editorOnly ? true : hasUserToggled ? toggledExpanded : initialExpanded
   );
@@ -179,7 +204,7 @@
     </div>
   </div>
 {:else}
-  <article class="relative grid gap-3 rounded p-4 {index % 2 === 0 ? 'bg-surface' : 'bg-surface-muted'}">
+  <article class="relative grid gap-3 rounded">
     {#if !editorOnly}
       <span class="absolute left-2 top-2 text-[10px] font-medium tabular-nums text-text-muted">{index + 1}</span>
     {/if}
@@ -248,123 +273,151 @@
   {#if isExpanded}
     <div
       transition:slide={{ duration: SLIDE_DURATION, easing: quintOut, axis: 'y' }}
-      class="grid gap-3"
+      class="flex flex-col gap-3"
     >
-      <div transition:fade={{ duration: FADE_DURATION, delay: 0 * STAGGER_MS, easing: quintOut }}>
-        <form id="photo-update-form-{photo.id}" method="POST" action="?/update" class="grid gap-3">
-      <input type="hidden" name="id" value={photo.id} />
-      <div class="grid gap-2 sm:grid-cols-2">
-        <input name="title" value={photo.title} placeholder="Title" class="rounded border border-border-strong px-3 py-2" required />
-        <input name="slug" value={photo.slug} placeholder="Slug" class="rounded border border-border-strong px-3 py-2" required />
-      </div>
+      <div class="flex min-w-0 gap-12 mb-20">
+        <div transition:fade={{ duration: FADE_DURATION, delay: 0 * STAGGER_MS, easing: quintOut }} class="min-w-0 flex-[7] flex flex-col gap-3">
+          <form id="photo-update-form-{photo.id}" method="POST" action="?/update" class="grid gap-3">
+            <input type="hidden" name="id" value={photo.id} />
+            <div class="grid gap-3 sm:grid-cols-2">
+              <FormField label="Title" id="edit-title-{photo.id}">
+                <FormInput id="edit-title-{photo.id}" name="title" bind:value={formTitle} placeholder="Title" required />
+              </FormField>
+              <FormField label="Slug" id="edit-slug-{photo.id}">
+                <FormInput id="edit-slug-{photo.id}" name="slug" bind:value={formSlug} placeholder="Slug" required />
+              </FormField>
+            </div>
+            <FormField label="Description" id="edit-description-{photo.id}">
+              <FormTextarea id="edit-description-{photo.id}" name="description" bind:value={formDescription} rows={3} placeholder="Description" />
+            </FormField>
+            <div class="grid gap-3 sm:grid-cols-2">
+              <FormField label="Capture date" id="edit-capture_date-{photo.id}">
+                <FormInput id="edit-capture_date-{photo.id}" name="capture_date" bind:value={formCaptureDate} type="text" placeholder="Capture date" />
+              </FormField>
+              <FormField label="Dimensions" id="edit-dimensions-{photo.id}">
+                <FormInput id="edit-dimensions-{photo.id}" name="dimensions" bind:value={formDimensions} type="text" placeholder="Dimensions" />
+              </FormField>
+            </div>
+          </form>
 
-      <textarea name="description" rows="3" placeholder="Description" class="rounded border border-border-strong px-3 py-2">{photo.description ?? ''}</textarea>
+        <div class="grid gap-3 lg:grid-cols-2 p-3">
+          <fieldset class="grid gap-2 border-0">
+            <legend class="text-sm font-medium text-text">Categories</legend>
+            <div class="grid max-h-36 gap-1 overflow-auto">
+              {#each categories as category (category.id)}
+                <label class="flex items-center gap-2 text-sm cursor-pointer">
+                  <input
+                    type="checkbox"
+                    value={category.id}
+                    checked={selectedCategoryIds.includes(category.id)}
+                    onchange={() => {
+                      const checked = !selectedCategoryIds.includes(category.id);
+                      const next = checked
+                        ? [...selectedCategoryIds, category.id]
+                        : selectedCategoryIds.filter((id: string) => id !== category.id);
+                      onTaxonomyChange(photo.id, next, selectedTagIds);
+                    }}
+                  />
+                  {category.name}
+                </label>
+              {/each}
+            </div>
+          </fieldset>
 
-      <div class="grid gap-2 sm:grid-cols-3 sm:items-center">
-        <input name="capture_date" type="text" value={photo.capture_date ?? ''} placeholder="Capture date" class="rounded border border-border-strong px-3 py-2" />
-        <input name="dimensions" type="text" value={photo.dimensions ?? ''} placeholder="Dimensions" class="rounded border border-border-strong px-3 py-2" />
-        <label class="flex items-center gap-2 text-sm cursor-pointer">
-          <input type="checkbox" bind:checked={showAdvanced} /> Advanced
+          <fieldset class="grid gap-2 border-0">
+            <legend class="text-sm font-medium text-text">Tags</legend>
+            <div class="grid max-h-36 gap-1 overflow-auto">
+              {#each tags as tag (tag.id)}
+                <label class="flex items-center gap-2 text-sm cursor-pointer">
+                  <input
+                    type="checkbox"
+                    value={tag.id}
+                    checked={selectedTagIds.includes(tag.id)}
+                    onchange={() => {
+                      const checked = !selectedTagIds.includes(tag.id);
+                      const next = checked
+                        ? [...selectedTagIds, tag.id]
+                        : selectedTagIds.filter((id: string) => id !== tag.id);
+                      onTaxonomyChange(photo.id, selectedCategoryIds, next);
+                    }}
+                  />
+                  {tag.name}
+                </label>
+              {/each}
+            </div>
+          </fieldset>
+        </div>
+        </div>
+
+        <div transition:fade={{ duration: FADE_DURATION, delay: 1 * STAGGER_MS, easing: quintOut }} class="min-w-0 flex-[3]">
+          <div class="grid gap-3">
+      <div class="grid gap-3">
+        <FormField label="License text" id="edit-license_text-{photo.id}">
+          <FormTextarea id="edit-license_text-{photo.id}" name="license_text" bind:value={formLicenseText} rows={2} placeholder="License text" form="photo-update-form-{photo.id}" />
+        </FormField>
+        <FormField label="OG title" id="edit-og_title-{photo.id}">
+          <FormInput id="edit-og_title-{photo.id}" name="og_title" bind:value={formOgTitle} placeholder="OG title" form="photo-update-form-{photo.id}" />
+        </FormField>
+        <FormField label="OG description" id="edit-og_description-{photo.id}">
+          <FormTextarea id="edit-og_description-{photo.id}" name="og_description" bind:value={formOgDescription} rows={2} placeholder="OG description" form="photo-update-form-{photo.id}" />
+        </FormField>
+        <FormField label="OG image path" id="edit-og_image_path-{photo.id}">
+          <FormInput id="edit-og_image_path-{photo.id}" name="og_image_path" bind:value={formOgImagePath} placeholder="OG image path" form="photo-update-form-{photo.id}" />
+        </FormField>
+        <label class="flex items-center gap-2 text-sm">
+          <input type="checkbox" name="is_searchable" checked={photo.is_searchable} form="photo-update-form-{photo.id}" /> Searchable
         </label>
       </div>
-      {#if showAdvanced}
-        <div class="grid gap-3">
-          <label class="flex items-center gap-2 rounded border border-border-strong px-3 py-2 text-sm">
-            <input type="checkbox" name="is_searchable" checked={photo.is_searchable} /> Searchable
-          </label>
-          <textarea name="license_text" rows="2" class="rounded border border-border-strong px-3 py-2" placeholder="License text">{photo.license_text ?? ''}</textarea>
-          <input name="og_title" value={photo.og_title ?? ''} class="rounded border border-border-strong px-3 py-2" placeholder="OG title" />
-          <textarea name="og_description" rows="2" class="rounded border border-border-strong px-3 py-2" placeholder="OG description">{photo.og_description ?? ''}</textarea>
-          <input name="og_image_path" value={photo.og_image_path ?? ''} class="rounded border border-border-strong px-3 py-2" placeholder="OG image path" />
-        </div>
-      {:else}
-        <input type="hidden" name="is_searchable" value={photo.is_searchable ? 'on' : ''} />
-        <input type="hidden" name="license_text" value={photo.license_text ?? ''} />
-        <input type="hidden" name="og_title" value={photo.og_title ?? ''} />
-        <input type="hidden" name="og_description" value={photo.og_description ?? ''} />
-        <input type="hidden" name="og_image_path" value={photo.og_image_path ?? ''} />
-      {/if}
-        </form>
-      </div>
-
-      <div transition:fade={{ duration: FADE_DURATION, delay: 1 * STAGGER_MS, easing: quintOut }}>
-        <div class="grid gap-3 rounded border border-border p-3">
-      <div class="grid gap-3 lg:grid-cols-2">
-        <fieldset class="grid gap-2">
-          <legend class="text-xs uppercase tracking-[0.12em]">Categories</legend>
-          <div class="grid max-h-36 gap-1 overflow-auto">
-            {#each categories as category (category.id)}
-              <label class="flex items-center gap-2 text-sm cursor-pointer">
-                <input
-                  type="checkbox"
-                  value={category.id}
-                  checked={selectedCategoryIds.includes(category.id)}
-                  onchange={() => {
-                    const checked = !selectedCategoryIds.includes(category.id);
-                    const next = checked
-                      ? [...selectedCategoryIds, category.id]
-                      : selectedCategoryIds.filter((id: string) => id !== category.id);
-                    onTaxonomyChange(photo.id, next, selectedTagIds);
-                  }}
-                />
-                {category.name}
-              </label>
-            {/each}
           </div>
-        </fieldset>
-
-        <fieldset class="grid gap-2">
-          <legend class="text-xs uppercase tracking-[0.12em]">Tags</legend>
-          <div class="grid max-h-36 gap-1 overflow-auto">
-            {#each tags as tag (tag.id)}
-              <label class="flex items-center gap-2 text-sm cursor-pointer">
-                <input
-                  type="checkbox"
-                  value={tag.id}
-                  checked={selectedTagIds.includes(tag.id)}
-                  onchange={() => {
-                    const checked = !selectedTagIds.includes(tag.id);
-                    const next = checked
-                      ? [...selectedTagIds, tag.id]
-                      : selectedTagIds.filter((id: string) => id !== tag.id);
-                    onTaxonomyChange(photo.id, selectedCategoryIds, next);
-                  }}
-                />
-                {tag.name}
-              </label>
-            {/each}
-          </div>
-        </fieldset>
-      </div>
         </div>
       </div>
+      <h2 class="text-xl uppercase tracking-[0.15em]">Images</h2>
+      <div class="flex min-w-0 gap-12">
+        <div
+          transition:fade={{ duration: FADE_DURATION, delay: 2 * STAGGER_MS, easing: quintOut }}
+          class="min-w-0 flex-1 grid gap-3 p-3"
+        >
 
-      <div transition:fade={{ duration: FADE_DURATION, delay: 2 * STAGGER_MS, easing: quintOut }}>
-        <PhotoUploadZone photoId={photo.id} existingImageCount={images.length} />
-      </div>
-
-      <div transition:fade={{ duration: FADE_DURATION, delay: 3 * STAGGER_MS, easing: quintOut }}>
-        <div class="grid gap-3 p-3">
       <div class="flex flex-wrap items-center gap-2">
-        <p class="text-xs uppercase tracking-[0.12em]">Images</p>
         <span class="rounded border border-border px-2 py-1 text-[10px] uppercase tracking-[0.12em]">
           Processing: {pendingImageCount}
         </span>
       </div>
 
       {#if lead}
-        <div class="grid gap-2 rounded p-2 sm:grid-cols-[auto_1fr_auto] sm:items-center">
+        <div class="grid gap-2 rounded p-2 sm:grid-cols-[auto_1fr_auto] sm:items-start">
           {#if lead.delivery_storage_path}
-            <img src={photoPublicUrl(lead.delivery_storage_path, 180)} alt={lead.alt_text ?? photo.title} class="h-12 w-16 rounded object-cover" />
+            <div class="flex h-24 w-32 shrink-0 items-center justify-center overflow-hidden rounded">
+              <img src={photoPublicUrl(lead.delivery_storage_path, 360)} alt={lead.alt_text ?? photo.title} class="max-h-full max-w-full object-contain" />
+            </div>
           {:else}
-            <div class="grid h-12 w-16 place-items-center rounded border border-border-strong text-[10px] uppercase">pending</div>
+            <div class="grid h-24 w-32 shrink-0 place-items-center rounded border border-border-strong text-[10px] uppercase">pending</div>
           {/if}
 
-          <div class="text-xs">
+          <div class="flex min-w-0 flex-col gap-2 text-xs">
             <div class="flex items-center gap-2 uppercase tracking-[0.12em]">
               <span>Lead Image</span>
               <PhotoConversionBadge state={imageConversionState(lead)} size="sm" />
             </div>
+            {#if lead.delivery_storage_path}
+              <details class="min-w-0">
+                <summary class="cursor-pointer text-xs uppercase tracking-[0.12em]">Edit thumbnail crop</summary>
+                <div class="mt-3">
+                  <ThumbnailCropEditor
+                    imageId={lead.id}
+                    deliveryStoragePath={lead.delivery_storage_path}
+                    altText={lead.alt_text ?? photo.title}
+                    dimensions={lead.dimensions}
+                    initialCrop={{
+                      thumb_crop_x: lead.thumb_crop_x,
+                      thumb_crop_y: lead.thumb_crop_y,
+                      thumb_crop_zoom: lead.thumb_crop_zoom
+                    }}
+                    photoId={photo.id}
+                  />
+                </div>
+              </details>
+            {/if}
           </div>
 
           <form method="POST" action="?/removeImage">
@@ -372,26 +425,6 @@
             <AdminButton variant="danger-outline" size="sm" type="submit">Delete</AdminButton>
           </form>
         </div>
-
-        {#if lead.delivery_storage_path}
-          <details class="rounded border border-border p-3">
-            <summary class="cursor-pointer text-xs uppercase tracking-[0.12em]">Edit thumbnail crop</summary>
-            <div class="mt-3">
-              <ThumbnailCropEditor
-                imageId={lead.id}
-                deliveryStoragePath={lead.delivery_storage_path}
-                altText={lead.alt_text ?? photo.title}
-                dimensions={lead.dimensions}
-                initialCrop={{
-                  thumb_crop_x: lead.thumb_crop_x,
-                  thumb_crop_y: lead.thumb_crop_y,
-                  thumb_crop_zoom: lead.thumb_crop_zoom
-                }}
-                photoId={photo.id}
-              />
-            </div>
-          </details>
-        {/if}
       {:else}
         <p class="text-sm text-text-muted">No lead image set.</p>
       {/if}
@@ -407,33 +440,22 @@
               {@const image = imageById(imageId)}
               {#if image}
                 <li
-                  class="grid cursor-move gap-2 rounded p-2 sm:grid-cols-[auto_auto_1fr_auto_auto] sm:items-center {i % 2 === 0 ? 'bg-surface' : 'bg-surface-muted'}"
+                  class="grid cursor-move gap-2 rounded p-2 sm:grid-cols-[auto_1fr_auto_auto] sm:items-center {i % 2 === 0 ? 'bg-surface' : 'bg-surface-muted'}"
                   draggable="true"
                   ondragstart={(event) => onAdditionalDragStart(photo.id, image.id, event)}
                   ondragover={onAdditionalDragOver}
                   ondrop={(event) => onAdditionalDropBefore(photo.id, image.id, event)}
                   ondragend={onAdditionalDragEnd}
                 >
-                  <label class="flex items-center justify-center">
-                    <input
-                      type="checkbox"
-                      checked={selectedAdditional.includes(image.id)}
-                      onchange={(event) => onToggleAdditionalSelected(photo.id, image.id, (event.currentTarget as HTMLInputElement).checked)}
-                    />
-                  </label>
-
                   {#if image.delivery_storage_path}
-                    <img src={photoPublicUrl(image.delivery_storage_path, 160)} alt={image.alt_text ?? photo.title} class="h-12 w-16 rounded object-cover" />
+                    <div class="flex h-24 w-32 shrink-0 items-center justify-center overflow-hidden rounded">
+                      <img src={photoPublicUrl(image.delivery_storage_path, 320)} alt={image.alt_text ?? photo.title} class="max-h-full max-w-full object-contain" />
+                    </div>
                   {:else}
-                    <div class="grid h-12 w-16 place-items-center rounded border border-border-strong text-[10px] uppercase">pending</div>
+                    <div class="grid h-24 w-32 shrink-0 place-items-center rounded border border-border-strong text-[10px] uppercase">pending</div>
                   {/if}
 
-                  <div class="text-xs">
-                    <div class="flex items-center gap-2">
-                      <PhotoConversionBadge state={imageConversionState(image)} size="sm" />
-                    </div>
-                    <div>pos: {image.position}</div>
-                  </div>
+                  <div></div>
 
                   <form method="POST" action="?/setLead">
                     <input type="hidden" name="photo_id" value={photo.id} />
@@ -449,30 +471,23 @@
               {/if}
             {/each}
           </ul>
-
-          <div class="flex flex-wrap gap-2">
-            <form method="POST" action="?/removeSelectedImages" class="w-fit">
-              <input type="hidden" name="photo_id" value={photo.id} />
-              <input type="hidden" name="selected_image_ids" value={selectedAdditional.join('\n')} />
-              <AdminButton
-                variant="danger-outline"
-                type="submit"
-                disabled={selectedAdditional.length === 0}
-              >
-                Delete Selected Additional
-              </AdminButton>
-            </form>
-          </div>
         {/if}
       </div>
         </div>
+
+        <div class="min-w-0 flex-1">
+          <PhotoUploadZone photoId={photo.id} existingImageCount={images.length} />
+        </div>
       </div>
 
-      <div transition:fade={{ duration: FADE_DURATION, delay: 4 * STAGGER_MS, easing: quintOut }} class="flex flex-wrap items-center gap-2">
+      <div transition:fade={{ duration: FADE_DURATION, delay: 4 * STAGGER_MS, easing: quintOut }} class="mt-8 flex flex-wrap items-center justify-center gap-2">
         <AdminButton form="photo-update-form-{photo.id}" variant="success" type="submit">Save</AdminButton>
-        <AdminButton form="photo-update-form-{photo.id}" variant="danger" type="submit" formaction="?/archive">Archive</AdminButton>
-        <AdminButton form="photo-update-form-{photo.id}" type="submit" formaction="?/restore">Restore</AdminButton>
-        <span class="text-xs text-text-muted">{photo.status}{#if photo.deleted_at} (archived){/if}</span>
+        {#if !photo.deleted_at}
+          <AdminButton form="photo-update-form-{photo.id}" variant="danger" type="submit" formaction="?/archive">Archive</AdminButton>
+        {/if}
+        {#if photo.deleted_at}
+          <AdminButton form="photo-update-form-{photo.id}" type="submit" formaction="?/restore">Restore</AdminButton>
+        {/if}
       </div>
     </div>
   {/if}

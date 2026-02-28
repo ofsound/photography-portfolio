@@ -1160,7 +1160,7 @@
       <div class="flex items-center gap-1">
         <button
           type="button"
-          class="rounded border border-border-strong px-2 py-1 disabled:opacity-40"
+          class="rounded border border-border-strong px-2 py-1 {layoutMode === 'uniform' ? 'bg-border' : 'opacity-40'}"
           onclick={() => updateLayoutMode('uniform')}
           disabled={layoutMode === 'uniform'}
         >
@@ -1168,7 +1168,7 @@
         </button>
         <button
           type="button"
-          class="rounded border border-border-strong px-2 py-1 disabled:opacity-40"
+          class="rounded border border-border-strong px-2 py-1 {layoutMode === 'masonry' ? 'bg-border' : 'opacity-40'}"
           onclick={() => updateLayoutMode('masonry')}
           disabled={layoutMode === 'masonry'}
         >
@@ -1179,7 +1179,7 @@
       <div class="flex items-center gap-1">
         <button
           type="button"
-          class="rounded border border-border-strong px-2 py-1 disabled:opacity-40"
+          class="rounded border border-border-strong px-2 py-1 {widthMode === 'full' ? 'bg-border' : 'opacity-40'}"
           onclick={() => updateWidthMode('full')}
           disabled={widthMode === 'full'}
         >
@@ -1187,7 +1187,7 @@
         </button>
         <button
           type="button"
-          class="rounded border border-border-strong px-2 py-1 disabled:opacity-40"
+          class="rounded border border-border-strong px-2 py-1 {widthMode === 'constrained' ? 'bg-border' : 'opacity-40'}"
           onclick={() => updateWidthMode('constrained')}
           disabled={widthMode === 'constrained'}
         >

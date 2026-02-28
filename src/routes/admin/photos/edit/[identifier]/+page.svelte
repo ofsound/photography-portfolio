@@ -44,14 +44,12 @@
 
   let selectedPhotoIds = $state<string[]>([]);
   let orderedAdditional = $state<string[]>([]);
-  let selectedAdditional = $state<string[]>([]);
   let selectedCategoryIds = $state<string[]>([]);
   let selectedTagIds = $state<string[]>([]);
   let draggingId = $state<string | null>(null);
 
   $effect(() => {
     orderedAdditional = baseAdditionalOrder();
-    selectedAdditional = [];
     selectedPhotoIds = [];
     selectedCategoryIds = serverCategoryIds;
     selectedTagIds = serverTagIds;
@@ -70,15 +68,6 @@
       return;
     }
     selectedPhotoIds = [];
-  };
-
-  const onToggleAdditionalSelected = (_photoId: string, imageId: string, checked: boolean) => {
-    if (checked) {
-      if (selectedAdditional.includes(imageId)) return;
-      selectedAdditional = [...selectedAdditional, imageId];
-      return;
-    }
-    selectedAdditional = selectedAdditional.filter((id) => id !== imageId);
   };
 
   const onAdditionalDragStart = (_photoId: string, imageId: string, event: DragEvent) => {
@@ -132,8 +121,8 @@
 </script>
 
 <div class="flex flex-col gap-3">
-  <a href="/admin/photos" class="rounded border border-border-strong px-3 py-1 text-xs uppercase tracking-[0.14em] w-fit">Back to Photos</a>
-  <h1 class="text-xl uppercase tracking-[0.15em]">Edit Photo</h1>
+  <a href="/admin/photos" class="rounded border border-admin-btn-border bg-admin-btn-bg px-3 py-1 text-xs uppercase tracking-[0.14em] w-fit hover:bg-border">Back to Photos</a>
+  <h2 class="text-xl uppercase tracking-[0.15em]">Details</h2>
 </div>
 
 {#if form?.message}
@@ -155,9 +144,7 @@
     {onTaxonomyChange}
     {photoConversionState}
     additionalOrder={orderedAdditional}
-    selectedAdditional={selectedAdditional}
     {onTogglePhotoSelected}
-    {onToggleAdditionalSelected}
     {onAdditionalDragStart}
     {onAdditionalDragOver}
     {onAdditionalDropBefore}

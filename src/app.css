@@ -23,6 +23,9 @@
   --color-text-inverse: light-dark(theme(colors.zinc.100), theme(colors.zinc.900));
   --color-border: light-dark(theme(colors.zinc.300), theme(colors.zinc.600));
   --color-border-strong: light-dark(theme(colors.zinc.400), theme(colors.zinc.500));
+  /* Admin default button: light = slightly darker bg + subtle border; dark = transparent bg + strong border */
+  --color-admin-btn-bg: light-dark(theme(colors.zinc.100), transparent);
+  --color-admin-btn-border: light-dark(theme(colors.zinc.200), theme(colors.zinc.500));
   --color-brand: light-dark(theme(colors.indigo.600), theme(colors.indigo.300));
   --color-brand-contrast: light-dark(theme(colors.indigo.50), theme(colors.indigo.950));
   --color-success: light-dark(theme(colors.green.600), theme(colors.green.400));

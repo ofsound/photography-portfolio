@@ -4,18 +4,43 @@
   let { photoId, existingImageCount = 0 } = $props<{ photoId: string; existingImageCount?: number }>();
 
   const defaultKind = $derived(existingImageCount === 0 ? 'lead' : 'additional');
+  let fileName = $state<string | null>(null);
+
+  function handleFileChange(e: Event) {
+    const input = e.currentTarget as HTMLInputElement;
+    fileName = input.files?.[0]?.name ?? null;
+  }
 </script>
 
 <form method="POST" action="?/uploadImage" enctype="multipart/form-data" class="grid gap-2 rounded-lg border-2 border-dashed border-border-strong bg-surface p-4">
   <input type="hidden" name="photo_id" value={photoId} />
-  <p class="text-xs uppercase tracking-[0.12em]">Upload Image (source/; conversion async)</p>
-  <div class="grid gap-2 sm:grid-cols-4">
-    <input type="file" name="image_file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" class="sm:col-span-2" required />
-    <select name="kind" class="rounded border border-border-strong px-3 py-2 text-sm">
-      <option value="lead" selected={defaultKind === 'lead'}>Lead image</option>
-      <option value="additional" selected={defaultKind === 'additional'}>Additional image</option>
-    </select>
-    <input name="alt_text" placeholder="Alt text" class="rounded border border-border-strong px-3 py-2" />
+  <p class="text-xs uppercase tracking-[0.12em]">Upload Image</p>
+  <div class="grid gap-2">
+    <div class="flex flex-wrap items-center gap-2">
+      <label
+        class="relative cursor-pointer rounded border border-admin-btn-border bg-admin-btn-bg px-3 py-2 text-sm uppercase tracking-[0.14em] hover:bg-border"
+      >
+        <input
+          type="file"
+          name="image_file"
+          accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
+          required
+          class="absolute inset-0 cursor-pointer opacity-0"
+          onchange={handleFileChange}
+        />
+        Choose file
+      </label>
+      <span class="min-w-0 truncate text-sm text-text-muted">
+        {fileName ?? 'No file chosen'}
+      </span>
+    </div>
+    <div class="grid gap-2 sm:grid-cols-2 sm:items-center">
+      <select name="kind" class="rounded border border-border-strong px-3 py-2 text-sm">
+        <option value="lead" selected={defaultKind === 'lead'}>Lead image</option>
+        <option value="additional" selected={defaultKind === 'additional'}>Additional image</option>
+      </select>
+      <input name="alt_text" placeholder="Alt text" class="rounded border border-border-strong px-3 py-2" />
+    </div>
   </div>
   <p class="text-xs text-text-muted">
     {#if defaultKind === 'lead'}
@@ -24,5 +49,7 @@
       Choose <strong>Additional image</strong> for gallery uploads. Use <strong>Lead image</strong> only for the cover.
     {/if}
   </p>
-  <AdminButton type="submit">Upload</AdminButton>
+  <div class="flex justify-center">
+    <AdminButton type="submit" variant="success" wFit>Upload</AdminButton>
+  </div>
 </form>

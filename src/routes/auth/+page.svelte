@@ -1,4 +1,7 @@
 <script lang="ts">
+  import FormField from '$lib/components/FormField.svelte';
+  import FormInput from '$lib/components/FormInput.svelte';
+
   let { data, form } = $props();
 </script>
 
@@ -13,25 +16,22 @@
     <div class="grid gap-3 rounded border border-border p-4 text-sm">
       <p>Signed in as <strong>{data.userEmail}</strong>.</p>
       <div class="flex flex-wrap items-center gap-2">
-        <a href="/admin" class="rounded border border-border-strong px-3 py-1 text-xs uppercase tracking-[0.14em]">Go to Admin</a>
+        <a href="/admin/photos" class="rounded border border-admin-btn-border bg-admin-btn-bg px-3 py-1 text-xs uppercase tracking-[0.14em] hover:bg-border">Go to Admin</a>
         <form method="POST" action="?/logout">
-          <button class="rounded border border-border-strong px-3 py-1 text-xs uppercase tracking-[0.14em]" type="submit">Sign Out</button>
+          <button class="rounded border border-admin-btn-border bg-admin-btn-bg px-3 py-1 text-xs uppercase tracking-[0.14em] hover:bg-border" type="submit">Sign Out</button>
         </form>
       </div>
     </div>
   {:else}
     <form method="POST" action="?/login" class="grid gap-3 rounded border border-border p-4">
-      <label class="grid gap-1 text-xs uppercase tracking-[0.12em]">
-        Email
-        <input name="email" type="email" required class="rounded border border-border-strong px-3 py-2" />
-      </label>
+      <FormField label="Email" id="auth-email">
+        <FormInput id="auth-email" name="email" type="email" required />
+      </FormField>
+      <FormField label="Password" id="auth-password">
+        <FormInput id="auth-password" name="password" type="password" required />
+      </FormField>
 
-      <label class="grid gap-1 text-xs uppercase tracking-[0.12em]">
-        Password
-        <input name="password" type="password" required class="rounded border border-border-strong px-3 py-2" />
-      </label>
-
-      <button class="w-fit rounded border border-border-strong px-3 py-1 text-xs uppercase tracking-[0.14em]" type="submit">Sign In</button>
+      <button class="w-fit rounded border border-admin-btn-border bg-admin-btn-bg px-3 py-1 text-xs uppercase tracking-[0.14em] hover:bg-border" type="submit">Sign In</button>
     </form>
   {/if}
 </section>

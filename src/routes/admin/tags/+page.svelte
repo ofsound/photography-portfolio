@@ -1,5 +1,8 @@
 <script lang="ts">
   import AdminButton from '$lib/components/admin/AdminButton.svelte';
+  import FormField from '$lib/components/FormField.svelte';
+  import FormInput from '$lib/components/FormInput.svelte';
+  import FormTextarea from '$lib/components/FormTextarea.svelte';
 
   let { data, form } = $props();
 </script>
@@ -13,9 +16,15 @@
 <section class="mt-6 grid gap-8 lg:grid-cols-[360px_1fr]">
   <form method="POST" action="?/create" class="grid gap-3 rounded border border-border p-4">
     <h2 class="text-sm uppercase tracking-[0.14em]">New Tag</h2>
-    <input name="name" placeholder="Name" class="rounded border border-border-strong px-3 py-2" required />
-    <input name="slug" placeholder="Slug (optional)" class="rounded border border-border-strong px-3 py-2" />
-    <textarea name="description" placeholder="Description" class="rounded border border-border-strong px-3 py-2"></textarea>
+    <FormField label="Name" id="tag-create-name">
+      <FormInput id="tag-create-name" name="name" placeholder="Name" required />
+    </FormField>
+    <FormField label="Slug" id="tag-create-slug" helper="Optional">
+      <FormInput id="tag-create-slug" name="slug" placeholder="Slug (optional)" />
+    </FormField>
+    <FormField label="Description" id="tag-create-description">
+      <FormTextarea id="tag-create-description" name="description" placeholder="Description" />
+    </FormField>
     <label class="flex items-center gap-2 text-sm">
       <input name="is_active" type="checkbox" checked /> Active
     </label>
@@ -24,13 +33,19 @@
 
   <div class="grid gap-3">
     {#each data.tags as tag (tag.id)}
-      <form method="POST" action="?/update" class="grid gap-2 rounded border border-border p-4">
+      <form method="POST" action="?/update" class="grid gap-3 rounded border border-border p-4">
         <input type="hidden" name="id" value={tag.id} />
-        <div class="grid gap-2 sm:grid-cols-2">
-          <input name="name" value={tag.name} class="rounded border border-border-strong px-3 py-2" required />
-          <input name="slug" value={tag.slug} class="rounded border border-border-strong px-3 py-2" required />
+        <div class="grid gap-3 sm:grid-cols-2">
+          <FormField label="Name" id="tag-edit-name-{tag.id}">
+            <FormInput id="tag-edit-name-{tag.id}" name="name" value={tag.name} placeholder="Name" required />
+          </FormField>
+          <FormField label="Slug" id="tag-edit-slug-{tag.id}">
+            <FormInput id="tag-edit-slug-{tag.id}" name="slug" value={tag.slug} placeholder="Slug" required />
+          </FormField>
         </div>
-        <textarea name="description" class="rounded border border-border-strong px-3 py-2">{tag.description ?? ''}</textarea>
+        <FormField label="Description" id="tag-edit-description-{tag.id}">
+          <FormTextarea id="tag-edit-description-{tag.id}" name="description" value={tag.description ?? ''} placeholder="Description" />
+        </FormField>
         <div class="flex flex-wrap items-center gap-3">
           <label class="flex items-center gap-2 text-sm">
             <input name="is_active" type="checkbox" checked={tag.is_active} /> Active

@@ -1,5 +1,8 @@
 <script lang="ts">
   import AdminButton from '$lib/components/admin/AdminButton.svelte';
+  import FormField from '$lib/components/FormField.svelte';
+  import FormInput from '$lib/components/FormInput.svelte';
+  import FormTextarea from '$lib/components/FormTextarea.svelte';
 
   let { data, form } = $props();
   const pages = $derived(
@@ -21,29 +24,35 @@
   <form method="POST" action="?/create" class="grid gap-3 rounded border border-border p-4">
     <h2 class="text-sm uppercase tracking-[0.14em]">Create Page</h2>
 
-    <input name="title" placeholder="Title" class="rounded border border-border-strong px-3 py-2" required />
-    <input name="slug" placeholder="Slug" class="rounded border border-border-strong px-3 py-2" />
+    <FormField label="Title" id="page-create-title">
+      <FormInput id="page-create-title" name="title" placeholder="Title" required />
+    </FormField>
+    <FormField label="Slug" id="page-create-slug">
+      <FormInput id="page-create-slug" name="slug" placeholder="Slug" />
+    </FormField>
 
-    <div class="grid gap-2 sm:grid-cols-2">
-      <label class="grid gap-1 text-xs uppercase tracking-[0.12em]">
-        Status
-        <select name="status" class="rounded border border-border-strong px-3 py-2">
-          <option value="published">published</option>
-          <option value="archived">archived</option>
-        </select>
-      </label>
-    </div>
+    <FormField label="Status" id="page-create-status">
+      <select name="status" id="page-create-status" class="w-full rounded border border-border-strong bg-surface px-3 py-2 text-sm">
+        <option value="published">published</option>
+        <option value="archived">archived</option>
+      </select>
+    </FormField>
 
-    <textarea name="html_content" rows="6" placeholder="HTML" class="rounded border border-border-strong px-3 py-2 font-mono text-xs"></textarea>
-    <textarea
-      name="css_module"
-      rows="4"
-      placeholder="Scoped CSS"
-      class="rounded border border-border-strong px-3 py-2 font-mono text-xs"
-    ></textarea>
-    <input name="seo_title" placeholder="SEO title" class="rounded border border-border-strong px-3 py-2" />
-    <textarea name="seo_description" rows="2" placeholder="SEO description" class="rounded border border-border-strong px-3 py-2"></textarea>
-    <input name="og_image_path" placeholder="OG image path" class="rounded border border-border-strong px-3 py-2" />
+    <FormField label="HTML" id="page-create-html_content">
+      <FormTextarea id="page-create-html_content" name="html_content" rows={6} placeholder="HTML" class="font-mono text-xs" />
+    </FormField>
+    <FormField label="Scoped CSS" id="page-create-css_module">
+      <FormTextarea id="page-create-css_module" name="css_module" rows={4} placeholder="Scoped CSS" class="font-mono text-xs" />
+    </FormField>
+    <FormField label="SEO title" id="page-create-seo_title">
+      <FormInput id="page-create-seo_title" name="seo_title" placeholder="SEO title" />
+    </FormField>
+    <FormField label="SEO description" id="page-create-seo_description">
+      <FormTextarea id="page-create-seo_description" name="seo_description" rows={2} placeholder="SEO description" />
+    </FormField>
+    <FormField label="OG image path" id="page-create-og_image_path">
+      <FormInput id="page-create-og_image_path" name="og_image_path" placeholder="OG image path" />
+    </FormField>
 
     <div class="flex flex-wrap items-center gap-3">
       <label class="flex items-center gap-2 text-sm"><input name="show_in_nav" type="checkbox" /> Show in nav</label>

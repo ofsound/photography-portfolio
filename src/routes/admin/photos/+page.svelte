@@ -1,11 +1,15 @@
 <script lang="ts">
   import { invalidateAll } from '$app/navigation';
   import { onMount } from 'svelte';
+  import { DragDropProvider, DragOverlay } from '@dnd-kit/svelte';
+  import { createSortable } from '@dnd-kit/svelte/sortable';
+  import { move } from '@dnd-kit/helpers';
   import AdminButton from '$lib/components/admin/AdminButton.svelte';
   import AdminPhotoCard from '$lib/components/admin/photos/AdminPhotoCard.svelte';
   import AdminPhotosBulkPanel from '$lib/components/admin/photos/AdminPhotosBulkPanel.svelte';
   import AdminPhotosFilterForm from '$lib/components/admin/photos/AdminPhotosFilterForm.svelte';
   import { getAdminPhotosPrefs, setAdminPhotosPrefs } from '$lib/stores/admin-photos-prefs';
+  import { photoPublicUrl } from '$lib/utils/storage-url';
   import type { AdminCategory, AdminPhoto, AdminPhotoImage, AdminTag } from '$lib/types/content';
 
   const UNIFORM_RATIO = 1;
@@ -62,8 +66,8 @@
   let redoStack = $state<PhotoDraftState[]>([]);
 
   let dragging = $state<{ photoId: string; imageId: string } | null>(null);
-  let draggingPhotoId = $state<string | null>(null);
   let draggingTaxonomy = $state<{ type: 'category' | 'tag'; id: string } | null>(null);
+  let orderedPhotoIds = $state<string[]>([]);
   let showSearch = $state(false);
   let showMeta = $state(false);
 
@@ -153,6 +157,8 @@
     }
   };
 
+  const photoById = $derived(new Map(photos.map((p) => [p.id, p])));
+
   $effect(() => {
     const nextOrder: Record<string, string[]> = {};
     const nextCategoryIds: Record<string, string[]> = {};
@@ -167,6 +173,7 @@
     orderedAdditionalByPhoto = nextOrder;
     selectedCategoryIdsByPhoto = nextCategoryIds;
     selectedTagIdsByPhoto = nextTagIds;
+    orderedPhotoIds = photos.map((p) => p.id);
     undoStack = [];
     redoStack = [];
   });
@@ -327,36 +334,13 @@
     if (res.ok) invalidateAll();
   }
 
-  const onPhotoDragStart = (photoId: string, event: DragEvent) => {
-    draggingPhotoId = photoId;
-    event.dataTransfer?.setData('text/plain', photoId);
-    if (event.dataTransfer) event.dataTransfer.effectAllowed = 'move';
-  };
-
-  const onPhotoDragOver = (event: DragEvent) => {
-    event.preventDefault();
-    if (event.dataTransfer) event.dataTransfer.dropEffect = 'move';
-  };
-
-  const onPhotoDrop = (targetPhotoId: string, event: DragEvent) => {
-    event.preventDefault();
-    event.stopPropagation();
-    const sourceId = draggingPhotoId;
-    draggingPhotoId = null;
-    if (!sourceId || sourceId === targetPhotoId) return;
-
-    const currentIds = photos.map((p) => p.id);
-    const from = currentIds.indexOf(sourceId);
-    const to = currentIds.indexOf(targetPhotoId);
-    if (from < 0 || to < 0 || from === to) return;
-
-    const next = moveItem(currentIds, from, to);
-    persistPhotoOrder(next);
-  };
-
-  const onPhotoDragEnd = () => {
-    draggingPhotoId = null;
-  };
+  function onPhotoDragEnd(event: unknown) {
+    const next = move(orderedPhotoIds, event as Parameters<typeof move>[1]);
+    if (next !== orderedPhotoIds) {
+      orderedPhotoIds = next;
+      persistPhotoOrder(next);
+    }
+  }
 
   const updateDensity = (next: number) => {
     density = next;
@@ -437,37 +421,72 @@
   {/if}
 
   <div class="mx-auto w-full" style={sectionMaxWidthStyle}>
-    <ul class="grid" style="grid-template-columns: repeat({colCount}, minmax(0, 1fr)); gap: {gap}px;">
-      {#each photos as photo, i (photo.id)}
-        <li>
-          <AdminPhotoCard
-            index={i}
-            {photo}
-            editHref={`/admin/photos/edit/${photo.id}`}
-            images={imagesForPhoto(photo.id)}
-            {categories}
-            {tags}
-            {selectedPhotoIds}
-            selectedCategoryIds={selectedCategoryIds(photo.id)}
-            selectedTagIds={selectedTagIds(photo.id)}
-            onTaxonomyChange={onTaxonomyChange}
-            photoConversionState={photoConversionState(photo.id)}
-            additionalOrder={additionalOrder(photo.id)}
-            onTogglePhotoSelected={togglePhotoSelected}
-            {onAdditionalDragStart}
-            {onAdditionalDragOver}
-            {onAdditionalDropBefore}
-            {onAdditionalDropToEnd}
-            {onAdditionalDragEnd}
-            gridMode={true}
-            onPhotoDragStart={onPhotoDragStart}
-            onPhotoDragOver={onPhotoDragOver}
-            onPhotoDrop={onPhotoDrop}
-            onPhotoDragEnd={onPhotoDragEnd}
-            isDraggingPhoto={draggingPhotoId === photo.id}
-          />
-        </li>
-      {/each}
-    </ul>
+    <DragDropProvider onDragEnd={onPhotoDragEnd}>
+      <ul class="grid" style="grid-template-columns: repeat({colCount}, minmax(0, 1fr)); gap: {gap}px;">
+        {#each orderedPhotoIds as id, index (id)}
+          {@const photo = photoById.get(id)}
+          {#if photo}
+            {@const sortable = createSortable({ id, index })}
+            <li {@attach sortable.attach} class="cursor-move">
+              <AdminPhotoCard
+                index={index}
+                {photo}
+                editHref={`/admin/photos/edit/${photo.id}`}
+                images={imagesForPhoto(photo.id)}
+                {categories}
+                {tags}
+                {selectedPhotoIds}
+                selectedCategoryIds={selectedCategoryIds(photo.id)}
+                selectedTagIds={selectedTagIds(photo.id)}
+                onTaxonomyChange={onTaxonomyChange}
+                photoConversionState={photoConversionState(photo.id)}
+                additionalOrder={additionalOrder(photo.id)}
+                onTogglePhotoSelected={togglePhotoSelected}
+                {onAdditionalDragStart}
+                {onAdditionalDragOver}
+                {onAdditionalDropBefore}
+                {onAdditionalDropToEnd}
+                {onAdditionalDragEnd}
+                gridMode={true}
+                isDraggingPhoto={sortable.isDragging}
+              />
+            </li>
+          {/if}
+        {/each}
+      </ul>
+
+      <DragOverlay>
+        {#snippet children(source)}
+          {@const photo = photoById.get(String(source.id))}
+          {#if photo}
+            {@const lead = imagesForPhoto(photo.id).find((img) => img.kind === 'lead') ?? null}
+            <div
+              class="relative flex aspect-square w-40 flex-col overflow-hidden rounded border-2 border-primary bg-surface shadow-xl"
+              role="presentation"
+            >
+              <div class="flex-1 overflow-hidden">
+                {#if lead?.delivery_storage_path}
+                  <img
+                    src={photoPublicUrl(lead.delivery_storage_path, 400)}
+                    alt={lead.alt_text ?? photo.title}
+                    class="h-full w-full object-cover"
+                  />
+                {:else}
+                  <div
+                    class="grid h-full w-full place-items-center rounded bg-surface-muted text-[var(--text-chip)] uppercase text-text-muted"
+                  >
+                    {lead ? 'pending' : 'no lead'}
+                  </div>
+                {/if}
+              </div>
+              <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent px-2 pb-2 pt-6">
+                <p class="truncate text-xs font-medium uppercase text-white">{photo.title}</p>
+                <p class="truncate text-[var(--text-chip)] text-white/80">/{photo.slug}</p>
+              </div>
+            </div>
+          {/if}
+        {/snippet}
+      </DragOverlay>
+    </DragDropProvider>
   </div>
 </section>

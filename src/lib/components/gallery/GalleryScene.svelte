@@ -86,7 +86,7 @@
   const swipeMaxDurationMs = 700;
 
   const FADE_OUT_CHROME_MS = 280;
-  const SCALE_MASK_MS = 520;
+  const SCALE_MASK_MS = 1520;
   const CLOSING_CHROME_MS = 180;
 
   /** Macromedia Flash-style preloader: only when on gallery grid (no active photo). */
@@ -425,7 +425,9 @@
       useCover: layoutMode === "uniform",
     });
 
-    await wait(reducedMotion() ? 150 : SCALE_MASK_MS);
+    if (reducedMotion()) {
+      await wait(150);
+    }
 
     reinsertPromotedTile(session);
     promoted = null;
@@ -581,10 +583,11 @@
 
     await Promise.all([movePromotedTile(outgoingSession, outgoingEndRect, motion), movePromotedTile(incomingSession, incomingFinalRect, motion)]);
 
-    releasePromotedTile(outgoingSession);
+    // Atomic update to avoid one-frame flash of empty detail layer
     promoted = incomingSession;
     activeSlug = targetSlug;
     activeImageId = null;
+    releasePromotedTile(outgoingSession);
 
     return true;
   };
@@ -628,7 +631,7 @@
   };
 
   const onKeydown = (event: KeyboardEvent) => {
-    if (!activeSlug) return;
+    if (!activeSlug || event.repeat) return;
 
     if (event.key === "Escape") {
       closeToGallery(event);

@@ -289,6 +289,7 @@ export const promoteTile = async ({
     if (options?.reducedMotion || (options?.durationMs ?? 520) <= 0 || typeof wrapper.animate !== 'function') {
       applyRectToWrapper(wrapper, targetRect);
     } else {
+      if (img) img.style.objectFit = 'cover';
       await wrapper.animate(
         [
           { top: `${startRect.top}px`, left: `${startRect.left}px`, width: `${startRect.width}px`, height: `${startRect.height}px` },
@@ -297,6 +298,7 @@ export const promoteTile = async ({
         { duration: options?.durationMs ?? 520, easing: options?.easing ?? 'cubic-bezier(0.16, 1, 0.3, 1)', fill: 'forwards' }
       ).finished;
       applyRectToWrapper(wrapper, targetRect);
+      if (img) img.style.objectFit = '';
     }
   }
 
@@ -374,6 +376,7 @@ export const demoteTile = async (session: TileAnimationSession, options?: Demote
       img.style.transform = `translate(${tx}%, ${ty}%) scale(${session.imgCrop.scale})`;
     }
   } else {
+    if (img) img.style.objectFit = 'cover';
     await animateRect(rectEl, session.currentRect, targetRect, options);
   }
   session.currentRect = targetRect;
@@ -397,6 +400,12 @@ export const reinsertPromotedTile = (
   } else if (session.gridAspectRatio != null) {
     session.node.style.aspectRatio = String(session.gridAspectRatio);
   }
+
+  const img = session.node.querySelector('img');
+  if (img && !session.imgCrop) {
+    img.style.objectFit = '';
+  }
+
   const parent = session.placeholder.parentNode;
   if (parent) {
     parent.insertBefore(session.node, session.placeholder);
@@ -430,6 +439,11 @@ export const releasePromotedTile = (
       img.style.objectFit = 'contain';
       img.style.transformOrigin = `${session.imgCrop.originX * 100}% ${session.imgCrop.originY * 100}%`;
       img.style.transform = `translate(${session.imgCrop.translateX}%, ${session.imgCrop.translateY}%) scale(${session.imgCrop.scale})`;
+    }
+  } else {
+    const img = session.node.querySelector('img');
+    if (img) {
+      img.style.objectFit = '';
     }
   }
   const parent = session.placeholder.parentNode;

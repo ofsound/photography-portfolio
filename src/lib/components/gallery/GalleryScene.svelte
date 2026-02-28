@@ -1103,7 +1103,7 @@
       <a
         href={withCurrentSearch("/gallery")}
         onclick={closeToGallery}
-        class="chrome-panel pointer-events-auto fixed left-4 top-[calc(var(--site-header-height,var(--size-header))+14px)] rounded px-3 py-2 text-xs uppercase tracking-[var(--tracking-heading)]"
+        class="chrome-panel pointer-events-auto fixed left-5 top-5 rounded px-3 py-2 text-xs uppercase tracking-[var(--tracking-heading)]"
         class:pointer-events-none={isTransitioning}
         class:opacity-50={isTransitioning}
       >

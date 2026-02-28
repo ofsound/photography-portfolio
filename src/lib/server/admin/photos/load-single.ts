@@ -3,7 +3,7 @@ import type { Database } from '$lib/types/database';
 import { isUuid } from '$lib/server/admin/photos/shared';
 
 const PHOTO_SELECT =
-  'id, slug, title, capture_date, description, dimensions, license_text, og_title, og_description, og_image_path, status, is_searchable, deleted_at, updated_at';
+  'id, slug, title, capture_date, description, dimensions, license_text, og_title, og_description, og_image_path, status, deleted_at, updated_at';
 const IMAGE_SELECT =
   'id, photo_id, kind, position, source_storage_path, delivery_storage_path, source_mime_type, source_bytes, alt_text, dimensions, thumb_crop_x, thumb_crop_y, thumb_crop_zoom, created_at';
 

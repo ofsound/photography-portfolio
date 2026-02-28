@@ -1,5 +1,5 @@
 import { fail, type Actions } from '@sveltejs/kit';
-import { asBoolean, asOptionalDate, asString, toSlug } from '$lib/server/admin-helpers';
+import { asOptionalDate, asString, toSlug } from '$lib/server/admin-helpers';
 
 export type PhotoPayload = {
   title: string;
@@ -11,7 +11,6 @@ export type PhotoPayload = {
   og_title: string | null;
   og_description: string | null;
   og_image_path: string | null;
-  is_searchable: boolean;
 };
 
 export const upsertPhotoPayload = (form: FormData): { ok: true; payload: PhotoPayload } | { ok: false; message: string } => {
@@ -33,8 +32,7 @@ export const upsertPhotoPayload = (form: FormData): { ok: true; payload: PhotoPa
       license_text: asString(form.get('license_text')).trim() || null,
       og_title: asString(form.get('og_title')).trim() || null,
       og_description: asString(form.get('og_description')).trim() || null,
-      og_image_path: asString(form.get('og_image_path')).trim() || null,
-      is_searchable: asBoolean(form.get('is_searchable'))
+      og_image_path: asString(form.get('og_image_path')).trim() || null
     }
   };
 };

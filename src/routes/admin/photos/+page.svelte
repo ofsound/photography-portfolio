@@ -378,6 +378,7 @@
   {selectedPhotoIds}
   undoCount={undoStack.length}
   redoCount={redoStack.length}
+  showArchived={data.showArchived}
   {categories}
   {tags}
   {taxonomyDraftCategories}

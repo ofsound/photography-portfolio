@@ -293,10 +293,6 @@
                 <FormField label="OG image path" id="edit-og_image_path-{photo.id}">
                   <FormInput id="edit-og_image_path-{photo.id}" name="og_image_path" bind:value={formOgImagePath} placeholder="OG image path" form="photo-update-form-{photo.id}" />
                 </FormField>
-                <label class="flex items-center gap-2 text-sm">
-                  <input type="checkbox" name="is_searchable" checked={photo.is_searchable} form="photo-update-form-{photo.id}" />
-                   Searchable
-                </label>
               </div>
             </div>
           </div>

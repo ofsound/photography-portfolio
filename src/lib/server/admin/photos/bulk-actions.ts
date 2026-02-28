@@ -1,5 +1,5 @@
 import { fail, type Actions } from '@sveltejs/kit';
-import { asBoolean, asString, parseUuidList } from '$lib/server/admin-helpers';
+import { asString, parseUuidList } from '$lib/server/admin-helpers';
 
 export const bulkPhotoActions: Actions = {
   bulkArchivePhotos: async ({ locals, request }) => {
@@ -30,19 +30,45 @@ export const bulkPhotoActions: Actions = {
     return { success: true, message: `Restored ${photoIds.length} photo(s).` };
   },
 
-  bulkSetSearchable: async ({ locals, request }) => {
+  bulkDeletePhotos: async ({ locals, request }) => {
     const form = await request.formData();
+    if (asString(form.get('showArchived')) !== '1') {
+      return fail(400, { message: 'Delete is only allowed when viewing archived photos.' });
+    }
     const photoIds = parseUuidList(asString(form.get('selected_photo_ids')));
-    const searchable = asBoolean(form.get('searchable'));
     if (!photoIds.length) return fail(400, { message: 'Select at least one photo.' });
 
-    const { error } = await locals.supabase.from('photos').update({ is_searchable: searchable }).in('id', photoIds);
-    if (error) return fail(400, { message: error.message });
+    const { data: photos, error: photosError } = await locals.supabase
+      .from('photos')
+      .select('id, status, deleted_at')
+      .in('id', photoIds);
 
-    return {
-      success: true,
-      message: `${searchable ? 'Enabled' : 'Disabled'} search for ${photoIds.length} photo(s).`
-    };
+    if (photosError) return fail(400, { message: photosError.message });
+    const notArchived = (photos ?? []).filter(
+      (p: { status: string; deleted_at: string | null }) => p.status !== 'archived' || p.deleted_at == null
+    );
+    if (notArchived.length > 0) {
+      return fail(400, { message: 'Only archived photos can be permanently deleted.' });
+    }
+
+    const { data: images, error: imagesError } = await locals.supabase
+      .from('photo_images')
+      .select('source_storage_path, delivery_storage_path')
+      .in('photo_id', photoIds);
+
+    if (imagesError) return fail(400, { message: imagesError.message });
+
+    const pathsToRemove = (images ?? []).flatMap((row: { source_storage_path: string; delivery_storage_path: string | null }) =>
+      [row.source_storage_path, row.delivery_storage_path].filter(Boolean)
+    ) as string[];
+    if (pathsToRemove.length > 0) {
+      const { error: storageError } = await locals.supabase.storage.from('photos').remove(pathsToRemove);
+      if (storageError) return fail(400, { message: storageError.message });
+    }
+
+    const { error: deleteError } = await locals.supabase.from('photos').delete().in('id', photoIds);
+    if (deleteError) return fail(400, { message: deleteError.message });
+    return { success: true, message: `Deleted ${photoIds.length} photo(s) and their files.` };
   },
 
   reorderPhotos: async ({ locals, request }) => {

@@ -59,7 +59,7 @@
 
   <div class="flex flex-wrap items-center gap-2">
     <label class="flex items-center gap-2 text-sm">
-      <input type="checkbox" name="showArchived" value="1" checked={showArchived} /> Show archived
+      <input type="checkbox" name="showArchived" value="1" checked={showArchived} /> Archived only
     </label>
     <AdminButton type="submit">Apply</AdminButton>
   </div>

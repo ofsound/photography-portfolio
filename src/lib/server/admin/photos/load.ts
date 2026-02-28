@@ -15,13 +15,15 @@ export const loadAdminPhotosPage = async ({ locals, url }: { locals: App.Locals;
   let photoQuery = locals.supabase
     .from('photos')
     .select(
-      'id, slug, title, capture_date, description, dimensions, license_text, og_title, og_description, og_image_path, status, is_searchable, deleted_at, updated_at, admin_sort_order'
+      'id, slug, title, capture_date, description, dimensions, license_text, og_title, og_description, og_image_path, status, deleted_at, updated_at, admin_sort_order'
     )
     .order('admin_sort_order', { ascending: true, nullsFirst: false })
     .order('updated_at', { ascending: false })
     .limit(120);
 
-  if (!showArchived) {
+  if (showArchived) {
+    photoQuery = photoQuery.not('deleted_at', 'is', null);
+  } else {
     photoQuery = photoQuery.is('deleted_at', null);
   }
 

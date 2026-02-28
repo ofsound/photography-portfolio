@@ -48,7 +48,6 @@
     <input type="hidden" name="og_description" value="" />
     <input type="hidden" name="og_image_path" value="" />
   {/if}
-  <label class="flex items-center gap-2 text-sm"><input type="checkbox" name="is_searchable" checked /> Searchable</label>
   <AdminButton wFit type="submit">Create Photo</AdminButton>
 </form>
 

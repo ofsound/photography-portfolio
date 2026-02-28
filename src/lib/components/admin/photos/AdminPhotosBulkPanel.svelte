@@ -7,6 +7,7 @@
     selectedPhotoIds,
     undoCount,
     redoCount,
+    showArchived = false,
     categories,
     tags,
     taxonomyDraftCategories,
@@ -28,6 +29,7 @@
     selectedPhotoIds: string[];
     undoCount: number;
     redoCount: number;
+    showArchived?: boolean;
     categories: AdminCategory[];
     tags: AdminTag[];
     taxonomyDraftCategories: string[];
@@ -69,17 +71,28 @@
       <AdminButton type="submit" disabled={selectedPhotoIds.length === 0}>Restore Selected</AdminButton>
     </form>
 
-    <form method="POST" action="?/bulkSetSearchable">
-      <input type="hidden" name="selected_photo_ids" value={selectedPhotoIds.join('\n')} />
-      <input type="hidden" name="searchable" value="true" />
-      <AdminButton type="submit" disabled={selectedPhotoIds.length === 0}>Set Searchable</AdminButton>
-    </form>
-
-    <form method="POST" action="?/bulkSetSearchable">
-      <input type="hidden" name="selected_photo_ids" value={selectedPhotoIds.join('\n')} />
-      <input type="hidden" name="searchable" value="false" />
-      <AdminButton type="submit" disabled={selectedPhotoIds.length === 0}>Unset Searchable</AdminButton>
-    </form>
+    {#if showArchived}
+      <form
+        method="POST"
+        action="?/bulkDeletePhotos"
+        onsubmit={(e) => {
+          if (
+            selectedPhotoIds.length > 0 &&
+            !confirm(
+              `Permanently delete ${selectedPhotoIds.length} photo(s) and all their files? This cannot be undone.`
+            )
+          ) {
+            e.preventDefault();
+          }
+        }}
+      >
+        <input type="hidden" name="selected_photo_ids" value={selectedPhotoIds.join('\n')} />
+        <input type="hidden" name="showArchived" value="1" />
+        <AdminButton type="submit" variant="danger-outline" disabled={selectedPhotoIds.length === 0}>
+          Delete Selected
+        </AdminButton>
+      </form>
+    {/if}
   </div>
 
   <PhotoTaxonomyEditor

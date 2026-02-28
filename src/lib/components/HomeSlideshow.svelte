@@ -236,10 +236,6 @@
       </figure>
     </div>
   {/if}
-
-  <div class="chrome-panel absolute bottom-5 left-5 rounded px-4 py-2 text-xs uppercase tracking-[var(--tracking-caption)]">
-    Curated Home Sequence
-  </div>
 </section>
 
 <style>

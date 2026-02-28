@@ -61,7 +61,6 @@ export type AdminPhoto = {
   og_description: string | null;
   og_image_path: string | null;
   status: string;
-  is_searchable: boolean;
   deleted_at: string | null;
   updated_at: string;
 };

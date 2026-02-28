@@ -44,12 +44,6 @@
     document.documentElement.dataset.theme = active;
   };
 
-  const updateTheme = (mode: "light" | "dark" | "system") => {
-    themeMode = mode;
-    localStorage.setItem("theme-mode", mode);
-    applyTheme(mode);
-  };
-
   const updateTransitionPreset = (preset: "cinematic" | "snappy" | "experimental") => {
     transitionPreset = preset;
     if (siteSettings?.allow_transition_toggle) {
@@ -170,28 +164,21 @@
 
 <div class="min-h-screen bg-bg text-text">
   <header bind:this={siteHeaderEl} class="chrome-panel sticky top-0 z-40 border-b border-border px-4 py-3 transition-opacity duration-[var(--duration-chrome)] ease-out" class:opacity-0={chromeHidden}>
-    <div class="mx-auto flex w-full max-w-[var(--max-width-site)] items-center justify-between gap-3">
+    <div class="mx-auto flex w-full items-center justify-between gap-3">
       <nav class="flex items-center gap-4 text-sm tracking-[var(--tracking-nav)] uppercase">
-        <a href="/" class:underline={page.url.pathname === "/"}>Home</a>
-        <a href="/gallery" class:underline={page.url.pathname.startsWith("/gallery")}>Gallery</a>
+        <a href="/" >Home</a>
+        <a href="/gallery">Gallery</a>
         {#each navPages as navPage (navPage.id)}
-          <a href={`/${navPage.slug}`} class:underline={page.url.pathname === `/${navPage.slug}`}>{navPage.title}</a>
+          <a href={`/${navPage.slug}`}>{navPage.title}</a>
         {/each}
         {#if hasSession}
-          <a href="/admin/photos" class:underline={page.url.pathname.startsWith("/admin")}>Admin</a>
+          <a href="/admin/photos" >Admin</a>
         {/if}
       </nav>
 
       <div class="flex items-center gap-2">
-        <label for="theme" class="text-xs uppercase tracking-[var(--tracking-tight)]">Theme</label>
-        <select id="theme" class="rounded border border-border-strong bg-transparent px-2 py-1 text-xs" bind:value={themeMode} onchange={(event) => updateTheme((event.currentTarget as HTMLSelectElement).value as typeof themeMode)}>
-          <option value="light">Light</option>
-          <option value="dark">Dark</option>
-          <option value="system">System</option>
-        </select>
-
         {#if siteSettings?.allow_transition_toggle}
-          <label for="transition" class="ml-2 text-xs uppercase tracking-[var(--tracking-tight)]">Motion</label>
+          <label for="transition" class="text-xs uppercase tracking-[var(--tracking-tight)]">Motion</label>
           <select id="transition" class="rounded border border-border-strong bg-transparent px-2 py-1 text-xs" bind:value={transitionPreset} onchange={(event) => updateTransitionPreset((event.currentTarget as HTMLSelectElement).value as typeof transitionPreset)}>
             <option value="cinematic">Cinematic</option>
             <option value="snappy">Snappy</option>

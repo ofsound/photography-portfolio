@@ -380,7 +380,6 @@ export type Database = {
           description: string | null;
           dimensions: string | null;
           id: string;
-          is_searchable: boolean;
           license_text: string | null;
           og_description: string | null;
           og_image_path: string | null;
@@ -402,7 +401,6 @@ export type Database = {
           description?: string | null;
           dimensions?: string | null;
           id?: string;
-          is_searchable?: boolean;
           license_text?: string | null;
           og_description?: string | null;
           og_image_path?: string | null;
@@ -424,7 +422,6 @@ export type Database = {
           description?: string | null;
           dimensions?: string | null;
           id?: string;
-          is_searchable?: boolean;
           license_text?: string | null;
           og_description?: string | null;
           og_image_path?: string | null;

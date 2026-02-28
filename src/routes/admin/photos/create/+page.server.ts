@@ -28,7 +28,6 @@ export const load: PageServerLoad = async ({ locals, url, cookies }) => {
         og_title: null,
         og_description: null,
         og_image_path: null,
-        is_searchable: true,
         status: 'published',
         deleted_at: null
       })

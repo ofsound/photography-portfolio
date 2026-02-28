@@ -2,17 +2,12 @@
   import '../app.css';
   import { invalidateAll, onNavigate } from '$app/navigation';
   import { page } from '$app/state';
-  import { galleryTransitionPhase } from '$lib/stores/gallery-transition';
+  import { setGalleryTransitionContext } from '$lib/context/gallery-transition';
   import type { LayoutData } from './$types';
 
   let { data, children } = $props<{ data: LayoutData | null; children: import('svelte').Snippet }>();
-  let phase = $state<import('$lib/stores/gallery-transition').GalleryTransitionPhase>('idle');
-  $effect(() => {
-    const unsub = galleryTransitionPhase.subscribe((p) => {
-      phase = p;
-    });
-    return unsub;
-  });
+
+  const { phase } = setGalleryTransitionContext();
   const chromeHidden = $derived(
     phase === 'fade-out-chrome' ||
       phase === 'scale-and-mask' ||
@@ -176,11 +171,11 @@
 <div class="min-h-screen bg-bg text-text">
   <header
     bind:this={siteHeaderEl}
-    class="chrome-panel sticky top-0 z-40 border-b border-border px-4 py-3 transition-opacity duration-[280ms] ease-out"
+    class="chrome-panel sticky top-0 z-40 border-b border-border px-4 py-3 transition-opacity duration-[var(--duration-chrome)] ease-out"
     class:opacity-0={chromeHidden}
   >
-    <div class="mx-auto flex w-full max-w-[1800px] items-center justify-between gap-3">
-      <nav class="flex items-center gap-4 text-sm tracking-[0.16em] uppercase">
+    <div class="mx-auto flex w-full max-w-[var(--max-width-site)] items-center justify-between gap-3">
+      <nav class="flex items-center gap-4 text-sm tracking-[var(--tracking-nav)] uppercase">
         <a href="/" class:underline={page.url.pathname === '/'}>Home</a>
         <a href="/gallery" class:underline={page.url.pathname.startsWith('/gallery')}>Gallery</a>
         {#each navPages as navPage (navPage.id)}
@@ -188,14 +183,14 @@
         {/each}
         {#if hasSession}
           <a href="/admin/photos" class:underline={page.url.pathname.startsWith('/admin')}>Admin</a>
-          <span class="rounded border border-border px-2 py-1 text-xs uppercase tracking-[0.12em]"
+          <span class="rounded border border-border px-2 py-1 text-xs uppercase tracking-[var(--tracking-tight)]"
             >PENDING CONVERSIONS: {pendingConversionCount}</span
           >
         {/if}
       </nav>
 
       <div class="flex items-center gap-2">
-        <label for="theme" class="text-xs uppercase tracking-[0.12em]">Theme</label>
+        <label for="theme" class="text-xs uppercase tracking-[var(--tracking-tight)]">Theme</label>
         <select
           id="theme"
           class="rounded border border-border-strong bg-transparent px-2 py-1 text-xs"
@@ -208,7 +203,7 @@
         </select>
 
         {#if siteSettings?.allow_transition_toggle}
-          <label for="transition" class="ml-2 text-xs uppercase tracking-[0.12em]">Motion</label>
+          <label for="transition" class="ml-2 text-xs uppercase tracking-[var(--tracking-tight)]">Motion</label>
           <select
             id="transition"
             class="rounded border border-border-strong bg-transparent px-2 py-1 text-xs"
@@ -234,7 +229,7 @@
   }
 
   :global(html) {
-    --site-header-height: 54px;
+    --site-header-height: var(--size-header);
     --vt-duration: 450ms;
     --vt-ease: cubic-bezier(0.22, 1, 0.36, 1);
   }

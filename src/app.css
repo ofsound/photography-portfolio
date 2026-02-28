@@ -51,6 +51,36 @@
   --transition-timing-function-cinematic: cubic-bezier(0.22, 1, 0.36, 1);
   --transition-timing-function-snappy: cubic-bezier(0.2, 0.8, 0.2, 1);
   --transition-timing-function-experimental: cubic-bezier(0.68, -0.6, 0.32, 1.6);
+  --duration-chrome: 280ms;
+
+  /* Letter-spacing */
+  --tracking-minimal: 0.1em;
+  --tracking-tight: 0.12em;
+  --tracking-label: 0.14em;
+  --tracking-heading: 0.15em;
+  --tracking-nav: 0.16em;
+  --tracking-hero: 0.18em;
+  --tracking-caption: 0.2em;
+
+  /* Layout */
+  --max-width-form: 520px;
+  --max-width-content: 900px;
+  --max-width-cms: 1000px;
+  --max-width-search: 1300px;
+  --max-width-site: 1800px;
+  --max-height-drawer: 620px;
+  --sticky-offset: 70px;
+  --size-btn-tall: 42px;
+  --size-header: 54px;
+
+  /* Font sizes (micro) */
+  --text-chip: 10px;
+  --text-badge: 11px;
+
+  /* Overlay / modal */
+  --inset-overlay: 5%;
+  --max-width-prose: 70ch;
+  --z-overlay: 80;
 }
 
 html,

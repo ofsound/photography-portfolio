@@ -173,7 +173,7 @@
     <div class="absolute right-2 top-2 z-10">
       <a
         href="/photo/{photo.slug}"
-        class="rounded bg-black/50 px-2 py-1 text-[10px] text-white hover:bg-black/70"
+        class="rounded bg-black/50 px-2 py-1 text-[var(--text-chip)] text-white hover:bg-black/70"
         target="_blank"
         rel="noopener noreferrer"
         onclick={(e) => e.stopPropagation()}
@@ -187,16 +187,16 @@
           class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
         />
       {:else if lead}
-        <div class="grid h-full w-full place-items-center rounded border border-border-strong bg-surface-muted text-[10px] uppercase text-text-muted">pending</div>
+        <div class="grid h-full w-full place-items-center rounded border border-border-strong bg-surface-muted text-[var(--text-chip)] uppercase text-text-muted">pending</div>
       {:else}
-        <div class="grid h-full w-full place-items-center rounded border border-border-strong bg-surface-muted text-[10px] uppercase text-text-muted">no lead</div>
+        <div class="grid h-full w-full place-items-center rounded border border-border-strong bg-surface-muted text-[var(--text-chip)] uppercase text-text-muted">no lead</div>
       {/if}
     </div>
     <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent px-2 pb-2 pt-6">
-      <h2 class="truncate text-xs font-medium uppercase tracking-[0.1em] text-white">{photo.title}</h2>
+      <h2 class="truncate text-xs font-medium uppercase tracking-[var(--tracking-minimal)] text-white">{photo.title}</h2>
       <a
         href="/photo/{photo.slug}"
-        class="block truncate text-[10px] text-white/80 hover:underline"
+        class="block truncate text-[var(--text-chip)] text-white/80 hover:underline"
         target="_blank"
         rel="noopener noreferrer"
         onclick={(e) => e.stopPropagation()}
@@ -206,7 +206,7 @@
 {:else}
   <article class="relative grid gap-3 rounded">
     {#if !editorOnly}
-      <span class="absolute left-2 top-2 text-[10px] font-medium tabular-nums text-text-muted">{index + 1}</span>
+      <span class="absolute left-2 top-2 text-[var(--text-chip)] font-medium tabular-nums text-text-muted">{index + 1}</span>
     {/if}
     {#if !editorOnly}
       <div
@@ -228,13 +228,13 @@
         {#if lead?.delivery_storage_path}
           <img src={photoPublicUrl(lead.delivery_storage_path, 220)} alt={lead.alt_text ?? photo.title} class="h-14 w-20 rounded object-cover" />
         {:else if lead}
-          <div class="grid h-14 w-20 place-items-center rounded border border-border-strong text-[10px] uppercase">pending</div>
+          <div class="grid h-14 w-20 place-items-center rounded border border-border-strong text-[var(--text-chip)] uppercase">pending</div>
         {:else}
-          <div class="grid h-14 w-20 place-items-center rounded border border-border-strong text-[10px] uppercase">no lead</div>
+          <div class="grid h-14 w-20 place-items-center rounded border border-border-strong text-[var(--text-chip)] uppercase">no lead</div>
         {/if}
 
         <div class="min-w-0">
-          <h2 class="truncate text-sm uppercase tracking-[0.12em]">{photo.title}</h2>
+          <h2 class="truncate text-sm uppercase tracking-[var(--tracking-tight)]">{photo.title}</h2>
           <a
             href="/photo/{photo.slug}"
             class="inline-block text-xs text-text-muted hover:underline"
@@ -244,10 +244,11 @@
         </div>
 
         <div class="flex items-center justify-end gap-2">
-          <button
+          <AdminButton
+            variant="ghost"
             type="button"
             onclick={toggleExpanded}
-            class="flex size-8 items-center justify-center rounded text-text-muted transition-colors hover:bg-border hover:text-text"
+            class="flex size-8 items-center justify-center p-0"
             aria-label={editHref ? 'Open' : isExpanded ? 'Collapse' : 'Edit'}
           >
             <svg
@@ -265,7 +266,7 @@
             >
               <polyline points="9 18 15 12 9 6" />
             </svg>
-          </button>
+          </AdminButton>
         </div>
       </div>
     {/if}
@@ -371,7 +372,7 @@
           </div>
         </div>
       </div>
-      <h2 class="text-xl uppercase tracking-[0.15em]">Images</h2>
+      <h2 class="text-xl uppercase tracking-[var(--tracking-heading)]">Images</h2>
       <div class="flex min-w-0 gap-12">
         <div
           transition:fade={{ duration: FADE_DURATION, delay: 2 * STAGGER_MS, easing: quintOut }}
@@ -379,7 +380,7 @@
         >
 
       <div class="flex flex-wrap items-center gap-2">
-        <span class="rounded border border-border px-2 py-1 text-[10px] uppercase tracking-[0.12em]">
+        <span class="rounded border border-border px-2 py-1 text-[var(--text-chip)] uppercase tracking-[var(--tracking-tight)]">
           Processing: {pendingImageCount}
         </span>
       </div>
@@ -391,17 +392,17 @@
               <img src={photoPublicUrl(lead.delivery_storage_path, 360)} alt={lead.alt_text ?? photo.title} class="max-h-full max-w-full object-contain" />
             </div>
           {:else}
-            <div class="grid h-24 w-32 shrink-0 place-items-center rounded border border-border-strong text-[10px] uppercase">pending</div>
+            <div class="grid h-24 w-32 shrink-0 place-items-center rounded border border-border-strong text-[var(--text-chip)] uppercase">pending</div>
           {/if}
 
           <div class="flex min-w-0 flex-col gap-2 text-xs">
-            <div class="flex items-center gap-2 uppercase tracking-[0.12em]">
+            <div class="flex items-center gap-2 uppercase tracking-[var(--tracking-tight)]">
               <span>Lead Image</span>
               <PhotoConversionBadge state={imageConversionState(lead)} size="sm" />
             </div>
             {#if lead.delivery_storage_path}
               <details class="min-w-0">
-                <summary class="cursor-pointer text-xs uppercase tracking-[0.12em]">Edit thumbnail crop</summary>
+                <summary class="cursor-pointer text-xs uppercase tracking-[var(--tracking-tight)]">Edit thumbnail crop</summary>
                 <div class="mt-3">
                   <ThumbnailCropEditor
                     imageId={lead.id}
@@ -430,7 +431,7 @@
       {/if}
 
       <div class="grid gap-2">
-        <p class="text-xs uppercase tracking-[0.12em]">Additional Images (drag to reorder)</p>
+        <p class="text-xs uppercase tracking-[var(--tracking-tight)]">Additional Images (drag to reorder)</p>
 
         {#if additionalOrder.length === 0}
           <p class="text-sm text-text-muted">No additional images.</p>
@@ -452,7 +453,7 @@
                       <img src={photoPublicUrl(image.delivery_storage_path, 320)} alt={image.alt_text ?? photo.title} class="max-h-full max-w-full object-contain" />
                     </div>
                   {:else}
-                    <div class="grid h-24 w-32 shrink-0 place-items-center rounded border border-border-strong text-[10px] uppercase">pending</div>
+                    <div class="grid h-24 w-32 shrink-0 place-items-center rounded border border-border-strong text-[var(--text-chip)] uppercase">pending</div>
                   {/if}
 
                   <div></div>

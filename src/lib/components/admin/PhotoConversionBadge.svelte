@@ -4,7 +4,7 @@
     size?: 'sm' | 'md';
   }>();
 
-  const sizeClass = $derived(size === 'sm' ? 'text-[10px]' : 'text-[11px]');
+  const sizeClass = $derived(size === 'sm' ? 'text-[var(--text-chip)]' : 'text-[var(--text-badge)]');
 
   const badgeClass = $derived((() => {
     // Photo-level states

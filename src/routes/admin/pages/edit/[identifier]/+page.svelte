@@ -35,8 +35,8 @@
 </script>
 
 <div class="flex flex-wrap items-center justify-between gap-3">
-  <h1 class="text-xl uppercase tracking-[0.15em]">Edit Page</h1>
-  <a href="/admin/pages" class="rounded border border-admin-btn-border bg-admin-btn-bg px-3 py-1 text-xs uppercase tracking-[0.14em] hover:bg-border">Back to Pages</a>
+  <h1 class="text-xl uppercase tracking-[var(--tracking-heading)]">Edit Page</h1>
+  <AdminButton href="/admin/pages">Back to Pages</AdminButton>
 </div>
 <p class="mt-2 text-sm text-text-muted">Editing `/{page.slug}`</p>
 
@@ -91,7 +91,7 @@
 
   {#if revisions.length}
     <div class="rounded border border-border p-3">
-      <p class="mb-2 text-xs uppercase tracking-[0.12em]">Recent Revisions</p>
+      <p class="mb-2 text-xs uppercase tracking-[var(--tracking-tight)]">Recent Revisions</p>
       <div class="grid gap-2">
         {#each revisions.slice(0, 10) as rev (rev.id)}
           <div class="flex flex-wrap items-center justify-between gap-2 text-xs">

@@ -2,12 +2,12 @@
   let { data } = $props();
 </script>
 
-<h1 class="text-xl uppercase tracking-[0.15em]">Audit Log</h1>
+<h1 class="text-xl uppercase tracking-[var(--tracking-heading)]">Audit Log</h1>
 <p class="mt-2 text-sm text-text-muted">Most recent {data.logs.length} entries.</p>
 
 <div class="mt-6 overflow-x-auto rounded border border-border">
   <table class="min-w-full border-collapse text-left text-xs">
-    <thead class="border-b border-border bg-canvas/[0.03] uppercase tracking-[0.12em]">
+    <thead class="border-b border-border bg-canvas/[0.03] uppercase tracking-[var(--tracking-tight)]">
       <tr>
         <th class="px-3 py-2">When</th>
         <th class="px-3 py-2">Action</th>

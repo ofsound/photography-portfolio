@@ -37,7 +37,7 @@
 
 <div class="grid gap-3 rounded border border-border p-3 lg:grid-cols-3">
   <div class="grid gap-2">
-    <p class="text-xs uppercase tracking-[0.12em]">Drag Category Chips</p>
+    <p class="text-xs uppercase tracking-[var(--tracking-tight)]">Drag Category Chips</p>
     <div class="flex flex-wrap gap-2">
       {#each categories as category (category.id)}
         <AdminButton
@@ -55,7 +55,7 @@
   </div>
 
   <div class="grid gap-2">
-    <p class="text-xs uppercase tracking-[0.12em]">Drag Tag Chips</p>
+    <p class="text-xs uppercase tracking-[var(--tracking-tight)]">Drag Tag Chips</p>
     <div class="flex flex-wrap gap-2">
       {#each tags as tag (tag.id)}
         <AdminButton
@@ -81,7 +81,7 @@
       <input type="hidden" name="tag_ids" value={tagId} />
     {/each}
 
-    <p class="text-xs uppercase tracking-[0.12em]">Drop Taxonomy Here</p>
+    <p class="text-xs uppercase tracking-[var(--tracking-tight)]">Drop Taxonomy Here</p>
 
     <div class="flex flex-wrap gap-2">
       {#each taxonomyDraftCategories as categoryId (categoryId)}

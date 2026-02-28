@@ -49,7 +49,7 @@
 </script>
 
 <section class="mt-4 grid gap-3 rounded border border-border p-3">
-  <div class="flex flex-wrap items-center gap-2 text-xs uppercase tracking-[0.12em]">
+  <div class="flex flex-wrap items-center gap-2 text-xs uppercase tracking-[var(--tracking-tight)]">
     <span>Selected photos: {selectedPhotoIds.length}</span>
     <AdminButton size="chip" type="button" onclick={selectAllVisiblePhotos}>Select all visible</AdminButton>
     <AdminButton size="chip" type="button" onclick={clearSelectedPhotos}>Clear</AdminButton>

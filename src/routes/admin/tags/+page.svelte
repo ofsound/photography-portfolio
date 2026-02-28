@@ -7,7 +7,7 @@
   let { data, form } = $props();
 </script>
 
-<h1 class="text-xl uppercase tracking-[0.15em]">Tags</h1>
+<h1 class="text-xl uppercase tracking-[var(--tracking-heading)]">Tags</h1>
 
 {#if form?.message}
   <p class="mt-3 rounded border border-border px-3 py-2 text-sm">{form.message}</p>
@@ -15,7 +15,7 @@
 
 <section class="mt-6 grid gap-8 lg:grid-cols-[360px_1fr]">
   <form method="POST" action="?/create" class="grid gap-3 rounded border border-border p-4">
-    <h2 class="text-sm uppercase tracking-[0.14em]">New Tag</h2>
+    <h2 class="text-sm uppercase tracking-[var(--tracking-label)]">New Tag</h2>
     <FormField label="Name" id="tag-create-name">
       <FormInput id="tag-create-name" name="name" placeholder="Name" required />
     </FormField>

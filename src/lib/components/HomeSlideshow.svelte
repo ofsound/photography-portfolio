@@ -195,9 +195,9 @@
   }
 </script>
 
-<section class="relative h-[calc(100dvh-var(--site-header-height,54px))] w-full overflow-hidden bg-canvas">
+<section class="relative h-[calc(100dvh-var(--site-header-height,var(--size-header)))] w-full overflow-hidden bg-canvas">
   {#if slides.length === 0}
-    <div class="grid h-full place-items-center text-sm uppercase tracking-[0.16em] text-text-subtle">
+    <div class="grid h-full place-items-center text-sm uppercase tracking-[var(--tracking-nav)] text-text-subtle">
       Add slideshow images in Admin -> Homepage.
     </div>
   {:else}
@@ -237,7 +237,7 @@
     </div>
   {/if}
 
-  <div class="chrome-panel absolute bottom-5 left-5 rounded px-4 py-2 text-xs uppercase tracking-[0.2em]">
+  <div class="chrome-panel absolute bottom-5 left-5 rounded px-4 py-2 text-xs uppercase tracking-[var(--tracking-caption)]">
     Curated Home Sequence
   </div>
 </section>

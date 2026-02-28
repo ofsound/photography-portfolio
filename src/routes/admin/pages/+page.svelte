@@ -10,7 +10,7 @@
   );
 </script>
 
-<h1 class="text-xl uppercase tracking-[0.15em]">Pages</h1>
+<h1 class="text-xl uppercase tracking-[var(--tracking-heading)]">Pages</h1>
 <p class="mt-2 text-sm text-text-muted">Create pages here, then edit each page on its own route editor.</p>
 
 {#if form?.message}
@@ -22,7 +22,7 @@
 
 <section class="mt-6 grid gap-8 lg:grid-cols-[420px_1fr]">
   <form method="POST" action="?/create" class="grid gap-3 rounded border border-border p-4">
-    <h2 class="text-sm uppercase tracking-[0.14em]">Create Page</h2>
+    <h2 class="text-sm uppercase tracking-[var(--tracking-label)]">Create Page</h2>
 
     <FormField label="Title" id="page-create-title">
       <FormInput id="page-create-title" name="title" placeholder="Title" required />
@@ -64,19 +64,19 @@
   </form>
 
   <section class="rounded border border-border p-4">
-    <h2 class="text-sm uppercase tracking-[0.14em]">Existing Pages</h2>
+    <h2 class="text-sm uppercase tracking-[var(--tracking-label)]">Existing Pages</h2>
     {#if pages.length === 0}
       <p class="mt-2 text-sm text-text-muted">No pages yet.</p>
     {:else}
       <div class="mt-3 grid gap-2">
         {#each pages as page (page.id)}
-          <a href={`/admin/pages/edit/${page.slug}`} class="rounded border border-border px-3 py-2 text-sm hover:bg-canvas/[0.03]">
+          <AdminButton href={`/admin/pages/edit/${page.slug}`} variant="subtle" class="block text-left">
             <div class="flex flex-wrap items-center justify-between gap-2">
               <span>/{page.slug} - {page.title}</span>
-              <span class="text-xs uppercase tracking-[0.12em] text-text-subtle">{page.status}</span>
+              <span class="text-xs uppercase tracking-[var(--tracking-tight)] text-text-subtle">{page.status}</span>
             </div>
             <p class="mt-1 text-xs text-text-subtle">Updated {new Date(page.updated_at).toLocaleString()}</p>
-          </a>
+          </AdminButton>
         {/each}
       </div>
     {/if}

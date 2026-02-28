@@ -2,7 +2,7 @@
   import { goto } from '$app/navigation';
   import { fade } from 'svelte/transition';
   import { onDestroy, onMount } from 'svelte';
-  import { galleryTransitionPhase } from '$lib/stores/gallery-transition';
+  import { getGalleryTransitionContext } from '$lib/context/gallery-transition';
   import { getGalleryPrefs, setGalleryPrefs } from '$lib/stores/gallery-prefs';
 
   /** Portals the element to document.body so it can stack above the promoted tile (z-70). */
@@ -179,13 +179,7 @@
 
   const isTransitioning = $derived(transitionsInFlight > 0);
 
-  let transitionPhase = $state<import('$lib/stores/gallery-transition').GalleryTransitionPhase>('idle');
-  $effect(() => {
-    const unsub = galleryTransitionPhase.subscribe((p) => {
-      transitionPhase = p;
-    });
-    return unsub;
-  });
+  const { phase: transitionPhase, setPhase } = getGalleryTransitionContext();
   const chromePanelHidden = $derived(
     transitionPhase === 'fade-out-chrome' ||
       transitionPhase === 'scale-and-mask' ||
@@ -424,11 +418,11 @@
     }
 
     if (!reducedMotion()) {
-      galleryTransitionPhase.set('closing-chrome');
+      setPhase('closing-chrome');
       await wait(CLOSING_CHROME_MS);
     }
 
-    galleryTransitionPhase.set('closing-scale');
+    setPhase('closing-scale');
     activeSlug = null;
     activeImageId = null;
 
@@ -446,7 +440,7 @@
 
     reinsertPromotedTile(session);
     promoted = null;
-    galleryTransitionPhase.set('idle');
+    setPhase('idle');
   };
 
   const applyRouteState = async (route: ActiveRoute | null, animate: boolean) => {
@@ -459,7 +453,7 @@
     }
 
     if (typeof document !== 'undefined') document.body.style.overflow = 'hidden';
-    galleryTransitionPhase.set('open');
+    setPhase('open');
     const switchingPhotos = Boolean(activeSlug && activeSlug !== route.photoSlug);
     await ensurePromotedTile(route.photoSlug, route.imageId, animate && !switchingPhotos);
 
@@ -518,14 +512,14 @@
           activeImageId = null;
           if (typeof document !== 'undefined') document.body.style.overflow = 'hidden';
           await ensurePromotedTile(slug, null, true);
-          galleryTransitionPhase.set('open');
+          setPhase('open');
           return;
         }
 
-        galleryTransitionPhase.set('fade-out-chrome');
+        setPhase('fade-out-chrome');
         await wait(FADE_OUT_CHROME_MS);
 
-        galleryTransitionPhase.set('scale-and-mask');
+        setPhase('scale-and-mask');
         activeSlug = slug;
         activeImageId = null;
 
@@ -539,7 +533,7 @@
 
         await ensurePromotedTile(slug, null, true, SCALE_MASK_MS);
 
-        galleryTransitionPhase.set('open');
+        setPhase('open');
       });
 
       skipNextRouteAnimation = true;
@@ -1119,7 +1113,7 @@
 
 <section class="mx-auto w-full px-4 py-5" style={sectionMaxWidthStyle}>
   <div
-    class="chrome-panel sticky top-[70px] z-30 mb-5 grid gap-2 rounded px-3 py-2 text-xs uppercase tracking-[0.15em] transition-opacity duration-[280ms] ease-out lg:grid-cols-[1fr_auto] lg:items-center"
+    class="chrome-panel sticky top-[var(--sticky-offset)] z-30 mb-5 grid gap-2 rounded px-3 py-2 text-xs uppercase tracking-[var(--tracking-heading)] transition-opacity duration-[var(--duration-chrome)] ease-out lg:grid-cols-[1fr_auto] lg:items-center"
     class:opacity-0={chromePanelHidden}
   >
     <form class="flex flex-1 items-center gap-2" onsubmit={onSearchSubmit}>
@@ -1198,7 +1192,7 @@
   </div>
 
   {#if photos.length === 0}
-    <p class="py-16 text-center text-sm uppercase tracking-[0.14em] text-text-muted">No photos found.</p>
+    <p class="py-16 text-center text-sm uppercase tracking-[var(--tracking-label)] text-text-muted">No photos found.</p>
   {:else}
     {#if layoutMode === 'uniform'}
       <ul class="grid" style={`grid-template-columns: repeat(${colCount}, minmax(0, 1fr)); gap: ${gap}px;`}>
@@ -1281,13 +1275,13 @@
     {/if}
 
     {#if isLoadingMore}
-      <p class="py-4 text-center text-xs uppercase tracking-[0.14em] text-text-subtle">Loading more</p>
+      <p class="py-4 text-center text-xs uppercase tracking-[var(--tracking-label)] text-text-subtle">Loading more</p>
     {/if}
 
     {#if loadError}
       <div class="py-4 text-center text-sm">
         <p>{loadError}</p>
-        <button class="mt-2 rounded border border-border-strong px-3 py-1 text-xs uppercase tracking-[0.14em]" type="button" onclick={() => void loadNextPage()}>
+        <button class="mt-2 rounded border border-border-strong px-3 py-1 text-xs uppercase tracking-[var(--tracking-label)]" type="button" onclick={() => void loadNextPage()}>
           Retry
         </button>
       </div>
@@ -1324,7 +1318,7 @@
       <a
         href={withCurrentSearch('/gallery')}
         onclick={closeToGallery}
-        class="chrome-panel pointer-events-auto fixed left-4 top-[calc(var(--site-header-height,54px)+14px)] rounded px-3 py-2 text-xs uppercase tracking-[0.15em]"
+        class="chrome-panel pointer-events-auto fixed left-4 top-[calc(var(--site-header-height,var(--size-header))+14px)] rounded px-3 py-2 text-xs uppercase tracking-[var(--tracking-heading)]"
         class:pointer-events-none={isTransitioning}
         class:opacity-50={isTransitioning}
       >
@@ -1355,15 +1349,15 @@
 
   <aside
     use:portal
-    class="chrome-panel fixed left-[5%] bottom-[5%] z-[80] w-fit max-w-[min(90vw,70ch)] rounded px-4 py-3 transition-opacity ease-out"
+    class="chrome-panel fixed left-[var(--inset-overlay)] bottom-[var(--inset-overlay)] z-[var(--z-overlay)] w-fit max-w-[min(90vw,var(--max-width-prose))] rounded px-4 py-3 transition-opacity ease-out"
     class:opacity-0={overlayChromeHidden}
     style="transition-duration: {CLOSING_CHROME_MS}ms"
   >
     <div class="flex flex-wrap items-center justify-between gap-3">
       <div>
-        <h1 class="text-sm uppercase tracking-[0.16em]">{activePhoto.title}</h1>
+        <h1 class="text-sm uppercase tracking-[var(--tracking-nav)]">{activePhoto.title}</h1>
         {#if activePhoto.description}
-          <p class="mt-2 max-w-[70ch] text-sm text-canvas-text/80">{activePhoto.description}</p>
+          <p class="mt-2 max-w-[var(--max-width-prose)] text-sm text-canvas-text/80">{activePhoto.description}</p>
         {/if}
       </div>
     </div>

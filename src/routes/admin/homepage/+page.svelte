@@ -159,7 +159,7 @@
   };
 </script>
 
-<h1 class="text-xl uppercase tracking-[0.15em]">Homepage Curation</h1>
+<h1 class="text-xl uppercase tracking-[var(--tracking-heading)]">Homepage Curation</h1>
 <p class="mt-2 text-sm text-text-muted">Image-only slides. Add images, drag selected slides to reorder, then save.</p>
 
 {#if form?.message}
@@ -167,9 +167,9 @@
 {/if}
 
 <section class="mt-6 rounded border border-border p-4">
-  <h2 class="text-sm uppercase tracking-[0.14em]">Slideshow Timing</h2>
+  <h2 class="text-sm uppercase tracking-[var(--tracking-label)]">Slideshow Timing</h2>
   <form method="POST" action="?/saveTiming" class="mt-3 grid gap-3 sm:grid-cols-[minmax(0,220px)_minmax(0,220px)_auto] sm:items-end">
-    <label class="grid gap-1 text-xs uppercase tracking-[0.12em]">
+    <label class="grid gap-1 text-xs uppercase tracking-[var(--tracking-tight)]">
       Slide Duration (ms)
       <input
         class="rounded border border-border-strong bg-transparent px-3 py-2 text-sm normal-case tracking-normal"
@@ -181,7 +181,7 @@
         bind:value={slideDurationMs}
       />
     </label>
-    <label class="grid gap-1 text-xs uppercase tracking-[0.12em]">
+    <label class="grid gap-1 text-xs uppercase tracking-[var(--tracking-tight)]">
       Transition Duration (ms)
       <input
         class="rounded border border-border-strong bg-transparent px-3 py-2 text-sm normal-case tracking-normal"
@@ -200,7 +200,7 @@
 <section class="mt-6 grid gap-8 lg:grid-cols-[440px_1fr]">
   <div class="grid gap-3 rounded border border-border p-4">
     <div class="flex flex-wrap items-center gap-2">
-      <h2 class="text-sm uppercase tracking-[0.14em]">Selected Slides</h2>
+      <h2 class="text-sm uppercase tracking-[var(--tracking-label)]">Selected Slides</h2>
       <AdminButton
         size="sm"
         type="button"
@@ -236,7 +236,7 @@
             {#if slide.delivery_storage_path}
               <img src={photoPublicUrl(slide.delivery_storage_path, 180)} alt={slide.photo_title} class="h-12 w-16 rounded object-cover" />
             {:else}
-              <div class="grid h-12 w-16 place-items-center rounded border border-border-strong text-[10px] uppercase">pending</div>
+              <div class="grid h-12 w-16 place-items-center rounded border border-border-strong text-[var(--text-chip)] uppercase">pending</div>
             {/if}
 
             <div class="text-xs">
@@ -258,14 +258,14 @@
   </div>
 
   <div class="rounded border border-border p-4">
-    <h2 class="mb-2 text-sm uppercase tracking-[0.14em]">Available Images</h2>
-    <ul class="grid max-h-[620px] gap-2 overflow-auto">
+    <h2 class="mb-2 text-sm uppercase tracking-[var(--tracking-label)]">Available Images</h2>
+    <ul class="grid max-h-[var(--max-height-drawer)] gap-2 overflow-auto">
       {#each availableImages as image (image.id)}
         <li class="grid gap-2 rounded border border-border p-2 sm:grid-cols-[auto_1fr_auto] sm:items-center">
           {#if image.delivery_storage_path}
             <img src={photoPublicUrl(image.delivery_storage_path, 160)} alt={image.photo_title} class="h-12 w-16 rounded object-cover" />
           {:else}
-            <div class="grid h-12 w-16 place-items-center rounded border border-border-strong text-[10px] uppercase">pending</div>
+            <div class="grid h-12 w-16 place-items-center rounded border border-border-strong text-[var(--text-chip)] uppercase">pending</div>
           {/if}
 
           <div class="text-xs">

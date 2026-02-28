@@ -390,11 +390,11 @@
 
 <div class="flex items-baseline justify-between gap-4">
   <div class="flex items-baseline gap-3">
-    <h1 class="text-xl uppercase tracking-[0.15em]">Photos</h1>
+    <h1 class="text-xl uppercase tracking-[var(--tracking-heading)]">Photos</h1>
     <AdminButton size="sm" type="button" onclick={() => (showSearch = !showSearch)}>Toggle Search</AdminButton>
     <AdminButton size="sm" type="button" onclick={() => (showMeta = !showMeta)}>Toggle Meta</AdminButton>
   </div>
-  <a href="/admin/photos/create" class="inline-flex rounded border border-success/40 bg-success px-3 py-1 text-xs uppercase tracking-[0.14em] text-white hover:opacity-90">Add New Photo</a>
+  <AdminButton href="/admin/photos/create" variant="success">Add New Photo</AdminButton>
 </div>
 
 {#if form?.message}
@@ -439,12 +439,12 @@
 {/if}
 
 <section class="mt-6">
-  <h2 class="text-sm uppercase tracking-[0.14em]">Existing Photos</h2>
-  <p class="mt-1 text-xs uppercase tracking-[0.12em] text-text-subtle">Click a photo to open it for editing. Drag to reorder.</p>
+  <h2 class="text-sm uppercase tracking-[var(--tracking-label)]">Existing Photos</h2>
+  <p class="mt-1 text-xs uppercase tracking-[var(--tracking-tight)] text-text-subtle">Click a photo to open it for editing. Drag to reorder.</p>
 
   {#if mounted}
     <div
-      class="sticky top-[70px] z-20 mb-4 mt-3 grid gap-2 rounded border border-border bg-surface px-3 py-2 text-xs uppercase tracking-[0.15em] lg:grid-cols-[1fr_auto] lg:items-center"
+      class="sticky top-[var(--sticky-offset)] z-20 mb-4 mt-3 grid gap-2 rounded border border-border bg-surface px-3 py-2 text-xs uppercase tracking-[var(--tracking-heading)] lg:grid-cols-[1fr_auto] lg:items-center"
     >
       <span class="text-text-muted">Grid layout</span>
       <div class="flex flex-wrap items-center justify-end gap-3">
@@ -471,40 +471,44 @@
           <span class="tabular-nums">{gap}px</span>
         </label>
         <div class="flex items-center gap-1">
-          <button
+          <AdminButton
+            variant="toggle"
             type="button"
-            class="rounded border border-border-strong px-2 py-1 {layoutMode === 'uniform' ? 'bg-border' : 'opacity-40'}"
+            selected={layoutMode === 'uniform'}
             onclick={() => updateLayoutMode('uniform')}
             disabled={layoutMode === 'uniform'}
           >
             Uniform
-          </button>
-          <button
+          </AdminButton>
+          <AdminButton
+            variant="toggle"
             type="button"
-            class="rounded border border-border-strong px-2 py-1 {layoutMode === 'masonry' ? 'bg-border' : 'opacity-40'}"
+            selected={layoutMode === 'masonry'}
             onclick={() => updateLayoutMode('masonry')}
             disabled={layoutMode === 'masonry'}
           >
             Masonry
-          </button>
+          </AdminButton>
         </div>
         <div class="flex items-center gap-1">
-          <button
+          <AdminButton
+            variant="toggle"
             type="button"
-            class="rounded border border-border-strong px-2 py-1 {widthMode === 'full' ? 'bg-border' : 'opacity-40'}"
+            selected={widthMode === 'full'}
             onclick={() => updateWidthMode('full')}
             disabled={widthMode === 'full'}
           >
             Full
-          </button>
-          <button
+          </AdminButton>
+          <AdminButton
+            variant="toggle"
             type="button"
-            class="rounded border border-border-strong px-2 py-1 {widthMode === 'constrained' ? 'bg-border' : 'opacity-40'}"
+            selected={widthMode === 'constrained'}
             onclick={() => updateWidthMode('constrained')}
             disabled={widthMode === 'constrained'}
           >
             Constrained
-          </button>
+          </AdminButton>
         </div>
       </div>
     </div>

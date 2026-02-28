@@ -8,7 +8,7 @@
 </script>
 
 <form method="POST" action="?/create" class="grid gap-3 rounded border border-border p-4">
-  <h2 class="text-sm uppercase tracking-[0.14em]">Create Photo</h2>
+  <h2 class="text-sm uppercase tracking-[var(--tracking-label)]">Create Photo</h2>
   <FormField label="Title" id="create-title">
     <FormInput id="create-title" name="title" placeholder="Title" required />
   </FormField>

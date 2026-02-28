@@ -14,12 +14,10 @@
 
 <form method="POST" action="?/uploadImage" enctype="multipart/form-data" class="grid gap-2 rounded-lg border-2 border-dashed border-border-strong bg-surface p-4">
   <input type="hidden" name="photo_id" value={photoId} />
-  <p class="text-xs uppercase tracking-[0.12em]">Upload Image</p>
+  <p class="text-xs uppercase tracking-[var(--tracking-tight)]">Upload Image</p>
   <div class="grid gap-2">
     <div class="flex flex-wrap items-center gap-2">
-      <label
-        class="relative cursor-pointer rounded border border-admin-btn-border bg-admin-btn-bg px-3 py-2 text-sm uppercase tracking-[0.14em] hover:bg-border"
-      >
+      <AdminButton as="label" class="relative">
         <input
           type="file"
           name="image_file"
@@ -29,7 +27,7 @@
           onchange={handleFileChange}
         />
         Choose file
-      </label>
+      </AdminButton>
       <span class="min-w-0 truncate text-sm text-text-muted">
         {fileName ?? 'No file chosen'}
       </span>

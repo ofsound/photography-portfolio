@@ -27,13 +27,13 @@
   const selectClass = 'w-full rounded border border-border-strong bg-surface px-3 py-2 text-sm';
 </script>
 
-<h1 class="text-xl uppercase tracking-[0.15em]">Site Settings</h1>
+<h1 class="text-xl uppercase tracking-[var(--tracking-heading)]">Site Settings</h1>
 
 {#if form?.message}
   <p class="mt-3 rounded border border-border px-3 py-2 text-sm">{form.message}</p>
 {/if}
 
-<form method="POST" action="?/save" class="mt-6 grid max-w-[900px] gap-4 rounded border border-border p-4">
+<form method="POST" action="?/save" class="mt-6 grid max-w-[var(--max-width-content)] gap-4 rounded border border-border p-4">
   <div class="grid gap-3 sm:grid-cols-2">
     <FormField label="Theme Default" id="settings-theme_default">
       <select name="theme_default" id="settings-theme_default" class={selectClass}>

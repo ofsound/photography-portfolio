@@ -1,6 +1,6 @@
 <script lang="ts">
-  type Size = 'sm' | 'md' | 'md-tall' | 'chip';
-  type Variant = 'default' | 'success' | 'danger' | 'danger-outline' | 'info' | 'success-soft' | 'link';
+  import { baseClasses, sizeClasses, variantClasses } from '$lib/styles/admin-buttons';
+  import type { Size, Variant } from '$lib/styles/admin-buttons';
 
   let {
     size = 'md',
@@ -8,6 +8,9 @@
     wFit = false,
     disabled = false,
     type = 'button',
+    selected = false,
+    href,
+    as,
     class: className = '',
     children,
     ...restProps
@@ -17,42 +20,39 @@
     wFit?: boolean;
     disabled?: boolean;
     type?: 'button' | 'submit';
+    selected?: boolean;
+    href?: string;
+    as?: 'button' | 'a' | 'label';
     class?: string;
     children?: import('svelte').Snippet;
     [key: string]: unknown;
   }>();
 
-  const sizeClasses: Record<Size, string> = {
-    sm: 'px-2 py-1 text-xs uppercase tracking-[0.12em]',
-    md: 'px-3 py-1 text-sm uppercase tracking-[0.14em]',
-    'md-tall': 'h-[42px] px-3 py-1 text-base uppercase tracking-[0.14em]',
-    chip: 'px-2 py-1 text-[10px]'
-  };
+  const isLabel = $derived(as === 'label');
+  const isLink = $derived(Boolean(href) || as === 'a');
 
-  const variantClasses: Record<Variant, string> = {
-    default: 'rounded border border-admin-btn-border bg-admin-btn-bg hover:bg-border',
-    success: 'rounded border border-success/40 bg-success text-white',
-    danger: 'rounded border border-danger/60 bg-danger text-white',
-    'danger-outline': 'rounded border border-danger/60 bg-danger-soft text-danger',
-    info: 'rounded border border-info/40 bg-info-soft',
-    'success-soft': 'rounded border border-success/40 bg-success-soft',
-    link: 'text-[10px] text-text-muted underline'
-  };
-
-  const baseClasses = 'disabled:opacity-40';
   const classes = $derived(
     [
-      variant === 'link' ? '' : sizeClasses[size as Size],
+      ['link', 'ghost', 'toggle'].includes(variant) ? '' : sizeClasses[size as Size],
       variantClasses[variant as Variant],
+      variant === 'toggle' && selected ? 'bg-border' : '',
+      variant === 'toggle' && !selected ? 'opacity-40' : '',
       baseClasses,
-      wFit ? 'w-fit' : '',
+      wFit || isLink ? 'w-fit' : '',
+      isLabel ? 'cursor-pointer' : '',
       className
     ]
       .filter(Boolean)
       .join(' ')
   );
+
+  const commonAttrs = $derived({ class: classes });
 </script>
 
-<button {type} {disabled} class={classes} {...restProps}>
-  {@render children?.()}
-</button>
+{#if isLabel}
+  <label {...commonAttrs} {...restProps}>{@render children?.()}</label>
+{:else if isLink}
+  <a href={href ?? '#'} {...commonAttrs} {...restProps}>{@render children?.()}</a>
+{:else}
+  <button {type} {disabled} {...commonAttrs} {...restProps}>{@render children?.()}</button>
+{/if}

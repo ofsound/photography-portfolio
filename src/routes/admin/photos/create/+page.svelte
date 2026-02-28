@@ -1,5 +1,6 @@
 <script lang="ts">
   import { invalidateAll } from '$app/navigation';
+  import AdminButton from '$lib/components/admin/AdminButton.svelte';
   import AdminPhotoCard from '$lib/components/admin/photos/AdminPhotoCard.svelte';
   import type { AdminCategory, AdminPhoto, AdminPhotoImage, AdminTag } from '$lib/types/content';
 
@@ -121,8 +122,8 @@
 </script>
 
 <div class="flex flex-wrap items-center justify-between gap-3">
-  <h1 class="text-xl uppercase tracking-[0.15em]">New Photo</h1>
-  <a href="/admin/photos" class="rounded border border-admin-btn-border bg-admin-btn-bg px-3 py-1 text-xs uppercase tracking-[0.14em] hover:bg-border">Back to Photos</a>
+  <h1 class="text-xl uppercase tracking-[var(--tracking-heading)]">New Photo</h1>
+  <AdminButton href="/admin/photos">Back to Photos</AdminButton>
 </div>
 <p class="mt-2 text-sm text-text-muted">This page opens with all photo fields, taxonomy, and upload controls ready to edit.</p>
 

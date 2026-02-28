@@ -7,7 +7,8 @@
 
   let { data, children } = $props<{ data: LayoutData | null; children: import('svelte').Snippet }>();
 
-  const { phase } = setGalleryTransitionContext();
+  let phase = $state<import('$lib/context/gallery-transition').GalleryTransitionPhase>('idle');
+  setGalleryTransitionContext(phase, (p) => { phase = p; });
   const chromeHidden = $derived(
     phase === 'fade-out-chrome' ||
       phase === 'scale-and-mask' ||

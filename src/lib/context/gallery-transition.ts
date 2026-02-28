@@ -15,15 +15,9 @@ export type GalleryTransitionContext = {
   setPhase: (phase: GalleryTransitionPhase) => void;
 };
 
-/** Call in the root layout to provide gallery transition phase to descendants. Returns the context for use in the same component. */
-export function setGalleryTransitionContext(): GalleryTransitionContext {
-  let phase = $state<GalleryTransitionPhase>('idle');
-  const context: GalleryTransitionContext = {
-    phase,
-    setPhase: (p: GalleryTransitionPhase) => {
-      phase = p;
-    }
-  };
+/** Call from a Svelte component that has created phase with $state. Provides the context to descendants. */
+export function setGalleryTransitionContext(phase: GalleryTransitionPhase, setPhase: (p: GalleryTransitionPhase) => void): GalleryTransitionContext {
+  const context: GalleryTransitionContext = { phase, setPhase };
   setContext(GALLERY_TRANSITION_KEY, context);
   return context;
 }

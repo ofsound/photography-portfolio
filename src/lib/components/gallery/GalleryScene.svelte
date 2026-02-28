@@ -87,7 +87,7 @@
   const swipeMaxDurationMs = 700;
 
   const FADE_OUT_CHROME_MS = 280;
-  const SCALE_MASK_MS = 1520;
+  const SCALE_MASK_MS = 520;
   const CLOSING_CHROME_MS = 180;
 
   /** Macromedia Flash-style preloader: only when on gallery grid (no active photo). */

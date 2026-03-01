@@ -2,7 +2,7 @@ import { createClient } from 'npm:@supabase/supabase-js@2';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type'
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-webhook-secret, x-webhook-signature'
 };
 
 type StorageWebhookPayload = {
@@ -24,6 +24,19 @@ type SupabaseRuntime = {
   serviceRoleKey: string;
   supabase: ReturnType<typeof createClient>;
 };
+
+type WebhookAuthConfig = {
+  sharedSecret: string;
+  signatureSecret: string | null;
+};
+
+type WebhookAuthResult =
+  | { ok: true }
+  | {
+      ok: false;
+      status: number;
+      error: string;
+    };
 
 const firstNonEmptyEnv = (keys: string[]) => {
   for (const key of keys) {
@@ -59,6 +72,106 @@ const getRuntime = (): SupabaseRuntime => {
     serviceRoleKey,
     supabase: createClient(supabaseUrl, serviceRoleKey)
   };
+};
+
+const getWebhookAuthConfig = (): WebhookAuthConfig => {
+  const sharedSecret = firstNonEmptyEnv([
+    'IMAGE_CONVERT_WEBHOOK_SECRET',
+    'STORAGE_WEBHOOK_SECRET',
+    'WEBHOOK_SHARED_SECRET'
+  ]);
+
+  if (!sharedSecret) {
+    throw new Error(
+      'Missing webhook auth secret (set IMAGE_CONVERT_WEBHOOK_SECRET, STORAGE_WEBHOOK_SECRET, or WEBHOOK_SHARED_SECRET).'
+    );
+  }
+
+  const signatureSecret = firstNonEmptyEnv([
+    'IMAGE_CONVERT_WEBHOOK_SIGNATURE_SECRET',
+    'STORAGE_WEBHOOK_SIGNATURE_SECRET',
+    'WEBHOOK_SIGNATURE_SECRET'
+  ]);
+
+  return {
+    sharedSecret,
+    signatureSecret: signatureSecret || null
+  };
+};
+
+const constantTimeEqual = (a: string, b: string) => {
+  if (a.length !== b.length) return false;
+  let mismatch = 0;
+  for (let i = 0; i < a.length; i += 1) {
+    mismatch |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  }
+  return mismatch === 0;
+};
+
+const readBearerToken = (authorizationHeader: string | null) => {
+  if (!authorizationHeader) return null;
+  const [scheme, token] = authorizationHeader.split(/\s+/, 2);
+  if (!scheme || !token) return null;
+  if (scheme.toLowerCase() !== 'bearer') return null;
+  return token.trim();
+};
+
+const toHex = (bytes: Uint8Array) =>
+  Array.from(bytes)
+    .map((byte) => byte.toString(16).padStart(2, '0'))
+    .join('');
+
+const hmacSha256Hex = async (secret: string, payload: string) => {
+  const encoder = new TextEncoder();
+  const key = await crypto.subtle.importKey(
+    'raw',
+    encoder.encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign']
+  );
+  const signature = await crypto.subtle.sign('HMAC', key, encoder.encode(payload));
+  return toHex(new Uint8Array(signature));
+};
+
+const normalizeSignatureHeader = (headerValue: string | null) => {
+  if (!headerValue) return null;
+  const trimmed = headerValue.trim();
+  if (!trimmed) return null;
+  if (trimmed.toLowerCase().startsWith('sha256=')) {
+    return trimmed.slice(7).toLowerCase();
+  }
+  return trimmed.toLowerCase();
+};
+
+const verifyWebhookRequest = async (
+  request: Request,
+  rawBody: string,
+  config: WebhookAuthConfig
+): Promise<WebhookAuthResult> => {
+  const headerSecret = request.headers.get('x-webhook-secret')?.trim() ?? '';
+  const bearerSecret = readBearerToken(request.headers.get('authorization')) ?? '';
+  const suppliedSharedSecret = headerSecret || bearerSecret;
+
+  if (!suppliedSharedSecret || !constantTimeEqual(suppliedSharedSecret, config.sharedSecret)) {
+    return { ok: false, status: 401, error: 'Unauthorized webhook request.' };
+  }
+
+  if (!config.signatureSecret) {
+    return { ok: true };
+  }
+
+  const suppliedSignature = normalizeSignatureHeader(request.headers.get('x-webhook-signature'));
+  if (!suppliedSignature) {
+    return { ok: false, status: 401, error: 'Missing webhook signature.' };
+  }
+
+  const expectedSignature = await hmacSha256Hex(config.signatureSecret, rawBody);
+  if (!constantTimeEqual(suppliedSignature, expectedSignature)) {
+    return { ok: false, status: 401, error: 'Invalid webhook signature.' };
+  }
+
+  return { ok: true };
 };
 
 const sourceMimeFromPath = (path: string) => {
@@ -212,8 +325,34 @@ Deno.serve(async (request) => {
   }
 
   try {
+    if (request.method !== 'POST') {
+      return new Response(JSON.stringify({ ok: false, error: 'Method not allowed.' }), {
+        status: 405,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    const authConfig = getWebhookAuthConfig();
+    const rawBody = await request.text();
+    const authResult = await verifyWebhookRequest(request, rawBody, authConfig);
+    if (!authResult.ok) {
+      return new Response(JSON.stringify({ ok: false, error: authResult.error }), {
+        status: authResult.status,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    let payload: StorageWebhookPayload;
+    try {
+      payload = rawBody ? (JSON.parse(rawBody) as StorageWebhookPayload) : ({ type: 'unknown' } as StorageWebhookPayload);
+    } catch {
+      return new Response(JSON.stringify({ ok: false, error: 'Invalid JSON payload.' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
     const runtime = getRuntime();
-    const payload = (await request.json()) as StorageWebhookPayload;
     const record = payload.record;
     const bucketId = record?.bucket_id ?? record?.bucketId;
     const objectName = record?.name ?? record?.object_name;

@@ -93,7 +93,7 @@ export const actions: Actions = {
     newForm.set('kind', asString(form.get('kind'), 'additional'));
     newForm.set('alt_text', asString(form.get('alt_text')));
     const result = await uploadImageWithForm(locals, newForm);
-    if (result.success) {
+    if ('success' in result && result.success) {
       throw redirect(303, `/admin/photos/create?photo=${newId}`);
     }
     return result;

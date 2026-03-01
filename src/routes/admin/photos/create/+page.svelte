@@ -3,6 +3,7 @@
   import AdminButton from '$lib/components/admin/AdminButton.svelte';
   import AdminPhotoCard from '$lib/components/admin/photos/AdminPhotoCard.svelte';
   import type { AdminCategory, AdminPhoto, AdminPhotoImage, AdminTag } from '$lib/types/content';
+  import type { PageProps } from './$types';
 
   async function persistAdditionalOrder(photoId: string, orderedIds: string[]) {
     const formData = new FormData();
@@ -27,7 +28,7 @@
     if (res.ok) invalidateAll();
   }
 
-  let { data, form } = $props();
+  let { data, form }: PageProps = $props();
 
   const photo = $derived(data.photo as AdminPhoto | (Omit<AdminPhoto, 'id'> & { id: null }));
   const categories = $derived(data.categories as AdminCategory[]);
@@ -36,6 +37,10 @@
   const serverCategoryIds = $derived(data.selectedCategoryIds as string[]);
   const serverTagIds = $derived(data.selectedTagIds as string[]);
   const photoConversionState = $derived(data.photoConversionState as 'no-images' | 'pending' | 'ready' | 'mixed');
+  const formMessage = $derived(
+    form && 'message' in form && typeof form.message === 'string' ? form.message : null
+  );
+  const formSuccess = $derived(form && 'success' in form ? form.success === true : false);
 
   const baseAdditionalOrder = () =>
     images
@@ -127,9 +132,9 @@
 </div>
 <p class="mt-2 text-sm text-text-muted">You can upload images below; the first upload will create the photo. Use Save to set title and metadata. After saving, you can add categories.</p>
 
-{#if form?.message}
-  <p class={`mt-3 rounded border px-3 py-2 text-sm ${(form as { success?: boolean })?.success ? 'border-success/40 bg-success-soft text-success' : 'border-danger/40 bg-danger-soft text-danger'}`}>
-    {form.message}
+{#if formMessage}
+  <p class={`mt-3 rounded border px-3 py-2 text-sm ${formSuccess ? 'border-success/40 bg-success-soft text-success' : 'border-danger/40 bg-danger-soft text-danger'}`}>
+    {formMessage}
   </p>
 {/if}
 

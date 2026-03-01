@@ -97,7 +97,7 @@
   let preloadComplete = $state(false);
   let imagesLoaded = $state(0);
   let totalImages = $state(0);
-  let preloaderVisible = $state(true);
+  let preloaderVisible = $state(false);
   let galleryRevealed = $state(false);
   let preloadKey = $state("");
 
@@ -823,24 +823,44 @@
     totalImages = toPreload.length;
     imagesLoaded = 0;
     preloadComplete = false;
-    preloaderVisible = true;
     galleryRevealed = false;
 
-    const loadOne = (url: string) =>
-      new Promise<void>((resolve) => {
-        const img = new Image();
-        img.onload = () => {
+    const loadTasks = toPreload.map((url) => {
+      const img = new Image();
+      let settled = false;
+      let completedSynchronously = false;
+
+      const promise = new Promise<void>((resolve) => {
+        const finish = () => {
+          if (settled) return;
+          settled = true;
           imagesLoaded += 1;
           resolve();
         };
-        img.onerror = () => {
-          imagesLoaded += 1;
-          resolve();
-        };
+
+        img.onload = finish;
+        img.onerror = finish;
         img.src = url;
+        if (img.complete) {
+          completedSynchronously = true;
+          finish();
+        }
       });
 
-    await Promise.all(toPreload.map(loadOne));
+      return {promise, completedSynchronously};
+    });
+
+    const synchronouslyLoaded = loadTasks.reduce((count, task) => count + (task.completedSynchronously ? 1 : 0), 0);
+    if (synchronouslyLoaded === totalImages) {
+      preloadComplete = true;
+      preloaderVisible = false;
+      galleryRevealed = true;
+      return;
+    }
+
+    preloaderVisible = true;
+
+    await Promise.all(loadTasks.map((task) => task.promise));
     preloadComplete = true;
 
     await new Promise((r) => setTimeout(r, PRELOADER_FADE_MS));

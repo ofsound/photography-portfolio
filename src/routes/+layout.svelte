@@ -209,7 +209,7 @@
       <div class="flex items-center justify-end gap-3">
         {#if isViewer}
           <div class="flex items-center gap-2 text-xs uppercase tracking-[var(--tracking-heading)]" role="group" aria-label="Items per row">
-            <span>Items per row</span>
+            <span>Zoom</span>
             <div class="flex items-center gap-1">
               <input
                 type="number"
@@ -261,10 +261,15 @@
             <input
               name="q"
               bind:value={galleryQueryInput}
+              placeholder="Search"
               aria-label="Search title, description, tags, category"
               class="w-full rounded border border-border bg-transparent px-2 py-1 text-xs"
             />
-            <button class="shrink-0 rounded border border-border-strong px-2 py-1 text-xs" type="submit">Search</button>
+            <button class="flex shrink-0 items-center justify-center rounded border border-border-strong p-1.5 transition-colors hover:bg-surface-muted" type="submit" aria-label="Search">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+              </svg>
+            </button>
           </form>
         {:else}
           {#if siteSettings?.allow_transition_toggle}

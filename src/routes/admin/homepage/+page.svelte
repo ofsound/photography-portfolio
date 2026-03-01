@@ -1,4 +1,7 @@
 <script lang="ts">
+  import { DragDropProvider } from '@dnd-kit/svelte';
+  import { createSortable } from '@dnd-kit/svelte/sortable';
+  import { move } from '@dnd-kit/helpers';
   import AdminButton from '$lib/components/admin/AdminButton.svelte';
   import { photoPublicUrl } from '$lib/utils/storage-url';
   import type { HomepageImage, HomepageSlide } from '$lib/types/content';
@@ -11,7 +14,6 @@
   let selectedIds = $state<string[]>([]);
   let slideDurationMs = $state<number>(4000);
   let transitionDurationMs = $state<number>(2000);
-  let draggingId = $state<string | null>(null);
   let undoStack = $state<string[][]>([]);
   let redoStack = $state<string[][]>([]);
   const historyLimit = 100;
@@ -76,53 +78,11 @@
     selectedIds = selectedIds.filter((item) => item !== id);
   };
 
-  const onDragStart = (id: string, event: DragEvent) => {
-    draggingId = id;
-    event.dataTransfer?.setData('text/plain', id);
-    if (event.dataTransfer) event.dataTransfer.effectAllowed = 'move';
-  };
-
-  const onDragOver = (event: DragEvent) => {
-    event.preventDefault();
-    if (event.dataTransfer) event.dataTransfer.dropEffect = 'move';
-  };
-
-  const moveItem = (arr: string[], from: number, to: number) => {
-    const clone = [...arr];
-    const [item] = clone.splice(from, 1);
-    clone.splice(to, 0, item);
-    return clone;
-  };
-
-  const onDropBefore = (targetId: string, event: DragEvent) => {
-    event.preventDefault();
-    event.stopPropagation();
-    if (!draggingId) return;
-
-    const from = selectedIds.indexOf(draggingId);
-    const to = selectedIds.indexOf(targetId);
-    if (from < 0 || to < 0 || from === to) return;
-
-    pushHistory();
-    selectedIds = moveItem(selectedIds, from, to);
-  };
-
-  const onDropToEnd = (event: DragEvent) => {
-    event.preventDefault();
-    if (!draggingId) return;
-
-    const from = selectedIds.indexOf(draggingId);
-    if (from < 0) return;
-
-    const next = [...selectedIds];
-    const [item] = next.splice(from, 1);
-    next.push(item);
+  const onSelectedSlidesDragEnd = (event: unknown) => {
+    const next = move(selectedIds, event as Parameters<typeof move>[1]);
+    if (next === selectedIds) return;
     pushHistory();
     selectedIds = next;
-  };
-
-  const onDragEnd = () => {
-    draggingId = null;
   };
 </script>
 
@@ -189,32 +149,32 @@
     {#if selectedSlides.length === 0}
       <p class="text-sm text-text-muted">No slides selected.</p>
     {:else}
-      <ul class="grid gap-2" ondragover={onDragOver} ondrop={onDropToEnd}>
-        {#each selectedSlides as slide, index (slide.id)}
-          <li
-            class="grid cursor-move gap-2 rounded border border-border p-2 sm:grid-cols-[auto_1fr_auto] sm:items-center"
-            draggable="true"
-            ondragstart={(event) => onDragStart(slide.id, event)}
-            ondragover={onDragOver}
-            ondrop={(event) => onDropBefore(slide.id, event)}
-            ondragend={onDragEnd}
-          >
-            {#if slide.delivery_storage_path}
-              <img src={photoPublicUrl(slide.delivery_storage_path, 180)} alt={slide.photo_title} class="h-12 w-16 rounded object-cover" />
-            {:else}
-              <div class="grid h-12 w-16 place-items-center rounded border border-border-strong text-[var(--text-chip)] uppercase">pending</div>
-            {/if}
+      <DragDropProvider onDragEnd={onSelectedSlidesDragEnd}>
+        <ul class="grid gap-2">
+          {#each selectedSlides as slide, index (slide.id)}
+            {@const sortable = createSortable({ id: slide.id, index })}
+            <li
+              {@attach sortable.attach}
+              class="grid cursor-move gap-2 rounded border border-border p-2 sm:grid-cols-[auto_1fr_auto] sm:items-center"
+              class:opacity-50={sortable.isDragging}
+            >
+              {#if slide.delivery_storage_path}
+                <img src={photoPublicUrl(slide.delivery_storage_path, 180)} alt={slide.photo_title} class="h-12 w-16 rounded object-cover" />
+              {:else}
+                <div class="grid h-12 w-16 place-items-center rounded border border-border-strong text-[var(--text-chip)] uppercase">pending</div>
+              {/if}
 
-            <div class="text-xs">
-              <div>#{index + 1}</div>
-              <div><code>{slide.id}</code></div>
-              <div>{slide.photo_title} ({slide.kind})</div>
-            </div>
+              <div class="text-xs">
+                <div>#{index + 1}</div>
+                <div><code>{slide.id}</code></div>
+                <div>{slide.photo_title} ({slide.kind})</div>
+              </div>
 
-            <AdminButton size="sm" type="button" onclick={() => removeSlide(slide.id)}>Remove</AdminButton>
-          </li>
-        {/each}
-      </ul>
+              <AdminButton size="sm" type="button" onclick={() => removeSlide(slide.id)}>Remove</AdminButton>
+            </li>
+          {/each}
+        </ul>
+      </DragDropProvider>
     {/if}
 
     <form method="POST" action="?/save" class="w-fit">

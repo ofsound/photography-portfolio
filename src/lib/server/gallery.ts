@@ -59,6 +59,8 @@ export const loadGalleryPage = async (locals: App.Locals, options: GalleryLoadOp
     .eq('status', 'published')
     .is('deleted_at', null)
     .order('capture_date', { ascending: false, nullsFirst: false })
+    .order('created_at', { ascending: false })
+    .order('id', { ascending: false })
     .range(start, end);
 
   if (options.q) {
@@ -102,27 +104,18 @@ export const loadGalleryPage = async (locals: App.Locals, options: GalleryLoadOp
 };
 
 export const loadGalleryPhotoNeighbors = async (locals: App.Locals, photoId: string): Promise<GalleryPhotoNeighbors> => {
-  const { data, error } = await locals.supabase
-    .from('photos')
-    .select('id, slug')
-    .eq('status', 'published')
-    .is('deleted_at', null)
-    .order('capture_date', { ascending: false, nullsFirst: false });
+  const { data, error } = await locals.supabase.rpc('gallery_photo_neighbors', {
+    p_photo_id: photoId
+  });
 
-  if (error || !data || data.length <= 1) {
+  if (error || !Array.isArray(data) || data.length === 0) {
     return { prevSlug: null, nextSlug: null };
   }
 
-  const currentIndex = data.findIndex((photo) => photo.id === photoId);
-  if (currentIndex === -1) {
-    return { prevSlug: null, nextSlug: null };
-  }
-
-  const prev = data[(currentIndex - 1 + data.length) % data.length];
-  const next = data[(currentIndex + 1) % data.length];
+  const row = data[0] as { prev_slug: string | null; next_slug: string | null } | undefined;
 
   return {
-    prevSlug: prev?.slug ?? null,
-    nextSlug: next?.slug ?? null
+    prevSlug: row?.prev_slug ?? null,
+    nextSlug: row?.next_slug ?? null
   };
 };

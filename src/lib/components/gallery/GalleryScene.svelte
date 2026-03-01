@@ -1,9 +1,12 @@
 <script lang="ts">
   import {goto} from "$app/navigation";
-  import {fade} from "svelte/transition";
   import {onDestroy, onMount} from "svelte";
   import {getGalleryTransitionContext} from "$lib/context/gallery-transition";
   import {getGalleryPrefs, setGalleryPrefs} from "$lib/stores/gallery-prefs";
+  import GalleryControls from "./scene/GalleryControls.svelte";
+  import GalleryDetailOverlay from "./scene/GalleryDetailOverlay.svelte";
+  import GalleryPreloader from "./scene/GalleryPreloader.svelte";
+  import GalleryTiles from "./scene/GalleryTiles.svelte";
 
   /** Portals the element to document.body so it can stack above the promoted tile (z-70). */
   const portal = (node: HTMLElement) => {
@@ -92,8 +95,6 @@
 
   /** Macromedia Flash-style preloader: only when on gallery grid (no active photo). */
   const PRELOADER_FADE_MS = 420;
-  const CASCADE_STAGGER_MS = 42;
-  const CASCADE_DURATION_MS = 520;
 
   let preloadComplete = $state(false);
   let imagesLoaded = $state(0);
@@ -780,7 +781,8 @@
     return tileAspectRatio(photo);
   };
 
-  const hasThumbCrop = (img: {thumb_crop_x?: number | null; thumb_crop_y?: number | null; thumb_crop_zoom?: number | null} | null) => img && img.thumb_crop_x != null && img.thumb_crop_y != null && img.thumb_crop_zoom != null && img.thumb_crop_zoom >= 1;
+  const hasThumbCrop = (img: GalleryImage | null): boolean =>
+    Boolean(img && img.thumb_crop_x != null && img.thumb_crop_y != null && img.thumb_crop_zoom != null && img.thumb_crop_zoom >= 1);
 
   const thumbCropStyle = (img: GalleryImage | null, containerAspect: number) => {
     if (!img || !hasThumbCrop(img)) return "";
@@ -940,22 +942,6 @@
   });
 
   $effect(() => {
-    if (!activeSlug || typeof document === "undefined") return;
-    const el = document.querySelector("[data-full-viewport]");
-    if (el) {
-      const rect = el.getBoundingClientRect();
-      const computed = getComputedStyle(el);
-      console.debug("[gallery] data-full-viewport", {
-        rect: {width: rect.width, height: rect.height, left: rect.left, top: rect.top},
-        width: computed.width,
-        maxWidth: computed.maxWidth,
-        position: computed.position,
-        viewport: {w: window.innerWidth, h: window.innerHeight},
-      });
-    }
-  });
-
-  $effect(() => {
     teardownObserver();
     if (!loadSentinel || !hasMore || Boolean(activeSlug)) return;
 
@@ -985,116 +971,53 @@
 
 <svelte:window onresize={onResize} onmousemove={onPointerMove} onkeydown={onKeydown} ontouchstart={onTouchStart} ontouchend={onTouchEnd} />
 
-{#if preloaderVisible && shouldShowPreloader}
-  <div transition:fade={{duration: PRELOADER_FADE_MS}} class="preloader-overlay" role="status" aria-live="polite" aria-label="Loading gallery">
-    <div class="preloader-content">
-      <p class="preloader-text">Loading {imagesLoaded} of {totalImages}</p>
-      <div class="preloader-bar-track">
-        <div class="preloader-bar-fill" style="width: {totalImages > 0 ? (imagesLoaded / totalImages) * 100 : 0}%"></div>
-      </div>
-    </div>
-  </div>
-{/if}
+<GalleryPreloader
+  visible={preloaderVisible}
+  enabled={shouldShowPreloader}
+  {imagesLoaded}
+  {totalImages}
+  fadeMs={PRELOADER_FADE_MS}
+/>
 
 <section class="mx-auto w-full px-4 py-5" style={sectionMaxWidthStyle}>
-  <div class="chrome-panel sticky top-[var(--sticky-offset)] z-30 mb-5 grid gap-2 rounded px-3 py-2 text-xs uppercase tracking-[var(--tracking-heading)] transition-opacity duration-[var(--duration-chrome)] ease-out lg:grid-cols-[1fr_auto] lg:items-center" class:opacity-0={chromePanelHidden}>
-    <form class="flex flex-1 items-center gap-2" onsubmit={onSearchSubmit}>
-      <input name="q" bind:value={query} placeholder="Search title, description, tags, category" class="w-full rounded border border-border bg-transparent px-2 py-1" />
-      <button class="rounded border border-border-strong px-2 py-1" type="submit">Search</button>
-    </form>
-
-    <div class="flex flex-wrap items-center justify-end gap-3">
-      <label class="flex items-center gap-2">
-        Density
-        <input type="range" min="1" max={String(data.maxDensity ?? 20)} value={colCount} oninput={(e) => updateDensity(Number((e.currentTarget as HTMLInputElement).value))} />
-        <span class="tabular-nums">{colCount}</span>
-      </label>
-
-      <label class="flex items-center gap-2">
-        Gap
-        <input type="range" min="0" max="20" value={gap} oninput={(e) => updateGap(Number((e.currentTarget as HTMLInputElement).value))} />
-        <span class="tabular-nums">{gap}px</span>
-      </label>
-
-      <div class="flex items-center gap-1">
-        <button type="button" class="rounded border border-border-strong px-2 py-1 {layoutMode === 'uniform' ? 'bg-border' : 'opacity-40'}" onclick={() => updateLayoutMode("uniform")} disabled={layoutMode === "uniform"}>Uniform</button>
-        <button type="button" class="rounded border border-border-strong px-2 py-1 {layoutMode === 'masonry' ? 'bg-border' : 'opacity-40'}" onclick={() => updateLayoutMode("masonry")} disabled={layoutMode === "masonry"}>Masonry</button>
-      </div>
-
-      <div class="flex items-center gap-1">
-        <button type="button" class="rounded border border-border-strong px-2 py-1 {widthMode === 'full' ? 'bg-border' : 'opacity-40'}" onclick={() => updateWidthMode("full")} disabled={widthMode === "full"}>Full</button>
-        <button type="button" class="rounded border border-border-strong px-2 py-1 {widthMode === 'constrained' ? 'bg-border' : 'opacity-40'}" onclick={() => updateWidthMode("constrained")} disabled={widthMode === "constrained"}>Constrained</button>
-      </div>
-    </div>
-  </div>
+  <GalleryControls
+    {query}
+    chromeHidden={chromePanelHidden}
+    maxDensity={data.maxDensity ?? 20}
+    {colCount}
+    {gap}
+    {layoutMode}
+    {widthMode}
+    {onSearchSubmit}
+    onQueryInput={(value) => {
+      query = value;
+    }}
+    onUpdateDensity={updateDensity}
+    onUpdateGap={updateGap}
+    onUpdateLayoutMode={updateLayoutMode}
+    onUpdateWidthMode={updateWidthMode}
+  />
 
   {#if photos.length === 0}
     <p class="py-16 text-center text-sm uppercase tracking-[var(--tracking-label)] text-text-muted">No photos found.</p>
   {:else}
-    {#if layoutMode === "uniform"}
-      <ul class="grid" style={`grid-template-columns: repeat(${colCount}, minmax(0, 1fr)); gap: ${gap}px;`}>
-        {#each photos as photo, index (photo.id)}
-          <li>
-            <div class="tile-cascade" class:revealed={galleryRevealed} class:no-motion={reducedMotion()} style="animation-delay: {galleryRevealed && !reducedMotion() ? index * CASCADE_STAGGER_MS : 0}ms">
-              <a href={withCurrentSearch(`/photo/${photo.slug}`)} use:registerTile={photo.slug} class="group relative block overflow-hidden rounded" style={`aspect-ratio: ${uniformRatio};`} onclick={(event) => onOpenPhoto(event, photo.slug)}>
-                {#if photo.leadImage}
-                  <img
-                    src={photoPublicUrl(photo.leadImage.delivery_storage_path, GALLERY_DETAIL_SHARED_WIDTH)}
-                    alt={photo.leadImage.alt_text ?? photo.title}
-                    class="tile-img transition-transform duration-500 ease-cinematic {hasThumbCrop(photo.leadImage) ? 'tile-img-crop' : 'group-hover:scale-[1.03]'}"
-                    style={thumbCropStyle(photo.leadImage, uniformRatio)}
-                    loading="eager"
-                  />
-                {/if}
-              </a>
-            </div>
-          </li>
-        {/each}
-
-        {#if isLoadingMore}
-          {#each Array.from({length: placeholderCount}) as _, index (index)}
-            <li class="animate-pulse rounded bg-surface-muted" style={`aspect-ratio: ${uniformRatio};`}></li>
-          {/each}
-        {/if}
-      </ul>
-    {:else}
-      <ul class="columns-2 md:columns-4 lg:columns-6" style={`columns: ${colCount}; column-gap: ${gap}px;`}>
-        {#each photos as photo, index (photo.id)}
-          {#if photo.leadImage}
-            {@const knownRatio = parseDimensions(photo.leadImage.dimensions)}
-            <li class="break-inside-avoid" style="margin-bottom: {gap}px">
-              <div class="tile-cascade" class:revealed={galleryRevealed} class:no-motion={reducedMotion()} style="animation-delay: {galleryRevealed && !reducedMotion() ? index * CASCADE_STAGGER_MS : 0}ms">
-                <a href={withCurrentSearch(`/photo/${photo.slug}`)} use:registerTile={photo.slug} class="group relative block overflow-hidden rounded" style={knownRatio ? `aspect-ratio: ${knownRatio.width / knownRatio.height};` : ""} onclick={(event) => onOpenPhoto(event, photo.slug)}>
-                  <img
-                    src={photoPublicUrl(photo.leadImage.delivery_storage_path, GALLERY_DETAIL_SHARED_WIDTH)}
-                    alt={photo.leadImage.alt_text ?? photo.title}
-                    class="tile-img tile-img-masonry transition-transform duration-500 ease-cinematic {hasThumbCrop(photo.leadImage) ? 'tile-img-crop' : 'group-hover:scale-[1.02]'}"
-                    style={thumbCropStyle(photo.leadImage, tileAspectRatio(photo))}
-                    loading="eager"
-                    onload={(e) => {
-                      // After load, update the anchor's aspect-ratio if it wasn't set from data
-                      if (!knownRatio && e.currentTarget instanceof HTMLImageElement) {
-                        const img = e.currentTarget;
-                        const anchor = img.closest("a");
-                        if (anchor && img.naturalWidth && img.naturalHeight) {
-                          anchor.style.aspectRatio = String(img.naturalWidth / img.naturalHeight);
-                        }
-                      }
-                    }}
-                  />
-                </a>
-              </div>
-            </li>
-          {/if}
-        {/each}
-
-        {#if isLoadingMore}
-          {#each Array.from({length: placeholderCount}) as _, index (index)}
-            <li class="break-inside-avoid animate-pulse rounded bg-surface-muted" style={`height: ${120 + (index % 5) * 34}px; margin-bottom: ${gap}px;`}></li>
-          {/each}
-        {/if}
-      </ul>
-    {/if}
+    <GalleryTiles
+      {photos}
+      {layoutMode}
+      {colCount}
+      {gap}
+      uniformRatio={uniformRatio}
+      {placeholderCount}
+      {isLoadingMore}
+      {galleryRevealed}
+      reducedMotion={reducedMotion()}
+      {withCurrentSearch}
+      {onOpenPhoto}
+      {registerTile}
+      {hasThumbCrop}
+      {thumbCropStyle}
+      {tileAspectRatio}
+    />
 
     {#if hasMore}
       <div bind:this={loadSentinel} class="h-10 w-full"></div>
@@ -1114,143 +1037,23 @@
 </section>
 
 {#if activePhoto && currentImage}
-  <div use:portal transition:fade={{duration: SCALE_MASK_MS}} class="fixed inset-0 z-[60] pointer-events-none bg-[var(--color-letterbox)]"></div>
-
-  {#if !promoted && transitionPhase !== "scale-and-mask"}
-    <div use:portal data-full-viewport class="fixed inset-0 z-[65] pointer-events-none flex items-center justify-center p-0 m-0" aria-hidden="true">
-      <img src={photoPublicUrl(currentImage.delivery_storage_path, GALLERY_DETAIL_SHARED_WIDTH)} alt={currentImage.alt_text ?? activePhoto.title} class="max-h-full max-w-full w-auto h-auto object-contain" />
-    </div>
-  {/if}
-
-  {#if controlsVisible}
-    <div use:portal class="fixed inset-0 z-[80] pointer-events-none transition-opacity ease-out" class:opacity-0={overlayChromeHidden} style="transition-duration: {CLOSING_CHROME_MS}ms" aria-hidden="true">
-      <a href={withCurrentSearch("/gallery")} onclick={closeToGallery} class="chrome-panel pointer-events-auto fixed left-5 top-5 rounded px-3 py-2 text-xs uppercase tracking-[var(--tracking-heading)]" class:pointer-events-none={isTransitioning} class:opacity-50={isTransitioning}>Close</a>
-
-      {#if canCycleGallery}
-        <a href={prevGalleryHref ? withCurrentSearch(prevGalleryHref) : "#"} onclick={(event) => onNeighborNavigate(event, prevGalleryHref, "prev")} class="chrome-panel pointer-events-auto fixed left-0 top-1/2 -translate-y-1/2 px-4 py-5 text-lg" aria-label="Previous image">←</a>
-
-        <a href={nextGalleryHref ? withCurrentSearch(nextGalleryHref) : "#"} onclick={(event) => onNeighborNavigate(event, nextGalleryHref, "next")} class="chrome-panel pointer-events-auto fixed right-0 top-1/2 -translate-y-1/2 px-4 py-5 text-lg" aria-label="Next image">→</a>
-      {/if}
-    </div>
-  {/if}
-
-  <aside
-    use:portal
-    class="chrome-panel fixed left-[var(--inset-overlay)] bottom-[var(--inset-overlay)] z-[var(--z-overlay)] w-fit max-w-[min(90vw,var(--max-width-prose))] rounded px-4 py-3 transition-opacity ease-out"
-    class:opacity-0={overlayChromeHidden}
-    style="transition-duration: {CLOSING_CHROME_MS}ms"
-  >
-    <div class="flex flex-wrap items-center justify-between gap-3">
-      <div>
-        <h1 class="text-sm uppercase tracking-[var(--tracking-nav)]">{activePhoto.title}</h1>
-        {#if activePhoto.description}
-          <p class="mt-2 max-w-[var(--max-width-prose)] text-sm text-canvas-text/80">{activePhoto.description}</p>
-        {/if}
-      </div>
-    </div>
-
-    {#if activePhoto.additionalImages.length > 0}
-      <div class="flex gap-2 overflow-x-auto px-4 pb-3" data-swipe-ignore>
-        {#each activePhoto.additionalImages as image (image.id)}
-          <a href={withCurrentSearch(`/photo/${activePhoto.slug}/${image.id}`)} onclick={(event) => onSelectAdditionalImage(event, image.id)} class="block shrink-0 overflow-hidden rounded border border-border-strong">
-            <img src={photoPublicUrl(image.delivery_storage_path, 180)} alt={image.alt_text ?? activePhoto.title} class="h-14 w-20 object-cover" loading="lazy" />
-          </a>
-        {/each}
-      </div>
-    {/if}
-  </aside>
+  <GalleryDetailOverlay
+    {activePhoto}
+    currentImage={currentImage}
+    promoted={Boolean(promoted)}
+    transitionPhase={transitionPhase}
+    {controlsVisible}
+    {overlayChromeHidden}
+    {isTransitioning}
+    {canCycleGallery}
+    {prevGalleryHref}
+    {nextGalleryHref}
+    {withCurrentSearch}
+    {closeToGallery}
+    {onNeighborNavigate}
+    {onSelectAdditionalImage}
+    {portal}
+    scaleMaskMs={SCALE_MASK_MS}
+    closingChromeMs={CLOSING_CHROME_MS}
+  />
 {/if}
-
-<style>
-  .tile-img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-  }
-
-  /* Masonry tiles: natural height flow — the img drives the tile height */
-  .tile-img-masonry {
-    height: auto;
-  }
-
-  .tile-img-crop {
-    object-fit: contain !important;
-  }
-
-  :global([data-promoted] .tile-img) {
-    object-fit: contain;
-    height: 100%;
-  }
-
-  .preloader-overlay {
-    position: fixed;
-    inset: 0;
-    z-index: 50;
-    pointer-events: none;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--color-bg);
-  }
-
-  .preloader-content {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 1rem;
-    min-width: 280px;
-    max-width: 90vw;
-  }
-
-  .preloader-text {
-    font-size: 0.75rem;
-    font-weight: 600;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    color: var(--color-text-muted);
-    font-variant-numeric: tabular-nums;
-  }
-
-  .preloader-bar-track {
-    width: 100%;
-    height: 8px;
-    background: linear-gradient(to bottom, color-mix(in srgb, var(--color-border) 60%, transparent), color-mix(in srgb, var(--color-border-strong) 80%, transparent));
-    border: 1px solid var(--color-border-strong);
-    border-radius: 2px;
-    overflow: hidden;
-    box-shadow:
-      inset 0 1px 2px rgba(0, 0, 0, 0.15),
-      0 1px 0 rgba(255, 255, 255, 0.4);
-  }
-
-  .preloader-bar-fill {
-    height: 100%;
-    background: linear-gradient(to bottom, color-mix(in srgb, var(--color-brand) 90%, white), var(--color-brand));
-    border-radius: 1px;
-    transition: width 0.12s ease-out;
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
-  }
-
-  .tile-cascade {
-    opacity: 0;
-    transform: translateY(14px);
-  }
-
-  .tile-cascade.revealed {
-    animation: cascadeIn 520ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
-  }
-
-  .tile-cascade.no-motion.revealed {
-    animation: none;
-    opacity: 1;
-    transform: none;
-  }
-
-  @keyframes cascadeIn {
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-</style>

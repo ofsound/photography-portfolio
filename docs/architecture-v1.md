@@ -100,7 +100,7 @@ Cons:
 - Roles: `admin`, `editor`.
 - Public reads only published/non-archived content.
 - Admin/editor write via RLS-protected tables.
-- `transition_preset` and theme token updates (`tailwind_palette`) are admin-only.
+- `transition_preset` updates are admin-only.
 - Immutable audit log for key mutations.
 
 ## Hosting Recommendation (v1)

@@ -2,14 +2,12 @@
   import AdminButton from '$lib/components/admin/AdminButton.svelte';
   import FormField from '$lib/components/FormField.svelte';
   import FormInput from '$lib/components/FormInput.svelte';
-  import FormTextarea from '$lib/components/FormTextarea.svelte';
 
   let { data, form } = $props();
 
   const settings = $derived(
     data.settings ?? {
     theme_default: 'system',
-    tailwind_palette: {},
     grid_desktop_default: 6,
     grid_mobile_default: 3,
     grid_desktop_max: 20,
@@ -21,8 +19,6 @@
     allow_transition_toggle: true
     }
   );
-
-  const palettePretty = $derived(JSON.stringify(settings.tailwind_palette ?? {}, null, 2));
 
   const selectClass = 'w-full rounded border border-border-strong bg-surface px-3 py-2 text-sm';
 </script>
@@ -84,17 +80,6 @@
   <label class="flex items-center gap-2 text-sm">
     <input type="checkbox" name="allow_transition_toggle" checked={settings.allow_transition_toggle} /> Allow Transition Toggle
   </label>
-
-  <FormField label={'Tailwind Palette JSON' + (data.role !== 'admin' ? ' (Admin)' : '')} id="settings-tailwind_palette">
-    <FormTextarea
-      id="settings-tailwind_palette"
-      name="tailwind_palette"
-      rows={8}
-      value={palettePretty}
-      class="font-mono text-xs"
-      disabled={data.role !== 'admin'}
-    />
-  </FormField>
 
   <AdminButton wFit type="submit">Save Settings</AdminButton>
 </form>

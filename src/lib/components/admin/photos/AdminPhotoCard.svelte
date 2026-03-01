@@ -1,6 +1,9 @@
 <script lang="ts">
   import {goto} from "$app/navigation";
   import {enhance} from "$app/forms";
+  import {DragDropProvider, DragOverlay} from "@dnd-kit/svelte";
+  import {createSortable} from "@dnd-kit/svelte/sortable";
+  import {move} from "@dnd-kit/helpers";
   import {fade, slide} from "svelte/transition";
   import {quintOut} from "svelte/easing";
   import AdminButton from "$lib/components/admin/AdminButton.svelte";
@@ -29,20 +32,12 @@
     photoConversionState,
     additionalOrder,
     onTogglePhotoSelected,
-    onAdditionalDragStart,
-    onAdditionalDragOver,
-    onAdditionalDropBefore,
-    onAdditionalDropToEnd,
-    onAdditionalDragEnd,
+    onAdditionalReorder,
     initialExpanded = false,
     editorOnly = false,
     editHref,
     index = 0,
     gridMode = false,
-    onPhotoDragStart,
-    onPhotoDragOver,
-    onPhotoDrop,
-    onPhotoDragEnd,
     isDraggingPhoto = false,
   } = $props<{
     photo: AdminPhoto | (Omit<AdminPhoto, 'id'> & { id: null });
@@ -56,20 +51,12 @@
     photoConversionState: "no-images" | "pending" | "ready" | "mixed";
     additionalOrder: string[];
     onTogglePhotoSelected: (photoId: string, checked: boolean) => void;
-    onAdditionalDragStart: (photoId: string, imageId: string, event: DragEvent) => void;
-    onAdditionalDragOver: (event: DragEvent) => void;
-    onAdditionalDropBefore: (photoId: string, targetId: string, event: DragEvent) => void;
-    onAdditionalDropToEnd: (photoId: string, event: DragEvent) => void;
-    onAdditionalDragEnd: () => void;
+    onAdditionalReorder: (photoId: string, orderedImageIds: string[]) => void | Promise<void>;
     initialExpanded?: boolean;
     editorOnly?: boolean;
     editHref?: string;
     index?: number;
     gridMode?: boolean;
-    onPhotoDragStart?: (photoId: string, event: DragEvent) => void;
-    onPhotoDragOver?: (event: DragEvent) => void;
-    onPhotoDrop?: (targetPhotoId: string, event: DragEvent) => void;
-    onPhotoDragEnd?: () => void;
     isDraggingPhoto?: boolean;
   }>();
 
@@ -145,18 +132,21 @@
     }
     toggleExpanded();
   };
+
+  const onAdditionalDragEnd = (event: unknown) => {
+    if (photo.id == null) return;
+    const next = move(additionalOrder, event as Parameters<typeof move>[1]);
+    if (next !== additionalOrder) {
+      void onAdditionalReorder(photo.id, next);
+    }
+  };
 </script>
 
 {#if gridMode}
   <!-- svelte-ignore a11y_no_noninteractive_element_to_interactive_role -->
   <div
-    class="group relative flex aspect-square flex-col overflow-hidden rounded border border-border bg-surface {onPhotoDragStart ? 'cursor-move' : ''}"
+    class="group relative flex aspect-square flex-col overflow-hidden rounded border border-border bg-surface"
     class:opacity-50={isDraggingPhoto}
-    draggable={!!onPhotoDragStart && photo.id != null}
-    ondragstart={onPhotoDragStart && photo.id != null ? (e) => onPhotoDragStart(photo.id, e) : undefined}
-    ondragover={onPhotoDragOver}
-    ondrop={onPhotoDrop && photo.id != null ? (e) => onPhotoDrop(photo.id, e) : undefined}
-    ondragend={onPhotoDragEnd}
     role="button"
     tabindex="0"
     onclick={(e) => {
@@ -384,42 +374,73 @@
                 {#if additionalOrder.length === 0}
                   <p class="text-sm text-text-muted">No additional images.</p>
                 {:else}
-                  <ul class="grid gap-2" ondragover={onAdditionalDragOver} ondrop={(event) => onAdditionalDropToEnd(photo.id, event)}>
-                    {#each additionalOrder as imageId, i}
-                      {@const image = imageById(imageId)}
-                      {#if image}
-                        <li
-                          class="grid cursor-move gap-2 rounded p-2 sm:grid-cols-[auto_1fr_auto_auto] sm:items-center {i % 2 === 0 ? 'bg-surface' : 'bg-surface-muted'}"
-                          draggable="true"
-                          ondragstart={(event) => onAdditionalDragStart(photo.id, image.id, event)}
-                          ondragover={onAdditionalDragOver}
-                          ondrop={(event) => onAdditionalDropBefore(photo.id, image.id, event)}
-                          ondragend={onAdditionalDragEnd}
-                        >
-                          {#if image.delivery_storage_path}
-                            <div class="flex h-24 w-32 shrink-0 items-center justify-center overflow-hidden rounded">
-                              <img src={photoPublicUrl(image.delivery_storage_path, 320)} alt={image.alt_text ?? photo.title} class="max-h-full max-w-full object-contain" />
-                            </div>
-                          {:else}
-                            <div class="grid h-24 w-32 shrink-0 place-items-center rounded border border-border-strong text-[var(--text-chip)] uppercase">pending</div>
-                          {/if}
+                  <DragDropProvider onDragEnd={onAdditionalDragEnd}>
+                    <ul class="grid gap-2">
+                      {#each additionalOrder as imageId, i}
+                        {@const image = imageById(imageId)}
+                        {#if image}
+                          {@const sortable = createSortable({ id: image.id, index: i })}
+                          <li
+                            {@attach sortable.attach}
+                            class="grid cursor-move gap-2 rounded p-2 sm:grid-cols-[auto_1fr_auto_auto] sm:items-center {i % 2 === 0 ? 'bg-surface' : 'bg-surface-muted'}"
+                            class:opacity-50={sortable.isDragging}
+                          >
+                            {#if image.delivery_storage_path}
+                              <div class="flex h-24 w-32 shrink-0 items-center justify-center overflow-hidden rounded">
+                                <img src={photoPublicUrl(image.delivery_storage_path, 320)} alt={image.alt_text ?? photo.title} class="max-h-full max-w-full object-contain" />
+                              </div>
+                            {:else}
+                              <div class="grid h-24 w-32 shrink-0 place-items-center rounded border border-border-strong text-[var(--text-chip)] uppercase">pending</div>
+                            {/if}
 
-                          <div></div>
+                            <div></div>
 
-                          <form method="POST" action="?/setLead" use:enhance>
-                            <input type="hidden" name="photo_id" value={photo.id} />
-                            <input type="hidden" name="image_id" value={image.id} />
-                            <AdminButton size="sm" type="submit">Set Lead</AdminButton>
-                          </form>
+                            <form method="POST" action="?/setLead" use:enhance>
+                              <input type="hidden" name="photo_id" value={photo.id} />
+                              <input type="hidden" name="image_id" value={image.id} />
+                              <AdminButton size="sm" type="submit">Set Lead</AdminButton>
+                            </form>
 
-                          <form method="POST" action="?/removeImage" use:enhance>
-                            <input type="hidden" name="image_id" value={image.id} />
-                            <AdminButton variant="danger-outline" size="sm" type="submit">Delete</AdminButton>
-                          </form>
-                        </li>
-                      {/if}
-                    {/each}
-                  </ul>
+                            <form method="POST" action="?/removeImage" use:enhance>
+                              <input type="hidden" name="image_id" value={image.id} />
+                              <AdminButton variant="danger-outline" size="sm" type="submit">Delete</AdminButton>
+                            </form>
+                          </li>
+                        {/if}
+                      {/each}
+                    </ul>
+
+                    <DragOverlay>
+                      {#snippet children(source)}
+                        {@const dragImage = imageById(String(source.id))}
+                        {#if dragImage}
+                          <div
+                            class="grid w-44 gap-2 rounded border-2 border-primary bg-surface p-2 shadow-xl"
+                            role="presentation"
+                          >
+                            {#if dragImage.delivery_storage_path}
+                              <div class="flex h-24 w-full items-center justify-center overflow-hidden rounded bg-surface-muted">
+                                <img
+                                  src={photoPublicUrl(dragImage.delivery_storage_path, 320)}
+                                  alt={dragImage.alt_text ?? photo.title}
+                                  class="max-h-full max-w-full object-contain"
+                                />
+                              </div>
+                            {:else}
+                              <div
+                                class="grid h-24 w-full place-items-center rounded border border-border-strong text-[var(--text-chip)] uppercase"
+                              >
+                                pending
+                              </div>
+                            {/if}
+                            <p class="truncate text-[var(--text-chip)] uppercase tracking-[var(--tracking-tight)] text-text-muted">
+                              Additional image
+                            </p>
+                          </div>
+                        {/if}
+                      {/snippet}
+                    </DragOverlay>
+                  </DragDropProvider>
                 {/if}
               </div>
             {/if}

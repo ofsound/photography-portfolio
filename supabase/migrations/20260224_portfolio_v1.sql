@@ -53,7 +53,6 @@ $$;
 create table public.site_settings (
   singleton_id smallint primary key default 1 check (singleton_id = 1),
   theme_default public.theme_mode not null default 'system',
-  tailwind_palette jsonb not null default '{}'::jsonb,
   grid_desktop_default integer not null default 6 check (grid_desktop_default between 1 and 30),
   grid_mobile_default integer not null default 3 check (grid_mobile_default between 1 and 8),
   grid_desktop_max integer not null default 20 check (grid_desktop_max between 1 and 30),
@@ -294,9 +293,8 @@ begin
   end if;
 
   if not public.cms_is_admin() then
-    if new.transition_preset is distinct from old.transition_preset
-      or new.tailwind_palette is distinct from old.tailwind_palette then
-      raise exception 'Only admins can update transition preset and theme tokens.';
+    if new.transition_preset is distinct from old.transition_preset then
+      raise exception 'Only admins can update transition preset.';
     end if;
   end if;
 

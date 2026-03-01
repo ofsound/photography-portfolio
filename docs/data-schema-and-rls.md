@@ -4,7 +4,7 @@ Migration file: [`supabase/migrations/20260224_portfolio_v1.sql`](/Users/ben/Dev
 
 ## Core Tables
 - `profiles`: maps `auth.users` to app role (`admin`, `editor`).
-- `site_settings`: singleton site-wide config (theme mode, grid defaults/max, layout mode, thumb ratio, transition preset, theme token map).
+- `site_settings`: singleton site-wide config (theme mode, grid defaults/max, layout mode, thumb ratio, transition preset).
 - `categories`: flat taxonomy set, editable.
 - `tags`: editable mixed taxonomy.
 - `photos`: primary photograph records (metadata, SEO fields, soft archive, search vectors).
@@ -50,7 +50,7 @@ Migration file: [`supabase/migrations/20260224_portfolio_v1.sql`](/Users/ben/Dev
 | `audit_log` | No | No | Read + trigger-driven insert | Read + trigger-driven insert |
 | `storage.objects` in `photos` bucket | Read | Read | Full read/write | Full read/write |
 
-`site_settings` note: although editors can update general layout fields, `transition_preset` and `tailwind_palette` are blocked at trigger level for non-admin users.
+`site_settings` note: although editors can update general layout fields, `transition_preset` is blocked at trigger level for non-admin users.
 
 ## Bootstrap Requirement
 The first `admin` profile must be seeded with the Supabase service role (or SQL editor as owner), because no user is admin before initial bootstrap.

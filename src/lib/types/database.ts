@@ -473,7 +473,6 @@ export type Database = {
           homepage_transition_duration_ms: number;
           max_content_width_px: number | null;
           singleton_id: number;
-          tailwind_palette: Json;
           theme_default: Database['public']['Enums']['theme_mode'];
           transition_preset: Database['public']['Enums']['transition_preset'];
           uniform_thumb_ratio: number;
@@ -492,7 +491,6 @@ export type Database = {
           homepage_transition_duration_ms?: number;
           max_content_width_px?: number | null;
           singleton_id?: number;
-          tailwind_palette?: Json;
           theme_default?: Database['public']['Enums']['theme_mode'];
           transition_preset?: Database['public']['Enums']['transition_preset'];
           uniform_thumb_ratio?: number;
@@ -511,7 +509,6 @@ export type Database = {
           homepage_transition_duration_ms?: number;
           max_content_width_px?: number | null;
           singleton_id?: number;
-          tailwind_palette?: Json;
           theme_default?: Database['public']['Enums']['theme_mode'];
           transition_preset?: Database['public']['Enums']['transition_preset'];
           uniform_thumb_ratio?: number;
@@ -563,6 +560,13 @@ export type Database = {
     Functions: {
       cms_can_edit: { Args: Record<string, never>; Returns: boolean };
       cms_is_admin: { Args: Record<string, never>; Returns: boolean };
+      gallery_photo_neighbors: {
+        Args: { p_photo_id: string };
+        Returns: {
+          prev_slug: string | null;
+          next_slug: string | null;
+        }[];
+      };
       insert_photo_image: {
         Args: {
           p_photo_id: string;
@@ -574,6 +578,25 @@ export type Database = {
           p_alt_text?: string | null;
         };
         Returns: string;
+      };
+      normalize_photo_image_positions: {
+        Args: {
+          p_photo_id: string;
+        };
+        Returns: undefined;
+      };
+      reorder_additional_images: {
+        Args: {
+          p_photo_id: string;
+          p_ordered_image_ids: string[];
+        };
+        Returns: undefined;
+      };
+      reorder_photos: {
+        Args: {
+          p_ordered_photo_ids: string[];
+        };
+        Returns: undefined;
       };
       refresh_photo_search: { Args: { p_photo_id: string }; Returns: undefined };
       save_homepage_slides: { Args: { p_slides: Json }; Returns: undefined };

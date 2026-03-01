@@ -77,44 +77,11 @@ export const photoImageActions: Actions = {
 
     if (!photoId) return fail(400, { message: 'Missing photo id.' });
 
-    const { data: images, error: loadError } = await locals.supabase
-      .from('photo_images')
-      .select('id, kind, position')
-      .eq('photo_id', photoId)
-      .order('position', { ascending: true });
-
-    if (loadError || !images) return fail(400, { message: loadError?.message ?? 'Failed to load images.' });
-
-    const lead = images.find((image) => image.kind === 'lead') ?? null;
-    const additional = images.filter((image) => image.kind === 'additional');
-    const additionalIds = new Set(additional.map((image) => image.id));
-
-    const submitted = orderedImageIds.filter((id) => additionalIds.has(id));
-    const remaining = additional.map((image) => image.id).filter((id) => !submitted.includes(id));
-    const finalOrder = [...submitted, ...remaining];
-
-    const stagedUpdates = images.map((image, idx) =>
-      locals.supabase.from('photo_images').update({ position: 100000 + idx }).eq('id', image.id).eq('photo_id', photoId)
-    );
-
-    const stagedResults = await Promise.all(stagedUpdates);
-    const stagedError = stagedResults.find((result) => result.error)?.error;
-    if (stagedError) return fail(400, { message: stagedError.message });
-
-    const finalWrites: PromiseLike<{ error: { message: string } | null }>[] = [];
-
-    if (lead) {
-      finalWrites.push(locals.supabase.from('photo_images').update({ position: 0 }).eq('id', lead.id).eq('photo_id', photoId));
-    }
-
-    finalOrder.forEach((id, index) => {
-      const nextPosition = (lead ? 1 : 0) + index;
-      finalWrites.push(locals.supabase.from('photo_images').update({ position: nextPosition }).eq('id', id).eq('photo_id', photoId));
+    const { error } = await locals.supabase.rpc('reorder_additional_images', {
+      p_photo_id: photoId,
+      p_ordered_image_ids: orderedImageIds
     });
-
-    const finalResults = await Promise.all(finalWrites);
-    const finalError = finalResults.find((result) => result.error)?.error;
-    if (finalError) return fail(400, { message: finalError.message });
+    if (error) return fail(400, { message: error.message });
 
     return { success: true, message: 'Additional image order saved.' };
   },
@@ -247,4 +214,3 @@ export const photoImageActions: Actions = {
     return { success: true, message: 'Thumbnail crop cleared.' };
   }
 };
-

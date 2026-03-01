@@ -7,7 +7,7 @@ export const load: PageServerLoad = async ({ locals }) => {
     locals.supabase
       .from('site_settings')
       .select(
-        'singleton_id, theme_default, tailwind_palette, grid_desktop_default, grid_mobile_default, grid_desktop_max, grid_mobile_max, max_content_width_px, gallery_layout_mode, uniform_thumb_ratio, transition_preset, allow_transition_toggle'
+        'singleton_id, theme_default, grid_desktop_default, grid_mobile_default, grid_desktop_max, grid_mobile_max, max_content_width_px, gallery_layout_mode, uniform_thumb_ratio, transition_preset, allow_transition_toggle'
       )
       .eq('singleton_id', 1)
       .maybeSingle(),
@@ -43,15 +43,6 @@ export const actions: Actions = {
 
     if (role === 'admin') {
       updatePayload.transition_preset = asString(form.get('transition_preset'), 'cinematic');
-
-      const paletteRaw = asString(form.get('tailwind_palette')).trim();
-      if (paletteRaw) {
-        try {
-          updatePayload.tailwind_palette = JSON.parse(paletteRaw);
-        } catch {
-          return fail(400, { message: 'Theme token JSON is invalid.' });
-        }
-      }
     }
 
     const { error } = await locals.supabase.from('site_settings').update(updatePayload).eq('singleton_id', 1);

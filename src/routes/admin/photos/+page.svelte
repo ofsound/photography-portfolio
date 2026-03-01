@@ -8,34 +8,29 @@
   import AdminPhotoCard from '$lib/components/admin/photos/AdminPhotoCard.svelte';
   import AdminPhotosBulkPanel from '$lib/components/admin/photos/AdminPhotosBulkPanel.svelte';
   import AdminPhotosFilterForm from '$lib/components/admin/photos/AdminPhotosFilterForm.svelte';
+  import {
+    clonePhotoDraftState,
+    createPhotoDraftState,
+    pushDraftHistory,
+    redoDraftHistory,
+    undoDraftHistory,
+    type PhotoDraftState
+  } from '$lib/components/admin/photos/page/history';
+  import {
+    addTaxonomyDraftId,
+    clearTaxonomyDraftIds,
+    removeTaxonomyDraftId,
+    selectAllPhotoIds,
+    toggleSelectedPhotoIds
+  } from '$lib/components/admin/photos/page/selection';
+  import {
+    persistAdditionalOrder,
+    persistPhotoOrder,
+    persistTaxonomy
+  } from '$lib/components/admin/photos/persist';
   import { getAdminPhotosPrefs, setAdminPhotosPrefs } from '$lib/stores/admin-photos-prefs';
   import { photoPublicUrl } from '$lib/utils/storage-url';
   import type { AdminCategory, AdminPhoto, AdminPhotoImage, AdminTag } from '$lib/types/content';
-
-  const UNIFORM_RATIO = 1;
-
-  async function persistAdditionalOrder(photoId: string, orderedIds: string[]) {
-    const formData = new FormData();
-    formData.append('photo_id', photoId);
-    formData.append('ordered_image_ids', orderedIds.join('\n'));
-    const res = await fetch(`${window.location.pathname}?/reorderAdditionalImages`, {
-      method: 'POST',
-      body: formData
-    });
-    if (res.ok) invalidateAll();
-  }
-
-  async function persistTaxonomy(photoId: string, categoryIds: string[], tagIds: string[]) {
-    const formData = new FormData();
-    formData.append('photo_id', photoId);
-    for (const id of categoryIds) formData.append('category_ids', id);
-    for (const id of tagIds) formData.append('tag_ids', id);
-    const res = await fetch(`${window.location.pathname}?/saveRelations`, {
-      method: 'POST',
-      body: formData
-    });
-    if (res.ok) invalidateAll();
-  }
 
   let { data, form } = $props();
 
@@ -65,8 +60,6 @@
   let undoStack = $state<PhotoDraftState[]>([]);
   let redoStack = $state<PhotoDraftState[]>([]);
 
-  let dragging = $state<{ photoId: string; imageId: string } | null>(null);
-  let draggingTaxonomy = $state<{ type: 'category' | 'tag'; id: string } | null>(null);
   let orderedPhotoIds = $state<string[]>([]);
   let showMeta = $state(false);
 
@@ -87,48 +80,49 @@
 
   const historyLimit = 100;
 
-  type PhotoDraftState = {
-    orderedAdditionalByPhoto: Record<string, string[]>;
-    taxonomyDraftCategories: string[];
-    taxonomyDraftTags: string[];
-  };
-
-  const cloneOrderedAdditional = (state: Record<string, string[]>) =>
-    Object.fromEntries(Object.entries(state).map(([photoId, imageIds]) => [photoId, [...imageIds]]));
-
-  const getDraftState = (): PhotoDraftState => ({
-    orderedAdditionalByPhoto: cloneOrderedAdditional(orderedAdditionalByPhoto),
-    taxonomyDraftCategories: [...taxonomyDraftCategories],
-    taxonomyDraftTags: [...taxonomyDraftTags]
-  });
+  const getDraftState = () =>
+    createPhotoDraftState(orderedAdditionalByPhoto, taxonomyDraftCategories, taxonomyDraftTags);
 
   const applyDraftState = (state: PhotoDraftState) => {
-    orderedAdditionalByPhoto = cloneOrderedAdditional(state.orderedAdditionalByPhoto);
-    taxonomyDraftCategories = [...state.taxonomyDraftCategories];
-    taxonomyDraftTags = [...state.taxonomyDraftTags];
+    const cloned = clonePhotoDraftState(state);
+    orderedAdditionalByPhoto = cloned.orderedAdditionalByPhoto;
+    taxonomyDraftCategories = cloned.taxonomyDraftCategories;
+    taxonomyDraftTags = cloned.taxonomyDraftTags;
   };
 
   const pushHistory = () => {
-    undoStack = [...undoStack, getDraftState()].slice(-historyLimit);
-    redoStack = [];
+    const result = pushDraftHistory({
+      undoStack,
+      redoStack,
+      currentState: getDraftState(),
+      limit: historyLimit
+    });
+    undoStack = result.undoStack;
+    redoStack = result.redoStack;
   };
 
   const undoDraftChange = () => {
-    if (undoStack.length === 0) return;
-
-    const previous = undoStack[undoStack.length - 1];
-    undoStack = undoStack.slice(0, -1);
-    redoStack = [...redoStack, getDraftState()].slice(-historyLimit);
-    applyDraftState(previous);
+    const result = undoDraftHistory({
+      undoStack,
+      redoStack,
+      currentState: getDraftState(),
+      limit: historyLimit
+    });
+    undoStack = result.undoStack;
+    redoStack = result.redoStack;
+    if (result.appliedState) applyDraftState(result.appliedState);
   };
 
   const redoDraftChange = () => {
-    if (redoStack.length === 0) return;
-
-    const next = redoStack[redoStack.length - 1];
-    redoStack = redoStack.slice(0, -1);
-    undoStack = [...undoStack, getDraftState()].slice(-historyLimit);
-    applyDraftState(next);
+    const result = redoDraftHistory({
+      undoStack,
+      redoStack,
+      currentState: getDraftState(),
+      limit: historyLimit
+    });
+    undoStack = result.undoStack;
+    redoStack = result.redoStack;
+    if (result.appliedState) applyDraftState(result.appliedState);
   };
 
   const isTypingTarget = (target: EventTarget | null) => {
@@ -189,70 +183,19 @@
   const selectedCategoryIds = (photoId: string) => selectedCategoryIdsByPhoto[photoId] ?? serverCategoryIds(photoId);
   const selectedTagIds = (photoId: string) => selectedTagIdsByPhoto[photoId] ?? serverTagIds(photoId);
 
-  const moveItem = (arr: string[], from: number, to: number) => {
-    const clone = [...arr];
-    const [item] = clone.splice(from, 1);
-    clone.splice(to, 0, item);
-    return clone;
-  };
-
-  const onAdditionalDragStart = (photoId: string, imageId: string, event: DragEvent) => {
-    dragging = { photoId, imageId };
-    event.dataTransfer?.setData('text/plain', imageId);
-    if (event.dataTransfer) event.dataTransfer.effectAllowed = 'move';
-  };
-
-  const onAdditionalDragOver = (event: DragEvent) => {
-    event.preventDefault();
-    if (event.dataTransfer) event.dataTransfer.dropEffect = 'move';
-  };
-
-  const onAdditionalDropBefore = (photoId: string, targetId: string, event: DragEvent) => {
-    event.preventDefault();
-    event.stopPropagation();
-    if (!dragging || dragging.photoId !== photoId) return;
-
-    const current = additionalOrder(photoId);
-    const from = current.indexOf(dragging.imageId);
-    const to = current.indexOf(targetId);
-    if (from < 0 || to < 0 || from === to) return;
-
-    const next = moveItem(current, from, to);
+  const onAdditionalReorder = async (photoId: string, next: string[]) => {
     orderedAdditionalByPhoto = { ...orderedAdditionalByPhoto, [photoId]: next };
-    persistAdditionalOrder(photoId, next);
-  };
-
-  const onAdditionalDropToEnd = (photoId: string, event: DragEvent) => {
-    event.preventDefault();
-    if (!dragging || dragging.photoId !== photoId) return;
-
-    const current = additionalOrder(photoId);
-    const from = current.indexOf(dragging.imageId);
-    if (from < 0) return;
-
-    const next = [...current];
-    const [item] = next.splice(from, 1);
-    next.push(item);
-
-    orderedAdditionalByPhoto = { ...orderedAdditionalByPhoto, [photoId]: next };
-    persistAdditionalOrder(photoId, next);
-  };
-
-  const onAdditionalDragEnd = () => {
-    dragging = null;
+    if (await persistAdditionalOrder(window.location.pathname, photoId, next)) {
+      invalidateAll();
+    }
   };
 
   const togglePhotoSelected = (photoId: string, checked: boolean) => {
-    if (checked) {
-      if (selectedPhotoIds.includes(photoId)) return;
-      selectedPhotoIds = [...selectedPhotoIds, photoId];
-      return;
-    }
-    selectedPhotoIds = selectedPhotoIds.filter((id) => id !== photoId);
+    selectedPhotoIds = toggleSelectedPhotoIds(selectedPhotoIds, photoId, checked);
   };
 
   const selectAllVisiblePhotos = () => {
-    selectedPhotoIds = photos.map((photo) => photo.id);
+    selectedPhotoIds = selectAllPhotoIds(photos);
   };
 
   const clearSelectedPhotos = () => {
@@ -261,83 +204,59 @@
 
   const photoConversionState = (photoId: string) => data.photoConversionStateMap[photoId] ?? 'no-images';
 
-  const onTaxonomyChange = (photoId: string, categoryIds: string[], tagIds: string[]) => {
+  const onTaxonomyChange = async (photoId: string, categoryIds: string[], tagIds: string[]) => {
     selectedCategoryIdsByPhoto = { ...selectedCategoryIdsByPhoto, [photoId]: categoryIds };
     selectedTagIdsByPhoto = { ...selectedTagIdsByPhoto, [photoId]: tagIds };
-    persistTaxonomy(photoId, categoryIds, tagIds);
+    if (await persistTaxonomy(window.location.pathname, photoId, categoryIds, tagIds)) {
+      invalidateAll();
+    }
   };
 
   const addTaxonomyDraft = (type: 'category' | 'tag', id: string) => {
     if (type === 'category') {
-      if (taxonomyDraftCategories.includes(id)) return;
+      const next = addTaxonomyDraftId(taxonomyDraftCategories, id);
+      if (next === taxonomyDraftCategories) return;
       pushHistory();
-      taxonomyDraftCategories = [...taxonomyDraftCategories, id];
+      taxonomyDraftCategories = next;
       return;
     }
 
-    if (taxonomyDraftTags.includes(id)) return;
+    const next = addTaxonomyDraftId(taxonomyDraftTags, id);
+    if (next === taxonomyDraftTags) return;
     pushHistory();
-    taxonomyDraftTags = [...taxonomyDraftTags, id];
+    taxonomyDraftTags = next;
   };
 
   const removeTaxonomyDraft = (type: 'category' | 'tag', id: string) => {
     if (type === 'category') {
-      if (!taxonomyDraftCategories.includes(id)) return;
+      const next = removeTaxonomyDraftId(taxonomyDraftCategories, id);
+      if (next === taxonomyDraftCategories) return;
       pushHistory();
-      taxonomyDraftCategories = taxonomyDraftCategories.filter((item) => item !== id);
+      taxonomyDraftCategories = next;
       return;
     }
 
-    if (!taxonomyDraftTags.includes(id)) return;
+    const next = removeTaxonomyDraftId(taxonomyDraftTags, id);
+    if (next === taxonomyDraftTags) return;
     pushHistory();
-    taxonomyDraftTags = taxonomyDraftTags.filter((item) => item !== id);
+    taxonomyDraftTags = next;
   };
 
   const clearTaxonomyDraft = () => {
-    if (taxonomyDraftCategories.length === 0 && taxonomyDraftTags.length === 0) return;
+    const cleared = clearTaxonomyDraftIds(taxonomyDraftCategories, taxonomyDraftTags);
+    if (!cleared.changed) return;
     pushHistory();
-    taxonomyDraftCategories = [];
-    taxonomyDraftTags = [];
+    taxonomyDraftCategories = cleared.categories;
+    taxonomyDraftTags = cleared.tags;
   };
 
-  const onTaxChipDragStart = (type: 'category' | 'tag', id: string, event: DragEvent) => {
-    draggingTaxonomy = { type, id };
-    event.dataTransfer?.setData('text/plain', `${type}:${id}`);
-    if (event.dataTransfer) event.dataTransfer.effectAllowed = 'copy';
-  };
-
-  const onTaxDrop = (event: DragEvent) => {
-    event.preventDefault();
-    if (!draggingTaxonomy) return;
-
-    addTaxonomyDraft(draggingTaxonomy.type, draggingTaxonomy.id);
-    draggingTaxonomy = null;
-  };
-
-  const onTaxDragOver = (event: DragEvent) => {
-    event.preventDefault();
-    if (event.dataTransfer) event.dataTransfer.dropEffect = 'copy';
-  };
-
-  const onTaxDragEnd = () => {
-    draggingTaxonomy = null;
-  };
-
-  async function persistPhotoOrder(orderedIds: string[]) {
-    const formData = new FormData();
-    formData.append('ordered_photo_ids', orderedIds.join('\n'));
-    const res = await fetch(`${window.location.pathname}?/reorderPhotos`, {
-      method: 'POST',
-      body: formData
-    });
-    if (res.ok) invalidateAll();
-  }
-
-  function onPhotoDragEnd(event: unknown) {
+  async function onPhotoDragEnd(event: unknown) {
     const next = move(orderedPhotoIds, event as Parameters<typeof move>[1]);
     if (next !== orderedPhotoIds) {
       orderedPhotoIds = next;
-      persistPhotoOrder(next);
+      if (await persistPhotoOrder(window.location.pathname, next)) {
+        invalidateAll();
+      }
     }
   }
 
@@ -392,10 +311,6 @@
   {addTaxonomyDraft}
   {removeTaxonomyDraft}
   {clearTaxonomyDraft}
-  {onTaxChipDragStart}
-  {onTaxDragOver}
-  {onTaxDrop}
-  {onTaxDragEnd}
   {selectAllVisiblePhotos}
   {clearSelectedPhotos}
   {undoDraftChange}
@@ -426,11 +341,7 @@
                 photoConversionState={photoConversionState(photo.id)}
                 additionalOrder={additionalOrder(photo.id)}
                 onTogglePhotoSelected={togglePhotoSelected}
-                {onAdditionalDragStart}
-                {onAdditionalDragOver}
-                {onAdditionalDropBefore}
-                {onAdditionalDropToEnd}
-                {onAdditionalDragEnd}
+                {onAdditionalReorder}
                 gridMode={true}
                 isDraggingPhoto={sortable.isDragging}
               />

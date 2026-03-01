@@ -17,10 +17,6 @@
     addTaxonomyDraft,
     removeTaxonomyDraft,
     clearTaxonomyDraft,
-    onTaxChipDragStart,
-    onTaxDragOver,
-    onTaxDrop,
-    onTaxDragEnd,
     selectAllVisiblePhotos,
     clearSelectedPhotos,
     undoDraftChange,
@@ -39,10 +35,6 @@
     addTaxonomyDraft: (type: 'category' | 'tag', id: string) => void;
     removeTaxonomyDraft: (type: 'category' | 'tag', id: string) => void;
     clearTaxonomyDraft: () => void;
-    onTaxChipDragStart: (type: 'category' | 'tag', id: string, event: DragEvent) => void;
-    onTaxDragOver: (event: DragEvent) => void;
-    onTaxDrop: (event: DragEvent) => void;
-    onTaxDragEnd: () => void;
     selectAllVisiblePhotos: () => void;
     clearSelectedPhotos: () => void;
     undoDraftChange: () => void;
@@ -106,10 +98,5 @@
     {addTaxonomyDraft}
     {removeTaxonomyDraft}
     {clearTaxonomyDraft}
-    {onTaxChipDragStart}
-    {onTaxDragOver}
-    {onTaxDrop}
-    {onTaxDragEnd}
   />
 </section>
-

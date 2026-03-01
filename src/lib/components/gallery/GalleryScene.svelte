@@ -1114,7 +1114,7 @@
 </section>
 
 {#if activePhoto && currentImage}
-  <div use:portal transition:fade={{duration: SCALE_MASK_MS}} class="fixed inset-0 z-[60] pointer-events-none bg-black"></div>
+  <div use:portal transition:fade={{duration: SCALE_MASK_MS}} class="fixed inset-0 z-[60] pointer-events-none bg-[var(--color-letterbox)]"></div>
 
   {#if !promoted && transitionPhase !== "scale-and-mask"}
     <div use:portal data-full-viewport class="fixed inset-0 z-[65] pointer-events-none flex items-center justify-center p-0 m-0" aria-hidden="true">

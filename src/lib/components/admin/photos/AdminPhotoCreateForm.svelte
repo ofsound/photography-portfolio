@@ -15,8 +15,8 @@
   <FormField label="Slug" id="create-slug">
     <FormInput id="create-slug" name="slug" placeholder="Slug" />
   </FormField>
-  <FormField label="Capture date" id="create-capture_date">
-    <FormInput id="create-capture_date" name="capture_date" type="text" placeholder="Capture date" />
+  <FormField label="Date" id="create-capture_date">
+    <FormInput id="create-capture_date" name="capture_date" type="text" placeholder="Date" />
   </FormField>
   <FormField label="Description" id="create-description">
     <FormTextarea id="create-description" name="description" rows={4} placeholder="Description" />

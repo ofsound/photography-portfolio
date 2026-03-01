@@ -236,26 +236,27 @@
                   <FormInput id="edit-slug-{photoFormId}" name="slug" bind:value={formSlug} placeholder="Slug" required />
                 </FormField>
               </div>
-              <FormField label="Description" id="edit-description-{photoFormId}">
-                <FormTextarea id="edit-description-{photoFormId}" name="description" bind:value={formDescription} rows={3} placeholder="Description" />
-              </FormField>
               <div class="grid gap-3 sm:grid-cols-2">
-                <FormField label="Capture date" id="edit-capture_date-{photoFormId}">
-                  <FormInput id="edit-capture_date-{photoFormId}" name="capture_date" bind:value={formCaptureDate} type="text" placeholder="Capture date" />
+                <FormField label="Description" id="edit-description-{photoFormId}">
+                  <FormTextarea id="edit-description-{photoFormId}" name="description" bind:value={formDescription} rows={5} placeholder="Description" />
                 </FormField>
-                <FormField label="Dimensions" id="edit-dimensions-{photoFormId}">
-                  <FormInput id="edit-dimensions-{photoFormId}" name="dimensions" bind:value={formDimensions} type="text" placeholder="Dimensions" />
-                </FormField>
+                <div class="flex flex-col gap-3">
+                  <FormField label="Date" id="edit-capture_date-{photoFormId}">
+                    <FormInput id="edit-capture_date-{photoFormId}" name="capture_date" bind:value={formCaptureDate} type="text" placeholder="Date" />
+                  </FormField>
+                  <FormField label="Dimensions" id="edit-dimensions-{photoFormId}" class="mt-auto">
+                    <FormInput id="edit-dimensions-{photoFormId}" name="dimensions" bind:value={formDimensions} type="text" placeholder="Dimensions" />
+                  </FormField>
+                </div>
               </div>
             </form>
 
             {#if !isDraft}
-              <div class="grid gap-3 lg:grid-cols-2 p-3">
-                <fieldset class="grid gap-2 border-0">
-                  <legend class="text-sm font-medium text-text">Categories</legend>
-                  <div class="grid max-h-36 gap-1 overflow-auto">
+              <div class="grid gap-3 sm:grid-cols-2">
+                <FormField label="Categories">
+                  <div class="rounded border border-border-strong bg-surface px-3 py-2 grid max-h-36 gap-1 overflow-auto text-sm">
                     {#each categories as category (category.id)}
-                      <label class="flex items-center gap-2 text-sm cursor-pointer">
+                      <label class="flex items-center gap-2 cursor-pointer">
                         <input
                           type="checkbox"
                           value={category.id}
@@ -270,13 +271,12 @@
                       </label>
                     {/each}
                   </div>
-                </fieldset>
+                </FormField>
 
-                <fieldset class="grid gap-2 border-0">
-                  <legend class="text-sm font-medium text-text">Tags</legend>
-                  <div class="grid max-h-36 gap-1 overflow-auto">
+                <FormField label="Tags">
+                  <div class="rounded border border-border-strong bg-surface px-3 py-2 grid max-h-36 gap-1 overflow-auto text-sm">
                     {#each tags as tag (tag.id)}
-                      <label class="flex items-center gap-2 text-sm cursor-pointer">
+                      <label class="flex items-center gap-2 cursor-pointer">
                         <input
                           type="checkbox"
                           value={tag.id}
@@ -291,10 +291,10 @@
                       </label>
                     {/each}
                   </div>
-                </fieldset>
+                </FormField>
               </div>
             {:else}
-              <p class="text-sm text-text-muted p-3">Save the photo first to add categories.</p>
+              <p class="text-sm text-text-muted p-3">Save the photo first to add categories and tags.</p>
             {/if}
           </div>
 

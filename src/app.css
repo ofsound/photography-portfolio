@@ -40,6 +40,8 @@
   --color-canvas-text: light-dark(theme(colors.zinc.100), theme(colors.slate.50));
   --color-canvas-border: light-dark(theme(colors.zinc.500), theme(colors.slate.500));
   --color-overlay: light-dark(theme(colors.black), theme(colors.slate.950));
+  /* Letterbox between zoomed detail and site: light = white, dark = black */
+  --color-letterbox: light-dark(theme(colors.white), theme(colors.black));
 
   /* Aliases */
   --color-paper: var(--color-bg);

@@ -30,7 +30,7 @@ export const variantClasses: Record<Variant, string> = {
   'success-soft': 'rounded border border-success/40 bg-success-soft',
   link: 'text-xs text-text-muted underline',
   ghost: 'rounded text-text-muted transition-colors hover:bg-border hover:text-text',
-  toggle: 'rounded border border-border-strong px-2 py-1',
+  toggle: 'rounded border border-border-strong',
   subtle: 'rounded border border-border hover:bg-surface-muted'
 };
 

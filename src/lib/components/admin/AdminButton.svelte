@@ -33,7 +33,7 @@
 
   const classes = $derived(
     [
-      ['link', 'ghost', 'toggle'].includes(variant) ? '' : sizeClasses[size as Size],
+      ['link', 'ghost'].includes(variant) ? '' : sizeClasses[size as Size],
       variantClasses[variant as Variant],
       variant === 'toggle' && selected ? 'bg-border' : '',
       variant === 'toggle' && !selected ? 'opacity-40' : '',

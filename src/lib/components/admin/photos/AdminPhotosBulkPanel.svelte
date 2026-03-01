@@ -15,7 +15,10 @@
     addTaxonomyDraft,
     removeTaxonomyDraft,
     selectAllVisiblePhotos,
-    clearSelectedPhotos
+    clearSelectedPhotos,
+    showBulkTaxonomy = true,
+    onToggleShowBulkTaxonomy,
+    hideTaxonomyEditor = false
   } = $props<{
     selectedPhotoIds: string[];
     showArchived?: boolean;
@@ -29,10 +32,13 @@
     removeTaxonomyDraft: (type: 'category' | 'tag', id: string) => void;
     selectAllVisiblePhotos: () => void;
     clearSelectedPhotos: () => void;
+    showBulkTaxonomy?: boolean;
+    onToggleShowBulkTaxonomy?: () => void;
+    hideTaxonomyEditor?: boolean;
   }>();
 </script>
 
-<section class="mt-4 grid gap-3 rounded border border-border p-3">
+<section class="mt-4 grid gap-3">
   <div class="flex flex-wrap items-center gap-2 text-xs uppercase tracking-[var(--tracking-tight)]">
     <span>Selected photos: {selectedPhotoIds.length}</span>
     <AdminButton size="xs" type="button" onclick={selectAllVisiblePhotos}>Select all visible</AdminButton>
@@ -77,8 +83,16 @@
         </AdminButton>
       </form>
     {/if}
+
+    {#if onToggleShowBulkTaxonomy}
+      <label class="ml-auto flex cursor-pointer items-center gap-2 text-xs uppercase tracking-[var(--tracking-tight)]">
+        <input type="checkbox" checked={showBulkTaxonomy} onchange={onToggleShowBulkTaxonomy} class="rounded border-border" />
+        Show Bulk Taxonomy
+      </label>
+    {/if}
   </div>
 
+  {#if !hideTaxonomyEditor}
   <PhotoTaxonomyEditor
     {categories}
     {tags}
@@ -90,4 +104,5 @@
     {addTaxonomyDraft}
     {removeTaxonomyDraft}
   />
+  {/if}
 </section>

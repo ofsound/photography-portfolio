@@ -4,7 +4,8 @@
   import FormInput from '$lib/components/FormInput.svelte';
   import type { AdminCategory, AdminTag } from '$lib/types/content';
 
-  const selectClass = 'w-full max-w-[180px] rounded border border-border-strong bg-surface px-3 py-2 text-sm';
+  const selectClass =
+    'w-full min-w-0 rounded border border-border-strong bg-surface px-3 py-2 text-sm';
 
   let {
     q,
@@ -31,33 +32,35 @@
   }>();
 </script>
 
-<div class="mt-4 flex flex-wrap items-end gap-3">
-  <form method="GET" class="flex flex-wrap items-end gap-3 rounded p-3">
-    <div class="flex flex-wrap items-end gap-3">
-      <div class="min-w-0 max-w-[230px] flex-1">
-        <FormField label="Search" id="filter-q">
-          <FormInput id="filter-q" name="q" value={q} placeholder="Search photos" />
-        </FormField>
-      </div>
+<div class="mt-4 flex w-full flex-wrap items-end gap-3">
+  <form method="GET" class="flex min-w-0 flex-1 flex-wrap items-end gap-3">
+    <div class="min-w-[180px] max-w-[300px] flex-1">
+      <FormField label="Search" id="filter-q">
+        <FormInput id="filter-q" name="q" value={q} placeholder="Search photos" />
+      </FormField>
     </div>
-    <FormField label="Category" id="filter-category">
-      <select id="filter-category" name="category" class={selectClass}>
-        <option value="">all</option>
-        {#each categories as category (category.id)}
-          <option value={category.id} selected={filterCategoryId === category.id}>{category.name}</option>
-        {/each}
-      </select>
-    </FormField>
-    <FormField label="Tag" id="filter-tag">
-      <select id="filter-tag" name="tag" class={selectClass}>
-        <option value="">all</option>
-        {#each tags as tag (tag.id)}
-          <option value={tag.id} selected={filterTagId === tag.id}>{tag.name}</option>
-        {/each}
-      </select>
-    </FormField>
+    <div class="min-w-[140px] max-w-[200px] flex-1">
+      <FormField label="Category" id="filter-category">
+        <select id="filter-category" name="category" class={selectClass}>
+          <option value="">all</option>
+          {#each categories as category (category.id)}
+            <option value={category.id} selected={filterCategoryId === category.id}>{category.name}</option>
+          {/each}
+        </select>
+      </FormField>
+    </div>
+    <div class="min-w-[140px] max-w-[200px] flex-1">
+      <FormField label="Tag" id="filter-tag">
+        <select id="filter-tag" name="tag" class={selectClass}>
+          <option value="">all</option>
+          {#each tags as tag (tag.id)}
+            <option value={tag.id} selected={filterTagId === tag.id}>{tag.name}</option>
+          {/each}
+        </select>
+      </FormField>
+    </div>
 
-    <div class="flex flex-wrap items-center gap-2">
+    <div class="flex flex-shrink-0 flex-wrap items-center gap-2">
       <AdminButton type="submit">Apply</AdminButton>
     </div>
   </form>

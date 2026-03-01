@@ -8,6 +8,7 @@
   import AdminPhotoCard from '$lib/components/admin/photos/AdminPhotoCard.svelte';
   import AdminPhotosBulkPanel from '$lib/components/admin/photos/AdminPhotosBulkPanel.svelte';
   import AdminPhotosFilterForm from '$lib/components/admin/photos/AdminPhotosFilterForm.svelte';
+  import PhotoTaxonomyEditor from '$lib/components/admin/PhotoTaxonomyEditor.svelte';
   import {
     addTaxonomyDraftId,
     removeTaxonomyDraftId,
@@ -50,6 +51,7 @@
   let taxonomyDraftTags = $state<string[]>([]);
 
   let orderedPhotoIds = $state<string[]>([]);
+  let showBulkTaxonomy = $state(true);
 
   const maxDensity = $derived((data as { maxDensity?: number }).maxDensity ?? 20);
 
@@ -163,11 +165,22 @@
 <div class="flex items-baseline justify-between gap-4">
   <div class="flex items-baseline gap-3">
     <h1 class="text-xl uppercase tracking-[var(--tracking-heading)]">Photos</h1>
-    {#if data.showArchived}
-      <AdminButton size="sm" href="/admin/photos">Active (draft + published)</AdminButton>
-    {:else}
-      <AdminButton size="sm" href="/admin/photos?showArchived=1">Archived only</AdminButton>
-    {/if}
+    <AdminButton 
+      size="sm" 
+      variant="toggle" 
+      selected={!data.showArchived} 
+      href="/admin/photos"
+    >
+      Active (draft + published)
+    </AdminButton>
+    <AdminButton 
+      size="sm" 
+      variant="toggle" 
+      selected={data.showArchived} 
+      href="/admin/photos?showArchived=1"
+    >
+      Archived only
+    </AdminButton>
   </div>
   <AdminButton href="/admin/photos/create" variant="success">Add New Photo</AdminButton>
 </div>
@@ -202,72 +215,93 @@
   {removeTaxonomyDraft}
   {selectAllVisiblePhotos}
   {clearSelectedPhotos}
+  showBulkTaxonomy={showBulkTaxonomy}
+  onToggleShowBulkTaxonomy={() => (showBulkTaxonomy = !showBulkTaxonomy)}
+  hideTaxonomyEditor={true}
 />
 
 <section class="mt-6">
-  <div class="mx-auto w-full" style={sectionMaxWidthStyle}>
-    <DragDropProvider onDragEnd={onPhotoDragEnd}>
-      <ul class="grid" style="grid-template-columns: repeat({colCount}, minmax(0, 1fr)); gap: {gap}px;">
-        {#each orderedPhotoIds as id, index (id)}
-          {@const photo = photoById.get(id)}
-          {#if photo}
-            {@const sortable = createSortable({ id, index })}
-            <li {@attach sortable.attach} class="cursor-move">
-              <AdminPhotoCard
-                index={index}
-                {photo}
-                editHref={`/admin/photos/edit/${photo.id}`}
-                images={imagesForPhoto(photo.id)}
-                {categories}
-                {tags}
-                {selectedPhotoIds}
-                selectedCategoryIds={selectedCategoryIds(photo.id)}
-                selectedTagIds={selectedTagIds(photo.id)}
-                onTaxonomyChange={onTaxonomyChange}
-                photoConversionState={photoConversionState(photo.id)}
-                additionalOrder={additionalOrder(photo.id)}
-                onTogglePhotoSelected={togglePhotoSelected}
-                {onAdditionalReorder}
-                gridMode={true}
-                isDraggingPhoto={sortable.isDragging}
-              />
-            </li>
-          {/if}
-        {/each}
-      </ul>
+  <div class="mx-auto flex w-full items-start gap-6" style={sectionMaxWidthStyle}>
+    <div class="flex-1 min-w-0">
+      <DragDropProvider onDragEnd={onPhotoDragEnd}>
+        <ul class="grid" style="grid-template-columns: repeat({colCount}, minmax(0, 1fr)); gap: {gap}px;">
+          {#each orderedPhotoIds as id, index (id)}
+            {@const photo = photoById.get(id)}
+            {#if photo}
+              {@const sortable = createSortable({ id, index })}
+              <li {@attach sortable.attach} class="cursor-move">
+                <AdminPhotoCard
+                  index={index}
+                  {photo}
+                  editHref={`/admin/photos/edit/${photo.id}`}
+                  images={imagesForPhoto(photo.id)}
+                  {categories}
+                  {tags}
+                  {selectedPhotoIds}
+                  selectedCategoryIds={selectedCategoryIds(photo.id)}
+                  selectedTagIds={selectedTagIds(photo.id)}
+                  onTaxonomyChange={onTaxonomyChange}
+                  photoConversionState={photoConversionState(photo.id)}
+                  additionalOrder={additionalOrder(photo.id)}
+                  onTogglePhotoSelected={togglePhotoSelected}
+                  {onAdditionalReorder}
+                  gridMode={true}
+                  isDraggingPhoto={sortable.isDragging}
+                />
+              </li>
+            {/if}
+          {/each}
+        </ul>
 
-      <DragOverlay>
-        {#snippet children(source)}
-          {@const photo = photoById.get(String(source.id))}
-          {#if photo}
-            {@const lead = imagesForPhoto(photo.id).find((img) => img.kind === 'lead') ?? null}
-            <div
-              class="relative flex aspect-square w-40 flex-col overflow-hidden rounded border-2 border-primary bg-surface shadow-xl"
-              role="presentation"
-            >
-              <div class="flex-1 overflow-hidden">
-                {#if lead?.delivery_storage_path}
-                  <img
-                    src={photoPublicUrl(lead.delivery_storage_path, 400)}
-                    alt={lead.alt_text ?? photo.title}
-                    class="h-full w-full object-cover"
-                  />
-                {:else}
-                  <div
-                    class="grid h-full w-full place-items-center rounded bg-surface-muted text-xs uppercase text-text-muted"
-                  >
-                    {lead ? 'pending' : 'no lead'}
-                  </div>
-                {/if}
+        <DragOverlay>
+          {#snippet children(source)}
+            {@const photo = photoById.get(String(source.id))}
+            {#if photo}
+              {@const lead = imagesForPhoto(photo.id).find((img) => img.kind === 'lead') ?? null}
+              <div
+                class="relative flex aspect-square w-40 flex-col overflow-hidden rounded border-2 border-primary bg-surface shadow-xl"
+                role="presentation"
+              >
+                <div class="flex-1 overflow-hidden">
+                  {#if lead?.delivery_storage_path}
+                    <img
+                      src={photoPublicUrl(lead.delivery_storage_path, 400)}
+                      alt={lead.alt_text ?? photo.title}
+                      class="h-full w-full object-cover"
+                    />
+                  {:else}
+                    <div
+                      class="grid h-full w-full place-items-center rounded bg-surface-muted text-xs uppercase text-text-muted"
+                    >
+                      {lead ? 'pending' : 'no lead'}
+                    </div>
+                  {/if}
+                </div>
+                <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent px-2 pb-2 pt-6">
+                  <p class="truncate text-xs font-medium text-white">{photo.title}</p>
+                  <p class="truncate text-xs text-white/80">/{photo.slug}</p>
+                </div>
               </div>
-              <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent px-2 pb-2 pt-6">
-                <p class="truncate text-xs font-medium text-white">{photo.title}</p>
-                <p class="truncate text-xs text-white/80">/{photo.slug}</p>
-              </div>
-            </div>
-          {/if}
-        {/snippet}
-      </DragOverlay>
-    </DragDropProvider>
+            {/if}
+          {/snippet}
+        </DragOverlay>
+      </DragDropProvider>
+    </div>
+
+    {#if showBulkTaxonomy}
+      <aside class="sticky top-20 w-full max-w-[300px] flex-shrink-0">
+        <PhotoTaxonomyEditor
+          {categories}
+          {tags}
+          {taxonomyDraftCategories}
+          {taxonomyDraftTags}
+          {selectedPhotoIds}
+          {categoryById}
+          {tagById}
+          {addTaxonomyDraft}
+          {removeTaxonomyDraft}
+        />
+      </aside>
+    {/if}
   </div>
 </section>

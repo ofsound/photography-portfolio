@@ -20,11 +20,3 @@ export const removeTaxonomyDraftId = (draftIds: string[], id: string) => {
   return draftIds.filter((item) => item !== id);
 };
 
-export const clearTaxonomyDraftIds = (categories: string[], tags: string[]) => {
-  const changed = categories.length > 0 || tags.length > 0;
-  return {
-    changed,
-    categories: changed ? [] : categories,
-    tags: changed ? [] : tags
-  };
-};

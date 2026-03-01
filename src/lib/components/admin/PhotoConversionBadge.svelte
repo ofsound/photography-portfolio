@@ -1,10 +1,9 @@
 <script lang="ts">
-  let { state, size = 'md' } = $props<{
+  let { state } = $props<{
     state: 'ready' | 'pending' | 'mixed' | 'no-images' | 'converting' | 'unknown' | string;
-    size?: 'sm' | 'md';
   }>();
 
-  const sizeClass = $derived(size === 'sm' ? 'text-[var(--text-chip)]' : 'text-[var(--text-badge)]');
+  const sizeClass = 'text-xs';
 
   const badgeClass = $derived((() => {
     // Photo-level states

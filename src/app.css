@@ -74,10 +74,6 @@
   --size-btn-tall: 42px;
   --size-header: 54px;
 
-  /* Font sizes (micro) */
-  --text-chip: 10px;
-  --text-badge: 11px;
-
   /* Overlay / modal */
   --inset-overlay: 5%;
   --max-width-prose: 70ch;

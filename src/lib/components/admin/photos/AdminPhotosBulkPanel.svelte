@@ -5,8 +5,6 @@
 
   let {
     selectedPhotoIds,
-    undoCount,
-    redoCount,
     showArchived = false,
     categories,
     tags,
@@ -16,15 +14,10 @@
     tagById,
     addTaxonomyDraft,
     removeTaxonomyDraft,
-    clearTaxonomyDraft,
     selectAllVisiblePhotos,
-    clearSelectedPhotos,
-    undoDraftChange,
-    redoDraftChange
+    clearSelectedPhotos
   } = $props<{
     selectedPhotoIds: string[];
-    undoCount: number;
-    redoCount: number;
     showArchived?: boolean;
     categories: AdminCategory[];
     tags: AdminTag[];
@@ -34,38 +27,32 @@
     tagById: (id: string) => AdminTag | null;
     addTaxonomyDraft: (type: 'category' | 'tag', id: string) => void;
     removeTaxonomyDraft: (type: 'category' | 'tag', id: string) => void;
-    clearTaxonomyDraft: () => void;
     selectAllVisiblePhotos: () => void;
     clearSelectedPhotos: () => void;
-    undoDraftChange: () => void;
-    redoDraftChange: () => void;
   }>();
 </script>
 
 <section class="mt-4 grid gap-3 rounded border border-border p-3">
   <div class="flex flex-wrap items-center gap-2 text-xs uppercase tracking-[var(--tracking-tight)]">
     <span>Selected photos: {selectedPhotoIds.length}</span>
-    <AdminButton size="chip" type="button" onclick={selectAllVisiblePhotos}>Select all visible</AdminButton>
-    <AdminButton size="chip" type="button" onclick={clearSelectedPhotos}>Clear</AdminButton>
-    <AdminButton size="chip" type="button" onclick={undoDraftChange} disabled={undoCount === 0}>Undo</AdminButton>
-    <AdminButton size="chip" type="button" onclick={redoDraftChange} disabled={redoCount === 0}>Redo</AdminButton>
-    <span class="text-text-subtle">Cmd/Ctrl+Z | Cmd/Ctrl+Shift+Z | Ctrl+Y</span>
+    <AdminButton size="xs" type="button" onclick={selectAllVisiblePhotos}>Select all visible</AdminButton>
+    <AdminButton size="xs" type="button" onclick={clearSelectedPhotos}>Clear</AdminButton>
   </div>
 
   <div class="flex flex-wrap items-center gap-2">
     <form method="POST" action="?/bulkPublishPhotos">
       <input type="hidden" name="selected_photo_ids" value={selectedPhotoIds.join('\n')} />
-      <AdminButton type="submit" disabled={selectedPhotoIds.length === 0}>Publish Selected</AdminButton>
+      <AdminButton size="xs" type="submit" disabled={selectedPhotoIds.length === 0}>Publish Selected</AdminButton>
     </form>
 
     <form method="POST" action="?/bulkArchivePhotos">
       <input type="hidden" name="selected_photo_ids" value={selectedPhotoIds.join('\n')} />
-      <AdminButton type="submit" disabled={selectedPhotoIds.length === 0}>Archive Selected</AdminButton>
+      <AdminButton size="xs" type="submit" disabled={selectedPhotoIds.length === 0}>Archive Selected</AdminButton>
     </form>
 
     <form method="POST" action="?/bulkRestorePhotos">
       <input type="hidden" name="selected_photo_ids" value={selectedPhotoIds.join('\n')} />
-      <AdminButton type="submit" disabled={selectedPhotoIds.length === 0}>Restore Selected</AdminButton>
+      <AdminButton size="xs" type="submit" disabled={selectedPhotoIds.length === 0}>Restore Selected</AdminButton>
     </form>
 
     {#if showArchived}
@@ -85,7 +72,7 @@
       >
         <input type="hidden" name="selected_photo_ids" value={selectedPhotoIds.join('\n')} />
         <input type="hidden" name="showArchived" value="1" />
-        <AdminButton type="submit" variant="danger-outline" disabled={selectedPhotoIds.length === 0}>
+        <AdminButton size="xs" type="submit" variant="danger-outline" disabled={selectedPhotoIds.length === 0}>
           Delete Selected
         </AdminButton>
       </form>
@@ -102,6 +89,5 @@
     {tagById}
     {addTaxonomyDraft}
     {removeTaxonomyDraft}
-    {clearTaxonomyDraft}
   />
 </section>

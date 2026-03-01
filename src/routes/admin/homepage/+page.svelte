@@ -161,7 +161,7 @@
               {#if slide.delivery_storage_path}
                 <img src={photoPublicUrl(slide.delivery_storage_path, 180)} alt={slide.photo_title} class="h-12 w-16 rounded object-cover" />
               {:else}
-                <div class="grid h-12 w-16 place-items-center rounded border border-border-strong text-[var(--text-chip)] uppercase">pending</div>
+                <div class="grid h-12 w-16 place-items-center rounded border border-border-strong text-xs uppercase">pending</div>
               {/if}
 
               <div class="text-xs">
@@ -191,7 +191,7 @@
           {#if image.delivery_storage_path}
             <img src={photoPublicUrl(image.delivery_storage_path, 160)} alt={image.photo_title} class="h-12 w-16 rounded object-cover" />
           {:else}
-            <div class="grid h-12 w-16 place-items-center rounded border border-border-strong text-[var(--text-chip)] uppercase">pending</div>
+            <div class="grid h-12 w-16 place-items-center rounded border border-border-strong text-xs uppercase">pending</div>
           {/if}
 
           <div class="text-xs">

@@ -182,26 +182,21 @@
     <div class="absolute left-2 top-2 z-10 flex items-center gap-1">
       <input type="checkbox" class="size-5 rounded border-border-strong" checked={selectedPhotoIds.includes(photo.id)} onchange={(event) => onTogglePhotoSelected(photo.id, (event.currentTarget as HTMLInputElement).checked)} onclick={(e) => e.stopPropagation()} />
     </div>
-    <div class="absolute right-2 top-2 z-10">
-      <span class="rounded border border-border-strong bg-black/55 px-2 py-0.5 text-[10px] uppercase tracking-[var(--tracking-tight)] text-white">
-        {photoStatus}
-      </span>
-    </div>
     <div class="relative flex-1 overflow-hidden">
       {#if lead?.delivery_storage_path}
-        <img src={photoPublicUrl(lead.delivery_storage_path, 400)} alt={lead.alt_text ?? photo.title} class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]" />
+        <img src={photoPublicUrl(lead.delivery_storage_path, 400)} alt={lead.alt_text ?? photo.title} class="h-full w-full object-cover" />
       {:else if lead}
-        <div class="grid h-full w-full place-items-center rounded border border-border-strong bg-surface-muted text-[var(--text-chip)] uppercase text-text-muted">pending</div>
+        <div class="grid h-full w-full place-items-center rounded border border-border-strong bg-surface-muted text-xs uppercase text-text-muted">pending</div>
       {:else}
-        <div class="grid h-full w-full place-items-center rounded border border-border-strong bg-surface-muted text-[var(--text-chip)] uppercase text-text-muted">no lead</div>
+        <div class="grid h-full w-full place-items-center rounded border border-border-strong bg-surface-muted text-xs uppercase text-text-muted">no lead</div>
       {/if}
     </div>
     <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent px-2 pb-2 pt-6">
-      <h2 class="truncate text-xs font-medium uppercase tracking-[var(--tracking-minimal)] text-white">{photo.title}</h2>
+      <h2 class="truncate text-xs font-medium tracking-[var(--tracking-minimal)] text-white">{photo.title}</h2>
       {#if isPublic}
-        <a href="/photo/{photo.slug}" class="block truncate text-[var(--text-chip)] text-white/80 hover:underline" target="_blank" rel="noopener noreferrer" onclick={(e) => e.stopPropagation()}>/{photo.slug}</a>
+        <a href="/photo/{photo.slug}" class="block truncate text-xs text-white/80 hover:underline" target="_blank" rel="noopener noreferrer" onclick={(e) => e.stopPropagation()}>/{photo.slug}</a>
       {:else}
-        <span class="block truncate text-[var(--text-chip)] text-white/75">
+        <span class="block truncate text-xs text-white/75">
           {photoStatus === "archived" ? "Archived" : "Private draft"}
         </span>
       {/if}
@@ -210,7 +205,7 @@
 {:else}
   <article class="relative grid gap-3 rounded">
     {#if !editorOnly}
-      <span class="absolute left-2 top-2 text-[var(--text-chip)] font-medium tabular-nums text-text-muted">{index + 1}</span>
+      <span class="absolute left-2 top-2 text-xs font-medium tabular-nums text-text-muted">{index + 1}</span>
     {/if}
     {#if !editorOnly}
       <div role="button" tabindex="0" class="grid cursor-pointer gap-2 rounded p-3 sm:grid-cols-[auto_auto_1fr_auto] sm:items-center" onclick={onHeaderClick} onkeydown={(e) => e.key === "Enter" && toggleExpanded()}>
@@ -221,17 +216,14 @@
         {#if lead?.delivery_storage_path}
           <img src={photoPublicUrl(lead.delivery_storage_path, 220)} alt={lead.alt_text ?? photo.title} class="h-14 w-20 rounded object-cover" />
         {:else if lead}
-          <div class="grid h-14 w-20 place-items-center rounded border border-border-strong text-[var(--text-chip)] uppercase">pending</div>
+          <div class="grid h-14 w-20 place-items-center rounded border border-border-strong text-xs uppercase">pending</div>
         {:else}
-          <div class="grid h-14 w-20 place-items-center rounded border border-border-strong text-[var(--text-chip)] uppercase">no lead</div>
+          <div class="grid h-14 w-20 place-items-center rounded border border-border-strong text-xs uppercase">no lead</div>
         {/if}
 
         <div class="min-w-0">
           <div class="flex items-center gap-2">
-            <h2 class="truncate text-sm uppercase tracking-[var(--tracking-tight)]">{photo.title}</h2>
-            <span class="rounded border border-border px-1.5 py-0.5 text-[10px] uppercase tracking-[var(--tracking-tight)] text-text-muted">
-              {photoStatus}
-            </span>
+            <h2 class="truncate text-sm tracking-[var(--tracking-tight)]">{photo.title}</h2>
           </div>
           {#if isPublic}
             <a href="/photo/{photo.slug}" class="inline-block text-xs text-text-muted hover:underline" target="_blank" rel="noopener noreferrer">/{photo.slug}</a>
@@ -256,11 +248,6 @@
       <div transition:slide={{duration: SLIDE_DURATION, easing: quintOut, axis: "y"}} class="flex flex-col gap-3">
         <div class="flex min-w-0 gap-12 mb-20">
           <div transition:fade={{duration: FADE_DURATION, delay: 0 * STAGGER_MS, easing: quintOut}} class="min-w-0 flex-[7] flex flex-col gap-3">
-            <p class="text-xs uppercase tracking-[var(--tracking-tight)] text-text-muted">
-              Status: <strong>{photoStatus}</strong>
-              {#if photoStatus === "draft"} (private until published){/if}
-              {#if photoStatus === "archived"} (archived, not public){/if}
-            </p>
             <form id="photo-update-form-{photoFormId}" method="POST" action={isDraft ? "?/create" : "?/update"} class="grid gap-3" use:enhance={() => {
   return async ({ update }) => {
     await update({ reset: false });
@@ -369,7 +356,7 @@
         <div class="flex min-w-0 gap-12">
           <div transition:fade={{duration: FADE_DURATION, delay: 2 * STAGGER_MS, easing: quintOut}} class="min-w-0 flex-1 grid gap-3 p-3">
             <div class="flex flex-wrap items-center gap-2">
-              <span class="rounded border border-border px-2 py-1 text-[var(--text-chip)] uppercase tracking-[var(--tracking-tight)]">
+              <span class="rounded border border-border px-2 py-1 text-xs uppercase tracking-[var(--tracking-tight)]">
                 Processing: {pendingImageCount}
               </span>
             </div>
@@ -388,13 +375,13 @@
                       <img src={photoPublicUrl(lead.delivery_storage_path, 360)} alt={lead.alt_text ?? photo.title} class="max-h-full max-w-full object-contain" />
                     </div>
                   {:else}
-                    <div class="grid h-24 w-32 shrink-0 place-items-center rounded border border-border-strong text-[var(--text-chip)] uppercase">pending</div>
+                    <div class="grid h-24 w-32 shrink-0 place-items-center rounded border border-border-strong text-xs uppercase">pending</div>
                   {/if}
 
                   <div class="flex min-w-0 flex-col gap-2 text-xs">
                     <div class="flex items-center gap-2 uppercase tracking-[var(--tracking-tight)]">
                       <span>Lead Image</span>
-                      <PhotoConversionBadge state={imageConversionState(lead)} size="sm" />
+                      <PhotoConversionBadge state={imageConversionState(lead)} />
                     </div>
                     {#if lead.delivery_storage_path}
                       <details class="min-w-0">
@@ -448,7 +435,7 @@
                                 <img src={photoPublicUrl(image.delivery_storage_path, 320)} alt={image.alt_text ?? photo.title} class="max-h-full max-w-full object-contain" />
                               </div>
                             {:else}
-                              <div class="grid h-24 w-32 shrink-0 place-items-center rounded border border-border-strong text-[var(--text-chip)] uppercase">pending</div>
+                              <div class="grid h-24 w-32 shrink-0 place-items-center rounded border border-border-strong text-xs uppercase">pending</div>
                             {/if}
 
                             <div></div>
@@ -486,12 +473,12 @@
                               </div>
                             {:else}
                               <div
-                                class="grid h-24 w-full place-items-center rounded border border-border-strong text-[var(--text-chip)] uppercase"
+                                class="grid h-24 w-full place-items-center rounded border border-border-strong text-xs uppercase"
                               >
                                 pending
                               </div>
                             {/if}
-                            <p class="truncate text-[var(--text-chip)] uppercase tracking-[var(--tracking-tight)] text-text-muted">
+                            <p class="truncate text-xs uppercase tracking-[var(--tracking-tight)] text-text-muted">
                               Additional image
                             </p>
                           </div>

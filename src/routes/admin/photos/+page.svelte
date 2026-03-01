@@ -9,16 +9,7 @@
   import AdminPhotosBulkPanel from '$lib/components/admin/photos/AdminPhotosBulkPanel.svelte';
   import AdminPhotosFilterForm from '$lib/components/admin/photos/AdminPhotosFilterForm.svelte';
   import {
-    clonePhotoDraftState,
-    createPhotoDraftState,
-    pushDraftHistory,
-    redoDraftHistory,
-    undoDraftHistory,
-    type PhotoDraftState
-  } from '$lib/components/admin/photos/page/history';
-  import {
     addTaxonomyDraftId,
-    clearTaxonomyDraftIds,
     removeTaxonomyDraftId,
     selectAllPhotoIds,
     toggleSelectedPhotoIds
@@ -57,11 +48,8 @@
   let selectedPhotoIds = $state<string[]>([]);
   let taxonomyDraftCategories = $state<string[]>([]);
   let taxonomyDraftTags = $state<string[]>([]);
-  let undoStack = $state<PhotoDraftState[]>([]);
-  let redoStack = $state<PhotoDraftState[]>([]);
 
   let orderedPhotoIds = $state<string[]>([]);
-  let showMeta = $state(false);
 
   const maxDensity = $derived((data as { maxDensity?: number }).maxDensity ?? 20);
 
@@ -77,78 +65,6 @@
     const prefs = getAdminPhotosPrefs(maxDensity);
     if (prefs) density = prefs.density;
   });
-
-  const historyLimit = 100;
-
-  const getDraftState = () =>
-    createPhotoDraftState(orderedAdditionalByPhoto, taxonomyDraftCategories, taxonomyDraftTags);
-
-  const applyDraftState = (state: PhotoDraftState) => {
-    const cloned = clonePhotoDraftState(state);
-    orderedAdditionalByPhoto = cloned.orderedAdditionalByPhoto;
-    taxonomyDraftCategories = cloned.taxonomyDraftCategories;
-    taxonomyDraftTags = cloned.taxonomyDraftTags;
-  };
-
-  const pushHistory = () => {
-    const result = pushDraftHistory({
-      undoStack,
-      redoStack,
-      currentState: getDraftState(),
-      limit: historyLimit
-    });
-    undoStack = result.undoStack;
-    redoStack = result.redoStack;
-  };
-
-  const undoDraftChange = () => {
-    const result = undoDraftHistory({
-      undoStack,
-      redoStack,
-      currentState: getDraftState(),
-      limit: historyLimit
-    });
-    undoStack = result.undoStack;
-    redoStack = result.redoStack;
-    if (result.appliedState) applyDraftState(result.appliedState);
-  };
-
-  const redoDraftChange = () => {
-    const result = redoDraftHistory({
-      undoStack,
-      redoStack,
-      currentState: getDraftState(),
-      limit: historyLimit
-    });
-    undoStack = result.undoStack;
-    redoStack = result.redoStack;
-    if (result.appliedState) applyDraftState(result.appliedState);
-  };
-
-  const isTypingTarget = (target: EventTarget | null) => {
-    if (!(target instanceof HTMLElement)) return false;
-    if (target.isContentEditable) return true;
-    const tag = target.tagName.toLowerCase();
-    return tag === 'input' || tag === 'textarea' || tag === 'select';
-  };
-
-  const onHistoryKeydown = (event: KeyboardEvent) => {
-    if (isTypingTarget(event.target)) return;
-    if (!event.metaKey && !event.ctrlKey) return;
-
-    const key = event.key.toLowerCase();
-    const redoCombo = (key === 'z' && event.shiftKey) || (key === 'y' && event.ctrlKey && !event.metaKey);
-    if (redoCombo) {
-      event.preventDefault();
-      redoDraftChange();
-      return;
-    }
-
-    if (key === 'z' && !event.shiftKey) {
-      event.preventDefault();
-      undoDraftChange();
-    }
-  };
 
   const photoById = $derived(new Map(photos.map((p) => [p.id, p])));
 
@@ -167,16 +83,6 @@
     selectedCategoryIdsByPhoto = nextCategoryIds;
     selectedTagIdsByPhoto = nextTagIds;
     orderedPhotoIds = photos.map((p) => p.id);
-    undoStack = [];
-    redoStack = [];
-  });
-
-  $effect(() => {
-    if (typeof window === 'undefined') return;
-    window.addEventListener('keydown', onHistoryKeydown);
-    return () => {
-      window.removeEventListener('keydown', onHistoryKeydown);
-    };
   });
 
   const additionalOrder = (photoId: string) => orderedAdditionalByPhoto[photoId] ?? baseAdditionalOrder(photoId);
@@ -216,14 +122,12 @@
     if (type === 'category') {
       const next = addTaxonomyDraftId(taxonomyDraftCategories, id);
       if (next === taxonomyDraftCategories) return;
-      pushHistory();
       taxonomyDraftCategories = next;
       return;
     }
 
     const next = addTaxonomyDraftId(taxonomyDraftTags, id);
     if (next === taxonomyDraftTags) return;
-    pushHistory();
     taxonomyDraftTags = next;
   };
 
@@ -231,23 +135,13 @@
     if (type === 'category') {
       const next = removeTaxonomyDraftId(taxonomyDraftCategories, id);
       if (next === taxonomyDraftCategories) return;
-      pushHistory();
       taxonomyDraftCategories = next;
       return;
     }
 
     const next = removeTaxonomyDraftId(taxonomyDraftTags, id);
     if (next === taxonomyDraftTags) return;
-    pushHistory();
     taxonomyDraftTags = next;
-  };
-
-  const clearTaxonomyDraft = () => {
-    const cleared = clearTaxonomyDraftIds(taxonomyDraftCategories, taxonomyDraftTags);
-    if (!cleared.changed) return;
-    pushHistory();
-    taxonomyDraftCategories = cleared.categories;
-    taxonomyDraftTags = cleared.tags;
   };
 
   async function onPhotoDragEnd(event: unknown) {
@@ -274,7 +168,6 @@
     {:else}
       <AdminButton size="sm" href="/admin/photos?showArchived=1">Archived only</AdminButton>
     {/if}
-    <AdminButton size="sm" type="button" onclick={() => (showMeta = !showMeta)}>Toggle Meta</AdminButton>
   </div>
   <AdminButton href="/admin/photos/create" variant="success">Add New Photo</AdminButton>
 </div>
@@ -296,11 +189,8 @@
   onDensityChange={updateDensity}
 />
 
-{#if showMeta}
-  <AdminPhotosBulkPanel
+<AdminPhotosBulkPanel
   {selectedPhotoIds}
-  undoCount={undoStack.length}
-  redoCount={redoStack.length}
   showArchived={data.showArchived}
   {categories}
   {tags}
@@ -310,13 +200,9 @@
   {tagById}
   {addTaxonomyDraft}
   {removeTaxonomyDraft}
-  {clearTaxonomyDraft}
   {selectAllVisiblePhotos}
   {clearSelectedPhotos}
-  {undoDraftChange}
-  {redoDraftChange}
 />
-{/if}
 
 <section class="mt-6">
   <div class="mx-auto w-full" style={sectionMaxWidthStyle}>
@@ -368,15 +254,15 @@
                   />
                 {:else}
                   <div
-                    class="grid h-full w-full place-items-center rounded bg-surface-muted text-[var(--text-chip)] uppercase text-text-muted"
+                    class="grid h-full w-full place-items-center rounded bg-surface-muted text-xs uppercase text-text-muted"
                   >
                     {lead ? 'pending' : 'no lead'}
                   </div>
                 {/if}
               </div>
               <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent px-2 pb-2 pt-6">
-                <p class="truncate text-xs font-medium uppercase text-white">{photo.title}</p>
-                <p class="truncate text-[var(--text-chip)] text-white/80">/{photo.slug}</p>
+                <p class="truncate text-xs font-medium text-white">{photo.title}</p>
+                <p class="truncate text-xs text-white/80">/{photo.slug}</p>
               </div>
             </div>
           {/if}

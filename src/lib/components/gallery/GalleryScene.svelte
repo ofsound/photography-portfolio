@@ -183,6 +183,11 @@
     tileRefs.set(slug, node);
     let currentSlug = slug;
 
+    // Retroactively promote the tile if this is a direct photo entry and the gallery tile just mounted
+    if (activeSlug === slug && !promoted) {
+      void ensurePromotedTile(slug, activeImageId, false);
+    }
+
     return {
       update(nextSlug: string) {
         if (nextSlug === currentSlug) return;
@@ -395,10 +400,16 @@
   const wait = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
   const collapsePromotedTile = async (animate: boolean) => {
-    if (!promoted) return;
-
     pendingDirectionQueue.length = 0;
     directionDrainScheduled = false;
+
+    if (!promoted) {
+      activeSlug = null;
+      activeImageId = null;
+      if (typeof document !== "undefined") document.body.style.overflow = "";
+      setPhase("idle");
+      return;
+    }
 
     const session = promoted;
 
@@ -856,14 +867,15 @@
 
   $effect(() => {
     if (!mounted) return;
+    const key = (data.q ?? "") || "\0";
     if (!shouldShowPreloader) {
       if (photos.length > 0) {
         galleryRevealed = true;
         preloaderVisible = false;
+        preloadKey = key;
       }
       return;
     }
-    const key = (data.q ?? "") || "\0";
     if (key === preloadKey) return;
     preloadKey = key;
     void preloadImages();

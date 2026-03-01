@@ -49,7 +49,12 @@
   use:portal
   in:fade={{ duration: transitionPhase === 'open' ? 0 : scaleMaskMs, easing: quartOut }}
   out:fade={{ duration: scaleMaskMs, easing: quartOut }}
-  class="fixed inset-0 z-[60] pointer-events-none bg-[var(--color-letterbox)]"
+  class="fixed inset-0 z-[60] cursor-default bg-[var(--color-letterbox)]"
+  onclick={(e: MouseEvent) => !isTransitioning && closeToGallery(e)}
+  onkeydown={(e: KeyboardEvent) => !isTransitioning && (e.key === 'Enter' || e.key === ' ') && closeToGallery(e)}
+  role="button"
+  tabindex="-1"
+  aria-label="Close photo detail"
 ></div>
 
 {#if !promoted && transitionPhase !== 'scale-and-mask'}

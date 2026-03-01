@@ -87,7 +87,7 @@
     {#if onToggleShowBulkTaxonomy}
       <label class="ml-auto flex cursor-pointer items-center gap-2 text-xs uppercase tracking-[var(--tracking-tight)]">
         <input type="checkbox" checked={showBulkTaxonomy} onchange={onToggleShowBulkTaxonomy} class="rounded border-border" />
-        Show Bulk Taxonomy
+        Show Taxonomy
       </label>
     {/if}
   </div>

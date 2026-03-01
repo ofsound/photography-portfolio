@@ -106,6 +106,7 @@
   let pendingRouteApply = $state(false);
   const pendingDirectionQueue: Array<"prev" | "next"> = [];
   let directionDrainScheduled = false;
+  let isClosing = $state(false);
 
   const tileRefs = new Map<string, HTMLElement>();
 
@@ -118,16 +119,18 @@
   };
 
   const drainDirectionQueue = () => {
-    if (!activeSlug) {
+    if (isClosing || !activeSlug) {
       pendingDirectionQueue.length = 0;
       directionDrainScheduled = false;
       return;
     }
     if (pendingDirectionQueue.length === 0) {
       directionDrainScheduled = false;
-      skipNextRouteAnimation = true;
-      expectedRouteKeyFromGoto = `${activeSlug}:`;
-      void goto(withCurrentSearch(`/photo/${activeSlug}`), {noScroll: true, keepFocus: true});
+      if (!isClosing) {
+        skipNextRouteAnimation = true;
+        expectedRouteKeyFromGoto = `${activeSlug}:`;
+        void goto(withCurrentSearch(`/photo/${activeSlug}`), {noScroll: true, keepFocus: true});
+      }
       return;
     }
     directionDrainScheduled = true;
@@ -139,6 +142,7 @@
       return;
     }
     void queueTransition(async () => {
+      if (isClosing) return;
       const localNeighbors = localNeighborsFor(targetSlug);
       prevGalleryHref = localNeighbors.prevGalleryHref;
       nextGalleryHref = localNeighbors.nextGalleryHref;
@@ -437,6 +441,7 @@
 
   const applyRouteState = async (route: ActiveRoute | null, animate: boolean) => {
     if (!route) {
+      isClosing = true;
       if (typeof document !== "undefined") document.body.style.overflow = "";
       await collapsePromotedTile(animate);
       prevGalleryHref = null;
@@ -444,6 +449,7 @@
       return;
     }
 
+    isClosing = false;
     if (typeof document !== "undefined") document.body.style.overflow = "hidden";
     setPhase("open");
     const switchingPhotos = Boolean(activeSlug && activeSlug !== route.photoSlug);
@@ -469,6 +475,7 @@
 
   const onOpenPhoto = (event: MouseEvent, slug: string) => {
     event.preventDefault();
+    isClosing = false;
 
     void (async () => {
       await queueTransition(async () => {
@@ -516,6 +523,8 @@
 
   const closeToGallery = (event?: MouseEvent | KeyboardEvent) => {
     event?.preventDefault();
+    isClosing = true;
+    pendingDirectionQueue.length = 0;
 
     void (async () => {
       await queueTransition(async () => {
@@ -577,7 +586,7 @@
 
   const onNeighborNavigate = (event: MouseEvent, _href: string | null, direction: "prev" | "next") => {
     event.preventDefault();
-    if (!canCycleGallery) return;
+    if (!canCycleGallery || isClosing) return;
 
     pendingDirectionQueue.push(direction);
     if (!directionDrainScheduled) {
@@ -588,6 +597,7 @@
   const onSelectAdditionalImage = (event: MouseEvent, imageId: string) => {
     event.preventDefault();
     if (!activeSlug) return;
+    isClosing = false;
 
     void (async () => {
       await queueTransition(async () => {

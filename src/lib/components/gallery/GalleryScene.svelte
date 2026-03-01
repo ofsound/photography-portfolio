@@ -66,16 +66,16 @@
   let loadSentinel = $state<HTMLElement | null>(null);
   let observer: IntersectionObserver | null = null;
 
-  let activeSlug = $state<string | null>(null);
-  let activeImageId = $state<string | null>(null);
-  let prevGalleryHref = $state<string | null>(null);
-  let nextGalleryHref = $state<string | null>(null);
+  let activeSlug = $state<string | null>(readInitialData().active?.photoSlug ?? null);
+  let activeImageId = $state<string | null>(readInitialData().active?.imageId ?? null);
+  let prevGalleryHref = $state<string | null>(readInitialData().active?.prevGalleryHref ?? null);
+  let nextGalleryHref = $state<string | null>(readInitialData().active?.nextGalleryHref ?? null);
   let controlsVisible = $state(true);
   let promoted = $state<TileAnimationSession | null>(null);
-  let routeKey = $state("");
+  let routeKey = $state(readInitialData().active ? `${readInitialData().active!.photoSlug}:${readInitialData().active!.imageId ?? ""}` : "");
   let querySignature = $state("");
   let mounted = $state(false);
-  let hasHydratedRoute = false;
+  let hasHydratedRoute = Boolean(readInitialData().active);
   let skipNextRouteAnimation = false;
   let expectedRouteKeyFromGoto: string | null = null;
 
@@ -843,6 +843,9 @@
 
   onMount(() => {
     mounted = true;
+    if (activeSlug && typeof document !== "undefined") {
+      document.body.style.overflow = "hidden";
+    }
     const prefs = getGalleryPrefs(data.maxDensity ?? 20);
     if (prefs) {
       galleryDensityStore.set(prefs.density);

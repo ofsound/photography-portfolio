@@ -1,5 +1,6 @@
 <script lang="ts">
   import { fade } from 'svelte/transition';
+  import { quartOut } from 'svelte/easing';
   import type { GalleryPhoto } from '$lib/types/content';
   import { GALLERY_DETAIL_SHARED_WIDTH, photoPublicUrl } from '$lib/utils/storage-url';
 
@@ -46,7 +47,8 @@
 
 <div
   use:portal
-  transition:fade={{ duration: scaleMaskMs }}
+  in:fade={{ duration: transitionPhase === 'open' ? 0 : scaleMaskMs, easing: quartOut }}
+  out:fade={{ duration: scaleMaskMs, easing: quartOut }}
   class="fixed inset-0 z-[60] pointer-events-none bg-[var(--color-letterbox)]"
 ></div>
 

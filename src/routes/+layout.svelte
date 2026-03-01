@@ -8,7 +8,11 @@
 
   let {data, children} = $props<{data: LayoutData | null; children: import("svelte").Snippet}>();
 
-  let phase = $state<import("$lib/context/gallery-transition").GalleryTransitionPhase>("idle");
+  const isDetailRoute = (pathname: string) => /^\/photo\/[^/]+(?:\/[^/]+)?$/.test(pathname);
+
+  let phase = $state<import("$lib/context/gallery-transition").GalleryTransitionPhase>(
+    isDetailRoute(page.url.pathname) ? "open" : "idle"
+  );
   setGalleryTransitionContext(
     () => phase,
     (p) => {
@@ -28,7 +32,6 @@
   let galleryQueryInput = $state("");
 
   const isGalleryRoute = (pathname: string) => pathname === "/gallery" || pathname.startsWith("/gallery/");
-  const isDetailRoute = (pathname: string) => /^\/photo\/[^/]+(?:\/[^/]+)?$/.test(pathname);
   const isViewerRoute = (pathname: string) => isGalleryRoute(pathname) || isDetailRoute(pathname);
   const isViewer = $derived(isViewerRoute(page.url.pathname));
 

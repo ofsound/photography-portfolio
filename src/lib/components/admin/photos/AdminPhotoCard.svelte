@@ -1,5 +1,5 @@
 <script lang="ts">
-  import {goto} from "$app/navigation";
+  import {goto, invalidateAll} from "$app/navigation";
   import {enhance} from "$app/forms";
   import {DragDropProvider, DragOverlay} from "@dnd-kit/svelte";
   import {createSortable} from "@dnd-kit/svelte/sortable";
@@ -72,6 +72,14 @@
     return "unknown";
   };
 
+  const clientSlugify = (input: string) =>
+    input
+      .trim()
+      .toLowerCase()
+      .replace(/['"]/g, "")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "");
+
   // Local form state to avoid overwriting user edits on re-renders (e.g. taxonomy checkbox changes)
   let formTitle = $state("");
   let formSlug = $state("");
@@ -82,7 +90,12 @@
   let formOgTitle = $state("");
   let formOgDescription = $state("");
   let formOgImagePath = $state("");
+  let hasManualSlugEdit = $state(false);
   const isDraft = $derived(photo.id === null || photo.id === undefined);
+  const photoStatus = $derived(
+    photo.deleted_at ? "archived" : photo.status === "published" ? "published" : "draft"
+  );
+  const isPublic = $derived(photoStatus === "published");
   const photoFormId = $derived(isDraft ? 'draft' : photo.id);
   let prevPhotoId = $state<string | null>(null);
   let prevUpdatedAt = $state<string | null>(null);
@@ -106,8 +119,19 @@
       formOgTitle = p.og_title ?? "";
       formOgDescription = p.og_description ?? "";
       formOgImagePath = p.og_image_path ?? "";
+      hasManualSlugEdit = Boolean((p.slug ?? "").trim()) && p.slug !== clientSlugify(p.title ?? "");
     }
   });
+
+  $effect(() => {
+    if (hasManualSlugEdit) return;
+    formSlug = clientSlugify(formTitle);
+  });
+
+  const onSlugInput = (event: Event) => {
+    const value = (event.currentTarget as HTMLInputElement).value.trim();
+    hasManualSlugEdit = value.length > 0;
+  };
 
   let hasUserToggled = $state(false);
   let toggledExpanded = $state(false);
@@ -158,6 +182,11 @@
     <div class="absolute left-2 top-2 z-10 flex items-center gap-1">
       <input type="checkbox" class="size-5 rounded border-border-strong" checked={selectedPhotoIds.includes(photo.id)} onchange={(event) => onTogglePhotoSelected(photo.id, (event.currentTarget as HTMLInputElement).checked)} onclick={(e) => e.stopPropagation()} />
     </div>
+    <div class="absolute right-2 top-2 z-10">
+      <span class="rounded border border-border-strong bg-black/55 px-2 py-0.5 text-[10px] uppercase tracking-[var(--tracking-tight)] text-white">
+        {photoStatus}
+      </span>
+    </div>
     <div class="relative flex-1 overflow-hidden">
       {#if lead?.delivery_storage_path}
         <img src={photoPublicUrl(lead.delivery_storage_path, 400)} alt={lead.alt_text ?? photo.title} class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]" />
@@ -169,7 +198,13 @@
     </div>
     <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent px-2 pb-2 pt-6">
       <h2 class="truncate text-xs font-medium uppercase tracking-[var(--tracking-minimal)] text-white">{photo.title}</h2>
-      <a href="/photo/{photo.slug}" class="block truncate text-[var(--text-chip)] text-white/80 hover:underline" target="_blank" rel="noopener noreferrer" onclick={(e) => e.stopPropagation()}>/{photo.slug}</a>
+      {#if isPublic}
+        <a href="/photo/{photo.slug}" class="block truncate text-[var(--text-chip)] text-white/80 hover:underline" target="_blank" rel="noopener noreferrer" onclick={(e) => e.stopPropagation()}>/{photo.slug}</a>
+      {:else}
+        <span class="block truncate text-[var(--text-chip)] text-white/75">
+          {photoStatus === "archived" ? "Archived" : "Private draft"}
+        </span>
+      {/if}
     </div>
   </div>
 {:else}
@@ -192,8 +227,19 @@
         {/if}
 
         <div class="min-w-0">
-          <h2 class="truncate text-sm uppercase tracking-[var(--tracking-tight)]">{photo.title}</h2>
-          <a href="/photo/{photo.slug}" class="inline-block text-xs text-text-muted hover:underline" target="_blank" rel="noopener noreferrer">/{photo.slug}</a>
+          <div class="flex items-center gap-2">
+            <h2 class="truncate text-sm uppercase tracking-[var(--tracking-tight)]">{photo.title}</h2>
+            <span class="rounded border border-border px-1.5 py-0.5 text-[10px] uppercase tracking-[var(--tracking-tight)] text-text-muted">
+              {photoStatus}
+            </span>
+          </div>
+          {#if isPublic}
+            <a href="/photo/{photo.slug}" class="inline-block text-xs text-text-muted hover:underline" target="_blank" rel="noopener noreferrer">/{photo.slug}</a>
+          {:else}
+            <span class="inline-block text-xs text-text-muted">
+              {photoStatus === "archived" ? "Archived (not public)" : "Not public until published"}
+            </span>
+          {/if}
         </div>
 
         <div class="flex items-center justify-end gap-2">
@@ -210,9 +256,15 @@
       <div transition:slide={{duration: SLIDE_DURATION, easing: quintOut, axis: "y"}} class="flex flex-col gap-3">
         <div class="flex min-w-0 gap-12 mb-20">
           <div transition:fade={{duration: FADE_DURATION, delay: 0 * STAGGER_MS, easing: quintOut}} class="min-w-0 flex-[7] flex flex-col gap-3">
+            <p class="text-xs uppercase tracking-[var(--tracking-tight)] text-text-muted">
+              Status: <strong>{photoStatus}</strong>
+              {#if photoStatus === "draft"} (private until published){/if}
+              {#if photoStatus === "archived"} (archived, not public){/if}
+            </p>
             <form id="photo-update-form-{photoFormId}" method="POST" action={isDraft ? "?/create" : "?/update"} class="grid gap-3" use:enhance={() => {
   return async ({ update }) => {
     await update({ reset: false });
+    await invalidateAll();
   };
 }}>
               {#if !isDraft}
@@ -223,7 +275,13 @@
                   <FormInput id="edit-title-{photoFormId}" name="title" bind:value={formTitle} placeholder="Title" required />
                 </FormField>
                 <FormField label="Slug" id="edit-slug-{photoFormId}">
-                  <FormInput id="edit-slug-{photoFormId}" name="slug" bind:value={formSlug} placeholder="Slug" required />
+                  <FormInput
+                    id="edit-slug-{photoFormId}"
+                    name="slug"
+                    bind:value={formSlug}
+                    placeholder="Leave blank to auto-generate from title"
+                    oninput={onSlugInput}
+                  />
                 </FormField>
               </div>
               <div class="grid gap-3 sm:grid-cols-2">
@@ -284,7 +342,7 @@
                 </FormField>
               </div>
             {:else}
-              <p class="text-sm text-text-muted p-3">Save the photo first to add categories and tags.</p>
+              <p class="text-sm text-text-muted p-3">Upload the first image or save the draft first to add categories and tags.</p>
             {/if}
           </div>
 
@@ -447,17 +505,29 @@
           </div>
 
           <div class="min-w-0 flex-1">
-            <PhotoUploadZone photoId={isDraft ? 'draft' : photo.id} existingImageCount={images.length} />
+            <PhotoUploadZone
+              photoId={isDraft ? 'draft' : photo.id}
+              existingImageCount={images.length}
+              draftTitle={formTitle}
+              draftSlug={formSlug}
+            />
           </div>
         </div>
 
         <div transition:fade={{duration: FADE_DURATION, delay: 4 * STAGGER_MS, easing: quintOut}} class="mt-8 flex flex-wrap items-center justify-center gap-2">
-          <AdminButton form="photo-update-form-{photoFormId}" variant="success" type="submit">Save</AdminButton>
+          <AdminButton form="photo-update-form-{photoFormId}" variant="success" type="submit">
+            {photoStatus === "draft" || isDraft ? "Save Draft" : "Save"}
+          </AdminButton>
           {#if !isDraft}
-            {#if !photo.deleted_at}
+            {#if photoStatus === "draft"}
+              <AdminButton form="photo-update-form-{photoFormId}" variant="success" type="submit" formaction="?/publish">
+                Publish
+              </AdminButton>
+            {/if}
+            {#if photoStatus === "published"}
               <AdminButton form="photo-update-form-{photoFormId}" variant="danger" type="submit" formaction="?/archive">Archive</AdminButton>
             {/if}
-            {#if photo.deleted_at}
+            {#if photoStatus === "archived"}
               <AdminButton form="photo-update-form-{photoFormId}" type="submit" formaction="?/restore">Restore</AdminButton>
             {/if}
           {/if}

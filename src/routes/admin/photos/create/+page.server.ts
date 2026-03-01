@@ -1,7 +1,12 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { loadSinglePhotoEditorData } from '$lib/server/admin/photos/load-single';
-import { createMinimalDraftPhoto, photoCoreActions, upsertPhotoPayload } from '$lib/server/admin/photos/photo-core';
+import {
+  createMinimalDraftPhoto,
+  normalizeDraftStatusErrorMessage,
+  photoCoreActions,
+  upsertPhotoPayload
+} from '$lib/server/admin/photos/photo-core';
 import { photoImageActions, uploadImageWithForm } from '$lib/server/admin/photos/photo-images';
 import { photoTaxonomyActions } from '$lib/server/admin/photos/photo-taxonomy';
 import { asString } from '$lib/server/admin-helpers';
@@ -31,7 +36,7 @@ export const load: PageServerLoad = async ({ locals, url, cookies }) => {
       og_title: null as string | null,
       og_description: null as string | null,
       og_image_path: null as string | null,
-      status: 'published',
+      status: 'draft',
       deleted_at: null as string | null,
       updated_at: ''
     };
@@ -76,7 +81,10 @@ export const actions: Actions = {
     }
     let newId: string;
     try {
-      const result = await createMinimalDraftPhoto(locals);
+      const result = await createMinimalDraftPhoto(locals, {
+        title: asString(form.get('draft_title')).trim() || undefined,
+        slug: asString(form.get('draft_slug')).trim() || undefined
+      });
       newId = result.id;
     } catch (err) {
       return fail(400, { message: err instanceof Error ? err.message : 'Failed to create draft photo.' });
@@ -107,14 +115,16 @@ export const actions: Actions = {
       .from('photos')
       .insert({
         ...result.payload,
-        status: 'published',
+        status: 'draft',
         deleted_at: null
       })
       .select('id')
       .single();
 
     if (insertResult.error || !insertResult.data) {
-      return fail(400, { message: insertResult.error?.message ?? 'Failed to create photo.' });
+      return fail(400, {
+        message: normalizeDraftStatusErrorMessage(insertResult.error?.message ?? 'Failed to create photo.')
+      });
     }
 
     const newId = insertResult.data.id;

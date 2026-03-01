@@ -464,6 +464,7 @@ export type Database = {
         Row: {
           allow_transition_toggle: boolean;
           created_at: string;
+          gallery_gap_px: number;
           gallery_layout_mode: Database['public']['Enums']['layout_mode'];
           grid_desktop_default: number;
           grid_desktop_max: number;
@@ -482,6 +483,7 @@ export type Database = {
         Insert: {
           allow_transition_toggle?: boolean;
           created_at?: string;
+          gallery_gap_px?: number;
           gallery_layout_mode?: Database['public']['Enums']['layout_mode'];
           grid_desktop_default?: number;
           grid_desktop_max?: number;
@@ -500,6 +502,7 @@ export type Database = {
         Update: {
           allow_transition_toggle?: boolean;
           created_at?: string;
+          gallery_gap_px?: number;
           gallery_layout_mode?: Database['public']['Enums']['layout_mode'];
           grid_desktop_default?: number;
           grid_desktop_max?: number;
@@ -621,7 +624,7 @@ export type Database = {
       asset_kind: 'lead' | 'additional';
       layout_mode: 'uniform' | 'masonry';
       page_kind: 'home' | 'about' | 'contact' | 'custom';
-      publish_status: 'published' | 'archived';
+      publish_status: 'draft' | 'published' | 'archived';
       theme_mode: 'light' | 'dark' | 'system';
       transition_preset: 'cinematic' | 'snappy' | 'experimental';
     };

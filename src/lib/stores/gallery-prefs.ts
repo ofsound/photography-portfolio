@@ -1,4 +1,9 @@
+import { writable } from 'svelte/store';
+
 const KEY = 'gallery_prefs';
+
+/** Reactive density for gallery; synced with localStorage. Header and GalleryScene both use this. */
+export const galleryDensityStore = writable<number>(6);
 
 export type GalleryPrefs = {
   density: number;
@@ -95,4 +100,7 @@ export function setGalleryPrefs(
       partial.pageSize !== undefined ? clampPageSize(partial.pageSize) : current.pageSize
   };
   localStorage.setItem(KEY, JSON.stringify(next));
+  if (partial.density !== undefined) {
+    galleryDensityStore.set(next.density);
+  }
 }

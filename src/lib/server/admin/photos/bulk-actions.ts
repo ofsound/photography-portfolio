@@ -2,6 +2,58 @@ import { fail, type Actions } from '@sveltejs/kit';
 import { asString, parseUuidList } from '$lib/server/admin-helpers';
 
 export const bulkPhotoActions: Actions = {
+  bulkPublishPhotos: async ({ locals, request }) => {
+    const form = await request.formData();
+    const photoIds = parseUuidList(asString(form.get('selected_photo_ids')));
+    if (!photoIds.length) return fail(400, { message: 'Select at least one photo.' });
+
+    const [{ data: photos, error: photosError }, { data: leads, error: leadsError }] = await Promise.all([
+      locals.supabase.from('photos').select('id, title, status, deleted_at').in('id', photoIds),
+      locals.supabase
+        .from('photo_images')
+        .select('photo_id, delivery_storage_path')
+        .in('photo_id', photoIds)
+        .eq('kind', 'lead')
+    ]);
+
+    if (photosError) return fail(400, { message: photosError.message });
+    if (leadsError) return fail(400, { message: leadsError.message });
+
+    const leadByPhotoId = new Map((leads ?? []).map((row) => [row.photo_id, row]));
+    const publishable: string[] = [];
+
+    for (const photo of photos ?? []) {
+      if (photo.status === 'archived') continue;
+      if (photo.deleted_at) continue;
+      if (!photo.title?.trim()) continue;
+      const lead = leadByPhotoId.get(photo.id);
+      if (!lead || !lead.delivery_storage_path) continue;
+      publishable.push(photo.id);
+    }
+
+    if (!publishable.length) {
+      return fail(400, {
+        message: 'No selected photos are publishable. Publish requires a title and a converted lead image.'
+      });
+    }
+
+    const { error } = await locals.supabase
+      .from('photos')
+      .update({ status: 'published', deleted_at: null })
+      .in('id', publishable);
+
+    if (error) return fail(400, { message: error.message });
+
+    const skipped = photoIds.length - publishable.length;
+    return {
+      success: true,
+      message:
+        skipped > 0
+          ? `Published ${publishable.length} photo(s). Skipped ${skipped} (missing title/lead image readiness or archived).`
+          : `Published ${publishable.length} photo(s).`
+    };
+  },
+
   bulkArchivePhotos: async ({ locals, request }) => {
     const form = await request.formData();
     const photoIds = parseUuidList(asString(form.get('selected_photo_ids')));
@@ -23,11 +75,11 @@ export const bulkPhotoActions: Actions = {
 
     const { error } = await locals.supabase
       .from('photos')
-      .update({ status: 'published', deleted_at: null })
+      .update({ status: 'draft', deleted_at: null })
       .in('id', photoIds);
 
     if (error) return fail(400, { message: error.message });
-    return { success: true, message: `Restored ${photoIds.length} photo(s).` };
+    return { success: true, message: `Restored ${photoIds.length} photo(s) to draft.` };
   },
 
   bulkDeletePhotos: async ({ locals, request }) => {

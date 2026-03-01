@@ -2,8 +2,7 @@
   import {goto} from "$app/navigation";
   import {onDestroy, onMount} from "svelte";
   import {getGalleryTransitionContext} from "$lib/context/gallery-transition";
-  import {getGalleryPrefs, setGalleryPrefs} from "$lib/stores/gallery-prefs";
-  import GalleryControls from "./scene/GalleryControls.svelte";
+  import {getGalleryPrefs, galleryDensityStore} from "$lib/stores/gallery-prefs";
   import GalleryDetailOverlay from "./scene/GalleryDetailOverlay.svelte";
   import GalleryPreloader from "./scene/GalleryPreloader.svelte";
   import GalleryTiles from "./scene/GalleryTiles.svelte";
@@ -54,7 +53,6 @@
   let {data} = $props<{data: ViewerData}>();
   const readInitialData = () => data;
 
-  let density = $state(readInitialData().density);
   let gap = $state(readInitialData().gap);
   let layoutMode = $state<"uniform" | "masonry">(readInitialData().layoutMode);
   let widthMode = $state<"full" | "constrained">(readInitialData().widthMode);
@@ -244,7 +242,7 @@
     });
   };
 
-  const colCount = $derived(Math.max(1, Math.min(data.maxDensity ?? 20, Number(density) || 6)));
+  const colCount = $derived(Math.max(1, Math.min(data.maxDensity ?? 20, Number($galleryDensityStore) || 6)));
   const placeholderCount = $derived(Math.max(colCount, 6));
   const uniformRatio = $derived(Math.max(0.2, Number(data.uniformThumbRatio ?? 1)));
   const constrainedMax = $derived(data.maxContentWidthPx ?? 1600);
@@ -455,26 +453,6 @@
     activeImageId = route.imageId;
     prevGalleryHref = route.prevGalleryHref;
     nextGalleryHref = route.nextGalleryHref;
-  };
-
-  const updateDensity = (next: number) => {
-    density = next;
-    setGalleryPrefs({density}, data.maxDensity ?? 20);
-  };
-
-  const updateGap = (next: number) => {
-    gap = Math.max(0, Math.min(20, next));
-    setGalleryPrefs({gap}, data.maxDensity ?? 20);
-  };
-
-  const updateLayoutMode = (next: "uniform" | "masonry") => {
-    layoutMode = next;
-    setGalleryPrefs({layoutMode}, data.maxDensity ?? 20);
-  };
-
-  const updateWidthMode = (next: "full" | "constrained") => {
-    widthMode = next;
-    setGalleryPrefs({widthMode}, data.maxDensity ?? 20);
   };
 
   const onSearchSubmit = (event: SubmitEvent) => {
@@ -857,12 +835,10 @@
     mounted = true;
     const prefs = getGalleryPrefs(data.maxDensity ?? 20);
     if (prefs) {
-      density = prefs.density;
-      gap = prefs.gap;
-      layoutMode = prefs.layoutMode;
-      widthMode = prefs.widthMode;
+      galleryDensityStore.set(prefs.density);
       pageSize = prefs.pageSize;
     }
+    // gap, layoutMode, widthMode come only from server (admin settings)
   });
 
   $effect(() => {
@@ -980,24 +956,6 @@
 />
 
 <section class="mx-auto w-full px-4 py-5" style={sectionMaxWidthStyle}>
-  <GalleryControls
-    {query}
-    chromeHidden={chromePanelHidden}
-    maxDensity={data.maxDensity ?? 20}
-    {colCount}
-    {gap}
-    {layoutMode}
-    {widthMode}
-    {onSearchSubmit}
-    onQueryInput={(value) => {
-      query = value;
-    }}
-    onUpdateDensity={updateDensity}
-    onUpdateGap={updateGap}
-    onUpdateLayoutMode={updateLayoutMode}
-    onUpdateWidthMode={updateWidthMode}
-  />
-
   {#if photos.length === 0}
     <p class="py-16 text-center text-sm uppercase tracking-[var(--tracking-label)] text-text-muted">No photos found.</p>
   {:else}

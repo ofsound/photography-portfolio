@@ -24,7 +24,7 @@
       prevPageId = p.id;
       formTitle = p.title;
       formSlug = p.slug;
-      formStatus = p.status;
+      formStatus = p.status === 'archived' ? 'archived' : 'published';
       formSeoTitle = p.seo_title ?? '';
       formHtmlContent = p.html_content ?? '';
       formCssModule = p.css_module ?? '';

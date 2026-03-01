@@ -3,7 +3,12 @@
   import {invalidateAll} from "$app/navigation";
   import AdminButton from "$lib/components/admin/AdminButton.svelte";
 
-  let {photoId, existingImageCount = 0} = $props<{photoId: string; existingImageCount?: number}>();
+  let {photoId, existingImageCount = 0, draftTitle = "", draftSlug = ""} = $props<{
+    photoId: string;
+    existingImageCount?: number;
+    draftTitle?: string;
+    draftSlug?: string;
+  }>();
 
   const defaultKind = $derived(existingImageCount === 0 ? "lead" : "additional");
   let fileName = $state<string | null>(null);
@@ -31,6 +36,8 @@
   }}
 >
   <input type="hidden" name="photo_id" value={photoId} />
+  <input type="hidden" name="draft_title" value={draftTitle} />
+  <input type="hidden" name="draft_slug" value={draftSlug} />
   <p class="text-xs uppercase tracking-[var(--tracking-tight)]">Upload Image</p>
   <div class="grid gap-2">
     <div class="flex flex-wrap items-center gap-2">

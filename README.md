@@ -26,8 +26,11 @@ Required env vars:
 - `PUBLIC_SITE_URL`
 
 ## Database
-Apply migration:
-- [`supabase/migrations/20260224_portfolio_v1.sql`](/Users/ben/Dev/SVELTE/photography-portfolio/supabase/migrations/20260224_portfolio_v1.sql)
+Apply all migrations in order from:
+- [`supabase/migrations`](/Users/ben/Dev/SVELTE/photography-portfolio/supabase/migrations)
+
+If you are updating an existing DB, make sure this draft-status migration is applied:
+- [`supabase/migrations/20260302_photo_draft_status.sql`](/Users/ben/Dev/SVELTE/photography-portfolio/supabase/migrations/20260302_photo_draft_status.sql)
 
 ## Edge Function
 Function path:

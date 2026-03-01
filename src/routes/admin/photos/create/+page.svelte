@@ -14,7 +14,9 @@
   <h1 class="text-xl uppercase tracking-[var(--tracking-heading)]">New Photo</h1>
   <AdminButton href="/admin/photos">Back to Photos</AdminButton>
 </div>
-<p class="mt-2 text-sm text-text-muted">You can upload images below; the first upload will create the photo. Use Save to set title and metadata. After saving, you can add categories.</p>
+<p class="mt-2 text-sm text-text-muted">
+  Type a title and upload immediately on this page. First upload creates a private draft automatically; nothing is public until you press Publish.
+</p>
 
 {#if formMessage}
   <p class={`mt-3 rounded border px-3 py-2 text-sm ${formSuccess ? 'border-success/40 bg-success-soft text-success' : 'border-danger/40 bg-danger-soft text-danger'}`}>

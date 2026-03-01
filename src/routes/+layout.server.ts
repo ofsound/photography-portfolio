@@ -5,7 +5,7 @@ export const load: LayoutServerLoad = async ({ locals }) => {
     locals.safeGetSession(),
     locals.supabase
       .from('site_settings')
-      .select('theme_default, transition_preset, allow_transition_toggle')
+      .select('theme_default, transition_preset, allow_transition_toggle, grid_desktop_max')
       .eq('singleton_id', 1)
       .maybeSingle(),
     locals.supabase

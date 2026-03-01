@@ -53,6 +53,11 @@
   </div>
 
   <div class="flex flex-wrap items-center gap-2">
+    <form method="POST" action="?/bulkPublishPhotos">
+      <input type="hidden" name="selected_photo_ids" value={selectedPhotoIds.join('\n')} />
+      <AdminButton type="submit" disabled={selectedPhotoIds.length === 0}>Publish Selected</AdminButton>
+    </form>
+
     <form method="POST" action="?/bulkArchivePhotos">
       <input type="hidden" name="selected_photo_ids" value={selectedPhotoIds.join('\n')} />
       <AdminButton type="submit" disabled={selectedPhotoIds.length === 0}>Archive Selected</AdminButton>

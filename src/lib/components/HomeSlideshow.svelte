@@ -13,21 +13,12 @@
     origin: string;
   };
 
-  type ViewTransitionHandle = {
-    finished: Promise<void>;
-  };
-
-  type ViewTransitionDocument = Document & {
-    startViewTransition?: (update: () => void) => ViewTransitionHandle;
-  };
-
   const DEFAULT_SLIDE_DURATION_MS = 4000;
   const DEFAULT_TRANSITION_DURATION_MS = 2000;
   const SLIDE_DURATION_MIN_MS = 1000;
   const SLIDE_DURATION_MAX_MS = 30000;
   const TRANSITION_DURATION_MIN_MS = 200;
   const TRANSITION_DURATION_MAX_MS = 10000;
-  const HERO_VT_FLAG = 'homeHeroVt';
 
   let {
     slides,
@@ -47,7 +38,6 @@
   let intervalHandle: ReturnType<typeof setInterval> | undefined;
   let frameHandle: number | undefined;
   let versionSeed = 0;
-  let vtInFlight = false;
 
   function clampInt(value: number, min: number, max: number) {
     return Math.min(max, Math.max(min, Math.round(value)));
@@ -109,32 +99,7 @@
   }
 
   function activateSlot(nextSlot: 0 | 1) {
-    if (typeof document === 'undefined' || typeof window === 'undefined') {
-      activeSlot = nextSlot;
-      return;
-    }
-
-    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const vtDoc = document as ViewTransitionDocument;
-    const canUseHeroViewTransition = !!vtDoc.startViewTransition && !reducedMotion && !vtInFlight;
-
-    if (!canUseHeroViewTransition) {
-      activeSlot = nextSlot;
-      return;
-    }
-
-    vtInFlight = true;
-    document.documentElement.dataset[HERO_VT_FLAG] = '1';
-    document.documentElement.style.setProperty('--home-hero-vt-duration', `${safeTransitionDurationMs}ms`);
-
-    const transition = vtDoc.startViewTransition!(() => {
-      activeSlot = nextSlot;
-    });
-
-    transition.finished.finally(() => {
-      vtInFlight = false;
-      delete document.documentElement.dataset[HERO_VT_FLAG];
-    });
+    activeSlot = nextSlot;
   }
 
   function beginTransition() {
@@ -173,7 +138,6 @@
     activeSlot = 0;
     currentIndex = 0;
     versionSeed = 0;
-    vtInFlight = false;
 
     if (slides.length === 0) {
       return;
@@ -270,23 +234,10 @@
   .hero-stage {
     contain: paint;
     isolation: isolate;
-    view-transition-name: home-hero-slide;
   }
 
   figure {
     will-change: opacity;
-  }
-
-  :global(html[data-home-hero-vt='1']::view-transition-old(root)),
-  :global(html[data-home-hero-vt='1']::view-transition-new(root)) {
-    animation: none;
-  }
-
-  :global(html[data-home-hero-vt='1']::view-transition-group(home-hero-slide)),
-  :global(html[data-home-hero-vt='1']::view-transition-old(home-hero-slide)),
-  :global(html[data-home-hero-vt='1']::view-transition-new(home-hero-slide)) {
-    animation-duration: var(--home-hero-vt-duration, 2000ms);
-    animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
   }
 
   .kenburns-in {

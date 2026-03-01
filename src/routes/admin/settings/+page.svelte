@@ -14,6 +14,7 @@
     grid_mobile_max: 6,
     max_content_width_px: null,
     gallery_layout_mode: 'uniform',
+    gallery_gap_px: 8,
     uniform_thumb_ratio: 1,
     transition_preset: 'cinematic',
     allow_transition_toggle: true
@@ -43,6 +44,9 @@
         <option selected={settings.gallery_layout_mode === 'uniform'} value="uniform">uniform</option>
         <option selected={settings.gallery_layout_mode === 'masonry'} value="masonry">masonry</option>
       </select>
+    </FormField>
+    <FormField label="Gallery gap (px)" id="settings-gallery_gap_px">
+      <FormInput id="settings-gallery_gap_px" name="gallery_gap_px" type="number" min="0" max="20" value={String(settings.gallery_gap_px ?? 8)} />
     </FormField>
   </div>
 

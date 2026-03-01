@@ -54,7 +54,7 @@
           <a
             href={withCurrentSearch(`/photo/${photo.slug}`)}
             use:registerTile={photo.slug}
-            class="group relative block overflow-hidden rounded"
+            class="group relative block overflow-hidden"
             style={`aspect-ratio: ${uniformRatio};`}
             onclick={(event: MouseEvent) => onOpenPhoto(event, photo.slug)}
           >
@@ -74,7 +74,7 @@
 
     {#if isLoadingMore}
       {#each Array.from({ length: placeholderCount }) as _, index (index)}
-        <li class="animate-pulse rounded bg-surface-muted" style={`aspect-ratio: ${uniformRatio};`}></li>
+        <li class="animate-pulse bg-surface-muted" style={`aspect-ratio: ${uniformRatio};`}></li>
       {/each}
     {/if}
   </ul>
@@ -93,7 +93,7 @@
             <a
               href={withCurrentSearch(`/photo/${photo.slug}`)}
               use:registerTile={photo.slug}
-              class="group relative block overflow-hidden rounded"
+              class="group relative block overflow-hidden"
               style={knownRatio ? `aspect-ratio: ${knownRatio.width / knownRatio.height};` : ''}
               onclick={(event: MouseEvent) => onOpenPhoto(event, photo.slug)}
             >
@@ -122,7 +122,7 @@
     {#if isLoadingMore}
       {#each Array.from({ length: placeholderCount }) as _, index (index)}
         <li
-          class="break-inside-avoid animate-pulse rounded bg-surface-muted"
+          class="break-inside-avoid animate-pulse bg-surface-muted"
           style={`height: ${120 + (index % 5) * 34}px; margin-bottom: ${gap}px;`}
         ></li>
       {/each}

@@ -270,7 +270,7 @@
   <div class="flex items-baseline gap-3">
     <h1 class="text-xl uppercase tracking-[var(--tracking-heading)]">Photos</h1>
     {#if data.showArchived}
-      <AdminButton size="sm" href="/admin/photos">Published only</AdminButton>
+      <AdminButton size="sm" href="/admin/photos">Active (draft + published)</AdminButton>
     {:else}
       <AdminButton size="sm" href="/admin/photos?showArchived=1">Archived only</AdminButton>
     {/if}

@@ -1,5 +1,9 @@
 {
+  "editor.formatOnSave": true,
   "files.associations": {
     "*.css": "css"
+  },
+  "[svelte]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
   }
 }

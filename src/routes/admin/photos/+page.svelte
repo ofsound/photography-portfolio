@@ -5,6 +5,7 @@
   import { createSortable } from '@dnd-kit/svelte/sortable';
   import { move } from '@dnd-kit/helpers';
   import AdminButton from '$lib/components/admin/AdminButton.svelte';
+  import AdminHeading from '$lib/components/admin/AdminHeading.svelte';
   import AdminPhotoCard from '$lib/components/admin/photos/AdminPhotoCard.svelte';
   import AdminPhotosBulkPanel from '$lib/components/admin/photos/AdminPhotosBulkPanel.svelte';
   import AdminPhotosFilterForm from '$lib/components/admin/photos/AdminPhotosFilterForm.svelte';
@@ -163,15 +164,15 @@
 </script>
 
 <div class="flex items-baseline justify-between gap-4">
-  <div class="flex items-baseline gap-3">
-    <h1 class="text-xl uppercase tracking-[var(--tracking-heading)]">Photos</h1>
+  <div class="flex items-center gap-3">
+    <AdminHeading>Photos</AdminHeading>
     <AdminButton 
       size="sm" 
       variant="toggle" 
       selected={!data.showArchived} 
       href="/admin/photos"
     >
-      Active (draft + published)
+      Active
     </AdminButton>
     <AdminButton 
       size="sm" 
@@ -179,15 +180,18 @@
       selected={data.showArchived} 
       href="/admin/photos?showArchived=1"
     >
-      Archived only
+      Archived
     </AdminButton>
   </div>
-  <AdminButton href="/admin/photos/create" variant="success">Add New Photo</AdminButton>
 </div>
 
 {#if form?.message}
   <p class="mt-3 rounded border border-border px-3 py-2 text-sm">{form.message}</p>
 {/if}
+
+<div class="mt-4 mb-6">
+  <AdminButton href="/admin/photos/create" variant="submit">Add New Photo</AdminButton>
+</div>
 
 <AdminPhotosFilterForm
   q={data.q}

@@ -502,12 +502,12 @@
         </div>
 
         <div transition:fade={{duration: FADE_DURATION, delay: 4 * STAGGER_MS, easing: quintOut}} class="mt-8 flex flex-wrap items-center justify-center gap-2">
-          <AdminButton form="photo-update-form-{photoFormId}" variant="success" type="submit">
+          <AdminButton form="photo-update-form-{photoFormId}" variant="submit" type="submit">
             {photoStatus === "draft" || isDraft ? "Save Draft" : "Save"}
           </AdminButton>
           {#if !isDraft}
             {#if photoStatus === "draft"}
-              <AdminButton form="photo-update-form-{photoFormId}" variant="success" type="submit" formaction="?/publish">
+              <AdminButton form="photo-update-form-{photoFormId}" variant="submit" type="submit" formaction="?/publish">
                 Publish
               </AdminButton>
             {/if}

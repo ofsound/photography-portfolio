@@ -13,6 +13,7 @@
     transitionPhase,
     controlsVisible,
     overlayChromeHidden,
+    showPhotographInfo,
     isTransitioning,
     canCycleGallery,
     prevGalleryHref,
@@ -31,6 +32,7 @@
     transitionPhase: string;
     controlsVisible: boolean;
     overlayChromeHidden: boolean;
+    showPhotographInfo: boolean;
     isTransitioning: boolean;
     canCycleGallery: boolean;
     prevGalleryHref: string | null;
@@ -112,6 +114,7 @@
   </div>
 {/if}
 
+{#if showPhotographInfo}
 <aside
   use:portal
   class="chrome-panel fixed left-[var(--inset-overlay)] bottom-[var(--inset-overlay)] z-[var(--z-overlay)] w-fit max-w-[min(90vw,var(--max-width-prose))] rounded px-4 py-3 transition-opacity ease-out"
@@ -146,3 +149,4 @@
     </div>
   {/if}
 </aside>
+{/if}

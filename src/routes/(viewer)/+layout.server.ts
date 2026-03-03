@@ -28,12 +28,12 @@ const readActivePhotoRoute = (pathname: string): Pick<ActivePhotoRoute, 'photoSl
 export const load: LayoutServerLoad = async ({ locals, url }) => {
   const { data: settings } = await locals.supabase
     .from('site_settings')
-    .select('grid_desktop_default, grid_desktop_max, max_content_width_px, gallery_layout_mode, gallery_gap_px, uniform_thumb_ratio')
+    .select('grid_desktop_default, max_content_width_px, gallery_layout_mode, gallery_gap_px, uniform_thumb_ratio')
     .eq('singleton_id', 1)
     .maybeSingle();
 
   const defaultDensity = settings?.grid_desktop_default ?? 6;
-  const maxDensity = settings?.grid_desktop_max ?? 20;
+  const maxDensity = 20;
   const startPage = asPositiveInt(url.searchParams.get('page'), 1);
   const pageSize = normalizePageSize(60);
   const density = defaultDensity;

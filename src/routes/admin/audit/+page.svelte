@@ -1,8 +1,10 @@
 <script lang="ts">
+  import AdminHeading from '$lib/components/admin/AdminHeading.svelte';
+
   let { data } = $props();
 </script>
 
-<h1 class="text-xl uppercase tracking-[var(--tracking-heading)]">Audit Log</h1>
+<AdminHeading>Audit Log</AdminHeading>
 <p class="mt-2 text-sm text-text-muted">Most recent {data.logs.length} entries.</p>
 
 <div class="mt-6 overflow-x-auto rounded border border-border">

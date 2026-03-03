@@ -69,7 +69,7 @@
     {/if}
   </p>
   <div class="flex justify-center">
-    <AdminButton type="submit" variant="success" wFit disabled={uploading}>
+    <AdminButton type="submit" variant="submit" wFit disabled={uploading}>
       {uploading ? "Uploading…" : "Upload"}
     </AdminButton>
   </div>

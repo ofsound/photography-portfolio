@@ -3,6 +3,7 @@
   import { createSortable } from '@dnd-kit/svelte/sortable';
   import { move } from '@dnd-kit/helpers';
   import AdminButton from '$lib/components/admin/AdminButton.svelte';
+  import AdminHeading from '$lib/components/admin/AdminHeading.svelte';
   import { photoPublicUrl } from '$lib/utils/storage-url';
   import type { HomepageImage, HomepageSlide } from '$lib/types/content';
 
@@ -86,7 +87,7 @@
   };
 </script>
 
-<h1 class="text-xl uppercase tracking-[var(--tracking-heading)]">Homepage Curation</h1>
+<AdminHeading>Homepage</AdminHeading>
 <p class="mt-2 text-sm text-text-muted">Image-only slides. Add images, drag selected slides to reorder, then save.</p>
 
 {#if form?.message}
@@ -120,7 +121,7 @@
         bind:value={transitionDurationMs}
       />
     </label>
-    <AdminButton size="md-tall" type="submit">Save Timing</AdminButton>
+    <AdminButton size="sm" type="submit">Save Timing</AdminButton>
   </form>
 </section>
 

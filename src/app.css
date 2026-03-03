@@ -1,3 +1,5 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap");
+
 @import "tailwindcss";
 
 :root {
@@ -11,7 +13,7 @@
 }
 
 @theme inline {
-  --font-sans: "Helvetica Neue", "Helvetica", "Arial", sans-serif;
+  --font-sans: "Inter", "sans-serif";
 
   --color-bg: light-dark(theme(colors.zinc.50), theme(colors.zinc.950));
   --color-surface: light-dark(theme(colors.white), theme(colors.zinc.900));
@@ -59,7 +61,7 @@
   --tracking-minimal: 0.1em;
   --tracking-tight: 0.12em;
   --tracking-label: 0.14em;
-  --tracking-heading: 0.15em;
+  --tracking-heading: 0.08em;
   --tracking-nav: 0.16em;
   --tracking-hero: 0.18em;
   --tracking-caption: 0.2em;

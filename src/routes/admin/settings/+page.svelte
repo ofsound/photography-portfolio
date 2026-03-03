@@ -1,5 +1,6 @@
 <script lang="ts">
   import AdminButton from '$lib/components/admin/AdminButton.svelte';
+  import AdminHeading from '$lib/components/admin/AdminHeading.svelte';
   import FormField from '$lib/components/FormField.svelte';
   import FormInput from '$lib/components/FormInput.svelte';
 
@@ -10,28 +11,27 @@
     theme_default: 'light',
     grid_desktop_default: 6,
     grid_mobile_default: 3,
-    grid_desktop_max: 20,
-    grid_mobile_max: 6,
     max_content_width_px: null,
     gallery_layout_mode: 'uniform',
     gallery_gap_px: 8,
     uniform_thumb_ratio: 1,
     transition_preset: 'cinematic',
     allow_transition_toggle: true,
-    show_search_bar: true
+    show_search_bar: true,
+    show_photograph_info: true
     }
   );
 
   const selectClass = 'w-full rounded border border-border-strong bg-surface px-3 py-2 text-sm';
 </script>
 
-<h1 class="text-xl uppercase tracking-[var(--tracking-heading)]">Site Settings</h1>
+<AdminHeading>Site Settings</AdminHeading>
 
 {#if form?.message}
   <p class="mt-3 rounded border border-border px-3 py-2 text-sm">{form.message}</p>
 {/if}
 
-<form method="POST" action="?/save" class="mt-6 grid max-w-[var(--max-width-content)] gap-4 rounded border border-border p-4">
+<form method="POST" action="?/save" class="mt-6 grid max-w-[var(--max-width-content)] gap-4">
   <div class="grid gap-3 sm:grid-cols-2">
     <FormField label="Site Theme" id="settings-theme_default">
       <select name="theme_default" id="settings-theme_default" class={selectClass}>
@@ -50,18 +50,12 @@
     </FormField>
   </div>
 
-  <div class="grid gap-3 sm:grid-cols-4">
+  <div class="grid gap-3 sm:grid-cols-2">
     <FormField label="Desktop Default" id="settings-grid_desktop_default">
       <FormInput id="settings-grid_desktop_default" name="grid_desktop_default" type="number" value={String(settings.grid_desktop_default)} />
     </FormField>
-    <FormField label="Desktop Max" id="settings-grid_desktop_max">
-      <FormInput id="settings-grid_desktop_max" name="grid_desktop_max" type="number" value={String(settings.grid_desktop_max)} />
-    </FormField>
     <FormField label="Mobile Default" id="settings-grid_mobile_default">
       <FormInput id="settings-grid_mobile_default" name="grid_mobile_default" type="number" value={String(settings.grid_mobile_default)} />
-    </FormField>
-    <FormField label="Mobile Max" id="settings-grid_mobile_max">
-      <FormInput id="settings-grid_mobile_max" name="grid_mobile_max" type="number" value={String(settings.grid_mobile_max)} />
     </FormField>
   </div>
 
@@ -87,6 +81,10 @@
 
   <label class="flex items-center gap-2 text-sm">
     <input type="checkbox" name="show_search_bar" checked={settings.show_search_bar} /> Show Search Bar
+  </label>
+
+  <label class="flex items-center gap-2 text-sm">
+    <input type="checkbox" name="show_photograph_info" checked={settings.show_photograph_info} /> Show Photograph Info
   </label>
 
   <AdminButton wFit type="submit">Save Settings</AdminButton>

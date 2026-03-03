@@ -39,7 +39,7 @@ export const loadAdminPhotosPage = async ({ locals, url }: { locals: App.Locals;
     locals.supabase.from('categories').select('id, name, slug, is_active').order('name', { ascending: true }),
     locals.supabase.from('tags').select('id, name, slug, is_active').order('name', { ascending: true }),
     locals.supabase.from('photo_images').select('id', { count: 'exact', head: true }).eq('is_active', true).is('delivery_storage_path', null),
-    locals.supabase.from('site_settings').select('grid_desktop_max, max_content_width_px').eq('singleton_id', 1).maybeSingle()
+    locals.supabase.from('site_settings').select('max_content_width_px').eq('singleton_id', 1).maybeSingle()
   ]);
 
   const photoIds = (photos ?? []).map((photo: { id: string }) => photo.id);
@@ -130,7 +130,7 @@ export const loadAdminPhotosPage = async ({ locals, url }: { locals: App.Locals;
     filterCategoryId,
     filterTagId,
     pendingConversionCount: pendingQuery.count ?? 0,
-    maxDensity: settings?.grid_desktop_max ?? 20,
+    maxDensity: 20,
     maxContentWidthPx: settings?.max_content_width_px ?? null
   };
 };

@@ -47,7 +47,7 @@
         {#each tags as tag (tag.id)}
           <AdminButton
             size="sm"
-            variant="success-soft"
+            variant="submit-soft"
             type="button"
             onclick={() => addTaxonomyDraft('tag', tag.id)}
           >
@@ -82,7 +82,7 @@
         {/each}
         {#each taxonomyDraftTags as tagId (tagId)}
           {#if tagById(tagId)}
-            <AdminButton variant="success-soft" size="xs" type="button" onclick={() => removeTaxonomyDraft('tag', tagId)}>
+            <AdminButton variant="submit-soft" size="xs" type="button" onclick={() => removeTaxonomyDraft('tag', tagId)}>
               {tagById(tagId)?.name ?? tagId} x
             </AdminButton>
           {/if}

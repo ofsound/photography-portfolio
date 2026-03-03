@@ -32,7 +32,7 @@
   }>();
 </script>
 
-<div class="mt-4 flex w-full flex-wrap items-end gap-3">
+<div class="mt-6 mb-6 flex w-full flex-wrap items-end gap-3">
   <form method="GET" class="flex min-w-0 flex-1 flex-wrap items-end gap-3">
     <div class="min-w-[180px] max-w-[300px] flex-1">
       <FormField label="Search" id="filter-q">
@@ -60,7 +60,7 @@
       </FormField>
     </div>
 
-    <div class="flex flex-shrink-0 flex-wrap items-center gap-2">
+    <div class="mb-1">
       <AdminButton type="submit">Apply</AdminButton>
     </div>
   </form>

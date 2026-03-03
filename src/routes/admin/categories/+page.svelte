@@ -1,5 +1,6 @@
 <script lang="ts">
   import AdminButton from '$lib/components/admin/AdminButton.svelte';
+  import AdminHeading from '$lib/components/admin/AdminHeading.svelte';
   import FormField from '$lib/components/FormField.svelte';
   import FormInput from '$lib/components/FormInput.svelte';
   import FormTextarea from '$lib/components/FormTextarea.svelte';
@@ -7,7 +8,7 @@
   let { data, form } = $props();
 </script>
 
-<h1 class="text-xl uppercase tracking-[var(--tracking-heading)]">Categories</h1>
+<AdminHeading>Categories</AdminHeading>
 
 {#if form?.message}
   <p class="mt-3 rounded border border-border px-3 py-2 text-sm">{form.message}</p>

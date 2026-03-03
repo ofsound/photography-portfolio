@@ -464,13 +464,12 @@ export type Database = {
         Row: {
           allow_transition_toggle: boolean;
           created_at: string;
+          show_photograph_info: boolean;
           show_search_bar: boolean;
           gallery_gap_px: number;
           gallery_layout_mode: Database['public']['Enums']['layout_mode'];
           grid_desktop_default: number;
-          grid_desktop_max: number;
           grid_mobile_default: number;
-          grid_mobile_max: number;
           homepage_slide_duration_ms: number;
           homepage_transition_duration_ms: number;
           max_content_width_px: number | null;
@@ -484,13 +483,12 @@ export type Database = {
         Insert: {
           allow_transition_toggle?: boolean;
           created_at?: string;
+          show_photograph_info?: boolean;
           show_search_bar?: boolean;
           gallery_gap_px?: number;
           gallery_layout_mode?: Database['public']['Enums']['layout_mode'];
           grid_desktop_default?: number;
-          grid_desktop_max?: number;
           grid_mobile_default?: number;
-          grid_mobile_max?: number;
           homepage_slide_duration_ms?: number;
           homepage_transition_duration_ms?: number;
           max_content_width_px?: number | null;
@@ -504,13 +502,12 @@ export type Database = {
         Update: {
           allow_transition_toggle?: boolean;
           created_at?: string;
+          show_photograph_info?: boolean;
           show_search_bar?: boolean;
           gallery_gap_px?: number;
           gallery_layout_mode?: Database['public']['Enums']['layout_mode'];
           grid_desktop_default?: number;
-          grid_desktop_max?: number;
           grid_mobile_default?: number;
-          grid_mobile_max?: number;
           homepage_slide_duration_ms?: number;
           homepage_transition_duration_ms?: number;
           max_content_width_px?: number | null;

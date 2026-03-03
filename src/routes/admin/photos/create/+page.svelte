@@ -1,5 +1,6 @@
 <script lang="ts">
   import AdminButton from '$lib/components/admin/AdminButton.svelte';
+  import AdminHeading from '$lib/components/admin/AdminHeading.svelte';
   import AdminSinglePhotoEditor from '$lib/components/admin/photos/AdminSinglePhotoEditor.svelte';
   import type { PageProps } from './$types';
 
@@ -11,7 +12,7 @@
 </script>
 
 <div class="flex flex-wrap items-center justify-between gap-3">
-  <h1 class="text-xl uppercase tracking-[var(--tracking-heading)]">New Photo</h1>
+  <AdminHeading>New Photo</AdminHeading>
   <AdminButton href="/admin/photos">Back to Photos</AdminButton>
 </div>
 <p class="mt-2 text-sm text-text-muted">

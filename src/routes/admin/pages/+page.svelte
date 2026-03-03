@@ -1,5 +1,6 @@
 <script lang="ts">
   import AdminButton from '$lib/components/admin/AdminButton.svelte';
+  import AdminHeading from '$lib/components/admin/AdminHeading.svelte';
   import FormField from '$lib/components/FormField.svelte';
   import FormInput from '$lib/components/FormInput.svelte';
   import FormTextarea from '$lib/components/FormTextarea.svelte';
@@ -10,7 +11,7 @@
   );
 </script>
 
-<h1 class="text-xl uppercase tracking-[var(--tracking-heading)]">Pages</h1>
+<AdminHeading>Pages</AdminHeading>
 <p class="mt-2 text-sm text-text-muted">Create pages here, then edit each page on its own route editor.</p>
 
 {#if form?.message}

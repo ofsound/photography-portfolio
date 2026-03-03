@@ -1047,6 +1047,7 @@
     transitionPhase={transitionPhase}
     {controlsVisible}
     {overlayChromeHidden}
+    showPhotographInfo={data.siteSettings?.show_photograph_info ?? true}
     {isTransitioning}
     {canCycleGallery}
     {prevGalleryHref}

@@ -1,5 +1,6 @@
 <script lang="ts">
   import AdminButton from '$lib/components/admin/AdminButton.svelte';
+  import AdminHeading from '$lib/components/admin/AdminHeading.svelte';
   import FormField from '$lib/components/FormField.svelte';
   import FormInput from '$lib/components/FormInput.svelte';
   import FormTextarea from '$lib/components/FormTextarea.svelte';
@@ -35,7 +36,7 @@
 </script>
 
 <div class="flex flex-wrap items-center justify-between gap-3">
-  <h1 class="text-xl uppercase tracking-[var(--tracking-heading)]">Edit Page</h1>
+  <AdminHeading>Edit Page</AdminHeading>
   <AdminButton href="/admin/pages">Back to Pages</AdminButton>
 </div>
 <p class="mt-2 text-sm text-text-muted">Editing `/{page.slug}`</p>

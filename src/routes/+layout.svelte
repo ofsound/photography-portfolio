@@ -24,7 +24,7 @@
   const siteSettings = $derived(data?.siteSettings ?? null);
   const hasSession = $derived(Boolean(data?.session));
   const pendingConversionCount = $derived((data?.pendingConversionCount as number) ?? 0);
-  const maxDensity = $derived(siteSettings?.grid_desktop_max ?? 20);
+  const maxDensity = 20;
   let themeMode = $state<"light" | "dark" | "system">("system");
   let transitionPreset = $state<"cinematic" | "snappy" | "experimental">("cinematic");
   let hasHydratedClientPrefs = $state(false);
@@ -227,7 +227,7 @@
 <div class="min-h-screen bg-bg text-text">
   <header bind:this={siteHeaderEl} class="chrome-panel sticky top-0 z-40 border-b border-border px-4 transition-opacity duration-[var(--duration-chrome)] ease-out" class:opacity-0={chromeHidden}>
     <div class="mx-auto flex w-full items-center justify-between gap-3">
-      <nav class=" py-3 flex items-center gap-4 text-sm tracking-[var(--tracking-nav)] uppercase">
+      <nav class=" py-3 flex items-center gap-6 text-sm tracking-[var(--tracking-nav)] uppercase">
         <a href="/" >Home</a>
         <a href="/gallery">Gallery</a>
         {#each navPages as navPage (navPage.id)}

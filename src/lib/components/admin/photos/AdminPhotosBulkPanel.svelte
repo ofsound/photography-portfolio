@@ -16,7 +16,7 @@
     removeTaxonomyDraft,
     selectAllVisiblePhotos,
     clearSelectedPhotos,
-    showBulkTaxonomy = true,
+    showBulkTaxonomy = false,
     onToggleShowBulkTaxonomy,
     hideTaxonomyEditor = false
   } = $props<{
@@ -40,28 +40,34 @@
 
 <section class="mt-4 grid gap-3">
   <div class="flex flex-wrap items-center gap-2 text-xs uppercase tracking-[var(--tracking-tight)]">
-    <span>Selected photos: {selectedPhotoIds.length}</span>
-    <AdminButton size="xs" type="button" onclick={selectAllVisiblePhotos}>Select all visible</AdminButton>
+    <span class="inline-block w-40 font-bold">Selected photos: {selectedPhotoIds.length}</span>
+    <AdminButton size="xs" type="button" onclick={selectAllVisiblePhotos}>Select all</AdminButton>
     <AdminButton size="xs" type="button" onclick={clearSelectedPhotos}>Clear</AdminButton>
   </div>
 
   <div class="flex flex-wrap items-center gap-2">
-    <form method="POST" action="?/bulkPublishPhotos">
-      <input type="hidden" name="selected_photo_ids" value={selectedPhotoIds.join('\n')} />
-      <AdminButton size="xs" type="submit" disabled={selectedPhotoIds.length === 0}>Publish Selected</AdminButton>
-    </form>
+    {#if !showArchived}
+      <form method="POST" action="?/bulkPublishPhotos">
+        <input type="hidden" name="selected_photo_ids" value={selectedPhotoIds.join('\n')} />
+        <AdminButton size="xs" type="submit" disabled={selectedPhotoIds.length === 0}>
+          Publish Selected
+        </AdminButton>
+      </form>
 
-    <form method="POST" action="?/bulkArchivePhotos">
-      <input type="hidden" name="selected_photo_ids" value={selectedPhotoIds.join('\n')} />
-      <AdminButton size="xs" type="submit" disabled={selectedPhotoIds.length === 0}>Archive Selected</AdminButton>
-    </form>
+      <form method="POST" action="?/bulkArchivePhotos">
+        <input type="hidden" name="selected_photo_ids" value={selectedPhotoIds.join('\n')} />
+        <AdminButton size="xs" type="submit" disabled={selectedPhotoIds.length === 0}>
+          Archive Selected
+        </AdminButton>
+      </form>
+    {:else}
+      <form method="POST" action="?/bulkRestorePhotos">
+        <input type="hidden" name="selected_photo_ids" value={selectedPhotoIds.join('\n')} />
+        <AdminButton size="xs" type="submit" disabled={selectedPhotoIds.length === 0}>
+          Restore Selected
+        </AdminButton>
+      </form>
 
-    <form method="POST" action="?/bulkRestorePhotos">
-      <input type="hidden" name="selected_photo_ids" value={selectedPhotoIds.join('\n')} />
-      <AdminButton size="xs" type="submit" disabled={selectedPhotoIds.length === 0}>Restore Selected</AdminButton>
-    </form>
-
-    {#if showArchived}
       <form
         method="POST"
         action="?/bulkDeletePhotos"

@@ -1,9 +1,8 @@
 <script lang="ts">
   import {goto, invalidateAll} from "$app/navigation";
   import {enhance} from "$app/forms";
-  import {DragDropProvider, DragOverlay} from "@dnd-kit/svelte";
-  import {createSortable} from "@dnd-kit/svelte/sortable";
-  import {move} from "@dnd-kit/helpers";
+  import { DragDropProvider, DragOverlay } from '@dnd-kit/svelte';
+  import { createSortable, isSortable } from '@dnd-kit/svelte/sortable';
   import {fade, slide} from "svelte/transition";
   import {quintOut} from "svelte/easing";
   import AdminButton from "$lib/components/admin/AdminButton.svelte";
@@ -159,10 +158,16 @@
 
   const onAdditionalDragEnd = (event: unknown) => {
     if (photo.id == null) return;
-    const next = move(additionalOrder, event as Parameters<typeof move>[1]);
-    if (next !== additionalOrder) {
-      void onAdditionalReorder(photo.id, next);
-    }
+    const e = event as { canceled?: boolean; operation?: { source: unknown } };
+    if (e.canceled || !e.operation?.source) return;
+    const source = e.operation.source as Parameters<typeof isSortable>[0];
+    if (!isSortable(source)) return;
+    const { initialIndex, index } = source as { initialIndex: number; index: number };
+    if (initialIndex === index) return;
+    const next = [...additionalOrder];
+    const [removed] = next.splice(initialIndex, 1);
+    next.splice(index, 0, removed);
+    void onAdditionalReorder(photo.id, next);
   };
 </script>
 

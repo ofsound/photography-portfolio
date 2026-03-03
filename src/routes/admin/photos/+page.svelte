@@ -2,8 +2,7 @@
   import { invalidateAll } from '$app/navigation';
   import { onMount } from 'svelte';
   import { DragDropProvider, DragOverlay } from '@dnd-kit/svelte';
-  import { createSortable } from '@dnd-kit/svelte/sortable';
-  import { move } from '@dnd-kit/helpers';
+  import { createSortable, isSortable } from '@dnd-kit/svelte/sortable';
   import AdminButton from '$lib/components/admin/AdminButton.svelte';
   import AdminHeading from '$lib/components/admin/AdminHeading.svelte';
   import AdminPhotoCard from '$lib/components/admin/photos/AdminPhotoCard.svelte';
@@ -52,7 +51,9 @@
   let taxonomyDraftTags = $state<string[]>([]);
 
   let orderedPhotoIds = $state<string[]>([]);
-  let showBulkTaxonomy = $state(true);
+  let showBulkTaxonomy = $state(false);
+  let gridEl = $state<HTMLUListElement | null>(null);
+  let overlayCellSize = $state<number | null>(null);
 
   const maxDensity = $derived((data as { maxDensity?: number }).maxDensity ?? 20);
 
@@ -61,6 +62,23 @@
   let mounted = $state(false);
 
   const colCount = $derived(Math.max(1, Math.min(maxDensity, Number(density) || 6)));
+
+  $effect(() => {
+    const el = gridEl;
+    const cols = colCount;
+    if (!el) return;
+    const measure = () => {
+      const w = el.clientWidth;
+      if (w > 0 && cols > 0) {
+        overlayCellSize = (w - gap * (cols - 1)) / cols;
+      }
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  });
+
   const sectionMaxWidthStyle = 'max-width: 100%;';
 
   onMount(() => {
@@ -148,12 +166,18 @@
   };
 
   async function onPhotoDragEnd(event: unknown) {
-    const next = move(orderedPhotoIds, event as Parameters<typeof move>[1]);
-    if (next !== orderedPhotoIds) {
-      orderedPhotoIds = next;
-      if (await persistPhotoOrder(window.location.pathname, next)) {
-        invalidateAll();
-      }
+    const e = event as { canceled?: boolean; operation?: { source: unknown } };
+    if (e.canceled || !e.operation?.source) return;
+    const source = e.operation.source as Parameters<typeof isSortable>[0];
+    if (!isSortable(source)) return;
+    const { initialIndex, index } = source as { initialIndex: number; index: number };
+    if (initialIndex === index) return;
+    const next = [...orderedPhotoIds];
+    const [removed] = next.splice(initialIndex, 1);
+    next.splice(index, 0, removed);
+    orderedPhotoIds = next;
+    if (await persistPhotoOrder(window.location.pathname, next)) {
+      invalidateAll();
     }
   }
 
@@ -172,7 +196,7 @@
       selected={!data.showArchived} 
       href="/admin/photos"
     >
-      Active
+      Active ({data.activeCount})
     </AdminButton>
     <AdminButton 
       size="sm" 
@@ -180,18 +204,14 @@
       selected={data.showArchived} 
       href="/admin/photos?showArchived=1"
     >
-      Archived
+      Archived ({data.archivedCount})
     </AdminButton>
   </div>
 </div>
 
 {#if form?.message}
-  <p class="mt-3 rounded border border-border px-3 py-2 text-sm">{form.message}</p>
+  <p class="mt-3 rounded border border-border px-3 py-2 text-sm w-max">{form.message}</p>
 {/if}
-
-<div class="mt-4 mb-6">
-  <AdminButton href="/admin/photos/create" variant="submit">Add New Photo</AdminButton>
-</div>
 
 <AdminPhotosFilterForm
   q={data.q}
@@ -224,11 +244,15 @@
   hideTaxonomyEditor={true}
 />
 
-<section class="mt-6">
+<section class="mt-8">
   <div class="mx-auto flex w-full items-start gap-6" style={sectionMaxWidthStyle}>
     <div class="flex-1 min-w-0">
       <DragDropProvider onDragEnd={onPhotoDragEnd}>
-        <ul class="grid" style="grid-template-columns: repeat({colCount}, minmax(0, 1fr)); gap: {gap}px;">
+        <ul
+          bind:this={gridEl}
+          class="grid"
+          style="grid-template-columns: repeat({colCount}, minmax(0, 1fr)); gap: {gap}px;"
+        >
           {#each orderedPhotoIds as id, index (id)}
             {@const photo = photoById.get(id)}
             {#if photo}
@@ -263,7 +287,8 @@
             {#if photo}
               {@const lead = imagesForPhoto(photo.id).find((img) => img.kind === 'lead') ?? null}
               <div
-                class="relative flex aspect-square w-40 flex-col overflow-hidden rounded border-2 border-primary bg-surface shadow-xl"
+                class="relative flex aspect-square flex-col overflow-hidden rounded border-2 border-primary bg-surface shadow-xl"
+                style="width: {overlayCellSize ?? 160}px;"
                 role="presentation"
               >
                 <div class="flex-1 overflow-hidden">
@@ -282,7 +307,7 @@
                   {/if}
                 </div>
                 <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent px-2 pb-2 pt-6">
-                  <p class="truncate text-xs font-medium text-white">{photo.title}</p>
+                  <p class="truncate text-xs font-medium tracking-[var(--tracking-minimal)] text-white">{photo.title}</p>
                   <p class="truncate text-xs text-white/80">/{photo.slug}</p>
                 </div>
               </div>

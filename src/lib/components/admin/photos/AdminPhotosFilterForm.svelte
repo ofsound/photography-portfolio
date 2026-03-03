@@ -2,6 +2,7 @@
   import AdminButton from '$lib/components/admin/AdminButton.svelte';
   import FormField from '$lib/components/FormField.svelte';
   import FormInput from '$lib/components/FormInput.svelte';
+  import ZoomControl from '$lib/components/ZoomControl.svelte';
   import type { AdminCategory, AdminTag } from '$lib/types/content';
 
   const selectClass =
@@ -65,20 +66,14 @@
     </div>
   </form>
   {#if densityVisible && onDensityChange}
-    <div class="ml-auto">
-      <FormField label="Items Per Row" id="filter-density">
-      <div class="flex items-center gap-2">
-        <input
-          id="filter-density"
-          type="range"
-          min="1"
-          max={String(densityMax)}
-          value={densityColCount}
-          oninput={(e) => onDensityChange(Number((e.currentTarget as HTMLInputElement).value))}
-        />
-        <span class="tabular-nums">{densityColCount}</span>
-      </div>
-    </FormField>
+    <div class="ml-auto mb-1">
+      <ZoomControl
+        label="Items Per Row"
+        min={1}
+        max={densityMax}
+        value={densityColCount}
+        onUpdate={onDensityChange}
+      />
     </div>
   {/if}
 </div>

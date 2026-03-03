@@ -1,7 +1,6 @@
 <script lang="ts">
   import { DragDropProvider } from '@dnd-kit/svelte';
-  import { createSortable } from '@dnd-kit/svelte/sortable';
-  import { move } from '@dnd-kit/helpers';
+  import { createSortable, isSortable } from '@dnd-kit/svelte/sortable';
   import AdminButton from '$lib/components/admin/AdminButton.svelte';
   import AdminHeading from '$lib/components/admin/AdminHeading.svelte';
   import { photoPublicUrl } from '$lib/utils/storage-url';
@@ -80,8 +79,15 @@
   };
 
   const onSelectedSlidesDragEnd = (event: unknown) => {
-    const next = move(selectedIds, event as Parameters<typeof move>[1]);
-    if (next === selectedIds) return;
+    const e = event as { canceled?: boolean; operation?: { source: unknown } };
+    if (e.canceled || !e.operation?.source) return;
+    const source = e.operation.source as Parameters<typeof isSortable>[0];
+    if (!isSortable(source)) return;
+    const { initialIndex, index } = source as { initialIndex: number; index: number };
+    if (initialIndex === index) return;
+    const next = [...selectedIds];
+    const [removed] = next.splice(initialIndex, 1);
+    next.splice(index, 0, removed);
     pushHistory();
     selectedIds = next;
   };

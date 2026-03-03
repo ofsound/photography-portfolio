@@ -88,6 +88,7 @@ body {
   min-height: 100%;
   background: var(--color-bg);
   color: var(--color-text);
+  scrollbar-gutter: stable;
 }
 
 body {

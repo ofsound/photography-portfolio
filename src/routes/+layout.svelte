@@ -4,6 +4,7 @@
   import {page} from "$app/state";
   import {setGalleryTransitionContext} from "$lib/context/gallery-transition";
   import {getGalleryPrefs, galleryDensityStore, setGalleryPrefs} from "$lib/stores/gallery-prefs";
+  import ZoomControl from "$lib/components/ZoomControl.svelte";
   import type {LayoutData} from "./$types";
 
   let {data, children} = $props<{data: LayoutData | null; children: import("svelte").Snippet}>();
@@ -197,6 +198,11 @@
       return;
     }
 
+    // Admin nav: skip View Transitions so rapid clicks always register and lead to route changes.
+    if (fromPath.startsWith('/admin/') || toPath.startsWith('/admin/')) {
+      return;
+    }
+
     if (!document.startViewTransition) {
       return;
     }
@@ -214,7 +220,11 @@
     return new Promise((resolve) => {
       const transition = document.startViewTransition(async () => {
         resolve();
-        await navigation.complete;
+        try {
+          await navigation.complete;
+        } catch (e) {
+          // If the navigation is cancelled, the VT is aborted anyway.
+        }
       });
 
       transition.finished.finally(() => {
@@ -240,55 +250,13 @@
 
       {#if isViewer}
         <div class="ml-4 flex items-center justify-end gap-3">
-          <div class="flex items-center gap-2 text-xs uppercase tracking-[var(--tracking-heading)]" role="group" aria-label="Items per row">
-            <span>Zoom</span>
-            <div class="flex items-center gap-1">
-              <input
-                type="number"
-                min="1"
-                max={maxDensity}
-                value={$galleryDensityStore}
-                class="h-6 w-8 rounded border border-border-strong bg-transparent py-0.5 text-center text-xs tabular-nums [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-                aria-label="Items per row"
-                oninput={(e) => {
-                  const v = Number((e.currentTarget as HTMLInputElement).value);
-                  if (!Number.isNaN(v)) updateHeaderDensity(v);
-                }}
-                onchange={(e) => {
-                  const el = e.currentTarget as HTMLInputElement;
-                  let v = Number(el.value);
-                  if (Number.isNaN(v) || v < 1) v = 1;
-                  if (v > maxDensity) v = maxDensity;
-                  el.value = String(v);
-                  updateHeaderDensity(v);
-                }}
-              />
-              <div class="flex flex-col">
-                <button
-                  type="button"
-                  class="flex h-[14px] w-6 shrink-0 items-center justify-center rounded-sm hover:bg-border/50 disabled:opacity-40"
-                  aria-label="Increase items per row"
-                  disabled={$galleryDensityStore >= maxDensity}
-                  onclick={() => updateHeaderDensity($galleryDensityStore + 1)}
-                >
-                  <svg class="h-2.5 w-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
-                  </svg>
-                </button>
-                <button
-                  type="button"
-                  class="flex h-[14px] w-6 shrink-0 items-center justify-center rounded-sm hover:bg-border/50 disabled:opacity-40"
-                  aria-label="Decrease items per row"
-                  disabled={$galleryDensityStore <= 1}
-                  onclick={() => updateHeaderDensity($galleryDensityStore - 1)}
-                >
-                  <svg class="h-2.5 w-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-          </div>
+          <ZoomControl
+            label="Zoom"
+            min={1}
+            max={maxDensity}
+            value={$galleryDensityStore}
+            onUpdate={updateHeaderDensity}
+          />
           {#if siteSettings?.show_search_bar}
             <form class="flex h-6 w-full max-w-[200px] items-center gap-2" onsubmit={onGallerySearchSubmit}>
               <input
@@ -369,7 +337,11 @@
   }
 
   /* Let clicks pass through the transition overlay so nav and links work on first click */
-  :global(::view-transition) {
+  :global(::view-transition),
+  :global(::view-transition-group(*)),
+  :global(::view-transition-image-pair(*)),
+  :global(::view-transition-old(*)),
+  :global(::view-transition-new(*)) {
     pointer-events: none;
   }
 

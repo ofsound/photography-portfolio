@@ -1,4 +1,6 @@
 <script lang="ts">
+  import ZoomControl from '$lib/components/ZoomControl.svelte';
+
   let {
     query,
     chromeHidden,
@@ -39,54 +41,12 @@
   </form>
 
   <div class="flex flex-wrap items-center justify-end gap-3">
-    <div class="flex items-center gap-2" role="group" aria-label="Items per row">
-      <span class="uppercase">Items per row</span>
-      <div class="flex items-center gap-1">
-        <input
-          type="number"
-          min="1"
-          max={maxDensity}
-          value={colCount}
-          class="w-8 rounded border border-border-strong bg-transparent py-0.5 text-center text-xs tabular-nums [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-          aria-label="Items per row"
-          oninput={(e) => {
-            const v = Number((e.currentTarget as HTMLInputElement).value);
-            if (!Number.isNaN(v)) onUpdateDensity(Math.max(1, Math.min(maxDensity, Math.round(v))));
-          }}
-          onchange={(e) => {
-            const el = e.currentTarget as HTMLInputElement;
-            let v = Number(el.value);
-            if (Number.isNaN(v) || v < 1) v = 1;
-            if (v > maxDensity) v = maxDensity;
-            el.value = String(v);
-            onUpdateDensity(v);
-          }}
-        />
-        <div class="flex flex-col">
-          <button
-            type="button"
-            class="flex h-[50%] min-h-5 w-6 items-center justify-center hover:bg-border/50 disabled:opacity-40"
-            aria-label="Increase items per row"
-            disabled={colCount >= maxDensity}
-            onclick={() => onUpdateDensity(Math.min(maxDensity, colCount + 1))}
-          >
-            <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
-            </svg>
-          </button>
-          <button
-            type="button"
-            class="flex h-[50%] min-h-5 w-6 items-center justify-center hover:bg-border/50 disabled:opacity-40"
-            aria-label="Decrease items per row"
-            disabled={colCount <= 1}
-            onclick={() => onUpdateDensity(Math.max(1, colCount - 1))}
-          >
-            <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
-        </div>
-      </div>
-    </div>
+    <ZoomControl
+      label="Items per row"
+      min={1}
+      max={maxDensity}
+      value={colCount}
+      onUpdate={onUpdateDensity}
+    />
   </div>
 </div>

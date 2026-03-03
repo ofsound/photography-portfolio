@@ -33,13 +33,17 @@ export const loadAdminPhotosPage = async ({ locals, url }: { locals: App.Locals;
     { data: categories },
     { data: tags },
     pendingQuery,
-    { data: settings }
+    { data: settings },
+    activeCountQuery,
+    archivedCountQuery
   ] = await Promise.all([
     photoQuery,
     locals.supabase.from('categories').select('id, name, slug, is_active').order('name', { ascending: true }),
     locals.supabase.from('tags').select('id, name, slug, is_active').order('name', { ascending: true }),
     locals.supabase.from('photo_images').select('id', { count: 'exact', head: true }).eq('is_active', true).is('delivery_storage_path', null),
-    locals.supabase.from('site_settings').select('max_content_width_px').eq('singleton_id', 1).maybeSingle()
+    locals.supabase.from('site_settings').select('max_content_width_px').eq('singleton_id', 1).maybeSingle(),
+    locals.supabase.from('photos').select('id', { count: 'exact', head: true }).is('deleted_at', null),
+    locals.supabase.from('photos').select('id', { count: 'exact', head: true }).not('deleted_at', 'is', null)
   ]);
 
   const photoIds = (photos ?? []).map((photo: { id: string }) => photo.id);
@@ -130,6 +134,8 @@ export const loadAdminPhotosPage = async ({ locals, url }: { locals: App.Locals;
     filterCategoryId,
     filterTagId,
     pendingConversionCount: pendingQuery.count ?? 0,
+    activeCount: activeCountQuery.count ?? 0,
+    archivedCount: archivedCountQuery.count ?? 0,
     maxDensity: 20,
     maxContentWidthPx: settings?.max_content_width_px ?? null
   };

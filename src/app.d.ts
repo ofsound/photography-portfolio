@@ -14,9 +14,10 @@ declare global {
         theme_default: 'light' | 'dark' | 'system';
         transition_preset: 'cinematic' | 'snappy' | 'experimental';
         allow_transition_toggle: boolean;
+        show_search_bar: boolean;
       } | null;
     }
   }
 }
 
-export {};
+export { };

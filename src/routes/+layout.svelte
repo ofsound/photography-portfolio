@@ -34,6 +34,7 @@
   const isGalleryRoute = (pathname: string) => pathname === "/gallery" || pathname.startsWith("/gallery/");
   const isViewerRoute = (pathname: string) => isGalleryRoute(pathname) || isDetailRoute(pathname);
   const isViewer = $derived(isViewerRoute(page.url.pathname));
+  const isAdminPage = $derived(page.url.pathname.startsWith("/admin/"));
 
   $effect(() => {
     if (!isViewerRoute(page.url.pathname)) return;
@@ -71,7 +72,20 @@
   const applyTheme = (mode: "light" | "dark" | "system") => {
     const isDarkSystem = window.matchMedia("(prefers-color-scheme: dark)").matches;
     const active = mode === "system" ? (isDarkSystem ? "dark" : "light") : mode;
-    document.documentElement.dataset.theme = active;
+    document.documentElement.setAttribute("data-theme", active);
+    document.documentElement.style.colorScheme = active;
+  };
+
+  const siteThemeDefault = $derived(
+    (siteSettings?.theme_default === "dark" || siteSettings?.theme_default === "light"
+      ? siteSettings.theme_default
+      : "light") as "light" | "dark"
+  );
+
+  const setAdminThemeMode = (mode: "light" | "dark" | "system") => {
+    themeMode = mode;
+    localStorage.setItem("admin-theme", mode);
+    applyTheme(mode);
   };
 
   const updateTransitionPreset = (preset: "cinematic" | "snappy" | "experimental") => {
@@ -90,12 +104,16 @@
   $effect(() => {
     if (typeof window === "undefined" || hasHydratedClientPrefs) return;
 
-    themeMode = siteSettings?.theme_default ?? "system";
+    const pathname = page.url.pathname;
+    const onAdmin = pathname.startsWith("/admin/");
     transitionPreset = siteSettings?.transition_preset ?? "cinematic";
 
-    const storedTheme = localStorage.getItem("theme-mode");
-    if (storedTheme === "light" || storedTheme === "dark" || storedTheme === "system") {
-      themeMode = storedTheme;
+    if (onAdmin) {
+      const stored = localStorage.getItem("admin-theme");
+      themeMode =
+        stored === "light" || stored === "dark" || stored === "system" ? stored : siteThemeDefault;
+    } else {
+      themeMode = siteThemeDefault;
     }
 
     if (siteSettings?.allow_transition_toggle) {
@@ -110,6 +128,20 @@
     applyTransitionPreset();
     applyTheme(themeMode);
     hasHydratedClientPrefs = true;
+  });
+
+  $effect(() => {
+    if (typeof window === "undefined" || !hasHydratedClientPrefs) return;
+    const pathname = page.url.pathname;
+    const onAdmin = pathname.startsWith("/admin/");
+    if (onAdmin) {
+      const stored = localStorage.getItem("admin-theme");
+      themeMode =
+        stored === "light" || stored === "dark" || stored === "system" ? stored : siteThemeDefault;
+    } else {
+      themeMode = siteThemeDefault;
+    }
+    applyTheme(themeMode);
   });
 
   $effect(() => {
@@ -193,9 +225,9 @@
 </script>
 
 <div class="min-h-screen bg-bg text-text">
-  <header bind:this={siteHeaderEl} class="chrome-panel sticky top-0 z-40 border-b border-border px-4 py-3 transition-opacity duration-[var(--duration-chrome)] ease-out" class:opacity-0={chromeHidden}>
+  <header bind:this={siteHeaderEl} class="chrome-panel sticky top-0 z-40 border-b border-border px-4 transition-opacity duration-[var(--duration-chrome)] ease-out" class:opacity-0={chromeHidden}>
     <div class="mx-auto flex w-full items-center justify-between gap-3">
-      <nav class="flex items-center gap-4 text-sm tracking-[var(--tracking-nav)] uppercase">
+      <nav class=" py-3 flex items-center gap-4 text-sm tracking-[var(--tracking-nav)] uppercase">
         <a href="/" >Home</a>
         <a href="/gallery">Gallery</a>
         {#each navPages as navPage (navPage.id)}
@@ -206,8 +238,8 @@
         {/if}
       </nav>
 
-      <div class="flex items-center justify-end gap-3">
-        {#if isViewer}
+      {#if isViewer}
+        <div class="ml-4 flex items-center justify-end gap-3">
           <div class="flex items-center gap-2 text-xs uppercase tracking-[var(--tracking-heading)]" role="group" aria-label="Items per row">
             <span>Zoom</span>
             <div class="flex items-center gap-1">
@@ -216,7 +248,7 @@
                 min="1"
                 max={maxDensity}
                 value={$galleryDensityStore}
-                class="w-8 rounded border border-border-strong bg-transparent py-0.5 text-center tabular-nums [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                class="h-6 w-8 rounded border border-border-strong bg-transparent py-0.5 text-center text-xs tabular-nums [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                 aria-label="Items per row"
                 oninput={(e) => {
                   const v = Number((e.currentTarget as HTMLInputElement).value);
@@ -234,44 +266,61 @@
               <div class="flex flex-col">
                 <button
                   type="button"
-                  class="flex h-[50%] min-h-5 w-6 items-center justify-center hover:bg-border/50 disabled:opacity-40"
+                  class="flex h-[14px] w-6 shrink-0 items-center justify-center rounded-sm hover:bg-border/50 disabled:opacity-40"
                   aria-label="Increase items per row"
                   disabled={$galleryDensityStore >= maxDensity}
                   onclick={() => updateHeaderDensity($galleryDensityStore + 1)}
                 >
-                  <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <svg class="h-2.5 w-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
                   </svg>
                 </button>
                 <button
                   type="button"
-                  class="flex h-[50%] min-h-5 w-6 items-center justify-center hover:bg-border/50 disabled:opacity-40"
+                  class="flex h-[14px] w-6 shrink-0 items-center justify-center rounded-sm hover:bg-border/50 disabled:opacity-40"
                   aria-label="Decrease items per row"
                   disabled={$galleryDensityStore <= 1}
                   onclick={() => updateHeaderDensity($galleryDensityStore - 1)}
                 >
-                  <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <svg class="h-2.5 w-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                   </svg>
                 </button>
               </div>
             </div>
           </div>
-          <form class="flex w-full max-w-[200px] items-center gap-2" onsubmit={onGallerySearchSubmit}>
-            <input
-              name="q"
-              bind:value={galleryQueryInput}
-              placeholder="Search"
-              aria-label="Search title, description, tags, category"
-              class="w-full rounded border border-border bg-transparent px-2 py-1 text-xs"
-            />
-            <button class="flex shrink-0 items-center justify-center rounded border border-border-strong p-1.5 transition-colors hover:bg-surface-muted" type="submit" aria-label="Search">
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
-              </svg>
-            </button>
-          </form>
-        {:else}
+          {#if siteSettings?.show_search_bar}
+            <form class="flex h-6 w-full max-w-[200px] items-center gap-2" onsubmit={onGallerySearchSubmit}>
+              <input
+                name="q"
+                bind:value={galleryQueryInput}
+                placeholder="Search"
+                aria-label="Search title, description, tags, category"
+                class="h-full w-full rounded border border-border bg-transparent px-2 py-0.5 text-xs"
+              />
+              <button class="flex h-6 w-6 shrink-0 items-center justify-center rounded border border-border-strong transition-colors hover:bg-surface-muted" type="submit" aria-label="Search">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+                </svg>
+              </button>
+            </form>
+          {/if}
+        </div>
+      {:else}
+        <div class="flex items-center justify-end gap-2">
+          {#if isAdminPage && hasSession}
+            <label for="header-theme" class="text-xs uppercase tracking-[var(--tracking-tight)]">Admin Theme</label>
+            <select
+              id="header-theme"
+              class="rounded border border-border-strong bg-transparent px-2 py-1 text-xs"
+              value={themeMode}
+              onchange={(e) => setAdminThemeMode((e.currentTarget as HTMLSelectElement).value as "light" | "dark" | "system")}
+            >
+              <option value="light">Light</option>
+              <option value="dark">Dark</option>
+              <option value="system">System</option>
+            </select>
+          {/if}
           {#if siteSettings?.allow_transition_toggle}
             <label for="transition" class="text-xs uppercase tracking-[var(--tracking-tight)]">Motion</label>
             <select id="transition" class="rounded border border-border-strong bg-transparent px-2 py-1 text-xs" bind:value={transitionPreset} onchange={(event) => updateTransitionPreset((event.currentTarget as HTMLSelectElement).value as typeof transitionPreset)}>
@@ -280,8 +329,8 @@
               <option value="experimental">Experimental</option>
             </select>
           {/if}
-        {/if}
-      </div>
+        </div>
+      {/if}
     </div>
   </header>
 

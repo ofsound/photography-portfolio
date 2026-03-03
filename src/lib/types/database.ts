@@ -464,6 +464,7 @@ export type Database = {
         Row: {
           allow_transition_toggle: boolean;
           created_at: string;
+          show_search_bar: boolean;
           gallery_gap_px: number;
           gallery_layout_mode: Database['public']['Enums']['layout_mode'];
           grid_desktop_default: number;
@@ -483,6 +484,7 @@ export type Database = {
         Insert: {
           allow_transition_toggle?: boolean;
           created_at?: string;
+          show_search_bar?: boolean;
           gallery_gap_px?: number;
           gallery_layout_mode?: Database['public']['Enums']['layout_mode'];
           grid_desktop_default?: number;
@@ -502,6 +504,7 @@ export type Database = {
         Update: {
           allow_transition_toggle?: boolean;
           created_at?: string;
+          show_search_bar?: boolean;
           gallery_gap_px?: number;
           gallery_layout_mode?: Database['public']['Enums']['layout_mode'];
           grid_desktop_default?: number;

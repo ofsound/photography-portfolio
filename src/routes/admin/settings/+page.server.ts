@@ -7,7 +7,7 @@ export const load: PageServerLoad = async ({ locals }) => {
     locals.supabase
       .from('site_settings')
       .select(
-        'singleton_id, theme_default, grid_desktop_default, grid_mobile_default, grid_desktop_max, grid_mobile_max, max_content_width_px, gallery_layout_mode, gallery_gap_px, uniform_thumb_ratio, transition_preset, allow_transition_toggle'
+        'singleton_id, theme_default, grid_desktop_default, grid_mobile_default, grid_desktop_max, grid_mobile_max, max_content_width_px, gallery_layout_mode, gallery_gap_px, uniform_thumb_ratio, transition_preset, allow_transition_toggle, show_search_bar'
       )
       .eq('singleton_id', 1)
       .maybeSingle(),
@@ -30,7 +30,10 @@ export const actions: Actions = {
     }
 
     const updatePayload: Record<string, unknown> = {
-      theme_default: asString(form.get('theme_default'), 'system'),
+      theme_default: (() => {
+        const v = form.get('theme_default');
+        return v === 'dark' ? 'dark' : 'light';
+      })(),
       grid_desktop_default: asOptionalNumber(form.get('grid_desktop_default')) ?? 6,
       grid_mobile_default: asOptionalNumber(form.get('grid_mobile_default')) ?? 3,
       grid_desktop_max: asOptionalNumber(form.get('grid_desktop_max')) ?? 20,
@@ -39,7 +42,8 @@ export const actions: Actions = {
       gallery_layout_mode: asString(form.get('gallery_layout_mode'), 'uniform'),
       gallery_gap_px: Math.max(0, Math.min(20, asOptionalNumber(form.get('gallery_gap_px')) ?? 8)),
       uniform_thumb_ratio: Number(asString(form.get('uniform_thumb_ratio'), '1')),
-      allow_transition_toggle: asBoolean(form.get('allow_transition_toggle'))
+      allow_transition_toggle: asBoolean(form.get('allow_transition_toggle')),
+      show_search_bar: asBoolean(form.get('show_search_bar'))
     };
 
     if (role === 'admin') {

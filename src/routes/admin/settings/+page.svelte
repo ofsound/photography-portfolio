@@ -7,7 +7,7 @@
 
   const settings = $derived(
     data.settings ?? {
-    theme_default: 'system',
+    theme_default: 'light',
     grid_desktop_default: 6,
     grid_mobile_default: 3,
     grid_desktop_max: 20,
@@ -17,7 +17,8 @@
     gallery_gap_px: 8,
     uniform_thumb_ratio: 1,
     transition_preset: 'cinematic',
-    allow_transition_toggle: true
+    allow_transition_toggle: true,
+    show_search_bar: true
     }
   );
 
@@ -32,11 +33,10 @@
 
 <form method="POST" action="?/save" class="mt-6 grid max-w-[var(--max-width-content)] gap-4 rounded border border-border p-4">
   <div class="grid gap-3 sm:grid-cols-2">
-    <FormField label="Theme Default" id="settings-theme_default">
+    <FormField label="Site Theme" id="settings-theme_default">
       <select name="theme_default" id="settings-theme_default" class={selectClass}>
-        <option selected={settings.theme_default === 'light'} value="light">light</option>
-        <option selected={settings.theme_default === 'dark'} value="dark">dark</option>
-        <option selected={settings.theme_default === 'system'} value="system">system</option>
+        <option selected={settings.theme_default !== 'dark'} value="light">Light</option>
+        <option selected={settings.theme_default === 'dark'} value="dark">Dark</option>
       </select>
     </FormField>
     <FormField label="Layout Mode" id="settings-gallery_layout_mode">
@@ -83,6 +83,10 @@
 
   <label class="flex items-center gap-2 text-sm">
     <input type="checkbox" name="allow_transition_toggle" checked={settings.allow_transition_toggle} /> Allow Transition Toggle
+  </label>
+
+  <label class="flex items-center gap-2 text-sm">
+    <input type="checkbox" name="show_search_bar" checked={settings.show_search_bar} /> Show Search Bar
   </label>
 
   <AdminButton wFit type="submit">Save Settings</AdminButton>

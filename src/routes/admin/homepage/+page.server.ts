@@ -169,17 +169,6 @@ export const actions: Actions = {
       is_active: true,
     }));
 
-    const { error } = await locals.supabase.rpc('save_homepage_slides', {
-      p_slides: slides,
-    });
-
-    if (error) return fail(400, { message: error.message });
-
-    return { success: true, message: 'Homepage slideshow updated.' };
-  },
-  saveTiming: async ({ locals, request }) => {
-    const form = await request.formData();
-
     const slideDurationMs = clampInt(
       asOptionalNumber(form.get('slide_duration_ms')) ??
         DEFAULT_SLIDE_DURATION_MS,
@@ -196,16 +185,24 @@ export const actions: Actions = {
       ),
     );
 
-    const { error } = await locals.supabase
-      .from('site_settings')
-      .update({
-        homepage_slide_duration_ms: slideDurationMs,
-        homepage_transition_duration_ms: transitionDurationMs,
-      })
-      .eq('singleton_id', 1);
+    const [slidesResult, settingsResult] = await Promise.all([
+      locals.supabase.rpc('save_homepage_slides', {
+        p_slides: slides,
+      }),
+      locals.supabase
+        .from('site_settings')
+        .update({
+          homepage_slide_duration_ms: slideDurationMs,
+          homepage_transition_duration_ms: transitionDurationMs,
+        })
+        .eq('singleton_id', 1),
+    ]);
 
-    if (error) return fail(400, { message: error.message });
+    if (slidesResult.error)
+      return fail(400, { message: slidesResult.error.message });
+    if (settingsResult.error)
+      return fail(400, { message: settingsResult.error.message });
 
-    return { success: true, message: 'Homepage slideshow timing updated.' };
+    return { success: true, message: 'Homepage slideshow updated.' };
   },
 };

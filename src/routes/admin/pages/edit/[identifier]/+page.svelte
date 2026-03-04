@@ -10,30 +10,18 @@
   const { data, form } = $props();
   const page = $derived(data.page);
   const revisions = $derived(data.revisions as ContentRevision[]);
+  const initialPage = () => data.page;
 
-  let formTitle = $state('');
-  let formSlug = $state('');
-  let formStatus = $state<'published' | 'archived'>('published');
-  let formSeoTitle = $state('');
-  let formHtmlContent = $state('');
-  let formCssModule = $state('');
-  let formSeoDescription = $state('');
-  let formOgImagePath = $state('');
-  let prevPageId = $state<string | null>(null);
-  $effect(() => {
-    const p = page;
-    if (prevPageId !== p.id) {
-      prevPageId = p.id;
-      formTitle = p.title;
-      formSlug = p.slug;
-      formStatus = p.status === 'archived' ? 'archived' : 'published';
-      formSeoTitle = p.seo_title ?? '';
-      formHtmlContent = p.html_content ?? '';
-      formCssModule = p.css_module ?? '';
-      formSeoDescription = p.seo_description ?? '';
-      formOgImagePath = p.og_image_path ?? '';
-    }
-  });
+  let formTitle = $state(initialPage().title);
+  let formSlug = $state(initialPage().slug);
+  let formStatus = $state<'published' | 'archived'>(
+    initialPage().status === 'archived' ? 'archived' : 'published',
+  );
+  let formSeoTitle = $state(initialPage().seo_title ?? '');
+  let formHtmlContent = $state(initialPage().html_content ?? '');
+  let formCssModule = $state(initialPage().css_module ?? '');
+  let formSeoDescription = $state(initialPage().seo_description ?? '');
+  let formOgImagePath = $state(initialPage().og_image_path ?? '');
 </script>
 
 <div class="flex flex-wrap items-center justify-between gap-3">

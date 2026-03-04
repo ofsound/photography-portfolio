@@ -103,9 +103,6 @@
 </script>
 
 <AdminHeading>Homepage</AdminHeading>
-<p class="mt-2 text-sm text-text-muted">
-  Image-only slides. Add images, drag selected slides to reorder, then save.
-</p>
 
 {#if form?.message}
   <p class="mt-3 rounded border border-border px-3 py-2 text-sm">
@@ -113,63 +110,36 @@
   </p>
 {/if}
 
-<section class="mt-6 shrink-0">
-  <form method="POST" action="?/saveTiming" class="flex items-center gap-6">
-    <label
-      class="grid w-fit gap-1 text-xs tracking-widest whitespace-nowrap uppercase"
-    >
-      Slide Duration (ms)
-      <input
-        class="max-w-[80px] rounded border border-border-strong bg-transparent px-3 py-2 text-sm tracking-normal normal-case"
-        type="number"
-        min="1000"
-        max="30000"
-        step="100"
-        name="slide_duration_ms"
-        bind:value={slideDurationMs}
-      />
-    </label>
-    <label
-      class="grid w-fit gap-1 text-xs tracking-widest whitespace-nowrap uppercase"
-    >
-      Transition Duration (ms)
-      <input
-        class="max-w-[80px] rounded border border-border-strong bg-transparent px-3 py-2 text-sm tracking-normal normal-case"
-        type="number"
-        min="200"
-        max="10000"
-        step="100"
-        name="transition_duration_ms"
-        bind:value={transitionDurationMs}
-      />
-    </label>
-    <AdminButton size="sm" type="submit" wFit>Save Timing</AdminButton>
-  </form>
-</section>
-
 <section class="mt-6 flex min-h-0 flex-1 flex-col overflow-hidden">
   <div
     class="grid min-h-0 flex-1 grid-rows-[1fr] gap-8 lg:grid-cols-[24rem_1fr]"
   >
     <div class="flex flex-col gap-3">
-      <div class="flex flex-wrap items-center gap-2">
-        <h2 class="text-sm tracking-widest uppercase">Selected Slides</h2>
-        <AdminButton
-          size="sm"
-          type="button"
-          onclick={undoSelectionChange}
-          disabled={undoStack.length === 0}
-        >
-          Undo
-        </AdminButton>
-        <AdminButton
-          size="sm"
-          type="button"
-          onclick={redoSelectionChange}
-          disabled={redoStack.length === 0}
-        >
-          Redo
-        </AdminButton>
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <div class="flex flex-col gap-1">
+          <h2 class="text-sm tracking-widest uppercase">Selected Slides</h2>
+          <p class="text-[10px] tracking-wider text-text-muted uppercase">
+            Drag slides to reorder
+          </p>
+        </div>
+        <div class="flex items-center gap-2">
+          <AdminButton
+            size="sm"
+            type="button"
+            onclick={undoSelectionChange}
+            disabled={undoStack.length === 0}
+          >
+            Undo
+          </AdminButton>
+          <AdminButton
+            size="sm"
+            type="button"
+            onclick={redoSelectionChange}
+            disabled={redoStack.length === 0}
+          >
+            Redo
+          </AdminButton>
+        </div>
       </div>
 
       {#if selectedSlides.length === 0}
@@ -214,13 +184,45 @@
         </DragDropProvider>
       {/if}
 
-      <form method="POST" action="?/save" class="w-fit">
+      <form method="POST" action="?/save" class="mt-4 flex flex-col gap-6">
         <input
           type="hidden"
           name="ordered_image_ids"
           value={selectedIds.join('\n')}
         />
-        <AdminButton type="submit">Save Slides</AdminButton>
+
+        <div class="flex flex-wrap items-center gap-6">
+          <label
+            class="grid w-fit gap-1 text-xs tracking-widest whitespace-nowrap uppercase"
+          >
+            Slide Duration (ms)
+            <input
+              class="max-w-[80px] rounded border border-border-strong bg-transparent px-3 py-2 text-sm tracking-normal normal-case"
+              type="number"
+              min="1000"
+              max="30000"
+              step="100"
+              name="slide_duration_ms"
+              bind:value={slideDurationMs}
+            />
+          </label>
+          <label
+            class="grid w-fit gap-1 text-xs tracking-widest whitespace-nowrap uppercase"
+          >
+            Transition Duration (ms)
+            <input
+              class="max-w-[80px] rounded border border-border-strong bg-transparent px-3 py-2 text-sm tracking-normal normal-case"
+              type="number"
+              min="200"
+              max="10000"
+              step="100"
+              name="transition_duration_ms"
+              bind:value={transitionDurationMs}
+            />
+          </label>
+        </div>
+
+        <AdminButton type="submit" wFit>Save Slides</AdminButton>
       </form>
     </div>
 
@@ -228,7 +230,9 @@
       <h2 class="mb-2 shrink-0 text-sm tracking-widest uppercase">
         Available Images
       </h2>
-      <ul class="flex min-h-0 flex-1 flex-wrap gap-2 overflow-auto">
+      <ul
+        class="flex min-h-0 flex-1 flex-wrap content-start gap-2 overflow-auto"
+      >
         {#each availableImages as image (image.id)}
           <li class="w-40">
             <div

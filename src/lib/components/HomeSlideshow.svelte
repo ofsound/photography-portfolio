@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { SvelteSet } from 'svelte/reactivity';
 
   type Slide = {
     id: string;
@@ -38,6 +39,8 @@
   let intervalHandle: ReturnType<typeof setInterval> | undefined;
   let frameHandle: number | undefined;
   let versionSeed = 0;
+  let hasPreloadedSlides = $state(false);
+  const preloadedSlideUrls = new SvelteSet<string>();
 
   function clampInt(value: number, min: number, max: number) {
     return Math.min(max, Math.max(min, Math.round(value)));
@@ -84,6 +87,30 @@
     if (frameHandle !== undefined && typeof window !== 'undefined') {
       window.cancelAnimationFrame(frameHandle);
       frameHandle = undefined;
+    }
+  }
+
+  function preloadRemainingSlides() {
+    if (
+      hasPreloadedSlides ||
+      typeof window === 'undefined' ||
+      slides.length <= 1
+    ) {
+      return;
+    }
+
+    hasPreloadedSlides = true;
+
+    for (let index = 1; index < slides.length; index += 1) {
+      const imagePath = slides[index]?.imagePath;
+      if (!imagePath || preloadedSlideUrls.has(imagePath)) {
+        continue;
+      }
+
+      const image = new Image();
+      image.decoding = 'async';
+      image.src = imagePath;
+      preloadedSlideUrls.add(imagePath);
     }
   }
 
@@ -142,6 +169,8 @@
     activeSlot = 0;
     currentIndex = 0;
     versionSeed = 0;
+    hasPreloadedSlides = false;
+    preloadedSlideUrls.clear();
 
     if (slides.length === 0) {
       return;
@@ -186,6 +215,7 @@
               src={slides[slotA.index].imagePath}
               alt={slides[slotA.index].altText}
               loading={slotA.index === 0 ? 'eager' : 'lazy'}
+              onload={slotA.index === 0 ? preloadRemainingSlides : undefined}
             />
           {/key}
         {/if}

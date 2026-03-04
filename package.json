@@ -7,7 +7,9 @@
     "dev": "vite dev",
     "build": "vite build",
     "preview": "vite preview",
-    "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json"
+    "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+    "lint": "prettier --check \"src/**/*.{svelte,ts,js,json}\"",
+    "knip": "knip"
   },
   "devDependencies": {
     "@sveltejs/adapter-vercel": "^6.3.3",

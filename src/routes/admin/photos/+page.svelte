@@ -54,6 +54,7 @@
   let showBulkTaxonomy = $state(false);
   let gridEl = $state<HTMLUListElement | null>(null);
   let overlayCellSize = $state<number | null>(null);
+  let isPollingInFlight = $state(false);
 
   const maxDensity = $derived((data as { maxDensity?: number }).maxDensity ?? 20);
 
@@ -130,6 +131,9 @@
   };
 
   const photoConversionState = (photoId: string) => data.photoConversionStateMap[photoId] ?? 'no-images';
+  const hasVisiblePendingConversions = $derived(
+    photos.some((photo) => imagesForPhoto(photo.id).some((image) => !image.delivery_storage_path))
+  );
 
   const onTaxonomyChange = async (photoId: string, categoryIds: string[], tagIds: string[]) => {
     selectedCategoryIdsByPhoto = { ...selectedCategoryIdsByPhoto, [photoId]: categoryIds };
@@ -185,6 +189,24 @@
     density = next;
     setAdminPhotosPrefs({ density }, maxDensity);
   };
+
+  const pollPendingConversions = async () => {
+    if (isPollingInFlight || !hasVisiblePendingConversions) return;
+    isPollingInFlight = true;
+    try {
+      await invalidateAll();
+    } finally {
+      isPollingInFlight = false;
+    }
+  };
+
+  $effect(() => {
+    if (!hasVisiblePendingConversions) return;
+    const intervalId = setInterval(() => {
+      void pollPendingConversions();
+    }, 3000);
+    return () => clearInterval(intervalId);
+  });
 </script>
 
 <div class="flex items-baseline justify-between gap-4">
@@ -211,6 +233,9 @@
 
 {#if form?.message}
   <p class="mt-3 rounded border border-border px-3 py-2 text-sm w-max">{form.message}</p>
+{/if}
+{#if hasVisiblePendingConversions}
+  <p class="mt-2 text-xs text-text-muted">Auto-refreshing while image processing completes...</p>
 {/if}
 
 <AdminPhotosFilterForm

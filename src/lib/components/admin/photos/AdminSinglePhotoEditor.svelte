@@ -30,7 +30,6 @@
   const images = $derived(data.images);
   const serverCategoryIds = $derived(data.selectedCategoryIds);
   const serverTagIds = $derived(data.selectedTagIds);
-  const photoConversionState = $derived(data.photoConversionState);
 
   const baseAdditionalOrder = () =>
     images
@@ -98,7 +97,6 @@
     {selectedCategoryIds}
     {selectedTagIds}
     {onTaxonomyChange}
-    {photoConversionState}
     additionalOrder={orderedAdditional}
     {onTogglePhotoSelected}
     {onAdditionalReorder}

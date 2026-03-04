@@ -104,7 +104,6 @@
   /** Macromedia Flash-style preloader: only when on gallery grid (no active photo). */
   const PRELOADER_FADE_MS = 420;
 
-  let _preloadComplete = $state(false);
   let imagesLoaded = $state(0);
   let totalImages = $state(0);
   let preloaderVisible = $state(false);
@@ -808,7 +807,6 @@
         ),
       );
     if (toPreload.length === 0) {
-      _preloadComplete = true;
       preloaderVisible = false;
       galleryRevealed = true;
       return;
@@ -816,7 +814,6 @@
 
     totalImages = toPreload.length;
     imagesLoaded = 0;
-    _preloadComplete = false;
     galleryRevealed = false;
 
     const loadTasks = toPreload.map((url) => {
@@ -849,7 +846,6 @@
       0,
     );
     if (synchronouslyLoaded === totalImages) {
-      _preloadComplete = true;
       preloaderVisible = false;
       galleryRevealed = true;
       return;
@@ -858,7 +854,6 @@
     preloaderVisible = true;
 
     await Promise.all(loadTasks.map((task) => task.promise));
-    _preloadComplete = true;
 
     await new Promise((resolveFade) =>
       setTimeout(resolveFade, PRELOADER_FADE_MS),

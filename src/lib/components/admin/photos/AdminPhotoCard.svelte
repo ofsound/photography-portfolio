@@ -33,7 +33,6 @@
     selectedCategoryIds,
     selectedTagIds,
     onTaxonomyChange,
-    photoConversionState: _photoConversionState,
     additionalOrder,
     onTogglePhotoSelected,
     onAdditionalReorder,
@@ -56,7 +55,6 @@
       categoryIds: string[],
       tagIds: string[],
     ) => void;
-    photoConversionState: 'no-images' | 'pending' | 'ready' | 'mixed';
     additionalOrder: string[];
     onTogglePhotoSelected: (photoId: string, checked: boolean) => void;
     onAdditionalReorder: (

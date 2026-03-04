@@ -153,46 +153,6 @@ const animateRect = async (
   applyFixedRect(node, toRect);
 };
 
-const _animateImgTransform = async (
-  img: HTMLImageElement,
-  from: ImgCropTransform,
-  to: { scale: number; translateX: number; translateY: number },
-  options?: AnimationConfig,
-) => {
-  const durationMs = options?.durationMs ?? 520;
-  const easing = options?.easing ?? 'cubic-bezier(0.16, 1, 0.3, 1)';
-  const reducedMotion = options?.reducedMotion ?? false;
-
-  if (reducedMotion || durationMs <= 0 || typeof img.animate !== 'function') {
-    img.style.transform = `scale(${to.scale}) translate(${to.translateX}%, ${to.translateY}%)`;
-    return;
-  }
-
-  const animation = img.animate(
-    [
-      {
-        transform: `scale(${from.scale}) translate(${from.translateX}%, ${from.translateY}%)`,
-      },
-      {
-        transform: `scale(${to.scale}) translate(${to.translateX}%, ${to.translateY}%)`,
-      },
-    ],
-    {
-      duration: durationMs,
-      easing,
-      fill: 'forwards',
-    },
-  );
-
-  try {
-    await animation.finished;
-  } catch {
-    // Ignore cancelled animations.
-  }
-
-  img.style.transform = `scale(${to.scale}) translate(${to.translateX}%, ${to.translateY}%)`;
-};
-
 const rectFromElement = (el: Element): TileRect => {
   const rect = el.getBoundingClientRect();
   return {

@@ -152,8 +152,6 @@
     selectedPhotoIds = [];
   };
 
-  const photoConversionState = (photoId: string) =>
-    data.photoConversionStateMap[photoId] ?? 'no-images';
   const hasVisiblePendingConversions = $derived(
     photos.some((photo) =>
       imagesForPhoto(photo.id).some((image) => !image.delivery_storage_path),
@@ -343,7 +341,6 @@
                   selectedCategoryIds={selectedCategoryIds(photo.id)}
                   selectedTagIds={selectedTagIds(photo.id)}
                   {onTaxonomyChange}
-                  photoConversionState={photoConversionState(photo.id)}
                   additionalOrder={additionalOrder(photo.id)}
                   onTogglePhotoSelected={togglePhotoSelected}
                   {onAdditionalReorder}

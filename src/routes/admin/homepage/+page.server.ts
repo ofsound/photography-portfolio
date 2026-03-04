@@ -4,17 +4,16 @@ import {
   asString,
   parseUuidList,
 } from '$lib/server/admin-helpers';
+import {
+  DEFAULT_SLIDE_DURATION_MS,
+  DEFAULT_TRANSITION_DURATION_MS,
+  SLIDE_DURATION_MIN_MS,
+  SLIDE_DURATION_MAX_MS,
+  TRANSITION_DURATION_MIN_MS,
+  TRANSITION_DURATION_MAX_MS,
+  clampInt,
+} from '$lib/server/slideshow-constants';
 import type { PageServerLoad } from './$types';
-
-const DEFAULT_SLIDE_DURATION_MS = 4000;
-const DEFAULT_TRANSITION_DURATION_MS = 2000;
-const SLIDE_DURATION_MIN_MS = 1000;
-const SLIDE_DURATION_MAX_MS = 30000;
-const TRANSITION_DURATION_MIN_MS = 200;
-const TRANSITION_DURATION_MAX_MS = 10000;
-
-const clampInt = (value: number, min: number, max: number) =>
-  Math.min(max, Math.max(min, Math.round(value)));
 
 export const load: PageServerLoad = async ({ locals }) => {
   const [

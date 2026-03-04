@@ -50,13 +50,20 @@
           ></a>
           <span class="pointer-events-none z-10 px-4 py-3">{link.label}</span>
           {#if link.href === '/admin/photos'}
-            <div class="relative z-20 pr-4">
+            <div class="relative z-20 flex gap-2 pr-4">
               <AdminButton
                 href="/admin/photos/create"
                 variant="submit"
                 size="xs"
               >
-                Add New
+                New
+              </AdminButton>
+              <AdminButton
+                href="/admin/photos/multiple"
+                variant="submit"
+                size="xs"
+              >
+                Multiple
               </AdminButton>
             </div>
           {/if}

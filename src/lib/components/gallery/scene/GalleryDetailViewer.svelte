@@ -153,7 +153,7 @@
   <div
     use:portal
     data-full-viewport
-    class="pointer-events-none fixed inset-0 z-[65] m-0 flex items-center justify-center p-0"
+    class="pointer-events-none z-[65] m-0 p-0"
     aria-hidden="true"
   >
     <img

@@ -306,7 +306,7 @@
   >
     <div class="mx-auto flex w-full items-center justify-between gap-3">
       <nav
-        class=" flex items-center gap-6 py-3 text-sm tracking-widest uppercase"
+        class="flex items-center gap-6 py-3 text-sm tracking-widest uppercase"
       >
         <a href={resolve('/')}>Home</a>
         <a href={resolve('/gallery')}>Gallery</a>

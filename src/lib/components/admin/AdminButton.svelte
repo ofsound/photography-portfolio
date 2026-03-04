@@ -1,7 +1,6 @@
 <script lang="ts">
   /* eslint-disable svelte/no-navigation-without-resolve -- external/fragment use raw href; internal use resolve(href) */
   import {
-    baseClasses,
     sizeClasses,
     variantClasses,
     type Size,
@@ -44,8 +43,7 @@
       variantClasses[variant as Variant],
       variant === 'toggle' && selected ? 'bg-border' : '',
       variant === 'toggle' && !selected ? 'opacity-40' : '',
-      baseClasses,
-      'enabled:cursor-pointer',
+      disabled ? 'pointer-events-none opacity-40' : 'cursor-pointer',
       wFit || isLink ? 'w-fit' : '',
       className,
     ]
@@ -57,7 +55,9 @@
 </script>
 
 {#if isLabel}
-  <label {...commonAttrs} {...restProps}>{@render children?.()}</label>
+  <label {...commonAttrs} aria-disabled={disabled} {...restProps}
+    >{@render children?.()}</label
+  >
 {:else if isLink}
   <a
     href={href == null
@@ -68,6 +68,7 @@
         ? href
         : resolve(href)}
     {...commonAttrs}
+    aria-disabled={disabled}
     {...restProps}>{@render children?.()}</a
   >
 {:else}

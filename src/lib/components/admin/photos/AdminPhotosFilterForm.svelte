@@ -33,7 +33,7 @@
   }>();
 </script>
 
-<div class="mt-6 mb-6 flex w-full flex-wrap items-end gap-3">
+<div class="my-6 flex w-full flex-wrap items-end gap-3">
   <form method="GET" class="flex min-w-0 flex-1 flex-wrap items-end gap-3">
     <input type="hidden" name="showArchived" value={showArchived ? '1' : '0'} />
     <div class="max-w-xs min-w-44 flex-1">

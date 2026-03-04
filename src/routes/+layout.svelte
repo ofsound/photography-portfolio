@@ -122,9 +122,10 @@
 
   const siteThemeDefault = $derived(
     (siteSettings?.theme_default === 'dark' ||
-    siteSettings?.theme_default === 'light'
+    siteSettings?.theme_default === 'light' ||
+    siteSettings?.theme_default === 'system'
       ? siteSettings.theme_default
-      : 'light') as 'light' | 'dark',
+      : 'system') as 'light' | 'dark' | 'system',
   );
 
   const setAdminThemeMode = (mode: 'light' | 'dark' | 'system') => {
@@ -292,6 +293,10 @@
     });
   });
 </script>
+
+<svelte:head>
+  <meta name="site-theme-default" content={siteThemeDefault} />
+</svelte:head>
 
 <div class="min-h-screen bg-bg text-text">
   <header

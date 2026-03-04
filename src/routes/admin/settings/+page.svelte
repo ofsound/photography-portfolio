@@ -8,7 +8,7 @@
 
   const settings = $derived(
     data.settings ?? {
-      theme_default: 'light',
+      theme_default: 'system',
       grid_desktop_default: 6,
       grid_mobile_default: 3,
       max_content_width_px: null,
@@ -42,9 +42,12 @@
         id="settings-theme_default"
         class={selectClass}
       >
-        <option selected={settings.theme_default !== 'dark'} value="light"
-          >Light</option
-        >
+        <option selected={settings.theme_default === 'system'} value="system">
+          System
+        </option>
+        <option selected={settings.theme_default === 'light'} value="light">
+          Light
+        </option>
         <option selected={settings.theme_default === 'dark'} value="dark"
           >Dark</option
         >

@@ -7,6 +7,27 @@ import {
 } from '$lib/server/admin-helpers';
 import type { PageServerLoad } from './$types';
 
+const asThemeMode = (value: FormDataEntryValue | null) => {
+  const mode = asString(value, 'system');
+  return mode === 'light' || mode === 'dark' || mode === 'system'
+    ? mode
+    : 'system';
+};
+
+const asLayoutMode = (value: FormDataEntryValue | null) => {
+  const mode = asString(value, 'uniform');
+  return mode === 'uniform' || mode === 'masonry' ? mode : 'uniform';
+};
+
+const asTransitionPreset = (value: FormDataEntryValue | null) => {
+  const preset = asString(value, 'cinematic');
+  return preset === 'cinematic' ||
+    preset === 'snappy' ||
+    preset === 'experimental'
+    ? preset
+    : 'cinematic';
+};
+
 export const load: PageServerLoad = async ({ locals }) => {
   const [{ data: settings }, role] = await Promise.all([
     locals.supabase
@@ -35,16 +56,13 @@ export const actions: Actions = {
     }
 
     const updatePayload: Record<string, unknown> = {
-      theme_default: (() => {
-        const v = form.get('theme_default');
-        return v === 'dark' ? 'dark' : 'light';
-      })(),
+      theme_default: asThemeMode(form.get('theme_default')),
       grid_desktop_default:
         asOptionalNumber(form.get('grid_desktop_default')) ?? 6,
       grid_mobile_default:
         asOptionalNumber(form.get('grid_mobile_default')) ?? 3,
       max_content_width_px: asOptionalNumber(form.get('max_content_width_px')),
-      gallery_layout_mode: asString(form.get('gallery_layout_mode'), 'uniform'),
+      gallery_layout_mode: asLayoutMode(form.get('gallery_layout_mode')),
       gallery_gap_px: Math.max(
         0,
         Math.min(20, asOptionalNumber(form.get('gallery_gap_px')) ?? 8),
@@ -58,9 +76,8 @@ export const actions: Actions = {
     };
 
     if (role === 'admin') {
-      updatePayload.transition_preset = asString(
+      updatePayload.transition_preset = asTransitionPreset(
         form.get('transition_preset'),
-        'cinematic',
       );
     }
 

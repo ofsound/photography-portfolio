@@ -1,25 +1,24 @@
 <script lang="ts">
+  import { enhance } from '$app/forms';
   import { goto, invalidateAll } from '$app/navigation';
   import { resolve } from '$app/paths';
-  import { enhance } from '$app/forms';
-  import { DragDropProvider, DragOverlay } from '@dnd-kit/svelte';
-  import { createSortable, isSortable } from '@dnd-kit/svelte/sortable';
-  import { fade, slide } from 'svelte/transition';
   import { quintOut } from 'svelte/easing';
+  import { fade, slide } from 'svelte/transition';
+
   import AdminButton from '$lib/components/admin/AdminButton.svelte';
+  import AdminPhotoCardCompact from '$lib/components/admin/photos/AdminPhotoCardCompact.svelte';
+  import AdminPhotoImageManager from '$lib/components/admin/photos/AdminPhotoImageManager.svelte';
+  import AdminPhotoMetadataForm from '$lib/components/admin/photos/AdminPhotoMetadataForm.svelte';
   import FormField from '$lib/components/FormField.svelte';
   import FormInput from '$lib/components/FormInput.svelte';
   import FormTextarea from '$lib/components/FormTextarea.svelte';
-  import PhotoConversionBadge from '$lib/components/admin/PhotoConversionBadge.svelte';
-  import PhotoUploadZone from '$lib/components/admin/PhotoUploadZone.svelte';
-  import ThumbnailCropEditor from '$lib/components/admin/ThumbnailCropEditor.svelte';
+
   import type {
     AdminCategory,
     AdminPhoto,
     AdminPhotoImage,
     AdminTag,
   } from '$lib/types/content';
-  import { photoPublicUrl } from '$lib/utils/storage-url';
 
   const SLIDE_DURATION = 280;
   const FADE_DURATION = 200;
@@ -72,25 +71,7 @@
     isDraggingPhoto?: boolean;
   }>();
 
-  const lead = $derived(
-    images.find((image: AdminPhotoImage) => image.kind === 'lead') ?? null,
-  );
-  const pendingImageCount = $derived(
-    images.filter((image: AdminPhotoImage) => !image.delivery_storage_path)
-      .length,
-  );
-  const imageById = (imageId: string) =>
-    images.find((image: AdminPhotoImage) => image.id === imageId) ?? null;
-
-  const imageConversionState = (
-    image: AdminPhotoImage,
-  ): 'ready' | 'converting' | 'unknown' => {
-    if (image.delivery_storage_path) return 'ready';
-    if (image.source_storage_path) return 'converting';
-    return 'unknown';
-  };
-
-  const clientSlugify = (input: string) =>
+  const slugify = (input: string) =>
     input
       .trim()
       .toLowerCase()
@@ -99,16 +80,29 @@
       .replace(/^-+|-+$/g, '');
 
   // Local form state to avoid overwriting user edits on re-renders (e.g. taxonomy checkbox changes)
-  let formTitle = $state('');
-  let formSlug = $state('');
-  let formDescription = $state('');
-  let formCaptureDate = $state('');
-  let formDimensions = $state('');
-  let formLicenseText = $state('');
-  let formOgTitle = $state('');
-  let formOgDescription = $state('');
-  let formOgImagePath = $state('');
-  let hasManualSlugEdit = $state(false);
+  const form = $state(
+    (() => {
+      const p = photo;
+      return {
+        title: p.title ?? '',
+        slug: p.slug ?? '',
+        description: p.description ?? '',
+        captureDate: p.capture_date ?? '',
+        dimensions: p.dimensions ?? '',
+        licenseText: p.license_text ?? '',
+        ogTitle: p.og_title ?? '',
+        ogDescription: p.og_description ?? '',
+        ogImagePath: p.og_image_path ?? '',
+      };
+    })(),
+  );
+  let hasManualSlugEdit = (() => {
+    const p = photo;
+    return (
+      (p.slug ?? '').trim().length > 0 &&
+      (p.slug ?? '') !== slugify(p.title ?? '')
+    );
+  })();
   const isDraft = $derived(photo.id === null || photo.id === undefined);
   const photoStatus = $derived(
     photo.deleted_at
@@ -119,46 +113,18 @@
   );
   const isPublic = $derived(photoStatus === 'published');
   const photoFormId = $derived(isDraft ? 'draft' : photo.id);
-  let prevPhotoId = $state<string | null>(null);
-  let prevUpdatedAt = $state<string | null>(null);
-  $effect(() => {
-    const p = photo;
-    // Skip sync when photo is undefined/incomplete (e.g. during load revalidation) to avoid flashing blank fields
-    if (!p || (p.title === undefined && p.slug === undefined)) return;
-    const idKey = p.id ?? 'draft';
-    const updatedAt =
-      'updated_at' in p && p.updated_at != null ? String(p.updated_at) : null;
-    const isNewPhoto = prevPhotoId !== idKey;
-    const serverDataRefreshed =
-      idKey === prevPhotoId &&
-      updatedAt !== null &&
-      updatedAt !== prevUpdatedAt;
-    if (isNewPhoto || serverDataRefreshed) {
-      prevPhotoId = idKey;
-      prevUpdatedAt = updatedAt;
-      formTitle = p.title ?? '';
-      formSlug = p.slug ?? '';
-      formDescription = p.description ?? '';
-      formCaptureDate = p.capture_date ?? '';
-      formDimensions = p.dimensions ?? '';
-      formLicenseText = p.license_text ?? '';
-      formOgTitle = p.og_title ?? '';
-      formOgDescription = p.og_description ?? '';
-      formOgImagePath = p.og_image_path ?? '';
-      hasManualSlugEdit =
-        Boolean((p.slug ?? '').trim()) &&
-        p.slug !== clientSlugify(p.title ?? '');
-    }
-  });
 
-  $effect(() => {
+  const onTitleInput = () => {
     if (hasManualSlugEdit) return;
-    formSlug = clientSlugify(formTitle);
-  });
+    form.slug = slugify(form.title);
+  };
 
   const onSlugInput = (event: Event) => {
     const value = (event.currentTarget as HTMLInputElement).value.trim();
-    hasManualSlugEdit = value.length > 0;
+    hasManualSlugEdit = value.length !== 0;
+    if (!hasManualSlugEdit) {
+      form.slug = slugify(form.title);
+    }
   };
 
   let hasUserToggled = $state(false);
@@ -197,196 +163,43 @@
     }
     toggleExpanded();
   };
-
-  const onAdditionalDragEnd = (event: unknown) => {
-    if (photo.id == null) return;
-    const e = event as { canceled?: boolean; operation?: { source: unknown } };
-    if (e.canceled || !e.operation?.source) return;
-    const source = e.operation.source as Parameters<typeof isSortable>[0];
-    if (!isSortable(source)) return;
-    const { initialIndex, index } = source as {
-      initialIndex: number;
-      index: number;
-    };
-    if (initialIndex === index) return;
-    const next = [...additionalOrder];
-    const [removed] = next.splice(initialIndex, 1);
-    next.splice(index, 0, removed);
-    void onAdditionalReorder(photo.id, next);
-  };
 </script>
 
 {#if gridMode}
-  <div
-    class="group relative flex aspect-square flex-col overflow-hidden rounded border border-border bg-surface"
-    class:opacity-50={isDraggingPhoto}
-    role="button"
-    tabindex="0"
-    onclick={(e) => {
-      if (
-        (e.target as HTMLElement).closest('input[type="checkbox"]') ||
-        (e.target as HTMLElement).closest('a')
-      )
-        return;
-      if (editHref) goto(resolve(editHref));
-    }}
-    onkeydown={(e) => e.key === 'Enter' && editHref && goto(resolve(editHref))}
-  >
-    <div class="absolute top-2 left-2 z-10 flex items-center gap-1">
-      <input
-        type="checkbox"
-        class="size-5 rounded border-border-strong"
-        checked={selectedPhotoIds.includes(photo.id)}
-        onchange={(event) =>
-          onTogglePhotoSelected(
-            photo.id,
-            (event.currentTarget as HTMLInputElement).checked,
-          )}
-        onclick={(e) => e.stopPropagation()}
-      />
-    </div>
-    <div class="relative flex-1 overflow-hidden">
-      {#if lead?.delivery_storage_path}
-        <img
-          src={photoPublicUrl(lead.delivery_storage_path, 400)}
-          alt={lead.alt_text ?? photo.title}
-          class="h-full w-full object-cover"
-        />
-      {:else if lead}
-        <div
-          class="grid h-full w-full place-items-center rounded border border-border-strong bg-surface-muted text-xs text-text-muted uppercase"
-        >
-          pending
-        </div>
-      {:else}
-        <div
-          class="grid h-full w-full place-items-center rounded border border-border-strong bg-surface-muted text-xs text-text-muted uppercase"
-        >
-          no lead
-        </div>
-      {/if}
-    </div>
-    <div
-      class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent px-2 pt-6 pb-2"
-    >
-      <h2
-        class="truncate text-xs font-medium tracking-[var(--tracking-minimal)] text-white"
-      >
-        {photo.title}
-      </h2>
-      {#if isPublic}
-        <a
-          href={resolve(`/photo/${photo.slug}`)}
-          class="block truncate text-xs text-white/80 hover:underline"
-          target="_blank"
-          rel="noopener noreferrer"
-          onclick={(e) => e.stopPropagation()}>/{photo.slug}</a
-        >
-      {:else}
-        <span class="block truncate text-xs text-white/75">
-          {photoStatus === 'archived' ? 'Archived' : 'Private draft'}
-        </span>
-      {/if}
-    </div>
-  </div>
+  <AdminPhotoCardCompact
+    {photo}
+    {images}
+    {selectedPhotoIds}
+    {onTogglePhotoSelected}
+    {isPublic}
+    {photoStatus}
+    {gridMode}
+    {editorOnly}
+    {index}
+    {isDraggingPhoto}
+    {isExpanded}
+    {editHref}
+    onToggleExpanded={toggleExpanded}
+    {onHeaderClick}
+  />
 {:else}
   <article class="relative grid gap-3 rounded">
-    {#if !editorOnly}
-      <span
-        class="absolute top-2 left-2 text-xs font-medium text-text-muted tabular-nums"
-        >{index + 1}</span
-      >
-    {/if}
-    {#if !editorOnly}
-      <div
-        role="button"
-        tabindex="0"
-        class="grid cursor-pointer gap-2 rounded p-3 sm:grid-cols-[auto_auto_1fr_auto] sm:items-center"
-        onclick={onHeaderClick}
-        onkeydown={(e) => e.key === 'Enter' && toggleExpanded()}
-      >
-        <div class="flex items-center sm:justify-center">
-          <input
-            type="checkbox"
-            class="size-8"
-            checked={selectedPhotoIds.includes(photo.id)}
-            onchange={(event) =>
-              onTogglePhotoSelected(
-                photo.id,
-                (event.currentTarget as HTMLInputElement).checked,
-              )}
-          />
-        </div>
-
-        {#if lead?.delivery_storage_path}
-          <img
-            src={photoPublicUrl(lead.delivery_storage_path, 220)}
-            alt={lead.alt_text ?? photo.title}
-            class="h-14 w-20 rounded object-cover"
-          />
-        {:else if lead}
-          <div
-            class="grid h-14 w-20 place-items-center rounded border border-border-strong text-xs uppercase"
-          >
-            pending
-          </div>
-        {:else}
-          <div
-            class="grid h-14 w-20 place-items-center rounded border border-border-strong text-xs uppercase"
-          >
-            no lead
-          </div>
-        {/if}
-
-        <div class="min-w-0">
-          <div class="flex items-center gap-2">
-            <h2 class="truncate text-sm tracking-[var(--tracking-tight)]">
-              {photo.title}
-            </h2>
-          </div>
-          {#if isPublic}
-            <a
-              href={resolve(`/photo/${photo.slug}`)}
-              class="inline-block text-xs text-text-muted hover:underline"
-              target="_blank"
-              rel="noopener noreferrer">/{photo.slug}</a
-            >
-          {:else}
-            <span class="inline-block text-xs text-text-muted">
-              {photoStatus === 'archived'
-                ? 'Archived (not public)'
-                : 'Not public until published'}
-            </span>
-          {/if}
-        </div>
-
-        <div class="flex items-center justify-end gap-2">
-          <AdminButton
-            variant="ghost"
-            type="button"
-            onclick={toggleExpanded}
-            class="flex size-8 items-center justify-center p-0"
-            aria-label={editHref ? 'Open' : isExpanded ? 'Collapse' : 'Edit'}
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              class="transition-transform duration-200"
-              style="transform: rotate({isExpanded ? 90 : 0}deg)"
-            >
-              <polyline points="9 18 15 12 9 6" />
-            </svg>
-          </AdminButton>
-        </div>
-      </div>
-    {/if}
+    <AdminPhotoCardCompact
+      {photo}
+      {images}
+      {selectedPhotoIds}
+      {onTogglePhotoSelected}
+      {isPublic}
+      {photoStatus}
+      {gridMode}
+      {editorOnly}
+      {index}
+      {isDraggingPhoto}
+      {isExpanded}
+      {editHref}
+      onToggleExpanded={toggleExpanded}
+      {onHeaderClick}
+    />
 
     {#if isExpanded}
       <div
@@ -421,64 +234,30 @@
               {#if !isDraft}
                 <input type="hidden" name="id" value={photo.id} />
               {/if}
-              <div class="grid gap-3 sm:grid-cols-2">
-                <FormField label="Title" id="edit-title-{photoFormId}">
-                  <FormInput
-                    id="edit-title-{photoFormId}"
-                    name="title"
-                    bind:value={formTitle}
-                    placeholder="Title"
-                    required
-                  />
-                </FormField>
-                <FormField label="Slug" id="edit-slug-{photoFormId}">
-                  <FormInput
-                    id="edit-slug-{photoFormId}"
-                    name="slug"
-                    bind:value={formSlug}
-                    placeholder="Leave blank to auto-generate from title"
-                    oninput={onSlugInput}
-                  />
-                </FormField>
-              </div>
-              <div class="grid gap-3 sm:grid-cols-2">
-                <FormField
-                  label="Description"
-                  id="edit-description-{photoFormId}"
-                >
-                  <FormTextarea
-                    id="edit-description-{photoFormId}"
-                    name="description"
-                    bind:value={formDescription}
-                    rows={5}
-                    placeholder="Description"
-                  />
-                </FormField>
-                <div class="flex flex-col gap-3">
-                  <FormField label="Date" id="edit-capture_date-{photoFormId}">
-                    <FormInput
-                      id="edit-capture_date-{photoFormId}"
-                      name="capture_date"
-                      bind:value={formCaptureDate}
-                      type="text"
-                      placeholder="Date"
-                    />
-                  </FormField>
-                  <FormField
-                    label="Dimensions"
-                    id="edit-dimensions-{photoFormId}"
-                    class="mt-auto"
-                  >
-                    <FormInput
-                      id="edit-dimensions-{photoFormId}"
-                      name="dimensions"
-                      bind:value={formDimensions}
-                      type="text"
-                      placeholder="Dimensions"
-                    />
-                  </FormField>
-                </div>
-              </div>
+
+              <AdminPhotoMetadataForm
+                {photoFormId}
+                bind:title={form.title}
+                bind:slug={form.slug}
+                bind:description={form.description}
+                bind:captureDate={form.captureDate}
+                {onTitleInput}
+                {onSlugInput}
+              />
+
+              <FormField
+                label="Dimensions"
+                id="edit-dimensions-{photoFormId}"
+                class="mt-auto"
+              >
+                <FormInput
+                  id="edit-dimensions-{photoFormId}"
+                  name="dimensions"
+                  bind:value={form.dimensions}
+                  type="text"
+                  placeholder="Dimensions"
+                />
+              </FormField>
             </form>
 
             {#if !isDraft}
@@ -566,7 +345,7 @@
                   <FormTextarea
                     id="edit-license_text-{photoFormId}"
                     name="license_text"
-                    bind:value={formLicenseText}
+                    bind:value={form.licenseText}
                     rows={2}
                     placeholder="License text"
                     form="photo-update-form-{photoFormId}"
@@ -576,7 +355,7 @@
                   <FormInput
                     id="edit-og_title-{photoFormId}"
                     name="og_title"
-                    bind:value={formOgTitle}
+                    bind:value={form.ogTitle}
                     placeholder="OG title"
                     form="photo-update-form-{photoFormId}"
                   />
@@ -588,7 +367,7 @@
                   <FormTextarea
                     id="edit-og_description-{photoFormId}"
                     name="og_description"
-                    bind:value={formOgDescription}
+                    bind:value={form.ogDescription}
                     rows={2}
                     placeholder="OG description"
                     form="photo-update-form-{photoFormId}"
@@ -601,7 +380,7 @@
                   <FormInput
                     id="edit-og_image_path-{photoFormId}"
                     name="og_image_path"
-                    bind:value={formOgImagePath}
+                    bind:value={form.ogImagePath}
                     placeholder="OG image path"
                     form="photo-update-form-{photoFormId}"
                   />
@@ -610,240 +389,22 @@
             </div>
           </div>
         </div>
-        <h2 class="text-xl tracking-[var(--tracking-heading)] uppercase">
-          Images
-        </h2>
-        <div class="flex min-w-0 gap-12">
-          <div
-            transition:fade={{
-              duration: FADE_DURATION,
-              delay: 2 * STAGGER_MS,
-              easing: quintOut,
-            }}
-            class="grid min-w-0 flex-1 gap-3 p-3"
-          >
-            <div class="flex flex-wrap items-center gap-2">
-              <span
-                class="rounded border border-border px-2 py-1 text-xs tracking-[var(--tracking-tight)] uppercase"
-              >
-                Processing: {pendingImageCount}
-              </span>
-            </div>
 
-            {#if isDraft}
-              <p class="text-sm text-text-muted">No lead image set.</p>
-              <div class="grid gap-2">
-                <p class="text-xs tracking-[var(--tracking-tight)] uppercase">
-                  Additional Images (drag to reorder)
-                </p>
-                <p class="text-sm text-text-muted">No additional images.</p>
-              </div>
-            {:else}
-              {#if lead}
-                <div
-                  class="grid gap-2 rounded p-2 sm:grid-cols-[auto_1fr_auto] sm:items-start"
-                >
-                  {#if lead.delivery_storage_path}
-                    <div
-                      class="flex h-24 w-32 shrink-0 items-center justify-center overflow-hidden rounded"
-                    >
-                      <img
-                        src={photoPublicUrl(lead.delivery_storage_path, 360)}
-                        alt={lead.alt_text ?? photo.title}
-                        class="max-h-full max-w-full object-contain"
-                      />
-                    </div>
-                  {:else}
-                    <div
-                      class="grid h-24 w-32 shrink-0 place-items-center rounded border border-border-strong text-xs uppercase"
-                    >
-                      pending
-                    </div>
-                  {/if}
-
-                  <div class="flex min-w-0 flex-col gap-2 text-xs">
-                    <div
-                      class="flex items-center gap-2 tracking-[var(--tracking-tight)] uppercase"
-                    >
-                      <span>Lead Image</span>
-                      <PhotoConversionBadge
-                        state={imageConversionState(lead)}
-                      />
-                    </div>
-                    {#if lead.delivery_storage_path}
-                      <details class="min-w-0">
-                        <summary
-                          class="cursor-pointer text-xs tracking-[var(--tracking-tight)] uppercase"
-                          >Edit thumbnail crop</summary
-                        >
-                        <div class="mt-3">
-                          <ThumbnailCropEditor
-                            imageId={lead.id}
-                            deliveryStoragePath={lead.delivery_storage_path}
-                            altText={lead.alt_text ?? photo.title}
-                            dimensions={lead.dimensions}
-                            initialCrop={{
-                              thumb_crop_x: lead.thumb_crop_x,
-                              thumb_crop_y: lead.thumb_crop_y,
-                              thumb_crop_zoom: lead.thumb_crop_zoom,
-                            }}
-                            photoId={photo.id}
-                          />
-                        </div>
-                      </details>
-                    {/if}
-                  </div>
-
-                  <form method="POST" action="?/removeImage" use:enhance>
-                    <input type="hidden" name="image_id" value={lead.id} />
-                    <AdminButton
-                      variant="danger-outline"
-                      size="sm"
-                      type="submit">Delete</AdminButton
-                    >
-                  </form>
-                </div>
-              {:else}
-                <p class="text-sm text-text-muted">No lead image set.</p>
-              {/if}
-
-              <div class="grid gap-2">
-                <p class="text-xs tracking-[var(--tracking-tight)] uppercase">
-                  Additional Images (drag to reorder)
-                </p>
-
-                {#if additionalOrder.length === 0}
-                  <p class="text-sm text-text-muted">No additional images.</p>
-                {:else}
-                  <DragDropProvider onDragEnd={onAdditionalDragEnd}>
-                    <ul class="grid gap-2">
-                      {#each additionalOrder as imageId, i (imageId)}
-                        {@const image = imageById(imageId)}
-                        {#if image}
-                          {@const sortable = createSortable({
-                            id: image.id,
-                            index: i,
-                          })}
-                          <li
-                            {@attach sortable.attach}
-                            class="grid cursor-move gap-2 rounded p-2 sm:grid-cols-[auto_1fr_auto_auto] sm:items-center {i %
-                              2 ===
-                            0
-                              ? 'bg-surface'
-                              : 'bg-surface-muted'}"
-                            class:opacity-50={sortable.isDragging}
-                          >
-                            {#if image.delivery_storage_path}
-                              <div
-                                class="flex h-24 w-32 shrink-0 items-center justify-center overflow-hidden rounded"
-                              >
-                                <img
-                                  src={photoPublicUrl(
-                                    image.delivery_storage_path,
-                                    320,
-                                  )}
-                                  alt={image.alt_text ?? photo.title}
-                                  class="max-h-full max-w-full object-contain"
-                                />
-                              </div>
-                            {:else}
-                              <div
-                                class="grid h-24 w-32 shrink-0 place-items-center rounded border border-border-strong text-xs uppercase"
-                              >
-                                pending
-                              </div>
-                            {/if}
-
-                            <div></div>
-
-                            <form method="POST" action="?/setLead" use:enhance>
-                              <input
-                                type="hidden"
-                                name="photo_id"
-                                value={photo.id}
-                              />
-                              <input
-                                type="hidden"
-                                name="image_id"
-                                value={image.id}
-                              />
-                              <AdminButton size="sm" type="submit"
-                                >Set Lead</AdminButton
-                              >
-                            </form>
-
-                            <form
-                              method="POST"
-                              action="?/removeImage"
-                              use:enhance
-                            >
-                              <input
-                                type="hidden"
-                                name="image_id"
-                                value={image.id}
-                              />
-                              <AdminButton
-                                variant="danger-outline"
-                                size="sm"
-                                type="submit">Delete</AdminButton
-                              >
-                            </form>
-                          </li>
-                        {/if}
-                      {/each}
-                    </ul>
-
-                    <DragOverlay>
-                      {#snippet children(source)}
-                        {@const dragImage = imageById(String(source.id))}
-                        {#if dragImage}
-                          <div
-                            class="border-primary grid w-44 gap-2 rounded border-2 bg-surface p-2 shadow-xl"
-                            role="presentation"
-                          >
-                            {#if dragImage.delivery_storage_path}
-                              <div
-                                class="flex h-24 w-full items-center justify-center overflow-hidden rounded bg-surface-muted"
-                              >
-                                <img
-                                  src={photoPublicUrl(
-                                    dragImage.delivery_storage_path,
-                                    320,
-                                  )}
-                                  alt={dragImage.alt_text ?? photo.title}
-                                  class="max-h-full max-w-full object-contain"
-                                />
-                              </div>
-                            {:else}
-                              <div
-                                class="grid h-24 w-full place-items-center rounded border border-border-strong text-xs uppercase"
-                              >
-                                pending
-                              </div>
-                            {/if}
-                            <p
-                              class="truncate text-xs tracking-[var(--tracking-tight)] text-text-muted uppercase"
-                            >
-                              Additional image
-                            </p>
-                          </div>
-                        {/if}
-                      {/snippet}
-                    </DragOverlay>
-                  </DragDropProvider>
-                {/if}
-              </div>
-            {/if}
-          </div>
-
-          <div class="min-w-0 flex-1">
-            <PhotoUploadZone
-              photoId={isDraft ? 'draft' : photo.id}
-              existingImageCount={images.length}
-              draftTitle={formTitle}
-              draftSlug={formSlug}
-            />
-          </div>
+        <div
+          transition:fade={{
+            duration: FADE_DURATION,
+            delay: 2 * STAGGER_MS,
+            easing: quintOut,
+          }}
+        >
+          <AdminPhotoImageManager
+            {photo}
+            {images}
+            {additionalOrder}
+            {onAdditionalReorder}
+            draftTitle={form.title}
+            draftSlug={form.slug}
+          />
         </div>
 
         <div

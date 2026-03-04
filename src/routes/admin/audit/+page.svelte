@@ -12,7 +12,7 @@
 <div class="mt-6 overflow-x-auto rounded border border-border">
   <table class="min-w-full border-collapse text-left text-xs">
     <thead
-      class="border-b border-border bg-canvas/[0.03] tracking-[var(--tracking-tight)] uppercase"
+      class="border-b border-border bg-canvas/[0.03] tracking-(--tracking-tight) uppercase"
     >
       <tr>
         <th class="px-3 py-2">When</th>

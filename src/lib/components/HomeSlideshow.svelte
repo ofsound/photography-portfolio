@@ -168,7 +168,7 @@
 >
   {#if slides.length === 0}
     <div
-      class="grid h-full place-items-center text-sm tracking-[var(--tracking-nav)] text-text-subtle uppercase"
+      class="grid h-full place-items-center text-sm tracking-(--tracking-nav) text-text-subtle uppercase"
     >
       Add slideshow images in Admin -> Homepage.
     </div>

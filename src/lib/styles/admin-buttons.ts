@@ -14,11 +14,11 @@ export type Variant =
   | 'subtle';
 
 export const sizeClasses: Record<Size, string> = {
-  xs: 'px-2.5 py-0.5 text-xs uppercase tracking-[var(--tracking-tight)]',
-  sm: 'px-3 py-1 text-xs uppercase tracking-[var(--tracking-tight)]',
-  md: 'px-3.5 py-1 text-sm uppercase tracking-[var(--tracking-label)]',
+  xs: 'px-2.5 py-0.5 text-xs uppercase tracking-(--tracking-tight)',
+  sm: 'px-3 py-1 text-xs uppercase tracking-(--tracking-tight)',
+  md: 'px-3.5 py-1 text-sm uppercase tracking-(--tracking-label)',
   'md-tall':
-    'h-[var(--size-btn-tall)] px-3 py-1 text-base uppercase tracking-[var(--tracking-label)]',
+    'h-(--size-btn-tall) px-3 py-1 text-base uppercase tracking-(--tracking-label)',
   chip: 'px-2 py-1 text-xs',
 };
 

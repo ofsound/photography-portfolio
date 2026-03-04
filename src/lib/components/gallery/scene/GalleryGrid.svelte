@@ -107,7 +107,7 @@
 <section class="mx-auto w-full px-4 py-5" style={sectionMaxWidthStyle}>
   {#if photos.length === 0}
     <p
-      class="py-16 text-center text-sm tracking-[var(--tracking-label)] text-text-muted uppercase"
+      class="py-16 text-center text-sm tracking-(--tracking-label) text-text-muted uppercase"
     >
       No photos found.
     </p>
@@ -139,7 +139,7 @@
 
     {#if isLoadingMore}
       <p
-        class="py-4 text-center text-xs tracking-[var(--tracking-label)] text-text-subtle uppercase"
+        class="py-4 text-center text-xs tracking-(--tracking-label) text-text-subtle uppercase"
       >
         Loading more
       </p>
@@ -149,7 +149,7 @@
       <div class="py-4 text-center text-sm">
         <p>{loadError}</p>
         <button
-          class="mt-2 rounded border border-border-strong px-3 py-1 text-xs tracking-[var(--tracking-label)] uppercase"
+          class="mt-2 rounded border border-border-strong px-3 py-1 text-xs tracking-(--tracking-label) uppercase"
           type="button"
           onclick={() => void onLoadMore()}>Retry</button
         >

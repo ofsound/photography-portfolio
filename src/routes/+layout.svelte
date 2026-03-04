@@ -296,12 +296,12 @@
 <div class="min-h-screen bg-bg text-text">
   <header
     bind:this={siteHeaderEl}
-    class="chrome-panel sticky top-0 z-40 border-b border-border px-4 transition-opacity duration-[var(--duration-chrome)] ease-out"
+    class="chrome-panel sticky top-0 z-40 border-b border-border px-4 transition-opacity duration-(--duration-chrome) ease-out"
     class:opacity-0={chromeHidden}
   >
     <div class="mx-auto flex w-full items-center justify-between gap-3">
       <nav
-        class=" flex items-center gap-6 py-3 text-sm tracking-[var(--tracking-nav)] uppercase"
+        class=" flex items-center gap-6 py-3 text-sm tracking-(--tracking-nav) uppercase"
       >
         <a href={resolve('/')}>Home</a>
         <a href={resolve('/gallery')}>Gallery</a>
@@ -360,7 +360,7 @@
           {#if isAdminPage && hasSession}
             <label
               for="header-theme"
-              class="text-xs tracking-[var(--tracking-tight)] uppercase"
+              class="text-xs tracking-(--tracking-tight) uppercase"
               >Admin Theme</label
             >
             <select
@@ -383,7 +383,7 @@
           {#if siteSettings?.allow_transition_toggle}
             <label
               for="transition"
-              class="text-xs tracking-[var(--tracking-tight)] uppercase"
+              class="text-xs tracking-(--tracking-tight) uppercase"
               >Motion</label
             >
             <select

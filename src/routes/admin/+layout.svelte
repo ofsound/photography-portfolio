@@ -33,7 +33,7 @@
     class="border-r border-border"
     style="view-transition-name: admin-sidebar"
   >
-    <p class="mb-5 p-4 text-xl tracking-[var(--tracking-heading)] uppercase">
+    <p class="mb-5 p-4 text-xl tracking-(--tracking-heading) uppercase">
       {data.role}
     </p>
     <nav class="flex flex-col border-y border-border text-lg font-medium">

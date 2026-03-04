@@ -149,7 +149,7 @@
 
   {#if revisions.length}
     <div class="rounded border border-border p-3">
-      <p class="mb-2 text-xs tracking-[var(--tracking-tight)] uppercase">
+      <p class="mb-2 text-xs tracking-(--tracking-tight) uppercase">
         Recent Revisions
       </p>
       <div class="grid gap-2">

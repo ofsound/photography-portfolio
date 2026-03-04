@@ -31,7 +31,7 @@
 </script>
 
 <div
-  class="flex items-center gap-2 text-xs tracking-[var(--tracking-heading)] uppercase"
+  class="flex items-center gap-2 text-xs tracking-(--tracking-heading) uppercase"
   role="group"
   aria-label={label}
 >
@@ -50,7 +50,7 @@
     <div class="flex flex-col">
       <button
         type="button"
-        class="flex h-[14px] w-6 shrink-0 items-center justify-center rounded-sm hover:bg-border/50 disabled:opacity-40"
+        class="flex h-3.5 w-6 shrink-0 items-center justify-center rounded-sm hover:bg-border/50 disabled:opacity-40"
         aria-label="Increase {label.toLowerCase()}"
         disabled={value >= max}
         onclick={() => onUpdate(value + 1)}
@@ -72,7 +72,7 @@
       </button>
       <button
         type="button"
-        class="flex h-[14px] w-6 shrink-0 items-center justify-center rounded-sm hover:bg-border/50 disabled:opacity-40"
+        class="flex h-3.5 w-6 shrink-0 items-center justify-center rounded-sm hover:bg-border/50 disabled:opacity-40"
         aria-label="Decrease {label.toLowerCase()}"
         disabled={value <= min}
         onclick={() => onUpdate(value - 1)}

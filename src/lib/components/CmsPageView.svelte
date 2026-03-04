@@ -23,11 +23,8 @@
   });
 </script>
 
-<section
-  class="mx-auto max-w-[var(--max-width-cms)] px-5 py-14"
-  data-cms-scope={scopeKey}
->
-  <h1 class="text-3xl tracking-[var(--tracking-hero)] uppercase">
+<section class="mx-auto max-w-cms px-5 py-14" data-cms-scope={scopeKey}>
+  <h1 class="text-3xl tracking-(--tracking-hero) uppercase">
     {page.title}
   </h1>
   <article class="prose mt-6 max-w-none">

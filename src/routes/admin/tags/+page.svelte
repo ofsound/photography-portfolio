@@ -22,7 +22,7 @@
     action="?/create"
     class="grid gap-3 rounded border border-border p-4"
   >
-    <h2 class="text-sm tracking-[var(--tracking-label)] uppercase">New Tag</h2>
+    <h2 class="text-sm tracking-(--tracking-label) uppercase">New Tag</h2>
     <FormField label="Name" id="tag-create-name">
       <FormInput id="tag-create-name" name="name" placeholder="Name" required />
     </FormField>

@@ -165,7 +165,7 @@
 </script>
 
 <div class="grid gap-3">
-  <p class="text-xs tracking-[var(--tracking-tight)] uppercase">
+  <p class="text-xs tracking-(--tracking-tight) uppercase">
     Thumbnail crop (grid square)
   </p>
 
@@ -203,7 +203,7 @@
 
   <div class="flex flex-wrap items-center gap-4">
     <label class="flex items-center gap-2 text-xs">
-      <span class="tracking-[var(--tracking-tight)] uppercase">Zoom</span>
+      <span class="tracking-(--tracking-tight) uppercase">Zoom</span>
       <input
         type="range"
         min={ZOOM_MIN}

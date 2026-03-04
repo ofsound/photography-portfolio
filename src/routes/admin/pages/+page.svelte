@@ -39,9 +39,7 @@
     action="?/create"
     class="grid gap-3 rounded border border-border p-4"
   >
-    <h2 class="text-sm tracking-[var(--tracking-label)] uppercase">
-      Create Page
-    </h2>
+    <h2 class="text-sm tracking-(--tracking-label) uppercase">Create Page</h2>
 
     <FormField label="Title" id="page-create-title">
       <FormInput
@@ -124,7 +122,7 @@
   </form>
 
   <section class="rounded border border-border p-4">
-    <h2 class="text-sm tracking-[var(--tracking-label)] uppercase">
+    <h2 class="text-sm tracking-(--tracking-label) uppercase">
       Existing Pages
     </h2>
     {#if pages.length === 0}
@@ -140,7 +138,7 @@
             <div class="flex flex-wrap items-center justify-between gap-2">
               <span>/{page.slug} - {page.title}</span>
               <span
-                class="text-xs tracking-[var(--tracking-tight)] text-text-subtle uppercase"
+                class="text-xs tracking-(--tracking-tight) text-text-subtle uppercase"
                 >{page.status}</span
               >
             </div>

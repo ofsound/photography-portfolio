@@ -22,9 +22,7 @@
     action="?/create"
     class="grid gap-3 rounded border border-border p-4"
   >
-    <h2 class="text-sm tracking-[var(--tracking-label)] uppercase">
-      New Category
-    </h2>
+    <h2 class="text-sm tracking-(--tracking-label) uppercase">New Category</h2>
     <FormField label="Name" id="cat-create-name">
       <FormInput id="cat-create-name" name="name" placeholder="Name" required />
     </FormField>

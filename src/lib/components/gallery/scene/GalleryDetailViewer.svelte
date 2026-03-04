@@ -138,7 +138,7 @@
     easing: quartOut,
   }}
   out:fade={{ duration: scaleMaskMs, easing: quartOut }}
-  class="fixed inset-0 z-[60] cursor-default bg-[var(--color-letterbox)]"
+  class="fixed inset-0 z-[60] cursor-default bg-(--color-letterbox)"
   onclick={(event: MouseEvent) => !isTransitioning && onClose(event)}
   onkeydown={(event: KeyboardEvent) =>
     !isTransitioning &&
@@ -178,7 +178,7 @@
     <a
       href={resolve(withCurrentSearch('/gallery') as `/${string}`)}
       onclick={onClose}
-      class="chrome-panel pointer-events-auto fixed top-5 left-5 rounded px-3 py-2 text-xs tracking-[var(--tracking-heading)] uppercase"
+      class="chrome-panel pointer-events-auto fixed top-5 left-5 rounded px-3 py-2 text-xs tracking-(--tracking-heading) uppercase"
       class:pointer-events-none={isTransitioning}
       class:opacity-50={isTransitioning}
     >
@@ -210,19 +210,17 @@
 {#if showPhotographInfo}
   <aside
     use:portal
-    class="chrome-panel fixed bottom-[var(--inset-overlay)] left-[var(--inset-overlay)] z-[var(--z-overlay)] w-fit max-w-[min(90vw,var(--max-width-prose))] rounded px-4 py-3 transition-opacity ease-out"
+    class="chrome-panel fixed bottom-(--inset-overlay) left-(--inset-overlay) z-(--z-overlay) w-fit max-w-[min(90vw,var(--max-width-prose))] rounded px-4 py-3 transition-opacity ease-out"
     class:opacity-0={overlayChromeHidden}
     style="transition-duration: {closingChromeMs}ms"
   >
     <div class="flex flex-wrap items-center justify-between gap-3">
       <div>
-        <h1 class="text-sm tracking-[var(--tracking-nav)] uppercase">
+        <h1 class="text-sm tracking-(--tracking-nav) uppercase">
           {activePhoto.title}
         </h1>
         {#if activePhoto.description}
-          <p
-            class="mt-2 max-w-[var(--max-width-prose)] text-sm text-canvas-text/80"
-          >
+          <p class="mt-2 max-w-prose text-sm text-canvas-text/80">
             {activePhoto.description}
           </p>
         {/if}

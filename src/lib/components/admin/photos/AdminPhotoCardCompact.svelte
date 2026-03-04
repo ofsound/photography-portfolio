@@ -98,7 +98,7 @@
       class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent px-2 pt-6 pb-2"
     >
       <h2
-        class="truncate text-xs font-medium tracking-[var(--tracking-minimal)] text-white"
+        class="truncate text-xs font-medium tracking-(--tracking-minimal) text-white"
       >
         {photo.title}
       </h2>
@@ -164,7 +164,7 @@
 
     <div class="min-w-0">
       <div class="flex items-center gap-2">
-        <h2 class="truncate text-sm tracking-[var(--tracking-tight)]">
+        <h2 class="truncate text-sm tracking-(--tracking-tight)">
           {photo.title}
         </h2>
       </div>

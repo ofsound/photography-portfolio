@@ -6,17 +6,13 @@
 
 <CmsPageView page={data.page} />
 
-<section class="mx-auto max-w-[var(--max-width-content)] px-5 py-14">
-  <p
-    class="mb-6 text-sm tracking-[var(--tracking-tight)] text-text-muted uppercase"
-  >
+<section class="mx-auto max-w-content px-5 py-14">
+  <p class="mb-6 text-sm tracking-(--tracking-tight) text-text-muted uppercase">
     MVP static form (no backend integration yet).
   </p>
 
   <form class="grid gap-4" onsubmit={(event) => event.preventDefault()}>
-    <label
-      class="grid gap-1 text-xs tracking-[var(--tracking-label)] uppercase"
-    >
+    <label class="grid gap-1 text-xs tracking-(--tracking-label) uppercase">
       Name
       <input
         class="rounded border border-border-strong bg-transparent px-3 py-2"
@@ -25,9 +21,7 @@
       />
     </label>
 
-    <label
-      class="grid gap-1 text-xs tracking-[var(--tracking-label)] uppercase"
-    >
+    <label class="grid gap-1 text-xs tracking-(--tracking-label) uppercase">
       Email
       <input
         class="rounded border border-border-strong bg-transparent px-3 py-2"
@@ -37,9 +31,7 @@
       />
     </label>
 
-    <label
-      class="grid gap-1 text-xs tracking-[var(--tracking-label)] uppercase"
-    >
+    <label class="grid gap-1 text-xs tracking-(--tracking-label) uppercase">
       Message
       <textarea
         class="min-h-40 rounded border border-border-strong bg-transparent px-3 py-2"
@@ -50,7 +42,7 @@
 
     <button
       type="submit"
-      class="w-fit rounded border border-border-strong px-4 py-2 text-xs tracking-[var(--tracking-label)] uppercase"
+      class="w-fit rounded border border-border-strong px-4 py-2 text-xs tracking-(--tracking-label) uppercase"
       >Send (Not Connected Yet)</button
     >
   </form>

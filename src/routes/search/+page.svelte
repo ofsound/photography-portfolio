@@ -4,7 +4,7 @@
   const { data } = $props();
 </script>
 
-<section class="mx-auto max-w-[var(--max-width-search)] px-5 py-10">
+<section class="mx-auto max-w-search px-5 py-10">
   <form class="mb-6" method="get">
     <input
       name="q"
@@ -15,9 +15,7 @@
   </form>
 
   {#if data.q && data.results.length === 0}
-    <p
-      class="text-sm tracking-[var(--tracking-label)] text-text-muted uppercase"
-    >
+    <p class="text-sm tracking-(--tracking-label) text-text-muted uppercase">
       No results.
     </p>
   {/if}
@@ -28,7 +26,7 @@
         href={resolve(`/photo/${result.slug}`)}
         class="rounded border border-border p-4 transition hover:border-border-strong"
       >
-        <h2 class="text-sm tracking-[var(--tracking-label)] uppercase">
+        <h2 class="text-sm tracking-(--tracking-label) uppercase">
           {result.title}
         </h2>
         {#if result.description}

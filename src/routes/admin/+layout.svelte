@@ -28,6 +28,7 @@
 
 <div
   class="grid min-h-[calc(100vh-var(--site-header-height))] grid-cols-[240px_1fr]"
+  style="--font-sans: var(--font-sans-admin); font-family: var(--font-sans)"
 >
   <aside
     class="border-r border-border"
@@ -63,7 +64,7 @@
                 variant="submit"
                 size="xs"
               >
-                Multiple
+                Bulk
               </AdminButton>
             </div>
           {/if}

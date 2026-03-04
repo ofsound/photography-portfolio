@@ -1,5 +1,6 @@
 {
   "editor.formatOnSave": true,
+  "css.lint.unknownAtRules": "ignore",
   "files.associations": {
     "*.css": "css"
   },

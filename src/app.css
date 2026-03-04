@@ -1,46 +1,89 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap");
+@import url('https://fonts.googleapis.com/css2?family=Gabarito:wght@400..900&display=swap');
 
-@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
+
+@import 'tailwindcss';
 
 :root {
   color-scheme: light dark;
 }
-:root[data-theme="dark"] {
+:root[data-theme='dark'] {
   color-scheme: dark;
 }
-:root[data-theme="light"] {
+:root[data-theme='light'] {
   color-scheme: light;
 }
 
 @theme inline {
-  --font-sans: "Inter", "sans-serif";
+  --font-sans-public: 'Gabarito', 'sans-serif';
+  --font-sans-admin: 'Inter', 'sans-serif';
+  --font-sans: var(--font-sans-public);
 
   --color-bg: light-dark(theme(colors.zinc.50), theme(colors.zinc.950));
   --color-surface: light-dark(theme(colors.white), theme(colors.zinc.900));
-  --color-surface-muted: light-dark(theme(colors.zinc.100), theme(colors.zinc.800));
-  --color-surface-strong: light-dark(theme(colors.zinc.200), theme(colors.zinc.700));
+  --color-surface-muted: light-dark(
+    theme(colors.zinc.100),
+    theme(colors.zinc.800)
+  );
+  --color-surface-strong: light-dark(
+    theme(colors.zinc.200),
+    theme(colors.zinc.700)
+  );
   --color-text: light-dark(theme(colors.zinc.900), theme(colors.zinc.100));
-  --color-text-muted: light-dark(theme(colors.zinc.600), theme(colors.zinc.300));
-  --color-text-subtle: light-dark(theme(colors.zinc.500), theme(colors.zinc.400));
-  --color-text-inverse: light-dark(theme(colors.zinc.100), theme(colors.zinc.900));
+  --color-text-muted: light-dark(
+    theme(colors.zinc.600),
+    theme(colors.zinc.300)
+  );
+  --color-text-subtle: light-dark(
+    theme(colors.zinc.500),
+    theme(colors.zinc.400)
+  );
+  --color-text-inverse: light-dark(
+    theme(colors.zinc.100),
+    theme(colors.zinc.900)
+  );
   --color-border: light-dark(theme(colors.zinc.300), theme(colors.zinc.600));
-  --color-border-strong: light-dark(theme(colors.zinc.400), theme(colors.zinc.500));
+  --color-border-strong: light-dark(
+    theme(colors.zinc.400),
+    theme(colors.zinc.500)
+  );
   /* Admin default button: light = slightly darker bg + subtle border; dark = transparent bg + strong border */
   --color-admin-btn-bg: light-dark(theme(colors.zinc.100), transparent);
-  --color-admin-btn-border: light-dark(theme(colors.zinc.200), theme(colors.zinc.500));
+  --color-admin-btn-border: light-dark(
+    theme(colors.zinc.200),
+    theme(colors.zinc.500)
+  );
   --color-brand: light-dark(theme(colors.indigo.600), theme(colors.indigo.300));
-  --color-brand-contrast: light-dark(theme(colors.indigo.50), theme(colors.indigo.950));
+  --color-brand-contrast: light-dark(
+    theme(colors.indigo.50),
+    theme(colors.indigo.950)
+  );
   --color-success: light-dark(theme(colors.green.600), theme(colors.green.400));
-  --color-success-soft: light-dark(theme(colors.green.100), theme(colors.green.900));
-  --color-warning: light-dark(theme(colors.amber.700), theme(colors.orange.300));
-  --color-warning-soft: light-dark(theme(colors.amber.100), theme(colors.amber.900));
+  --color-success-soft: light-dark(
+    theme(colors.green.100),
+    theme(colors.green.900)
+  );
+  --color-warning: light-dark(
+    theme(colors.amber.700),
+    theme(colors.orange.300)
+  );
+  --color-warning-soft: light-dark(
+    theme(colors.amber.100),
+    theme(colors.amber.900)
+  );
   --color-danger: light-dark(theme(colors.red.600), theme(colors.red.300));
   --color-danger-soft: light-dark(theme(colors.red.100), theme(colors.red.900));
   --color-info: light-dark(theme(colors.sky.600), theme(colors.sky.300));
   --color-info-soft: light-dark(theme(colors.sky.100), theme(colors.sky.900));
   --color-canvas: light-dark(theme(colors.zinc.950), theme(colors.slate.950));
-  --color-canvas-text: light-dark(theme(colors.zinc.100), theme(colors.slate.50));
-  --color-canvas-border: light-dark(theme(colors.zinc.500), theme(colors.slate.500));
+  --color-canvas-text: light-dark(
+    theme(colors.zinc.100),
+    theme(colors.slate.50)
+  );
+  --color-canvas-border: light-dark(
+    theme(colors.zinc.500),
+    theme(colors.slate.500)
+  );
   --color-overlay: light-dark(theme(colors.black), theme(colors.slate.950));
   /* Letterbox between zoomed detail and site: light = white, dark = black */
   --color-letterbox: light-dark(theme(colors.white), theme(colors.black));

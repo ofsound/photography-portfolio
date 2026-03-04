@@ -10,4 +10,3 @@ export const createCmsScopeKey = (slug?: string | null) => {
 
   return normalized || 'cms-page';
 };
-

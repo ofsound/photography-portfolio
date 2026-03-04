@@ -6,8 +6,10 @@
   const { data, form } = $props();
 </script>
 
-<section class="mx-auto grid w-full max-w-[var(--max-width-form)] gap-4 px-5 py-14">
-  <h1 class="text-2xl uppercase tracking-[var(--tracking-nav)]">CMS Auth</h1>
+<section
+  class="mx-auto grid w-full max-w-[var(--max-width-form)] gap-4 px-5 py-14"
+>
+  <h1 class="text-2xl tracking-[var(--tracking-nav)] uppercase">CMS Auth</h1>
 
   {#if form?.message}
     <p class="rounded border border-border px-3 py-2 text-sm">{form.message}</p>
@@ -24,12 +26,21 @@
       </div>
     </div>
   {:else}
-    <form method="POST" action="?/login" class="grid gap-3 rounded border border-border p-4">
+    <form
+      method="POST"
+      action="?/login"
+      class="grid gap-3 rounded border border-border p-4"
+    >
       <FormField label="Email" id="auth-email">
         <FormInput id="auth-email" name="email" type="email" required />
       </FormField>
       <FormField label="Password" id="auth-password">
-        <FormInput id="auth-password" name="password" type="password" required />
+        <FormInput
+          id="auth-password"
+          name="password"
+          type="password"
+          required
+        />
       </FormField>
 
       <AdminButton type="submit" wFit>Sign In</AdminButton>

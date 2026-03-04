@@ -17,21 +17,26 @@ export const sizeClasses: Record<Size, string> = {
   xs: 'px-2.5 py-0.5 text-xs uppercase tracking-[var(--tracking-tight)]',
   sm: 'px-3 py-1 text-xs uppercase tracking-[var(--tracking-tight)]',
   md: 'px-3.5 py-1 text-sm uppercase tracking-[var(--tracking-label)]',
-  'md-tall': 'h-[var(--size-btn-tall)] px-3 py-1 text-base uppercase tracking-[var(--tracking-label)]',
-  chip: 'px-2 py-1 text-xs'
+  'md-tall':
+    'h-[var(--size-btn-tall)] px-3 py-1 text-base uppercase tracking-[var(--tracking-label)]',
+  chip: 'px-2 py-1 text-xs',
 };
 
 export const variantClasses: Record<Variant, string> = {
-  default: 'rounded border border-admin-btn-border bg-admin-btn-bg enabled:hover:bg-border',
-  submit: 'rounded border border-success/40 bg-success text-white enabled:hover:opacity-90',
+  default:
+    'rounded border border-admin-btn-border bg-admin-btn-bg enabled:hover:bg-border',
+  submit:
+    'rounded border border-success/40 bg-success text-white enabled:hover:opacity-90',
   danger: 'rounded border border-danger/60 bg-danger text-white',
-  'danger-outline': 'rounded border border-danger/60 bg-danger-soft text-danger',
+  'danger-outline':
+    'rounded border border-danger/60 bg-danger-soft text-danger',
   info: 'rounded border border-info/40 bg-info-soft',
   'submit-soft': 'rounded border border-success/40 bg-success-soft',
   link: 'text-xs text-text-muted underline',
-  ghost: 'rounded text-text-muted transition-colors enabled:hover:bg-border enabled:hover:text-text',
+  ghost:
+    'rounded text-text-muted transition-colors enabled:hover:bg-border enabled:hover:text-text',
   toggle: 'rounded border border-border-strong',
-  subtle: 'rounded border border-border enabled:hover:bg-surface-muted'
+  subtle: 'rounded border border-border enabled:hover:bg-surface-muted',
 };
 
 export const baseClasses = 'disabled:opacity-40';

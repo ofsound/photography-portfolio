@@ -1,6 +1,10 @@
 <script lang="ts">
+  /* eslint-disable svelte/no-navigation-without-resolve -- withCurrentSearch resolves internally */
   import { parseDimensions } from '$lib/utils/parse-dimensions';
-  import { GALLERY_DETAIL_SHARED_WIDTH, photoPublicUrl } from '$lib/utils/storage-url';
+  import {
+    GALLERY_DETAIL_SHARED_WIDTH,
+    photoPublicUrl,
+  } from '$lib/utils/storage-url';
   import type { GalleryPhoto } from '$lib/types/content';
 
   type GalleryImage = NonNullable<GalleryPhoto['leadImage']>;
@@ -21,7 +25,7 @@
     registerTile,
     hasThumbCrop,
     thumbCropStyle,
-    tileAspectRatio
+    tileAspectRatio,
   } = $props<{
     photos: GalleryPhoto[];
     layoutMode: 'uniform' | 'masonry';
@@ -34,22 +38,33 @@
     reducedMotion: boolean;
     withCurrentSearch: (href: string) => string;
     onOpenPhoto: (event: MouseEvent, slug: string) => void;
-    registerTile: (node: HTMLElement, slug: string) => { update?: (slug: string) => void; destroy?: () => void };
+    registerTile: (
+      node: HTMLElement,
+      slug: string,
+    ) => { update?: (slug: string) => void; destroy?: () => void };
     hasThumbCrop: (img: GalleryImage | null) => boolean;
-    thumbCropStyle: (img: GalleryImage | null, containerAspect: number) => string;
+    thumbCropStyle: (
+      img: GalleryImage | null,
+      containerAspect: number,
+    ) => string;
     tileAspectRatio: (photo: GalleryPhoto) => number;
   }>();
 </script>
 
 {#if layoutMode === 'uniform'}
-  <ul class="grid" style={`grid-template-columns: repeat(${colCount}, minmax(0, 1fr)); gap: ${gap}px;`}>
+  <ul
+    class="grid"
+    style={`grid-template-columns: repeat(${colCount}, minmax(0, 1fr)); gap: ${gap}px;`}
+  >
     {#each photos as photo, index (photo.id)}
       <li>
         <div
           class="tile-cascade"
           class:revealed={galleryRevealed}
           class:no-motion={reducedMotion}
-          style="animation-delay: {galleryRevealed && !reducedMotion ? index * CASCADE_STAGGER_MS : 0}ms"
+          style="animation-delay: {galleryRevealed && !reducedMotion
+            ? index * CASCADE_STAGGER_MS
+            : 0}ms"
         >
           <a
             href={withCurrentSearch(`/photo/${photo.slug}`)}
@@ -60,9 +75,16 @@
           >
             {#if photo.leadImage}
               <img
-                src={photoPublicUrl(photo.leadImage.delivery_storage_path, GALLERY_DETAIL_SHARED_WIDTH)}
+                src={photoPublicUrl(
+                  photo.leadImage.delivery_storage_path,
+                  GALLERY_DETAIL_SHARED_WIDTH,
+                )}
                 alt={photo.leadImage.alt_text ?? photo.title}
-                class="tile-img transition-transform duration-500 ease-cinematic {hasThumbCrop(photo.leadImage) ? 'tile-img-crop' : 'group-hover:scale-[1.03]'}"
+                class="tile-img ease-cinematic transition-transform duration-500 {hasThumbCrop(
+                  photo.leadImage,
+                )
+                  ? 'tile-img-crop'
+                  : 'group-hover:scale-[1.03]'}"
                 style={thumbCropStyle(photo.leadImage, uniformRatio)}
                 loading="eager"
               />
@@ -74,12 +96,18 @@
 
     {#if isLoadingMore}
       {#each Array.from({ length: placeholderCount }) as _, index (index)}
-        <li class="animate-pulse bg-surface-muted" style={`aspect-ratio: ${uniformRatio};`}></li>
+        <li
+          class="animate-pulse bg-surface-muted"
+          style={`aspect-ratio: ${uniformRatio};`}
+        ></li>
       {/each}
     {/if}
   </ul>
 {:else}
-  <ul class="columns-2 md:columns-4 lg:columns-6" style={`columns: ${colCount}; column-gap: ${gap}px;`}>
+  <ul
+    class="columns-2 md:columns-4 lg:columns-6"
+    style={`columns: ${colCount}; column-gap: ${gap}px;`}
+  >
     {#each photos as photo, index (photo.id)}
       {#if photo.leadImage}
         {@const knownRatio = parseDimensions(photo.leadImage.dimensions)}
@@ -88,27 +116,43 @@
             class="tile-cascade"
             class:revealed={galleryRevealed}
             class:no-motion={reducedMotion}
-            style="animation-delay: {galleryRevealed && !reducedMotion ? index * CASCADE_STAGGER_MS : 0}ms"
+            style="animation-delay: {galleryRevealed && !reducedMotion
+              ? index * CASCADE_STAGGER_MS
+              : 0}ms"
           >
             <a
               href={withCurrentSearch(`/photo/${photo.slug}`)}
               use:registerTile={photo.slug}
               class="group relative block overflow-hidden"
-              style={knownRatio ? `aspect-ratio: ${knownRatio.width / knownRatio.height};` : ''}
+              style={knownRatio
+                ? `aspect-ratio: ${knownRatio.width / knownRatio.height};`
+                : ''}
               onclick={(event: MouseEvent) => onOpenPhoto(event, photo.slug)}
             >
               <img
-                src={photoPublicUrl(photo.leadImage.delivery_storage_path, GALLERY_DETAIL_SHARED_WIDTH)}
+                src={photoPublicUrl(
+                  photo.leadImage.delivery_storage_path,
+                  GALLERY_DETAIL_SHARED_WIDTH,
+                )}
                 alt={photo.leadImage.alt_text ?? photo.title}
-                class="tile-img tile-img-masonry transition-transform duration-500 ease-cinematic {hasThumbCrop(photo.leadImage) ? 'tile-img-crop' : 'group-hover:scale-[1.02]'}"
+                class="tile-img tile-img-masonry ease-cinematic transition-transform duration-500 {hasThumbCrop(
+                  photo.leadImage,
+                )
+                  ? 'tile-img-crop'
+                  : 'group-hover:scale-[1.02]'}"
                 style={thumbCropStyle(photo.leadImage, tileAspectRatio(photo))}
                 loading="eager"
                 onload={(event) => {
-                  if (!knownRatio && event.currentTarget instanceof HTMLImageElement) {
+                  if (
+                    !knownRatio &&
+                    event.currentTarget instanceof HTMLImageElement
+                  ) {
                     const img = event.currentTarget;
                     const anchor = img.closest('a');
                     if (anchor && img.naturalWidth && img.naturalHeight) {
-                      anchor.style.aspectRatio = String(img.naturalWidth / img.naturalHeight);
+                      anchor.style.aspectRatio = String(
+                        img.naturalWidth / img.naturalHeight,
+                      );
                     }
                   }
                 }}
@@ -122,7 +166,7 @@
     {#if isLoadingMore}
       {#each Array.from({ length: placeholderCount }) as _, index (index)}
         <li
-          class="break-inside-avoid animate-pulse bg-surface-muted"
+          class="animate-pulse break-inside-avoid bg-surface-muted"
           style={`height: ${120 + (index % 5) * 34}px; margin-bottom: ${gap}px;`}
         ></li>
       {/each}

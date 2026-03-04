@@ -5,16 +5,18 @@ import {
   asString,
   mimeToExtension,
   parseUuidList,
-  storageSourcePath
+  storageSourcePath,
 } from '$lib/server/admin-helpers';
 import { normalizePhotoImagePositions } from '$lib/server/admin/photos/shared';
 
 export async function uploadImageWithForm(
   locals: App.Locals,
-  form: FormData
+  form: FormData,
 ): Promise<{ success: true; message: string } | ReturnType<typeof fail>> {
   const photoId = asString(form.get('photo_id'));
-  const kind = asString(form.get('kind'), 'additional') as 'lead' | 'additional';
+  const kind = asString(form.get('kind'), 'additional') as
+    | 'lead'
+    | 'additional';
   const altText = asString(form.get('alt_text')).trim() || null;
   const imageFile = form.get('image_file');
 
@@ -29,7 +31,9 @@ export async function uploadImageWithForm(
   }
 
   const ext = mimeToExtension(mimeType);
-  const filename = imageFile.name?.includes('.') ? imageFile.name : `upload.${ext}`;
+  const filename = imageFile.name?.includes('.')
+    ? imageFile.name
+    : `upload.${ext}`;
   const sourcePath = storageSourcePath(photoId, filename);
 
   const { data: lastImage } = await locals.supabase
@@ -42,10 +46,12 @@ export async function uploadImageWithForm(
 
   const nextPosition = (lastImage?.position ?? -1) + 1;
 
-  const { error: uploadError } = await locals.supabase.storage.from('photos').upload(sourcePath, imageFile, {
-    contentType: mimeType,
-    upsert: false
-  });
+  const { error: uploadError } = await locals.supabase.storage
+    .from('photos')
+    .upload(sourcePath, imageFile, {
+      contentType: mimeType,
+      upsert: false,
+    });
 
   if (uploadError) {
     return fail(400, { message: uploadError.message });
@@ -58,7 +64,7 @@ export async function uploadImageWithForm(
     p_source_bytes: imageFile.size,
     p_kind: kind,
     p_position: nextPosition,
-    p_alt_text: altText
+    p_alt_text: altText,
   });
 
   if (rowError) {
@@ -66,20 +72,25 @@ export async function uploadImageWithForm(
     return fail(400, { message: rowError.message });
   }
 
-  return { success: true, message: 'Image uploaded. Conversion runs asynchronously.' };
+  return {
+    success: true,
+    message: 'Image uploaded. Conversion runs asynchronously.',
+  };
 }
 
 export const photoImageActions: Actions = {
   reorderAdditionalImages: async ({ locals, request }) => {
     const form = await request.formData();
     const photoId = asString(form.get('photo_id'));
-    const orderedImageIds = parseUuidList(asString(form.get('ordered_image_ids')));
+    const orderedImageIds = parseUuidList(
+      asString(form.get('ordered_image_ids')),
+    );
 
     if (!photoId) return fail(400, { message: 'Missing photo id.' });
 
     const { error } = await locals.supabase.rpc('reorder_additional_images', {
       p_photo_id: photoId,
-      p_ordered_image_ids: orderedImageIds
+      p_ordered_image_ids: orderedImageIds,
     });
     if (error) return fail(400, { message: error.message });
 
@@ -96,11 +107,12 @@ export const photoImageActions: Actions = {
     const photoId = asString(form.get('photo_id'));
     const imageId = asString(form.get('image_id'));
 
-    if (!photoId || !imageId) return fail(400, { message: 'Missing image or photo id.' });
+    if (!photoId || !imageId)
+      return fail(400, { message: 'Missing image or photo id.' });
 
     const { error } = await locals.supabase.rpc('set_lead_image', {
       p_photo_id: photoId,
-      p_image_id: imageId
+      p_image_id: imageId,
     });
 
     if (error) return fail(400, { message: error.message });
@@ -120,10 +132,16 @@ export const photoImageActions: Actions = {
 
     if (imageError || !image) return fail(404, { message: 'Image not found.' });
 
-    const { error: deleteError } = await locals.supabase.from('photo_images').delete().eq('id', imageId);
+    const { error: deleteError } = await locals.supabase
+      .from('photo_images')
+      .delete()
+      .eq('id', imageId);
     if (deleteError) return fail(400, { message: deleteError.message });
 
-    const pathsToRemove = [image.source_storage_path, image.delivery_storage_path].filter(Boolean) as string[];
+    const pathsToRemove = [
+      image.source_storage_path,
+      image.delivery_storage_path,
+    ].filter(Boolean) as string[];
     if (pathsToRemove.length) {
       await locals.supabase.storage.from('photos').remove(pathsToRemove);
     }
@@ -138,11 +156,17 @@ export const photoImageActions: Actions = {
         .maybeSingle();
 
       if (replacement) {
-        await locals.supabase.from('photo_images').update({ kind: 'lead' }).eq('id', replacement.id);
+        await locals.supabase
+          .from('photo_images')
+          .update({ kind: 'lead' })
+          .eq('id', replacement.id);
       }
     }
 
-    const normalizeResult = await normalizePhotoImagePositions(locals, image.photo_id);
+    const normalizeResult = await normalizePhotoImagePositions(
+      locals,
+      image.photo_id,
+    );
     if (!normalizeResult.ok) {
       return fail(400, { message: normalizeResult.message });
     }
@@ -158,7 +182,8 @@ export const photoImageActions: Actions = {
     const cropY = asOptionalNumber(form.get('thumb_crop_y'));
     const cropZoom = asOptionalNumber(form.get('thumb_crop_zoom'));
 
-    if (!photoId || !imageId) return fail(400, { message: 'Missing photo or image id.' });
+    if (!photoId || !imageId)
+      return fail(400, { message: 'Missing photo or image id.' });
 
     const { data: image, error: loadError } = await locals.supabase
       .from('photo_images')
@@ -168,7 +193,10 @@ export const photoImageActions: Actions = {
       .maybeSingle();
 
     if (loadError || !image) return fail(404, { message: 'Image not found.' });
-    if (image.kind !== 'lead') return fail(400, { message: 'Thumbnail crop applies only to lead images.' });
+    if (image.kind !== 'lead')
+      return fail(400, {
+        message: 'Thumbnail crop applies only to lead images.',
+      });
 
     const updates: Record<string, number | null> = {};
     if (cropX != null && cropX >= 0 && cropX <= 1) updates.thumb_crop_x = cropX;
@@ -191,7 +219,8 @@ export const photoImageActions: Actions = {
     const photoId = asString(form.get('photo_id'));
     const imageId = asString(form.get('image_id'));
 
-    if (!photoId || !imageId) return fail(400, { message: 'Missing photo or image id.' });
+    if (!photoId || !imageId)
+      return fail(400, { message: 'Missing photo or image id.' });
 
     const { data: image, error: loadError } = await locals.supabase
       .from('photo_images')
@@ -201,7 +230,10 @@ export const photoImageActions: Actions = {
       .maybeSingle();
 
     if (loadError || !image) return fail(404, { message: 'Image not found.' });
-    if (image.kind !== 'lead') return fail(400, { message: 'Thumbnail crop applies only to lead images.' });
+    if (image.kind !== 'lead')
+      return fail(400, {
+        message: 'Thumbnail crop applies only to lead images.',
+      });
 
     const { error: updateError } = await locals.supabase
       .from('photo_images')
@@ -212,5 +244,5 @@ export const photoImageActions: Actions = {
     if (updateError) return fail(400, { message: updateError.message });
 
     return { success: true, message: 'Thumbnail crop cleared.' };
-  }
+  },
 };

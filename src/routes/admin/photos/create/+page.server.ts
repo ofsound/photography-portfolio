@@ -5,9 +5,12 @@ import {
   createMinimalDraftPhoto,
   normalizeDraftStatusErrorMessage,
   photoCoreActions,
-  upsertPhotoPayload
+  upsertPhotoPayload,
 } from '$lib/server/admin/photos/photo-core';
-import { photoImageActions, uploadImageWithForm } from '$lib/server/admin/photos/photo-images';
+import {
+  photoImageActions,
+  uploadImageWithForm,
+} from '$lib/server/admin/photos/photo-images';
 import { photoTaxonomyActions } from '$lib/server/admin/photos/photo-taxonomy';
 import { asString } from '$lib/server/admin-helpers';
 
@@ -19,8 +22,14 @@ export const load: PageServerLoad = async ({ locals, url, cookies }) => {
   if (!requestedPhotoId) {
     cookies.delete(ACTIVE_CREATE_PHOTO_COOKIE, { path: '/admin/photos' });
     const [categoriesResult, tagsResult] = await Promise.all([
-      locals.supabase.from('categories').select('id, name, slug, is_active').order('name', { ascending: true }),
-      locals.supabase.from('tags').select('id, name, slug, is_active').order('name', { ascending: true })
+      locals.supabase
+        .from('categories')
+        .select('id, name, slug, is_active')
+        .order('name', { ascending: true }),
+      locals.supabase
+        .from('tags')
+        .select('id, name, slug, is_active')
+        .order('name', { ascending: true }),
     ]);
     if (categoriesResult.error) throw new Error(categoriesResult.error.message);
     if (tagsResult.error) throw new Error(tagsResult.error.message);
@@ -38,7 +47,7 @@ export const load: PageServerLoad = async ({ locals, url, cookies }) => {
       og_image_path: null as string | null,
       status: 'draft',
       deleted_at: null as string | null,
-      updated_at: ''
+      updated_at: '',
     };
 
     return {
@@ -47,22 +56,29 @@ export const load: PageServerLoad = async ({ locals, url, cookies }) => {
       tags: tagsResult.data ?? [],
       selectedCategoryIds: [] as string[],
       selectedTagIds: [] as string[],
-      images: [] as Awaited<ReturnType<typeof loadSinglePhotoEditorData>>['images'],
+      images: [] as Awaited<
+        ReturnType<typeof loadSinglePhotoEditorData>
+      >['images'],
       photoConversionState: 'no-images' as const,
-      pendingConversionCount: 0
+      pendingConversionCount: 0,
     };
   }
 
   cookies.set(ACTIVE_CREATE_PHOTO_COOKIE, requestedPhotoId, {
     path: '/admin/photos',
     httpOnly: true,
-    sameSite: 'lax'
+    sameSite: 'lax',
   });
 
   try {
     return await loadSinglePhotoEditorData(locals, requestedPhotoId);
   } catch (cause) {
-    if (typeof cause === 'object' && cause !== null && 'status' in cause && cause.status === 404) {
+    if (
+      typeof cause === 'object' &&
+      cause !== null &&
+      'status' in cause &&
+      cause.status === 404
+    ) {
       cookies.delete(ACTIVE_CREATE_PHOTO_COOKIE, { path: '/admin/photos' });
       throw redirect(303, '/admin/photos/create');
     }
@@ -83,16 +99,19 @@ export const actions: Actions = {
     try {
       const result = await createMinimalDraftPhoto(locals, {
         title: asString(form.get('draft_title')).trim() || undefined,
-        slug: asString(form.get('draft_slug')).trim() || undefined
+        slug: asString(form.get('draft_slug')).trim() || undefined,
       });
       newId = result.id;
     } catch (err) {
-      return fail(400, { message: err instanceof Error ? err.message : 'Failed to create draft photo.' });
+      return fail(400, {
+        message:
+          err instanceof Error ? err.message : 'Failed to create draft photo.',
+      });
     }
     cookies.set(ACTIVE_CREATE_PHOTO_COOKIE, newId, {
       path: '/admin/photos',
       httpOnly: true,
-      sameSite: 'lax'
+      sameSite: 'lax',
     });
     const imageFile = form.get('image_file');
     const newForm = new FormData();
@@ -116,14 +135,16 @@ export const actions: Actions = {
       .insert({
         ...result.payload,
         status: 'draft',
-        deleted_at: null
+        deleted_at: null,
       })
       .select('id')
       .single();
 
     if (insertResult.error || !insertResult.data) {
       return fail(400, {
-        message: normalizeDraftStatusErrorMessage(insertResult.error?.message ?? 'Failed to create photo.')
+        message: normalizeDraftStatusErrorMessage(
+          insertResult.error?.message ?? 'Failed to create photo.',
+        ),
       });
     }
 
@@ -131,8 +152,8 @@ export const actions: Actions = {
     cookies.set(ACTIVE_CREATE_PHOTO_COOKIE, newId, {
       path: '/admin/photos',
       httpOnly: true,
-      sameSite: 'lax'
+      sameSite: 'lax',
     });
     throw redirect(303, `/admin/photos/create?photo=${newId}`);
-  }
+  },
 };

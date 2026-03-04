@@ -1,6 +1,6 @@
 const KEY = 'admin_photos_prefs';
 
-export type AdminPhotosPrefs = {
+type AdminPhotosPrefs = {
   density: number;
   gap: number;
   layoutMode: 'uniform' | 'masonry';
@@ -11,7 +11,7 @@ const DEFAULT_PREFS: AdminPhotosPrefs = {
   density: 6,
   gap: 8,
   layoutMode: 'uniform',
-  widthMode: 'full'
+  widthMode: 'full',
 };
 
 const clampDensity = (n: number, max: number) => Math.max(1, Math.min(max, n));
@@ -25,7 +25,9 @@ function isValidWidthMode(v: unknown): v is AdminPhotosPrefs['widthMode'] {
   return v === 'full' || v === 'constrained';
 }
 
-export function getAdminPhotosPrefs(maxDensity: number = 20): AdminPhotosPrefs | null {
+export function getAdminPhotosPrefs(
+  maxDensity: number = 20,
+): AdminPhotosPrefs | null {
   if (typeof window === 'undefined') return null;
   try {
     const raw = localStorage.getItem(KEY);
@@ -39,8 +41,12 @@ export function getAdminPhotosPrefs(maxDensity: number = 20): AdminPhotosPrefs |
       typeof parsed.gap === 'number' && Number.isFinite(parsed.gap)
         ? clampGap(parsed.gap)
         : undefined;
-    const layoutMode = isValidLayoutMode(parsed.layoutMode) ? parsed.layoutMode : undefined;
-    const widthMode = isValidWidthMode(parsed.widthMode) ? parsed.widthMode : undefined;
+    const layoutMode = isValidLayoutMode(parsed.layoutMode)
+      ? parsed.layoutMode
+      : undefined;
+    const widthMode = isValidWidthMode(parsed.widthMode)
+      ? parsed.widthMode
+      : undefined;
 
     if (
       density === undefined &&
@@ -55,7 +61,7 @@ export function getAdminPhotosPrefs(maxDensity: number = 20): AdminPhotosPrefs |
       density: density ?? DEFAULT_PREFS.density,
       gap: gap ?? DEFAULT_PREFS.gap,
       layoutMode: layoutMode ?? DEFAULT_PREFS.layoutMode,
-      widthMode: widthMode ?? DEFAULT_PREFS.widthMode
+      widthMode: widthMode ?? DEFAULT_PREFS.widthMode,
     };
   } catch {
     return null;
@@ -64,7 +70,7 @@ export function getAdminPhotosPrefs(maxDensity: number = 20): AdminPhotosPrefs |
 
 export function setAdminPhotosPrefs(
   partial: Partial<AdminPhotosPrefs>,
-  maxDensity: number = 20
+  maxDensity: number = 20,
 ): void {
   if (typeof window === 'undefined') return;
   const current = getAdminPhotosPrefs(maxDensity) ?? DEFAULT_PREFS;
@@ -81,7 +87,7 @@ export function setAdminPhotosPrefs(
     widthMode:
       partial.widthMode !== undefined && isValidWidthMode(partial.widthMode)
         ? partial.widthMode
-        : current.widthMode
+        : current.widthMode,
   };
   localStorage.setItem(KEY, JSON.stringify(next));
 }

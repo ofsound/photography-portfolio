@@ -5,10 +5,10 @@ import { RESERVED_SLUGS } from '$lib/server/reserved-slugs';
 
 const ALLOWED_SYSTEM_SLUGS = new Set(['about', 'contact']);
 
-export type PageKind = Database['public']['Enums']['page_kind'];
+type PageKind = Database['public']['Enums']['page_kind'];
 export type PublishStatus = Database['public']['Enums']['publish_status'];
 
-export type PagePayload = {
+type PagePayload = {
   title: string;
   slug: string;
   kind: PageKind;
@@ -30,13 +30,16 @@ export const validateCmsPageSlug = (slug: string) => {
   return null;
 };
 
-export const pagePayloadFromForm = (form: FormData): { ok: true; payload: PagePayload } | { ok: false; message: string } => {
+export const pagePayloadFromForm = (
+  form: FormData,
+): { ok: true; payload: PagePayload } | { ok: false; message: string } => {
   const kind: PageKind = 'custom';
   const title = asString(form.get('title')).trim();
   const slugRaw = asString(form.get('slug')).trim();
   const generatedSlug = toSlug(slugRaw || title, 'page');
   const statusRaw = asString(form.get('status'), 'published');
-  const status: PublishStatus = statusRaw === 'archived' ? 'archived' : 'published';
+  const status: PublishStatus =
+    statusRaw === 'archived' ? 'archived' : 'published';
   const showInNav = asBoolean(form.get('show_in_nav'));
   const navOrder = Number(asString(form.get('nav_order'), '0')) || 0;
   const seoTitle = asString(form.get('seo_title')).trim() || null;
@@ -72,7 +75,7 @@ export const pagePayloadFromForm = (form: FormData): { ok: true; payload: PagePa
       seo_title: seoTitle,
       seo_description: seoDescription,
       og_image_path: ogImagePath,
-      deleted_at: status === 'archived' ? new Date().toISOString() : null
-    }
+      deleted_at: status === 'archived' ? new Date().toISOString() : null,
+    },
   };
 };

@@ -155,7 +155,7 @@ export type Database = {
             isOneToOne: false;
             referencedRelation: 'photo_images';
             referencedColumns: ['id'];
-          }
+          },
         ];
       };
       pages: {
@@ -251,7 +251,7 @@ export type Database = {
             isOneToOne: false;
             referencedRelation: 'photos';
             referencedColumns: ['id'];
-          }
+          },
         ];
       };
       photo_images: {
@@ -331,7 +331,7 @@ export type Database = {
             isOneToOne: false;
             referencedRelation: 'photos';
             referencedColumns: ['id'];
-          }
+          },
         ];
       };
       photo_tags: {
@@ -367,7 +367,7 @@ export type Database = {
             isOneToOne: false;
             referencedRelation: 'tags';
             referencedColumns: ['id'];
-          }
+          },
         ];
       };
       photos: {
@@ -601,7 +601,10 @@ export type Database = {
         };
         Returns: undefined;
       };
-      refresh_photo_search: { Args: { p_photo_id: string }; Returns: undefined };
+      refresh_photo_search: {
+        Args: { p_photo_id: string };
+        Returns: undefined;
+      };
       save_homepage_slides: { Args: { p_slides: Json }; Returns: undefined };
       save_photo_relations: {
         Args: {

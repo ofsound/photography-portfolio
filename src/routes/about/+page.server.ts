@@ -7,8 +7,9 @@ export const load: PageServerLoad = async ({ locals }) => {
     page: page ?? {
       slug: 'about',
       title: 'About',
-      html_content: '<p>Create or edit this page from Admin -> Pages using the slug "about".</p>',
-      css_module: ''
-    }
+      html_content:
+        '<p>Create or edit this page from Admin -> Pages using the slug "about".</p>',
+      css_module: '',
+    },
   };
 };

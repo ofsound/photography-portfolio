@@ -13,12 +13,12 @@
  *   imgAspect < containerAspect:  originX = 0.5 - 0.5*iA/cA + cropX*iA/cA, originY = cropY
  */
 
-export function cropCenterToElementCoords(
+function cropCenterToElementCoords(
   cropX: number,
   cropY: number,
   imgWidth: number,
   imgHeight: number,
-  containerAspect: number
+  containerAspect: number,
 ): { originX: number; originY: number } {
   const iA = Math.max(0.01, imgWidth / imgHeight);
   const cA = Math.max(0.01, containerAspect);
@@ -26,12 +26,12 @@ export function cropCenterToElementCoords(
   if (iA >= cA) {
     return {
       originX: cropX,
-      originY: 0.5 - (0.5 * cA) / iA + (cropY * cA) / iA
+      originY: 0.5 - (0.5 * cA) / iA + (cropY * cA) / iA,
     };
   }
   return {
     originX: 0.5 - (0.5 * iA) / cA + (cropX * iA) / cA,
-    originY: cropY
+    originY: cropY,
   };
 }
 
@@ -42,20 +42,26 @@ export function thumbCropTransform(
   zoom: number,
   imgWidth: number,
   imgHeight: number,
-  containerAspect: number
-): { translateX: number; translateY: number; scale: number; originX: number; originY: number } {
+  containerAspect: number,
+): {
+  translateX: number;
+  translateY: number;
+  scale: number;
+  originX: number;
+  originY: number;
+} {
   const { originX, originY } = cropCenterToElementCoords(
     cropX,
     cropY,
     imgWidth,
     imgHeight,
-    containerAspect
+    containerAspect,
   );
   return {
     translateX: (0.5 - originX) * 100,
     translateY: (0.5 - originY) * 100,
     scale: zoom,
     originX,
-    originY
+    originY,
   };
 }

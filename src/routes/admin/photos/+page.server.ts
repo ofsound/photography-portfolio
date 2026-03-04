@@ -13,6 +13,5 @@ export const actions: Actions = {
   ...photoCoreActions,
   ...bulkPhotoActions,
   ...photoTaxonomyActions,
-  ...photoImageActions
+  ...photoImageActions,
 };
-

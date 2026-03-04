@@ -1,5 +1,10 @@
 import { error } from '@sveltejs/kit';
-import { asPositiveInt, loadGalleryPage, loadGalleryPhotoNeighbors, normalizePageSize } from '$lib/server/gallery';
+import {
+  asPositiveInt,
+  loadGalleryPage,
+  loadGalleryPhotoNeighbors,
+  normalizePageSize,
+} from '$lib/server/gallery';
 import type { LayoutServerLoad } from './$types';
 
 type GalleryLayoutMode = 'uniform' | 'masonry';
@@ -14,21 +19,25 @@ type ActivePhotoRoute = {
 
 const photoRoutePattern = /^\/photo\/([^/]+)(?:\/([^/]+))?$/;
 
-const readActivePhotoRoute = (pathname: string): Pick<ActivePhotoRoute, 'photoSlug' | 'imageId'> | null => {
+const readActivePhotoRoute = (
+  pathname: string,
+): Pick<ActivePhotoRoute, 'photoSlug' | 'imageId'> | null => {
   const match = pathname.match(photoRoutePattern);
   if (!match) return null;
 
   const [, slug, imageId] = match;
   return {
     photoSlug: decodeURIComponent(slug),
-    imageId: imageId ? decodeURIComponent(imageId) : null
+    imageId: imageId ? decodeURIComponent(imageId) : null,
   };
 };
 
 export const load: LayoutServerLoad = async ({ locals, url }) => {
   const { data: settings } = await locals.supabase
     .from('site_settings')
-    .select('grid_desktop_default, max_content_width_px, gallery_layout_mode, gallery_gap_px, uniform_thumb_ratio')
+    .select(
+      'grid_desktop_default, max_content_width_px, gallery_layout_mode, gallery_gap_px, uniform_thumb_ratio',
+    )
     .eq('singleton_id', 1)
     .maybeSingle();
 
@@ -39,13 +48,16 @@ export const load: LayoutServerLoad = async ({ locals, url }) => {
   const density = defaultDensity;
   const gap = settings?.gallery_gap_px ?? 8;
   const q = url.searchParams.get('q')?.trim() ?? '';
-  const layoutMode = (settings?.gallery_layout_mode ?? 'uniform') as GalleryLayoutMode;
-  const widthMode = (settings?.max_content_width_px ? 'constrained' : 'full') as GalleryWidthMode;
+  const layoutMode = (settings?.gallery_layout_mode ??
+    'uniform') as GalleryLayoutMode;
+  const widthMode = (
+    settings?.max_content_width_px ? 'constrained' : 'full'
+  ) as GalleryWidthMode;
 
   const activeRoute = readActivePhotoRoute(url.pathname);
 
   let page = startPage;
-  let hasMore = false;
+  let hasMore: boolean;
   const photos: Awaited<ReturnType<typeof loadGalleryPage>>['photos'] = [];
 
   while (true) {
@@ -55,7 +67,9 @@ export const load: LayoutServerLoad = async ({ locals, url }) => {
     const seen = new Set(photos.map((photo) => photo.id));
     photos.push(...payload.photos.filter((photo) => !seen.has(photo.id)));
 
-    const foundActive = activeRoute ? photos.some((photo) => photo.slug === activeRoute.photoSlug) : true;
+    const foundActive = activeRoute
+      ? photos.some((photo) => photo.slug === activeRoute.photoSlug)
+      : true;
     if (foundActive || !hasMore) {
       break;
     }
@@ -68,13 +82,17 @@ export const load: LayoutServerLoad = async ({ locals, url }) => {
 
   let active: ActivePhotoRoute | null = null;
   if (activeRoute) {
-    const activePhoto = photos.find((photo) => photo.slug === activeRoute.photoSlug);
+    const activePhoto = photos.find(
+      (photo) => photo.slug === activeRoute.photoSlug,
+    );
     if (!activePhoto || !activePhoto.leadImage) {
       throw error(404, 'Photo not found');
     }
 
     if (activeRoute.imageId) {
-      const hasAdditional = activePhoto.additionalImages.some((image) => image.id === activeRoute.imageId);
+      const hasAdditional = activePhoto.additionalImages.some(
+        (image) => image.id === activeRoute.imageId,
+      );
       if (!hasAdditional) {
         throw error(404, 'Image not found for this photo');
       }
@@ -84,8 +102,12 @@ export const load: LayoutServerLoad = async ({ locals, url }) => {
     active = {
       photoSlug: activeRoute.photoSlug,
       imageId: activeRoute.imageId,
-      prevGalleryHref: neighbors.prevSlug ? `/photo/${neighbors.prevSlug}` : null,
-      nextGalleryHref: neighbors.nextSlug ? `/photo/${neighbors.nextSlug}` : null
+      prevGalleryHref: neighbors.prevSlug
+        ? `/photo/${neighbors.prevSlug}`
+        : null,
+      nextGalleryHref: neighbors.nextSlug
+        ? `/photo/${neighbors.nextSlug}`
+        : null,
     };
   }
 
@@ -103,6 +125,6 @@ export const load: LayoutServerLoad = async ({ locals, url }) => {
     uniformThumbRatio: Number(settings?.uniform_thumb_ratio ?? 1),
     maxDensity,
     baseQueryString: baseParams.toString(),
-    active
+    active,
   };
 };

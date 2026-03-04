@@ -14,11 +14,11 @@
 
 <div class="flex flex-col gap-1 {className ?? ''}">
   {#if id}
-    <label for={id} class="text-sm font-medium text-text tracking-wider">
+    <label for={id} class="text-sm font-medium tracking-wider text-text">
       {label}
     </label>
   {:else}
-    <span class="text-sm font-medium text-text tracking-wider">{label}</span>
+    <span class="text-sm font-medium tracking-wider text-text">{label}</span>
   {/if}
   {@render children()}
   {#if helper}

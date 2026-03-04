@@ -10,17 +10,23 @@ const draftStatusMigrationHint =
   'Database schema is missing draft photo status. Apply migration 20260302_photo_draft_status.sql and retry.';
 
 export const normalizeDraftStatusErrorMessage = (message: string) =>
-  message.includes('invalid input value for enum publish_status') && message.includes('"draft"')
+  message.includes('invalid input value for enum publish_status') &&
+    message.includes('"draft"')
     ? draftStatusMigrationHint
     : message;
 
 /** Creates a minimal photo row for draft (e.g. on first upload). Returns the new id or throws. */
-export async function createMinimalDraftPhoto(locals: App.Locals, seed: MinimalDraftSeed = {}): Promise<{ id: string }> {
+export async function createMinimalDraftPhoto(
+  locals: App.Locals,
+  seed: MinimalDraftSeed = {},
+): Promise<{ id: string }> {
   const fallbackTitle = 'New Photo';
   const title = seed.title?.trim() || fallbackTitle;
   const slugBase = toSlug(seed.slug?.trim() || title, 'photo');
   const makeSlug = (withSuffix: boolean) =>
-    withSuffix ? `${slugBase}-${Math.random().toString(36).slice(2, 8)}` : slugBase;
+    withSuffix
+      ? `${slugBase}-${Math.random().toString(36).slice(2, 8)}`
+      : slugBase;
 
   const insertDraft = async (slug: string) =>
     locals.supabase
@@ -36,7 +42,7 @@ export async function createMinimalDraftPhoto(locals: App.Locals, seed: MinimalD
         og_description: null,
         og_image_path: null,
         status: 'draft',
-        deleted_at: null
+        deleted_at: null,
       })
       .select('id')
       .single();
@@ -49,12 +55,16 @@ export async function createMinimalDraftPhoto(locals: App.Locals, seed: MinimalD
   }
 
   if (insertResult.error || !insertResult.data) {
-    throw new Error(normalizeDraftStatusErrorMessage(insertResult.error?.message ?? 'Failed to create draft photo.'));
+    throw new Error(
+      normalizeDraftStatusErrorMessage(
+        insertResult.error?.message ?? 'Failed to create draft photo.',
+      ),
+    );
   }
   return { id: insertResult.data.id };
 }
 
-export type PhotoPayload = {
+type PhotoPayload = {
   title: string;
   slug: string;
   capture_date: string | null;
@@ -66,7 +76,9 @@ export type PhotoPayload = {
   og_image_path: string | null;
 };
 
-export const upsertPhotoPayload = (form: FormData): { ok: true; payload: PhotoPayload } | { ok: false; message: string } => {
+export const upsertPhotoPayload = (
+  form: FormData,
+): { ok: true; payload: PhotoPayload } | { ok: false; message: string } => {
   const title = asString(form.get('title')).trim();
   const slugInput = asString(form.get('slug')).trim();
 
@@ -85,8 +97,8 @@ export const upsertPhotoPayload = (form: FormData): { ok: true; payload: PhotoPa
       license_text: asString(form.get('license_text')).trim() || null,
       og_title: asString(form.get('og_title')).trim() || null,
       og_description: asString(form.get('og_description')).trim() || null,
-      og_image_path: asString(form.get('og_image_path')).trim() || null
-    }
+      og_image_path: asString(form.get('og_image_path')).trim() || null,
+    },
   };
 };
 
@@ -100,10 +112,13 @@ export const photoCoreActions: Actions = {
     const { error } = await locals.supabase.from('photos').insert({
       ...result.payload,
       status: 'draft',
-      deleted_at: null
+      deleted_at: null,
     });
 
-    if (error) return fail(400, { message: normalizeDraftStatusErrorMessage(error.message) });
+    if (error)
+      return fail(400, {
+        message: normalizeDraftStatusErrorMessage(error.message),
+      });
     return { success: true, message: 'Draft created.' };
   },
 
@@ -149,9 +164,12 @@ export const photoCoreActions: Actions = {
     if (photoError) return fail(400, { message: photoError.message });
     if (!photo) return fail(404, { message: 'Photo not found.' });
     if (photo.status === 'archived' || photo.deleted_at) {
-      return fail(400, { message: 'Restore this photo to draft before publishing.' });
+      return fail(400, {
+        message: 'Restore this photo to draft before publishing.',
+      });
     }
-    if (!photo.title.trim()) return fail(400, { message: 'Title is required before publishing.' });
+    if (!photo.title.trim())
+      return fail(400, { message: 'Title is required before publishing.' });
 
     const { data: lead, error: leadError } = await locals.supabase
       .from('photo_images')
@@ -161,14 +179,22 @@ export const photoCoreActions: Actions = {
       .maybeSingle();
 
     if (leadError) return fail(400, { message: leadError.message });
-    if (!lead) return fail(400, { message: 'Set a lead image before publishing.' });
+    if (!lead)
+      return fail(400, { message: 'Set a lead image before publishing.' });
     if (!lead.delivery_storage_path) {
-      return fail(400, { message: 'Lead image is still processing. Wait until conversion finishes.' });
+      return fail(400, {
+        message:
+          'Lead image is still processing. Wait until conversion finishes.',
+      });
     }
 
     const { error } = await locals.supabase
       .from('photos')
-      .update({ status: 'published', deleted_at: null, updated_at: new Date().toISOString() })
+      .update({
+        status: 'published',
+        deleted_at: null,
+        updated_at: new Date().toISOString(),
+      })
       .eq('id', id);
 
     if (error) return fail(400, { message: error.message });
@@ -178,9 +204,12 @@ export const photoCoreActions: Actions = {
   restore: async ({ locals, request }) => {
     const form = await request.formData();
     const id = asString(form.get('id'));
-    const { error } = await locals.supabase.from('photos').update({ status: 'draft', deleted_at: null }).eq('id', id);
+    const { error } = await locals.supabase
+      .from('photos')
+      .update({ status: 'draft', deleted_at: null })
+      .eq('id', id);
 
     if (error) return fail(400, { message: error.message });
     return { success: true, message: 'Photo restored to draft.' };
-  }
+  },
 };

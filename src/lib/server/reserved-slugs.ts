@@ -5,5 +5,5 @@ export const RESERVED_SLUGS = new Set([
   'about',
   'contact',
   'search',
-  'api'
+  'api',
 ]);

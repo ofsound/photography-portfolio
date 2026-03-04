@@ -59,12 +59,18 @@
       kind: fromSlides.kind,
       delivery_storage_path: fromSlides.delivery_storage_path,
       photo_title: fromSlides.photo_title,
-      photo_slug: fromSlides.photo_slug
+      photo_slug: fromSlides.photo_slug,
     };
   };
 
-  const selectedSlides = $derived(selectedIds.map((id) => imageForId(id)).filter((s): s is HomepageSlide => s != null));
-  const availableImages = $derived(images.filter((image) => !selectedIds.includes(image.id)));
+  const selectedSlides = $derived(
+    selectedIds
+      .map((id) => imageForId(id))
+      .filter((s): s is HomepageSlide => s != null),
+  );
+  const availableImages = $derived(
+    images.filter((image) => !selectedIds.includes(image.id)),
+  );
 
   const addSlide = (id: string) => {
     if (selectedIds.includes(id)) return;
@@ -83,7 +89,10 @@
     if (e.canceled || !e.operation?.source) return;
     const source = e.operation.source as Parameters<typeof isSortable>[0];
     if (!isSortable(source)) return;
-    const { initialIndex, index } = source as { initialIndex: number; index: number };
+    const { initialIndex, index } = source as {
+      initialIndex: number;
+      index: number;
+    };
     if (initialIndex === index) return;
     const next = [...selectedIds];
     const [removed] = next.splice(initialIndex, 1);
@@ -94,19 +103,31 @@
 </script>
 
 <AdminHeading>Homepage</AdminHeading>
-<p class="mt-2 text-sm text-text-muted">Image-only slides. Add images, drag selected slides to reorder, then save.</p>
+<p class="mt-2 text-sm text-text-muted">
+  Image-only slides. Add images, drag selected slides to reorder, then save.
+</p>
 
 {#if form?.message}
-  <p class="mt-3 rounded border border-border px-3 py-2 text-sm">{form.message}</p>
+  <p class="mt-3 rounded border border-border px-3 py-2 text-sm">
+    {form.message}
+  </p>
 {/if}
 
 <section class="mt-6 rounded border border-border p-4">
-  <h2 class="text-sm uppercase tracking-[var(--tracking-label)]">Slideshow Timing</h2>
-  <form method="POST" action="?/saveTiming" class="mt-3 grid gap-3 sm:grid-cols-[minmax(0,220px)_minmax(0,220px)_auto] sm:items-end">
-    <label class="grid gap-1 text-xs uppercase tracking-[var(--tracking-tight)]">
+  <h2 class="text-sm tracking-[var(--tracking-label)] uppercase">
+    Slideshow Timing
+  </h2>
+  <form
+    method="POST"
+    action="?/saveTiming"
+    class="mt-3 grid gap-3 sm:grid-cols-[minmax(0,220px)_minmax(0,220px)_auto] sm:items-end"
+  >
+    <label
+      class="grid gap-1 text-xs tracking-[var(--tracking-tight)] uppercase"
+    >
       Slide Duration (ms)
       <input
-        class="rounded border border-border-strong bg-transparent px-3 py-2 text-sm normal-case tracking-normal"
+        class="rounded border border-border-strong bg-transparent px-3 py-2 text-sm tracking-normal normal-case"
         type="number"
         min="1000"
         max="30000"
@@ -115,10 +136,12 @@
         bind:value={slideDurationMs}
       />
     </label>
-    <label class="grid gap-1 text-xs uppercase tracking-[var(--tracking-tight)]">
+    <label
+      class="grid gap-1 text-xs tracking-[var(--tracking-tight)] uppercase"
+    >
       Transition Duration (ms)
       <input
-        class="rounded border border-border-strong bg-transparent px-3 py-2 text-sm normal-case tracking-normal"
+        class="rounded border border-border-strong bg-transparent px-3 py-2 text-sm tracking-normal normal-case"
         type="number"
         min="200"
         max="10000"
@@ -134,7 +157,9 @@
 <section class="mt-6 grid gap-8 lg:grid-cols-[440px_1fr]">
   <div class="grid gap-3 rounded border border-border p-4">
     <div class="flex flex-wrap items-center gap-2">
-      <h2 class="text-sm uppercase tracking-[var(--tracking-label)]">Selected Slides</h2>
+      <h2 class="text-sm tracking-[var(--tracking-label)] uppercase">
+        Selected Slides
+      </h2>
       <AdminButton
         size="sm"
         type="button"
@@ -166,9 +191,17 @@
               class:opacity-50={sortable.isDragging}
             >
               {#if slide.delivery_storage_path}
-                <img src={photoPublicUrl(slide.delivery_storage_path, 180)} alt={slide.photo_title} class="h-12 w-16 rounded object-cover" />
+                <img
+                  src={photoPublicUrl(slide.delivery_storage_path, 180)}
+                  alt={slide.photo_title}
+                  class="h-12 w-16 rounded object-cover"
+                />
               {:else}
-                <div class="grid h-12 w-16 place-items-center rounded border border-border-strong text-xs uppercase">pending</div>
+                <div
+                  class="grid h-12 w-16 place-items-center rounded border border-border-strong text-xs uppercase"
+                >
+                  pending
+                </div>
               {/if}
 
               <div class="text-xs">
@@ -177,7 +210,11 @@
                 <div>{slide.photo_title} ({slide.kind})</div>
               </div>
 
-              <AdminButton size="sm" type="button" onclick={() => removeSlide(slide.id)}>Remove</AdminButton>
+              <AdminButton
+                size="sm"
+                type="button"
+                onclick={() => removeSlide(slide.id)}>Remove</AdminButton
+              >
             </li>
           {/each}
         </ul>
@@ -185,20 +222,36 @@
     {/if}
 
     <form method="POST" action="?/save" class="w-fit">
-      <input type="hidden" name="ordered_image_ids" value={selectedIds.join('\n')} />
+      <input
+        type="hidden"
+        name="ordered_image_ids"
+        value={selectedIds.join('\n')}
+      />
       <AdminButton type="submit">Save Slides</AdminButton>
     </form>
   </div>
 
   <div class="rounded border border-border p-4">
-    <h2 class="mb-2 text-sm uppercase tracking-[var(--tracking-label)]">Available Images</h2>
+    <h2 class="mb-2 text-sm tracking-[var(--tracking-label)] uppercase">
+      Available Images
+    </h2>
     <ul class="grid max-h-[var(--max-height-drawer)] gap-2 overflow-auto">
       {#each availableImages as image (image.id)}
-        <li class="grid gap-2 rounded border border-border p-2 sm:grid-cols-[auto_1fr_auto] sm:items-center">
+        <li
+          class="grid gap-2 rounded border border-border p-2 sm:grid-cols-[auto_1fr_auto] sm:items-center"
+        >
           {#if image.delivery_storage_path}
-            <img src={photoPublicUrl(image.delivery_storage_path, 160)} alt={image.photo_title} class="h-12 w-16 rounded object-cover" />
+            <img
+              src={photoPublicUrl(image.delivery_storage_path, 160)}
+              alt={image.photo_title}
+              class="h-12 w-16 rounded object-cover"
+            />
           {:else}
-            <div class="grid h-12 w-16 place-items-center rounded border border-border-strong text-xs uppercase">pending</div>
+            <div
+              class="grid h-12 w-16 place-items-center rounded border border-border-strong text-xs uppercase"
+            >
+              pending
+            </div>
           {/if}
 
           <div class="text-xs">
@@ -206,7 +259,11 @@
             <div>{image.photo_title} ({image.kind})</div>
           </div>
 
-          <AdminButton size="sm" type="button" onclick={() => addSlide(image.id)}>Add</AdminButton>
+          <AdminButton
+            size="sm"
+            type="button"
+            onclick={() => addSlide(image.id)}>Add</AdminButton
+          >
         </li>
       {/each}
     </ul>

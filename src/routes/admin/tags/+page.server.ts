@@ -1,5 +1,10 @@
 import { fail, type Actions } from '@sveltejs/kit';
-import { asBoolean, asString, assertTitle, toSlug } from '$lib/server/admin-helpers';
+import {
+  asBoolean,
+  asString,
+  assertTitle,
+  toSlug,
+} from '$lib/server/admin-helpers';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals }) => {
@@ -28,7 +33,7 @@ export const actions: Actions = {
       name,
       slug,
       description,
-      is_active: isActive
+      is_active: isActive,
     });
 
     if (error) {
@@ -82,5 +87,5 @@ export const actions: Actions = {
     }
 
     return { success: true, message: 'Tag removed.' };
-  }
+  },
 };

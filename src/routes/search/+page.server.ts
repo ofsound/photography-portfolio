@@ -17,6 +17,6 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 
   return {
     q,
-    results: data ?? []
+    results: data ?? [],
   };
 };

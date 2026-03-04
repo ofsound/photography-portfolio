@@ -1,6 +1,13 @@
 <script lang="ts">
-  import { baseClasses, sizeClasses, variantClasses } from '$lib/styles/admin-buttons';
-  import type { Size, Variant } from '$lib/styles/admin-buttons';
+  /* eslint-disable svelte/no-navigation-without-resolve -- external/fragment use raw href; internal use resolve(href) */
+  import {
+    baseClasses,
+    sizeClasses,
+    variantClasses,
+    type Size,
+    type Variant,
+  } from '$lib/styles/admin-buttons';
+  import { resolve } from '$app/paths';
 
   const {
     size = 'md',
@@ -40,10 +47,10 @@
       baseClasses,
       'enabled:cursor-pointer',
       wFit || isLink ? 'w-fit' : '',
-      className
+      className,
     ]
       .filter(Boolean)
-      .join(' ')
+      .join(' '),
   );
 
   const commonAttrs = $derived({ class: classes });
@@ -52,7 +59,19 @@
 {#if isLabel}
   <label {...commonAttrs} {...restProps}>{@render children?.()}</label>
 {:else if isLink}
-  <a href={href ?? '#'} {...commonAttrs} {...restProps}>{@render children?.()}</a>
+  <a
+    href={href == null
+      ? '#'
+      : href.startsWith('http') ||
+          href.startsWith('//') ||
+          href.startsWith('mailto:')
+        ? href
+        : resolve(href)}
+    {...commonAttrs}
+    {...restProps}>{@render children?.()}</a
+  >
 {:else}
-  <button {type} {disabled} {...commonAttrs} {...restProps}>{@render children?.()}</button>
+  <button {type} {disabled} {...commonAttrs} {...restProps}
+    >{@render children?.()}</button
+  >
 {/if}

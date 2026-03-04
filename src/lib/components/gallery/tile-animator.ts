@@ -81,7 +81,11 @@ const clearFixedRect = (node: HTMLElement) => {
 };
 
 /** Apply rect to a wrapper; the child node fills it. Wrapper has no aspect-ratio. */
-const applyRectToWrapper = (wrapper: HTMLElement, rect: TileRect, zIndex = 70) => {
+const applyRectToWrapper = (
+  wrapper: HTMLElement,
+  rect: TileRect,
+  zIndex = 70,
+) => {
   wrapper.style.position = 'fixed';
   wrapper.style.margin = '0';
   wrapper.style.zIndex = String(zIndex);
@@ -103,7 +107,12 @@ const applyRectToWrapper = (wrapper: HTMLElement, rect: TileRect, zIndex = 70) =
   wrapper.style.height = `${rect.height}px`;
 };
 
-const animateRect = async (node: HTMLElement, fromRect: TileRect, toRect: TileRect, options?: AnimationConfig) => {
+const animateRect = async (
+  node: HTMLElement,
+  fromRect: TileRect,
+  toRect: TileRect,
+  options?: AnimationConfig,
+) => {
   const durationMs = options?.durationMs ?? 520;
   const easing = options?.easing ?? 'cubic-bezier(0.16, 1, 0.3, 1)';
   const reducedMotion = options?.reducedMotion ?? false;
@@ -119,20 +128,20 @@ const animateRect = async (node: HTMLElement, fromRect: TileRect, toRect: TileRe
         top: `${fromRect.top}px`,
         left: `${fromRect.left}px`,
         width: `${fromRect.width}px`,
-        height: `${fromRect.height}px`
+        height: `${fromRect.height}px`,
       },
       {
         top: `${toRect.top}px`,
         left: `${toRect.left}px`,
         width: `${toRect.width}px`,
-        height: `${toRect.height}px`
-      }
+        height: `${toRect.height}px`,
+      },
     ],
     {
       duration: durationMs,
       easing,
-      fill: 'forwards'
-    }
+      fill: 'forwards',
+    },
   );
 
   try {
@@ -144,11 +153,11 @@ const animateRect = async (node: HTMLElement, fromRect: TileRect, toRect: TileRe
   applyFixedRect(node, toRect);
 };
 
-const animateImgTransform = async (
+const _animateImgTransform = async (
   img: HTMLImageElement,
   from: ImgCropTransform,
   to: { scale: number; translateX: number; translateY: number },
-  options?: AnimationConfig
+  options?: AnimationConfig,
 ) => {
   const durationMs = options?.durationMs ?? 520;
   const easing = options?.easing ?? 'cubic-bezier(0.16, 1, 0.3, 1)';
@@ -162,17 +171,17 @@ const animateImgTransform = async (
   const animation = img.animate(
     [
       {
-        transform: `scale(${from.scale}) translate(${from.translateX}%, ${from.translateY}%)`
+        transform: `scale(${from.scale}) translate(${from.translateX}%, ${from.translateY}%)`,
       },
       {
-        transform: `scale(${to.scale}) translate(${to.translateX}%, ${to.translateY}%)`
-      }
+        transform: `scale(${to.scale}) translate(${to.translateX}%, ${to.translateY}%)`,
+      },
     ],
     {
       duration: durationMs,
       easing,
-      fill: 'forwards'
-    }
+      fill: 'forwards',
+    },
   );
 
   try {
@@ -190,7 +199,7 @@ const rectFromElement = (el: Element): TileRect => {
     top: rect.top,
     left: rect.left,
     width: rect.width,
-    height: rect.height
+    height: rect.height,
   };
 };
 
@@ -211,7 +220,11 @@ export const promoteTile = async ({
   // the placeholder responds to density changes correctly. For masonry tiles (non-square
   // aspect ratio), use the tile's exact rendered rect so the demote animation returns to
   // the correct position regardless of column reflow.
-  if (aspectRatio != null && Math.abs(aspectRatio - 1) < 0.01 && parent instanceof Element) {
+  if (
+    aspectRatio != null &&
+    Math.abs(aspectRatio - 1) < 0.01 &&
+    parent instanceof Element
+  ) {
     const cellRect = rectFromElement(parent);
     const size = Math.min(cellRect.width, cellRect.height);
     placeholder.style.width = `${size}px`;
@@ -245,7 +258,6 @@ export const promoteTile = async ({
   applyRectToWrapper(wrapper, startRect);
 
   const img = node.querySelector('img');
-  const identity = { scale: 1, translateX: 0, translateY: 0 };
 
   if (img && imgCropFrom) {
     const origin = `${imgCropFrom.originX * 100}% ${imgCropFrom.originY * 100}%`;
@@ -253,31 +265,54 @@ export const promoteTile = async ({
     img.style.objectFit = 'contain';
     const tx = imgCropFrom.translateX;
     const ty = imgCropFrom.translateY;
-    const base = `translate(${tx}%, ${ty}%)`;
     const durationMs = options?.durationMs ?? 520;
     const easing = options?.easing ?? 'cubic-bezier(0.16, 1, 0.3, 1)';
     const reducedMotion = options?.reducedMotion ?? false;
 
-    if (reducedMotion || durationMs <= 0 || typeof wrapper.animate !== 'function') {
+    if (
+      reducedMotion ||
+      durationMs <= 0 ||
+      typeof wrapper.animate !== 'function'
+    ) {
       applyRectToWrapper(wrapper, targetRect);
       img.style.transform = '';
       img.style.objectFit = 'contain';
     } else {
-      const rectTiming: KeyframeAnimationOptions = { duration: durationMs, easing: 'linear', fill: 'forwards' };
-      const imgTiming: KeyframeAnimationOptions = { duration: durationMs, easing, fill: 'forwards' };
+      const rectTiming: KeyframeAnimationOptions = {
+        duration: durationMs,
+        easing: 'linear',
+        fill: 'forwards',
+      };
+      const imgTiming: KeyframeAnimationOptions = {
+        duration: durationMs,
+        easing,
+        fill: 'forwards',
+      };
       const rectAnim = wrapper.animate(
         [
-          { top: `${startRect.top}px`, left: `${startRect.left}px`, width: `${startRect.width}px`, height: `${startRect.height}px` },
-          { top: `${targetRect.top}px`, left: `${targetRect.left}px`, width: `${targetRect.width}px`, height: `${targetRect.height}px` }
+          {
+            top: `${startRect.top}px`,
+            left: `${startRect.left}px`,
+            width: `${startRect.width}px`,
+            height: `${startRect.height}px`,
+          },
+          {
+            top: `${targetRect.top}px`,
+            left: `${targetRect.left}px`,
+            width: `${targetRect.width}px`,
+            height: `${targetRect.height}px`,
+          },
         ],
-        rectTiming
+        rectTiming,
       );
       const imgAnim = img.animate(
         [
-          { transform: `translate(${tx}%, ${ty}%) scale(${imgCropFrom.scale})` },
-          { transform: `translate(0%, 0%) scale(1)` }
+          {
+            transform: `translate(${tx}%, ${ty}%) scale(${imgCropFrom.scale})`,
+          },
+          { transform: `translate(0%, 0%) scale(1)` },
         ],
-        imgTiming
+        imgTiming,
       );
       await Promise.all([rectAnim.finished, imgAnim.finished]);
 
@@ -290,16 +325,34 @@ export const promoteTile = async ({
       img.style.objectFit = 'contain';
     }
   } else {
-    if (options?.reducedMotion || (options?.durationMs ?? 520) <= 0 || typeof wrapper.animate !== 'function') {
+    if (
+      options?.reducedMotion ||
+      (options?.durationMs ?? 520) <= 0 ||
+      typeof wrapper.animate !== 'function'
+    ) {
       applyRectToWrapper(wrapper, targetRect);
     } else {
       if (img) img.style.objectFit = 'cover';
       await wrapper.animate(
         [
-          { top: `${startRect.top}px`, left: `${startRect.left}px`, width: `${startRect.width}px`, height: `${startRect.height}px` },
-          { top: `${targetRect.top}px`, left: `${targetRect.left}px`, width: `${targetRect.width}px`, height: `${targetRect.height}px` }
+          {
+            top: `${startRect.top}px`,
+            left: `${startRect.left}px`,
+            width: `${startRect.width}px`,
+            height: `${startRect.height}px`,
+          },
+          {
+            top: `${targetRect.top}px`,
+            left: `${targetRect.left}px`,
+            width: `${targetRect.width}px`,
+            height: `${targetRect.height}px`,
+          },
         ],
-        { duration: options?.durationMs ?? 520, easing: options?.easing ?? 'cubic-bezier(0.16, 1, 0.3, 1)', fill: 'forwards' }
+        {
+          duration: options?.durationMs ?? 520,
+          easing: options?.easing ?? 'cubic-bezier(0.16, 1, 0.3, 1)',
+          fill: 'forwards',
+        },
       ).finished;
       applyRectToWrapper(wrapper, targetRect);
       if (img) img.style.objectFit = '';
@@ -315,17 +368,22 @@ export const promoteTile = async ({
     originalNextSibling: nextSibling,
     currentRect: targetRect,
     imgCrop: imgCropFrom ?? null,
-    gridAspectRatio: aspectRatio
+    gridAspectRatio: aspectRatio,
   };
 };
 
-export const movePromotedTile = async (session: TileAnimationSession, targetRect: TileRect, options?: AnimationConfig) => {
+export const movePromotedTile = async (
+  session: TileAnimationSession,
+  targetRect: TileRect,
+  options?: AnimationConfig,
+) => {
   const el = session.wrapper ?? session.node;
   await animateRect(el, session.currentRect, targetRect, options);
   session.currentRect = targetRect;
 };
 
-export const getPlaceholderRect = (session: TileAnimationSession): TileRect => rectFromElement(session.placeholder);
+const getPlaceholderRect = (session: TileAnimationSession): TileRect =>
+  rectFromElement(session.placeholder);
 
 type DemoteOptions = AnimationConfig & {
   useCover?: boolean;
@@ -334,13 +392,15 @@ type DemoteOptions = AnimationConfig & {
 };
 
 /** Animates the tile to its placeholder position. Does NOT reinsert. Call reinsertPromotedTile after overlay has faded. */
-export const demoteTile = async (session: TileAnimationSession, options?: DemoteOptions) => {
+export const demoteTile = async (
+  session: TileAnimationSession,
+  options?: DemoteOptions,
+) => {
   const rectEl = session.wrapper ?? session.node;
   rectEl.style.zIndex = String(DEMOTE_Z_INDEX);
   rectEl.style.opacity = '1';
   const img = session.node.querySelector('img');
   const targetRect = getPlaceholderRect(session);
-  const identity = { scale: 1, translateX: 0, translateY: 0 };
   if (img && session.imgCrop) {
     img.style.objectFit = 'cover';
     const origin = `${session.imgCrop.originX * 100}% ${session.imgCrop.originY * 100}%`;
@@ -352,24 +412,44 @@ export const demoteTile = async (session: TileAnimationSession, options?: Demote
     const rectEasing = options?.easing ?? 'cubic-bezier(0.16, 1, 0.3, 1)';
     const reducedMotion = options?.reducedMotion ?? false;
 
-    if (reducedMotion || durationMs <= 0 || typeof rectEl.animate !== 'function') {
+    if (
+      reducedMotion ||
+      durationMs <= 0 ||
+      typeof rectEl.animate !== 'function'
+    ) {
       applyRectToWrapper(rectEl, targetRect, DEMOTE_Z_INDEX);
       img.style.transform = `${base} scale(${session.imgCrop.scale})`;
     } else {
-      const timing: KeyframeAnimationOptions = { duration: durationMs, easing: rectEasing, fill: 'forwards' };
+      const timing: KeyframeAnimationOptions = {
+        duration: durationMs,
+        easing: rectEasing,
+        fill: 'forwards',
+      };
       const rectAnim = rectEl.animate(
         [
-          { top: `${session.currentRect.top}px`, left: `${session.currentRect.left}px`, width: `${session.currentRect.width}px`, height: `${session.currentRect.height}px` },
-          { top: `${targetRect.top}px`, left: `${targetRect.left}px`, width: `${targetRect.width}px`, height: `${targetRect.height}px` }
+          {
+            top: `${session.currentRect.top}px`,
+            left: `${session.currentRect.left}px`,
+            width: `${session.currentRect.width}px`,
+            height: `${session.currentRect.height}px`,
+          },
+          {
+            top: `${targetRect.top}px`,
+            left: `${targetRect.left}px`,
+            width: `${targetRect.width}px`,
+            height: `${targetRect.height}px`,
+          },
         ],
-        timing
+        timing,
       );
       const imgAnim = img.animate(
         [
           { transform: `translate(0, 0) scale(1)` },
-          { transform: `translate(${tx}%, ${ty}%) scale(${session.imgCrop.scale})` }
+          {
+            transform: `translate(${tx}%, ${ty}%) scale(${session.imgCrop.scale})`,
+          },
         ],
-        timing
+        timing,
       );
       await Promise.all([rectAnim.finished, imgAnim.finished]);
 
@@ -389,7 +469,7 @@ export const demoteTile = async (session: TileAnimationSession, options?: Demote
 /** Reinserts the promoted tile into the grid. Call after overlay has faded so the tile stays on top during the fade. */
 export const reinsertPromotedTile = (
   session: TileAnimationSession,
-  options?: { preserveDimensions?: boolean }
+  options?: { preserveDimensions?: boolean },
 ) => {
   (session.wrapper ?? session.node).getAnimations().forEach((a) => a.cancel());
   if (session.wrapper) {
@@ -415,13 +495,16 @@ export const reinsertPromotedTile = (
     parent.insertBefore(session.node, session.placeholder);
     parent.removeChild(session.placeholder);
   } else {
-    session.originalParent.insertBefore(session.node, session.originalNextSibling);
+    session.originalParent.insertBefore(
+      session.node,
+      session.originalNextSibling,
+    );
   }
 };
 
 export const releasePromotedTile = (
   session: TileAnimationSession,
-  options?: { preserveDimensions?: boolean }
+  options?: { preserveDimensions?: boolean },
 ) => {
   (session.wrapper ?? session.node).getAnimations().forEach((a) => a.cancel());
   if (session.wrapper) {
@@ -457,7 +540,10 @@ export const releasePromotedTile = (
     return;
   }
 
-  session.originalParent.insertBefore(session.node, session.originalNextSibling);
+  session.originalParent.insertBefore(
+    session.node,
+    session.originalNextSibling,
+  );
 };
 
 import { thumbCropTransform as thumbCropTransformUtil } from '$lib/utils/thumb-crop';
@@ -468,11 +554,18 @@ export const cropToImgTransform = (
   cropY: number,
   cropZoom: number,
   imageAspect: number,
-  containerAspect = 1
+  containerAspect = 1,
 ): ImgCropTransform => {
   const imgW = Math.max(1, imageAspect);
   const imgH = 1;
-  const t = thumbCropTransformUtil(cropX, cropY, cropZoom, imgW, imgH, containerAspect);
+  const t = thumbCropTransformUtil(
+    cropX,
+    cropY,
+    cropZoom,
+    imgW,
+    imgH,
+    containerAspect,
+  );
   return {
     scale: t.scale,
     translateX: t.translateX,
@@ -480,7 +573,7 @@ export const cropToImgTransform = (
     originX: t.originX,
     originY: t.originY,
     cropX,
-    cropY
+    cropY,
   };
 };
 
@@ -496,12 +589,15 @@ export const computeContainRect = (
   chromeTopOffset: number,
   chromeBottomOffset: number,
   horizontalPadding = 0,
-  verticalPadding = 0
+  verticalPadding = 0,
 ): TileRect => {
   const safeImageWidth = Math.max(1, imageWidth);
   const safeImageHeight = Math.max(1, imageHeight);
   const availableWidth = Math.max(1, viewportWidth - horizontalPadding * 2);
-  const availableHeight = Math.max(1, viewportHeight - chromeTopOffset - chromeBottomOffset - verticalPadding * 2);
+  const availableHeight = Math.max(
+    1,
+    viewportHeight - chromeTopOffset - chromeBottomOffset - verticalPadding * 2,
+  );
 
   const imageRatio = safeImageWidth / safeImageHeight;
   const viewportRatio = availableWidth / availableHeight;
@@ -515,13 +611,14 @@ export const computeContainRect = (
     width = height * imageRatio;
   }
 
-  const top = chromeTopOffset + verticalPadding + (availableHeight - height) / 2;
+  const top =
+    chromeTopOffset + verticalPadding + (availableHeight - height) / 2;
   const left = horizontalPadding + (availableWidth - width) / 2;
 
   return {
     top: Math.round(top),
     left: Math.round(left),
     width: Math.round(width),
-    height: Math.round(height)
+    height: Math.round(height),
   };
 };

@@ -5,7 +5,7 @@ const KEY = 'gallery_prefs';
 /** Reactive density for gallery; synced with localStorage. Header and GalleryScene both use this. */
 export const galleryDensityStore = writable<number>(6);
 
-export type GalleryPrefs = {
+type GalleryPrefs = {
   density: number;
   gap: number;
   layoutMode: 'uniform' | 'masonry';
@@ -18,7 +18,7 @@ const DEFAULT_PREFS: GalleryPrefs = {
   gap: 8,
   layoutMode: 'uniform',
   widthMode: 'full',
-  pageSize: 60
+  pageSize: 60,
 };
 
 const clampDensity = (n: number, max: number) => Math.max(1, Math.min(max, n));
@@ -47,8 +47,12 @@ export function getGalleryPrefs(maxDensity: number = 20): GalleryPrefs | null {
       typeof parsed.gap === 'number' && Number.isFinite(parsed.gap)
         ? clampGap(parsed.gap)
         : undefined;
-    const layoutMode = isValidLayoutMode(parsed.layoutMode) ? parsed.layoutMode : undefined;
-    const widthMode = isValidWidthMode(parsed.widthMode) ? parsed.widthMode : undefined;
+    const layoutMode = isValidLayoutMode(parsed.layoutMode)
+      ? parsed.layoutMode
+      : undefined;
+    const widthMode = isValidWidthMode(parsed.widthMode)
+      ? parsed.widthMode
+      : undefined;
     const pageSize =
       typeof parsed.pageSize === 'number' && Number.isFinite(parsed.pageSize)
         ? clampPageSize(parsed.pageSize)
@@ -69,7 +73,7 @@ export function getGalleryPrefs(maxDensity: number = 20): GalleryPrefs | null {
       gap: gap ?? DEFAULT_PREFS.gap,
       layoutMode: layoutMode ?? DEFAULT_PREFS.layoutMode,
       widthMode: widthMode ?? DEFAULT_PREFS.widthMode,
-      pageSize: pageSize ?? DEFAULT_PREFS.pageSize
+      pageSize: pageSize ?? DEFAULT_PREFS.pageSize,
     };
   } catch {
     return null;
@@ -78,7 +82,7 @@ export function getGalleryPrefs(maxDensity: number = 20): GalleryPrefs | null {
 
 export function setGalleryPrefs(
   partial: Partial<GalleryPrefs>,
-  maxDensity: number = 20
+  maxDensity: number = 20,
 ): void {
   if (typeof window === 'undefined') return;
   const current = getGalleryPrefs(maxDensity) ?? DEFAULT_PREFS;
@@ -97,7 +101,9 @@ export function setGalleryPrefs(
         ? partial.widthMode
         : current.widthMode,
     pageSize:
-      partial.pageSize !== undefined ? clampPageSize(partial.pageSize) : current.pageSize
+      partial.pageSize !== undefined
+        ? clampPageSize(partial.pageSize)
+        : current.pageSize,
   };
   localStorage.setItem(KEY, JSON.stringify(next));
   if (partial.density !== undefined) {

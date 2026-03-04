@@ -4,7 +4,7 @@
     min = 1,
     max = 20,
     label = 'Zoom',
-    onUpdate
+    onUpdate,
   } = $props<{
     value: number;
     min?: number;
@@ -31,7 +31,7 @@
 </script>
 
 <div
-  class="flex items-center gap-2 text-xs uppercase tracking-[var(--tracking-heading)]"
+  class="flex items-center gap-2 text-xs tracking-[var(--tracking-heading)] uppercase"
   role="group"
   aria-label={label}
 >
@@ -42,7 +42,7 @@
       {min}
       {max}
       {value}
-      class="h-6 w-8 rounded border border-border-strong bg-transparent py-0.5 text-center text-xs tabular-nums [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+      class="h-6 w-8 [appearance:textfield] rounded border border-border-strong bg-transparent py-0.5 text-center text-xs tabular-nums [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
       aria-label={label}
       oninput={handleInput}
       onchange={handleChange}
@@ -55,8 +55,19 @@
         disabled={value >= max}
         onclick={() => onUpdate(value + 1)}
       >
-        <svg class="h-2.5 w-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
+        <svg
+          class="h-2.5 w-2.5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M5 15l7-7 7 7"
+          />
         </svg>
       </button>
       <button
@@ -66,8 +77,19 @@
         disabled={value <= min}
         onclick={() => onUpdate(value - 1)}
       >
-        <svg class="h-2.5 w-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+        <svg
+          class="h-2.5 w-2.5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M19 9l-7 7-7-7"
+          />
         </svg>
       </button>
     </div>

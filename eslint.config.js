@@ -1,15 +1,23 @@
-import svelteConfig from "@sveltejs/eslint-config";
+import svelteConfig from '@sveltejs/eslint-config';
 
 export default [
   {
     ignores: [
-      ".svelte-kit/",
-      ".vercel/",
-      "build/",
-      "dist/",
-      "node_modules/",
-      "static/",
+      '.svelte-kit/',
+      '.vercel/',
+      'build/',
+      'dist/',
+      'node_modules/',
+      'static/',
     ],
   },
   ...svelteConfig,
+  {
+    rules: {
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
+      ],
+    },
+  },
 ];

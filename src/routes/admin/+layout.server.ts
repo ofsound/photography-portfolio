@@ -20,6 +20,6 @@ export const load: LayoutServerLoad = async ({ locals }) => {
 
   return {
     role: profile.role,
-    userEmail: user.email ?? ''
+    userEmail: user.email ?? '',
   };
 };

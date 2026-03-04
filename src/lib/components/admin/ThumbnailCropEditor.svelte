@@ -15,7 +15,7 @@
     altText,
     dimensions = null,
     initialCrop = null,
-    photoId
+    photoId,
   } = $props<{
     imageId: string;
     deliveryStoragePath: string;
@@ -94,11 +94,12 @@
       left: r.left + (cxNorm - halfW) * r.width,
       top: r.top + (cyNorm - halfH) * r.height,
       width: size,
-      height: size
+      height: size,
     };
   });
 
-  const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
+  const clamp = (v: number, min: number, max: number) =>
+    Math.max(min, Math.min(max, v));
 
   const onImgLoad = (e: Event) => {
     const img = e.target as HTMLImageElement;
@@ -106,17 +107,6 @@
       imgNaturalWidth = img.naturalWidth;
       imgNaturalHeight = img.naturalHeight;
     }
-  };
-
-  const containerToNorm = (clientX: number, clientY: number) => {
-    if (!containerRef) return { x: 0.5, y: 0.5 };
-    const rect = containerRef.getBoundingClientRect();
-    const r = containedRect;
-    const px = clientX - rect.left - r.left;
-    const py = clientY - rect.top - r.top;
-    const nx = px / r.width;
-    const ny = py / r.height;
-    return { x: clamp(nx, 0, 1), y: clamp(ny, 0, 1) };
   };
 
   const onPointerDown = (e: PointerEvent) => {
@@ -137,8 +127,16 @@
     const r = containedRect;
     const normDx = dx / r.width;
     const normDy = dy / r.height;
-    cropX = clamp(dragStartCropX + normDx, cropSideNormX / 2, 1 - cropSideNormX / 2);
-    cropY = clamp(dragStartCropY + normDy, cropSideNormY / 2, 1 - cropSideNormY / 2);
+    cropX = clamp(
+      dragStartCropX + normDx,
+      cropSideNormX / 2,
+      1 - cropSideNormX / 2,
+    );
+    cropY = clamp(
+      dragStartCropY + normDy,
+      cropSideNormY / 2,
+      1 - cropSideNormY / 2,
+    );
   };
 
   const onPointerUp = (e: PointerEvent) => {
@@ -157,17 +155,19 @@
   const hasCustomCrop = $derived(
     initialCrop?.thumb_crop_x != null ||
       initialCrop?.thumb_crop_y != null ||
-      initialCrop?.thumb_crop_zoom != null
+      initialCrop?.thumb_crop_zoom != null,
   );
   const hasChanges = $derived(
     cropX !== (initialCrop?.thumb_crop_x ?? 0.5) ||
       cropY !== (initialCrop?.thumb_crop_y ?? 0.5) ||
-      cropZoom !== (initialCrop?.thumb_crop_zoom ?? 1)
+      cropZoom !== (initialCrop?.thumb_crop_zoom ?? 1),
   );
 </script>
 
 <div class="grid gap-3">
-  <p class="text-xs uppercase tracking-[var(--tracking-tight)]">Thumbnail crop (grid square)</p>
+  <p class="text-xs tracking-[var(--tracking-tight)] uppercase">
+    Thumbnail crop (grid square)
+  </p>
 
   <div
     bind:this={containerRef}
@@ -203,7 +203,7 @@
 
   <div class="flex flex-wrap items-center gap-4">
     <label class="flex items-center gap-2 text-xs">
-      <span class="uppercase tracking-[var(--tracking-tight)]">Zoom</span>
+      <span class="tracking-[var(--tracking-tight)] uppercase">Zoom</span>
       <input
         type="range"
         min={ZOOM_MIN}
@@ -214,23 +214,35 @@
       />
       <span class="tabular-nums">{cropZoom.toFixed(1)}x</span>
     </label>
-    <AdminButton size="sm" type="button" onclick={resetToDefault}>Reset to default</AdminButton>
+    <AdminButton size="sm" type="button" onclick={resetToDefault}
+      >Reset to default</AdminButton
+    >
   </div>
 
-  <form method="POST" action="?/saveThumbCrop" class="flex flex-wrap items-center gap-2">
+  <form
+    method="POST"
+    action="?/saveThumbCrop"
+    class="flex flex-wrap items-center gap-2"
+  >
     <input type="hidden" name="photo_id" value={photoId} />
     <input type="hidden" name="image_id" value={imageId} />
     <input type="hidden" name="thumb_crop_x" value={cropX} />
     <input type="hidden" name="thumb_crop_y" value={cropY} />
     <input type="hidden" name="thumb_crop_zoom" value={cropZoom} />
-    <AdminButton type="submit" disabled={!hasChanges} class="disabled:opacity-50">Save thumbnail crop</AdminButton>
+    <AdminButton
+      type="submit"
+      disabled={!hasChanges}
+      class="disabled:opacity-50">Save thumbnail crop</AdminButton
+    >
   </form>
 
   {#if hasCustomCrop}
     <form method="POST" action="?/clearThumbCrop" class="inline">
       <input type="hidden" name="photo_id" value={photoId} />
       <input type="hidden" name="image_id" value={imageId} />
-      <AdminButton variant="link" type="submit">Clear custom crop (use default)</AdminButton>
+      <AdminButton variant="link" type="submit"
+        >Clear custom crop (use default)</AdminButton
+      >
     </form>
   {/if}
 </div>

@@ -11,7 +11,7 @@
     categoryById,
     tagById,
     addTaxonomyDraft,
-    removeTaxonomyDraft
+    removeTaxonomyDraft,
   } = $props<{
     categories: AdminCategory[];
     tags: AdminTag[];
@@ -58,12 +58,12 @@
     </div>
   </div>
 
-  <form
-    method="POST"
-    action="?/bulkAssignTaxonomy"
-    class="grid w-full gap-2"
-  >
-    <input type="hidden" name="selected_photo_ids" value={selectedPhotoIds.join('\n')} />
+  <form method="POST" action="?/bulkAssignTaxonomy" class="grid w-full gap-2">
+    <input
+      type="hidden"
+      name="selected_photo_ids"
+      value={selectedPhotoIds.join('\n')}
+    />
     {#each taxonomyDraftCategories as categoryId (categoryId)}
       <input type="hidden" name="category_ids" value={categoryId} />
     {/each}
@@ -75,21 +75,31 @@
       <div class="flex flex-wrap gap-2">
         {#each taxonomyDraftCategories as categoryId (categoryId)}
           {#if categoryById(categoryId)}
-            <AdminButton variant="info" size="xs" type="button" onclick={() => removeTaxonomyDraft('category', categoryId)}>
+            <AdminButton
+              variant="info"
+              size="xs"
+              type="button"
+              onclick={() => removeTaxonomyDraft('category', categoryId)}
+            >
               {categoryById(categoryId)?.name ?? categoryId} x
             </AdminButton>
           {/if}
         {/each}
         {#each taxonomyDraftTags as tagId (tagId)}
           {#if tagById(tagId)}
-            <AdminButton variant="submit-soft" size="xs" type="button" onclick={() => removeTaxonomyDraft('tag', tagId)}>
+            <AdminButton
+              variant="submit-soft"
+              size="xs"
+              type="button"
+              onclick={() => removeTaxonomyDraft('tag', tagId)}
+            >
               {tagById(tagId)?.name ?? tagId} x
             </AdminButton>
           {/if}
         {/each}
 
         {#if taxonomyDraftCategories.length === 0 && taxonomyDraftTags.length === 0}
-          <span class="text-xs italic text-text-muted/50">Empty</span>
+          <span class="text-xs text-text-muted/50 italic">Empty</span>
         {/if}
       </div>
     </div>
@@ -97,7 +107,9 @@
     <AdminButton
       size="xs"
       type="submit"
-      disabled={selectedPhotoIds.length === 0 || (taxonomyDraftCategories.length === 0 && taxonomyDraftTags.length === 0)}
+      disabled={selectedPhotoIds.length === 0 ||
+        (taxonomyDraftCategories.length === 0 &&
+          taxonomyDraftTags.length === 0)}
     >
       Apply To Selected
     </AdminButton>

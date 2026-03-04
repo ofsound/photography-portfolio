@@ -22,7 +22,7 @@ const allowedTags = [
   'div',
   'img',
   'figure',
-  'figcaption'
+  'figcaption',
 ];
 
 const allowedAttributes: sanitizeHtml.IOptions['allowedAttributes'] = {
@@ -41,14 +41,24 @@ const allowedAttributes: sanitizeHtml.IOptions['allowedAttributes'] = {
   hr: ['class'],
   span: ['class'],
   div: ['class'],
-  img: ['src', 'alt', 'title', 'width', 'height', 'loading', 'decoding', 'class'],
+  img: [
+    'src',
+    'alt',
+    'title',
+    'width',
+    'height',
+    'loading',
+    'decoding',
+    'class',
+  ],
   figure: ['class'],
-  figcaption: ['class']
+  figcaption: ['class'],
 };
 
 const safeAnchorSchemes = new Set(['http:', 'https:', 'mailto:']);
 const safeImageSchemes = new Set(['http:', 'https:']);
-const unsafeCssValuePattern = /(expression\s*\(|javascript:|vbscript:|data:\s*text\/html|@import)/i;
+const unsafeCssValuePattern =
+  /(expression\s*\(|javascript:|vbscript:|data:\s*text\/html|@import)/i;
 const unsafeCssPropertyPattern = /^(behavior|-moz-binding)$/i;
 
 const splitSelectors = (selectors: string) => {
@@ -92,7 +102,11 @@ const splitSelectors = (selectors: string) => {
   return parts;
 };
 
-const isSafeUrl = (rawValue: string, allowedSchemes: Set<string>, allowMailto = false) => {
+const isSafeUrl = (
+  rawValue: string,
+  allowedSchemes: Set<string>,
+  allowMailto = false,
+) => {
   const value = rawValue.trim();
   if (!value) return false;
   if (value.startsWith('#')) return true;
@@ -108,7 +122,10 @@ const isSafeUrl = (rawValue: string, allowedSchemes: Set<string>, allowMailto = 
 
 const sanitizeAnchorAttrs = (attrs: Record<string, string>) => {
   const sanitized: Record<string, string> = {};
-  const href = attrs.href && isSafeUrl(attrs.href, safeAnchorSchemes, true) ? attrs.href : null;
+  const href =
+    attrs.href && isSafeUrl(attrs.href, safeAnchorSchemes, true)
+      ? attrs.href
+      : null;
 
   if (href) {
     sanitized.href = href;
@@ -139,7 +156,8 @@ const asPositiveIntString = (raw: string | undefined, max: number) => {
 
 const sanitizeImageAttrs = (attrs: Record<string, string>) => {
   const sanitized: Record<string, string> = {};
-  const src = attrs.src && isSafeUrl(attrs.src, safeImageSchemes) ? attrs.src : null;
+  const src =
+    attrs.src && isSafeUrl(attrs.src, safeImageSchemes) ? attrs.src : null;
   if (!src) return sanitized;
 
   sanitized.src = src;
@@ -155,7 +173,11 @@ const sanitizeImageAttrs = (attrs: Record<string, string>) => {
   if (attrs.loading === 'lazy' || attrs.loading === 'eager') {
     sanitized.loading = attrs.loading;
   }
-  if (attrs.decoding === 'sync' || attrs.decoding === 'async' || attrs.decoding === 'auto') {
+  if (
+    attrs.decoding === 'sync' ||
+    attrs.decoding === 'async' ||
+    attrs.decoding === 'auto'
+  ) {
     sanitized.decoding = attrs.decoding;
   }
 
@@ -211,12 +233,15 @@ const sanitizeCssDeclarationBlock = (input: string) => {
     if (unsafeCssValuePattern.test(value)) continue;
 
     let unsafeUrl = false;
-    value = value.replace(/url\(\s*(['"]?)(.*?)\1\s*\)/gi, (_, __, url: string) => {
-      if (!isSafeUrl(url, safeImageSchemes)) {
-        unsafeUrl = true;
-      }
-      return `url("${url}")`;
-    });
+    value = value.replace(
+      /url\(\s*(['"]?)(.*?)\1\s*\)/gi,
+      (_, __, url: string) => {
+        if (!isSafeUrl(url, safeImageSchemes)) {
+          unsafeUrl = true;
+        }
+        return `url("${url}")`;
+      },
+    );
 
     if (unsafeUrl) continue;
     cleaned.push(`${property}: ${value}`);
@@ -236,7 +261,11 @@ const scopeSelectors = (selectors: string, scopeSelector: string) => {
     .join(', ');
 };
 
-const scopeAndSanitizeCss = (css: string, scopeSelector: string, shouldScopeSelectors = true): string => {
+const scopeAndSanitizeCss = (
+  css: string,
+  scopeSelector: string,
+  shouldScopeSelectors = true,
+): string => {
   const input = css.replace(/\/\*[\s\S]*?\*\//g, '');
   let output = '';
   let index = 0;
@@ -254,7 +283,12 @@ const scopeAndSanitizeCss = (css: string, scopeSelector: string, shouldScopeSele
 
     if (prelude.startsWith('@')) {
       const atName = prelude.slice(1).split(/[\s(]/)[0]?.toLowerCase() ?? '';
-      if (atName === 'import' || atName === 'charset' || atName === 'namespace' || atName === 'font-face') {
+      if (
+        atName === 'import' ||
+        atName === 'charset' ||
+        atName === 'namespace' ||
+        atName === 'font-face'
+      ) {
         continue;
       }
       if (atName.endsWith('keyframes')) {
@@ -265,7 +299,9 @@ const scopeAndSanitizeCss = (css: string, scopeSelector: string, shouldScopeSele
       continue;
     }
 
-    const scopedSelectors = shouldScopeSelectors ? scopeSelectors(prelude, scopeSelector) : prelude;
+    const scopedSelectors = shouldScopeSelectors
+      ? scopeSelectors(prelude, scopeSelector)
+      : prelude;
     const sanitizedDeclarations = sanitizeCssDeclarationBlock(body);
     if (!sanitizedDeclarations) continue;
     output += `${scopedSelectors}{${sanitizedDeclarations}}`;
@@ -281,28 +317,31 @@ export const sanitizeCmsHtml = (html: string): string => {
     allowedSchemes: ['http', 'https'],
     allowedSchemesByTag: {
       a: ['http', 'https', 'mailto'],
-      img: ['http', 'https']
+      img: ['http', 'https'],
     },
     allowProtocolRelative: false,
     disallowedTagsMode: 'discard',
     transformTags: {
       a: (_tagName, attribs) => ({
         tagName: 'a',
-        attribs: sanitizeAnchorAttrs(attribs)
+        attribs: sanitizeAnchorAttrs(attribs),
       }),
       img: (_tagName, attribs) => ({
         tagName: 'img',
-        attribs: sanitizeImageAttrs(attribs)
-      })
+        attribs: sanitizeImageAttrs(attribs),
+      }),
     },
     exclusiveFilter: (frame) => {
       if (frame.tag !== 'img') return false;
       return !frame.attribs.src;
-    }
+    },
   });
 };
 
-export const sanitizeCmsCss = (css: string, pageSlug?: string | null): string => {
+export const sanitizeCmsCss = (
+  css: string,
+  pageSlug?: string | null,
+): string => {
   if (!css.trim()) return '';
   const scopeSelector = `[data-cms-scope="${createCmsScopeKey(pageSlug)}"]`;
   return scopeAndSanitizeCss(css, scopeSelector);

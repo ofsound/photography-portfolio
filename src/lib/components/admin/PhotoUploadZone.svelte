@@ -1,16 +1,23 @@
 <script lang="ts">
-  import {enhance} from '$app/forms';
-  import {invalidateAll} from '$app/navigation';
+  import { enhance } from '$app/forms';
+  import { invalidateAll } from '$app/navigation';
   import AdminButton from '$lib/components/admin/AdminButton.svelte';
 
-  const {photoId, existingImageCount = 0, draftTitle = '', draftSlug = ''} = $props<{
+  const {
+    photoId,
+    existingImageCount = 0,
+    draftTitle = '',
+    draftSlug = '',
+  } = $props<{
     photoId: string;
     existingImageCount?: number;
     draftTitle?: string;
     draftSlug?: string;
   }>();
 
-  const defaultKind = $derived(existingImageCount === 0 ? 'lead' : 'additional');
+  const defaultKind = $derived(
+    existingImageCount === 0 ? 'lead' : 'additional',
+  );
   let fileName = $state<string | null>(null);
   let uploading = $state(false);
 
@@ -27,8 +34,8 @@
   class="grid gap-2 rounded-lg border-2 border-dashed border-border-strong bg-surface p-4"
   use:enhance={() => {
     uploading = true;
-    return async ({update}) => {
-      await update({reset: false});
+    return async ({ update }) => {
+      await update({ reset: false });
       await invalidateAll();
       uploading = false;
       fileName = null;
@@ -38,11 +45,18 @@
   <input type="hidden" name="photo_id" value={photoId} />
   <input type="hidden" name="draft_title" value={draftTitle} />
   <input type="hidden" name="draft_slug" value={draftSlug} />
-  <p class="text-xs uppercase tracking-[var(--tracking-tight)]">Upload Image</p>
+  <p class="text-xs tracking-[var(--tracking-tight)] uppercase">Upload Image</p>
   <div class="grid gap-2">
     <div class="flex flex-wrap items-center gap-2">
       <AdminButton as="label" class="relative">
-        <input type="file" name="image_file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" required class="absolute inset-0 cursor-pointer opacity-0" onchange={handleFileChange} />
+        <input
+          type="file"
+          name="image_file"
+          accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
+          required
+          class="absolute inset-0 cursor-pointer opacity-0"
+          onchange={handleFileChange}
+        />
         Choose file
       </AdminButton>
       <span class="min-w-0 truncate text-sm text-text-muted">
@@ -50,11 +64,22 @@
       </span>
     </div>
     <div class="grid gap-2 sm:grid-cols-2 sm:items-center">
-      <select name="kind" class="rounded border border-border-strong px-3 py-2 text-sm">
-        <option value="lead" selected={defaultKind === 'lead'}>Lead image</option>
-        <option value="additional" selected={defaultKind === 'additional'}>Additional image</option>
+      <select
+        name="kind"
+        class="rounded border border-border-strong px-3 py-2 text-sm"
+      >
+        <option value="lead" selected={defaultKind === 'lead'}
+          >Lead image</option
+        >
+        <option value="additional" selected={defaultKind === 'additional'}
+          >Additional image</option
+        >
       </select>
-      <input name="alt_text" placeholder="Alt text" class="rounded border border-border-strong px-3 py-2" />
+      <input
+        name="alt_text"
+        placeholder="Alt text"
+        class="rounded border border-border-strong px-3 py-2"
+      />
     </div>
   </div>
   <p class="text-xs text-text-muted">

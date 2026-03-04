@@ -5,7 +5,7 @@ export const load: PageServerLoad = async ({ locals }) => {
   const { session, user } = await locals.safeGetSession();
   return {
     session,
-    userEmail: user?.email ?? null
+    userEmail: user?.email ?? null,
   };
 };
 
@@ -21,7 +21,7 @@ export const actions: Actions = {
 
     const { error } = await locals.supabase.auth.signInWithPassword({
       email,
-      password
+      password,
     });
 
     if (error) {
@@ -34,5 +34,5 @@ export const actions: Actions = {
   logout: async ({ locals }) => {
     await locals.supabase.auth.signOut();
     throw redirect(303, '/');
-  }
+  },
 };

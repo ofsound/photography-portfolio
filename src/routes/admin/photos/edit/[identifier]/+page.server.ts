@@ -9,12 +9,12 @@ export const load: PageServerLoad = async ({ locals, params, url }) => {
 
   return {
     ...editorData,
-    message: url.searchParams.get('message')
+    message: url.searchParams.get('message'),
   };
 };
 
 export const actions: Actions = {
   ...photoCoreActions,
   ...photoTaxonomyActions,
-  ...photoImageActions
+  ...photoImageActions,
 };

@@ -11,7 +11,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 
   return {
     pages: pages ?? [],
-    message: url.searchParams.get('message')
+    message: url.searchParams.get('message'),
   };
 };
 
@@ -22,11 +22,13 @@ export const actions: Actions = {
 
     if (!result.ok) return fail(400, { message: result.message });
 
-    const { error } = await locals.supabase.from('pages').insert(result.payload);
+    const { error } = await locals.supabase
+      .from('pages')
+      .insert(result.payload);
     if (error) {
       return fail(400, { message: error.message });
     }
 
     return { success: true, message: 'Page created.' };
-  }
+  },
 };

@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { resolve } from '$app/paths';
+
   const { data } = $props();
 </script>
 
@@ -13,15 +15,26 @@
   </form>
 
   {#if data.q && data.results.length === 0}
-    <p class="text-sm uppercase tracking-[var(--tracking-label)] text-text-muted">No results.</p>
+    <p
+      class="text-sm tracking-[var(--tracking-label)] text-text-muted uppercase"
+    >
+      No results.
+    </p>
   {/if}
 
   <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
     {#each data.results as result (result.id)}
-      <a href={`/photo/${result.slug}`} class="rounded border border-border p-4 transition hover:border-border-strong">
-        <h2 class="text-sm uppercase tracking-[var(--tracking-label)]">{result.title}</h2>
+      <a
+        href={resolve(`/photo/${result.slug}`)}
+        class="rounded border border-border p-4 transition hover:border-border-strong"
+      >
+        <h2 class="text-sm tracking-[var(--tracking-label)] uppercase">
+          {result.title}
+        </h2>
         {#if result.description}
-          <p class="mt-2 text-sm text-text-muted line-clamp-3">{result.description}</p>
+          <p class="mt-2 line-clamp-3 text-sm text-text-muted">
+            {result.description}
+          </p>
         {/if}
       </a>
     {/each}

@@ -25,7 +25,7 @@
     class: className = '',
     disabled = false,
     readonly = false,
-    form
+    form,
   }: Props = $props();
 
   const fullClass = $derived(`${baseClass} ${className}`.trim());

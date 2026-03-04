@@ -18,7 +18,7 @@
     densityVisible = false,
     densityColCount = 6,
     densityMax = 20,
-    onDensityChange
+    onDensityChange,
   } = $props<{
     q: string;
     categories: AdminCategory[];
@@ -35,27 +35,39 @@
 
 <div class="mt-6 mb-6 flex w-full flex-wrap items-end gap-3">
   <form method="GET" class="flex min-w-0 flex-1 flex-wrap items-end gap-3">
-    <div class="min-w-[180px] max-w-[300px] flex-1">
+    <input type="hidden" name="showArchived" value={showArchived ? '1' : '0'} />
+    <div class="max-w-[300px] min-w-[180px] flex-1">
       <FormField label="Search" id="filter-q">
-        <FormInput id="filter-q" name="q" value={q} placeholder="Search photos" />
+        <FormInput
+          id="filter-q"
+          name="q"
+          value={q}
+          placeholder="Search photos"
+        />
       </FormField>
     </div>
-    <div class="min-w-[140px] max-w-[200px] flex-1">
+    <div class="max-w-[200px] min-w-[140px] flex-1">
       <FormField label="Category" id="filter-category">
         <select id="filter-category" name="category" class={selectClass}>
           <option value="">all</option>
           {#each categories as category (category.id)}
-            <option value={category.id} selected={filterCategoryId === category.id}>{category.name}</option>
+            <option
+              value={category.id}
+              selected={filterCategoryId === category.id}
+              >{category.name}</option
+            >
           {/each}
         </select>
       </FormField>
     </div>
-    <div class="min-w-[140px] max-w-[200px] flex-1">
+    <div class="max-w-[200px] min-w-[140px] flex-1">
       <FormField label="Tag" id="filter-tag">
         <select id="filter-tag" name="tag" class={selectClass}>
           <option value="">all</option>
           {#each tags as tag (tag.id)}
-            <option value={tag.id} selected={filterTagId === tag.id}>{tag.name}</option>
+            <option value={tag.id} selected={filterTagId === tag.id}
+              >{tag.name}</option
+            >
           {/each}
         </select>
       </FormField>
@@ -66,7 +78,7 @@
     </div>
   </form>
   {#if densityVisible && onDensityChange}
-    <div class="ml-auto mb-1">
+    <div class="mb-1 ml-auto">
       <ZoomControl
         label="Items Per Row"
         min={1}
@@ -77,4 +89,3 @@
     </div>
   {/if}
 </div>
-

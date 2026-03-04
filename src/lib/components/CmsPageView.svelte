@@ -1,4 +1,6 @@
 <script lang="ts">
+  /* eslint-disable svelte/no-at-html-tags -- CMS content is sanitized with sanitize-html */
+  import sanitizeHtml from 'sanitize-html';
   import { createCmsScopeKey } from '$lib/utils/cms-scope';
 
   type CmsPageData = {
@@ -21,7 +23,14 @@
   });
 </script>
 
-<section class="mx-auto max-w-[var(--max-width-cms)] px-5 py-14" data-cms-scope={scopeKey}>
-  <h1 class="text-3xl uppercase tracking-[var(--tracking-hero)]">{page.title}</h1>
-  <article class="prose mt-6 max-w-none">{@html page.html_content}</article>
+<section
+  class="mx-auto max-w-[var(--max-width-cms)] px-5 py-14"
+  data-cms-scope={scopeKey}
+>
+  <h1 class="text-3xl tracking-[var(--tracking-hero)] uppercase">
+    {page.title}
+  </h1>
+  <article class="prose mt-6 max-w-none">
+    {@html sanitizeHtml(page.html_content)}
+  </article>
 </section>

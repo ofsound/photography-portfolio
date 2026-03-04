@@ -5,11 +5,19 @@ declare global {
   namespace App {
     interface Locals {
       supabase: SupabaseClient<Database>;
-      safeGetSession: () => Promise<{ session: Session | null; user: User | null }>;
+      safeGetSession: () => Promise<{
+        session: Session | null;
+        user: User | null;
+      }>;
     }
     interface PageData {
       session: Session | null;
-      page?: { title: string; html_content: string; css_module: string; slug?: string };
+      page?: {
+        title: string;
+        html_content: string;
+        css_module: string;
+        slug?: string;
+      };
       siteSettings: {
         theme_default: 'light' | 'dark' | 'system';
         transition_preset: 'cinematic' | 'snappy' | 'experimental';
@@ -21,4 +29,4 @@ declare global {
   }
 }
 
-export { };
+export {};

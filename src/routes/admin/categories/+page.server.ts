@@ -1,5 +1,11 @@
 import { fail, type Actions } from '@sveltejs/kit';
-import { asBoolean, asOptionalNumber, asString, assertTitle, toSlug } from '$lib/server/admin-helpers';
+import {
+  asBoolean,
+  asOptionalNumber,
+  asString,
+  assertTitle,
+  toSlug,
+} from '$lib/server/admin-helpers';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals }) => {
@@ -31,7 +37,7 @@ export const actions: Actions = {
       slug,
       description,
       sort_order: sortOrder,
-      is_active: isActive
+      is_active: isActive,
     });
 
     if (error) {
@@ -61,7 +67,13 @@ export const actions: Actions = {
 
     const { error } = await locals.supabase
       .from('categories')
-      .update({ name, slug, description, sort_order: sortOrder, is_active: isActive })
+      .update({
+        name,
+        slug,
+        description,
+        sort_order: sortOrder,
+        is_active: isActive,
+      })
       .eq('id', id);
 
     if (error) {
@@ -79,12 +91,15 @@ export const actions: Actions = {
       return fail(400, { message: 'Missing category id.' });
     }
 
-    const { error } = await locals.supabase.from('categories').delete().eq('id', id);
+    const { error } = await locals.supabase
+      .from('categories')
+      .delete()
+      .eq('id', id);
 
     if (error) {
       return fail(400, { message: error.message });
     }
 
     return { success: true, message: 'Category removed.' };
-  }
+  },
 };

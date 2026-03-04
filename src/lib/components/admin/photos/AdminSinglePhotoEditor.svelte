@@ -1,12 +1,18 @@
 <script lang="ts">
   import { invalidateAll } from '$app/navigation';
   import AdminPhotoCard from '$lib/components/admin/photos/AdminPhotoCard.svelte';
-  import { persistAdditionalOrder, persistTaxonomy } from '$lib/components/admin/photos/persist';
-  import type { AdminCategory, AdminPhoto, AdminPhotoImage, AdminTag } from '$lib/types/content';
+  import {
+    persistAdditionalOrder,
+    persistTaxonomy,
+  } from '$lib/components/admin/photos/persist';
+  import type {
+    AdminCategory,
+    AdminPhoto,
+    AdminPhotoImage,
+    AdminTag,
+  } from '$lib/types/content';
 
-  const {
-    data
-  } = $props<{
+  const { data } = $props<{
     data: {
       photo: AdminPhoto | (Omit<AdminPhoto, 'id'> & { id: null });
       categories: AdminCategory[];
@@ -54,15 +60,29 @@
 
   const onAdditionalReorder = async (_photoId: string, next: string[]) => {
     orderedAdditional = next;
-    if (photo.id && (await persistAdditionalOrder(window.location.pathname, photo.id, next))) {
+    if (
+      photo.id &&
+      (await persistAdditionalOrder(window.location.pathname, photo.id, next))
+    ) {
       invalidateAll();
     }
   };
 
-  const onTaxonomyChange = async (photoId: string, categoryIds: string[], tagIds: string[]) => {
+  const onTaxonomyChange = async (
+    photoId: string,
+    categoryIds: string[],
+    tagIds: string[],
+  ) => {
     selectedCategoryIds = categoryIds;
     selectedTagIds = tagIds;
-    if (await persistTaxonomy(window.location.pathname, photoId, categoryIds, tagIds)) {
+    if (
+      await persistTaxonomy(
+        window.location.pathname,
+        photoId,
+        categoryIds,
+        tagIds,
+      )
+    ) {
       invalidateAll();
     }
   };

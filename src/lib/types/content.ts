@@ -1,22 +1,3 @@
-export type PhotoImage = {
-  id: string;
-  kind: 'lead' | 'additional';
-  delivery_storage_path: string;
-  dimensions: string | null;
-  position: number;
-  alt_text: string | null;
-};
-
-export type PhotoWithImages = {
-  id: string;
-  slug: string;
-  title: string;
-  description: string | null;
-  capture_date: string | null;
-  dimensions: string | null;
-  photo_images: PhotoImage[];
-};
-
 // Admin types (match server load return shapes)
 export type AdminPhotoImage = {
   id: string;

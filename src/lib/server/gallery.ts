@@ -1,6 +1,9 @@
-import { GALLERY_DETAIL_SHARED_WIDTH, photoPublicUrl } from '$lib/utils/storage-url';
+import {
+  GALLERY_DETAIL_SHARED_WIDTH,
+  photoPublicUrl,
+} from '$lib/utils/storage-url';
 
-export type GalleryPhotoCardImage = {
+type GalleryPhotoCardImage = {
   id: string;
   kind: 'lead' | 'additional';
   position: number;
@@ -12,7 +15,7 @@ export type GalleryPhotoCardImage = {
   thumb_crop_zoom: number | null;
 };
 
-export type GalleryPhotoCard = {
+type GalleryPhotoCard = {
   id: string;
   slug: string;
   title: string;
@@ -24,7 +27,7 @@ export type GalleryPhotoCard = {
   additionalImages: GalleryPhotoCardImage[];
 };
 
-export type GalleryPhotoNeighbors = {
+type GalleryPhotoNeighbors = {
   prevSlug: string | null;
   nextSlug: string | null;
 };
@@ -42,9 +45,13 @@ export const asPositiveInt = (value: string | null, fallback: number) => {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
 };
 
-export const normalizePageSize = (value: number) => Math.max(1, Math.min(maxPageSize, value));
+export const normalizePageSize = (value: number) =>
+  Math.max(1, Math.min(maxPageSize, value));
 
-export const loadGalleryPage = async (locals: App.Locals, options: GalleryLoadOptions) => {
+export const loadGalleryPage = async (
+  locals: App.Locals,
+  options: GalleryLoadOptions,
+) => {
   const page = Math.max(1, options.page);
   const pageSize = normalizePageSize(options.pageSize);
   const start = (page - 1) * pageSize;
@@ -54,7 +61,7 @@ export const loadGalleryPage = async (locals: App.Locals, options: GalleryLoadOp
     .from('photos')
     .select(
       'id, slug, title, description, capture_date, photo_images(id, kind, position, delivery_storage_path, alt_text, dimensions, thumb_crop_x, thumb_crop_y, thumb_crop_zoom)',
-      { count: 'exact' }
+      { count: 'exact' },
     )
     .eq('status', 'published')
     .is('deleted_at', null)
@@ -81,11 +88,13 @@ export const loadGalleryPage = async (locals: App.Locals, options: GalleryLoadOp
       .filter((image) => Boolean(image.delivery_storage_path))
       .map((image) => ({
         ...image,
-        delivery_storage_path: image.delivery_storage_path as string
+        delivery_storage_path: image.delivery_storage_path as string,
       }))
       .sort((a, b) => a.position - b.position);
     const lead = sortedImages.find((image) => image.kind === 'lead');
-    const additionalImages = sortedImages.filter((image) => image.kind === 'additional');
+    const additionalImages = sortedImages.filter(
+      (image) => image.kind === 'additional',
+    );
 
     return {
       id: photo.id,
@@ -93,29 +102,39 @@ export const loadGalleryPage = async (locals: App.Locals, options: GalleryLoadOp
       title: photo.title,
       description: photo.description,
       capture_date: photo.capture_date,
-      thumb: lead?.delivery_storage_path ? photoPublicUrl(lead.delivery_storage_path, GALLERY_DETAIL_SHARED_WIDTH) : null,
+      thumb: lead?.delivery_storage_path
+        ? photoPublicUrl(
+          lead.delivery_storage_path,
+          GALLERY_DETAIL_SHARED_WIDTH,
+        )
+        : null,
       thumbAlt: lead?.alt_text ?? photo.title,
       leadImage: lead ?? null,
-      additionalImages
+      additionalImages,
     };
   });
 
   return { photos, hasMore };
 };
 
-export const loadGalleryPhotoNeighbors = async (locals: App.Locals, photoId: string): Promise<GalleryPhotoNeighbors> => {
+export const loadGalleryPhotoNeighbors = async (
+  locals: App.Locals,
+  photoId: string,
+): Promise<GalleryPhotoNeighbors> => {
   const { data, error } = await locals.supabase.rpc('gallery_photo_neighbors', {
-    p_photo_id: photoId
+    p_photo_id: photoId,
   });
 
   if (error || !Array.isArray(data) || data.length === 0) {
     return { prevSlug: null, nextSlug: null };
   }
 
-  const row = data[0] as { prev_slug: string | null; next_slug: string | null } | undefined;
+  const row = data[0] as
+    | { prev_slug: string | null; next_slug: string | null }
+    | undefined;
 
   return {
     prevSlug: row?.prev_slug ?? null,
-    nextSlug: row?.next_slug ?? null
+    nextSlug: row?.next_slug ?? null,
   };
 };

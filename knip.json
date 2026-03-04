@@ -1,0 +1,14 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "ignoreFiles": [
+    "eslint.config.js",
+    "supabase/functions/_shared/cors.ts",
+    "supabase/functions/image-convert-on-upload/index.ts"
+  ],
+  "ignoreBinaries": [
+    "eslint"
+  ],
+  "ignoreDependencies": [
+    "@sveltejs/eslint-config"
+  ]
+}

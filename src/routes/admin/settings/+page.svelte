@@ -8,83 +8,167 @@
 
   const settings = $derived(
     data.settings ?? {
-    theme_default: 'light',
-    grid_desktop_default: 6,
-    grid_mobile_default: 3,
-    max_content_width_px: null,
-    gallery_layout_mode: 'uniform',
-    gallery_gap_px: 8,
-    uniform_thumb_ratio: 1,
-    transition_preset: 'cinematic',
-    allow_transition_toggle: true,
-    show_search_bar: true,
-    show_photograph_info: true
-    }
+      theme_default: 'light',
+      grid_desktop_default: 6,
+      grid_mobile_default: 3,
+      max_content_width_px: null,
+      gallery_layout_mode: 'uniform',
+      gallery_gap_px: 8,
+      uniform_thumb_ratio: 1,
+      transition_preset: 'cinematic',
+      allow_transition_toggle: true,
+      show_search_bar: true,
+      show_photograph_info: true,
+    },
   );
 
-  const selectClass = 'w-full rounded border border-border-strong bg-surface px-3 py-2 text-sm';
+  const selectClass =
+    'w-full rounded border border-border-strong bg-surface px-3 py-2 text-sm';
 </script>
 
 <AdminHeading>Site Settings</AdminHeading>
 
 {#if form?.message}
-  <p class="mt-3 rounded border border-border px-3 py-2 text-sm">{form.message}</p>
+  <p class="mt-3 rounded border border-border px-3 py-2 text-sm">
+    {form.message}
+  </p>
 {/if}
 
-<form method="POST" action="?/save" class="mt-6 grid max-w-[var(--max-width-content)] gap-4">
+<form
+  method="POST"
+  action="?/save"
+  class="mt-6 grid max-w-[var(--max-width-content)] gap-4"
+>
   <div class="grid gap-3 sm:grid-cols-2">
     <FormField label="Site Theme" id="settings-theme_default">
-      <select name="theme_default" id="settings-theme_default" class={selectClass}>
-        <option selected={settings.theme_default !== 'dark'} value="light">Light</option>
-        <option selected={settings.theme_default === 'dark'} value="dark">Dark</option>
+      <select
+        name="theme_default"
+        id="settings-theme_default"
+        class={selectClass}
+      >
+        <option selected={settings.theme_default !== 'dark'} value="light"
+          >Light</option
+        >
+        <option selected={settings.theme_default === 'dark'} value="dark"
+          >Dark</option
+        >
       </select>
     </FormField>
     <FormField label="Layout Mode" id="settings-gallery_layout_mode">
-      <select name="gallery_layout_mode" id="settings-gallery_layout_mode" class={selectClass}>
-        <option selected={settings.gallery_layout_mode === 'uniform'} value="uniform">uniform</option>
-        <option selected={settings.gallery_layout_mode === 'masonry'} value="masonry">masonry</option>
+      <select
+        name="gallery_layout_mode"
+        id="settings-gallery_layout_mode"
+        class={selectClass}
+      >
+        <option
+          selected={settings.gallery_layout_mode === 'uniform'}
+          value="uniform">uniform</option
+        >
+        <option
+          selected={settings.gallery_layout_mode === 'masonry'}
+          value="masonry">masonry</option
+        >
       </select>
     </FormField>
     <FormField label="Gallery gap (px)" id="settings-gallery_gap_px">
-      <FormInput id="settings-gallery_gap_px" name="gallery_gap_px" type="number" min="0" max="20" value={String(settings.gallery_gap_px ?? 8)} />
+      <FormInput
+        id="settings-gallery_gap_px"
+        name="gallery_gap_px"
+        type="number"
+        min="0"
+        max="20"
+        value={String(settings.gallery_gap_px ?? 8)}
+      />
     </FormField>
   </div>
 
   <div class="grid gap-3 sm:grid-cols-2">
     <FormField label="Desktop Default" id="settings-grid_desktop_default">
-      <FormInput id="settings-grid_desktop_default" name="grid_desktop_default" type="number" value={String(settings.grid_desktop_default)} />
+      <FormInput
+        id="settings-grid_desktop_default"
+        name="grid_desktop_default"
+        type="number"
+        value={String(settings.grid_desktop_default)}
+      />
     </FormField>
     <FormField label="Mobile Default" id="settings-grid_mobile_default">
-      <FormInput id="settings-grid_mobile_default" name="grid_mobile_default" type="number" value={String(settings.grid_mobile_default)} />
+      <FormInput
+        id="settings-grid_mobile_default"
+        name="grid_mobile_default"
+        type="number"
+        value={String(settings.grid_mobile_default)}
+      />
     </FormField>
   </div>
 
   <div class="grid gap-3 sm:grid-cols-3">
     <FormField label="Max Width (px)" id="settings-max_content_width_px">
-      <FormInput id="settings-max_content_width_px" name="max_content_width_px" type="number" value={settings.max_content_width_px != null ? String(settings.max_content_width_px) : ''} />
+      <FormInput
+        id="settings-max_content_width_px"
+        name="max_content_width_px"
+        type="number"
+        value={settings.max_content_width_px != null
+          ? String(settings.max_content_width_px)
+          : ''}
+      />
     </FormField>
     <FormField label="Uniform Thumb Ratio" id="settings-uniform_thumb_ratio">
-      <FormInput id="settings-uniform_thumb_ratio" name="uniform_thumb_ratio" type="number" step="0.001" value={String(settings.uniform_thumb_ratio)} />
+      <FormInput
+        id="settings-uniform_thumb_ratio"
+        name="uniform_thumb_ratio"
+        type="number"
+        step="0.001"
+        value={String(settings.uniform_thumb_ratio)}
+      />
     </FormField>
-    <FormField label={'Transition Preset' + (data.role !== 'admin' ? ' (Admin)' : '')} id="settings-transition_preset">
-      <select name="transition_preset" id="settings-transition_preset" class={selectClass} disabled={data.role !== 'admin'}>
-        <option selected={settings.transition_preset === 'cinematic'} value="cinematic">cinematic</option>
-        <option selected={settings.transition_preset === 'snappy'} value="snappy">snappy</option>
-        <option selected={settings.transition_preset === 'experimental'} value="experimental">experimental</option>
+    <FormField
+      label={'Transition Preset' + (data.role !== 'admin' ? ' (Admin)' : '')}
+      id="settings-transition_preset"
+    >
+      <select
+        name="transition_preset"
+        id="settings-transition_preset"
+        class={selectClass}
+        disabled={data.role !== 'admin'}
+      >
+        <option
+          selected={settings.transition_preset === 'cinematic'}
+          value="cinematic">cinematic</option
+        >
+        <option
+          selected={settings.transition_preset === 'snappy'}
+          value="snappy">snappy</option
+        >
+        <option
+          selected={settings.transition_preset === 'experimental'}
+          value="experimental">experimental</option
+        >
       </select>
     </FormField>
   </div>
 
   <label class="flex items-center gap-2 text-sm">
-    <input type="checkbox" name="allow_transition_toggle" checked={settings.allow_transition_toggle} /> Allow Transition Toggle
+    <input
+      type="checkbox"
+      name="allow_transition_toggle"
+      checked={settings.allow_transition_toggle}
+    /> Allow Transition Toggle
   </label>
 
   <label class="flex items-center gap-2 text-sm">
-    <input type="checkbox" name="show_search_bar" checked={settings.show_search_bar} /> Show Search Bar
+    <input
+      type="checkbox"
+      name="show_search_bar"
+      checked={settings.show_search_bar}
+    /> Show Search Bar
   </label>
 
   <label class="flex items-center gap-2 text-sm">
-    <input type="checkbox" name="show_photograph_info" checked={settings.show_photograph_info} /> Show Photograph Info
+    <input
+      type="checkbox"
+      name="show_photograph_info"
+      checked={settings.show_photograph_info}
+    /> Show Photograph Info
   </label>
 
   <AdminButton wFit type="submit">Save Settings</AdminButton>

@@ -23,7 +23,7 @@
   const {
     slides,
     slideDurationMs = DEFAULT_SLIDE_DURATION_MS,
-    transitionDurationMs = DEFAULT_TRANSITION_DURATION_MS
+    transitionDurationMs = DEFAULT_TRANSITION_DURATION_MS,
   } = $props<{
     slides: Slide[];
     slideDurationMs?: number;
@@ -44,15 +44,21 @@
   }
 
   const safeSlideDurationMs = $derived(
-    clampInt(slideDurationMs, SLIDE_DURATION_MIN_MS, SLIDE_DURATION_MAX_MS)
+    clampInt(slideDurationMs, SLIDE_DURATION_MIN_MS, SLIDE_DURATION_MAX_MS),
   );
   const safeTransitionDurationMs = $derived(
     Math.min(
       safeSlideDurationMs,
-      clampInt(transitionDurationMs, TRANSITION_DURATION_MIN_MS, TRANSITION_DURATION_MAX_MS)
-    )
+      clampInt(
+        transitionDurationMs,
+        TRANSITION_DURATION_MIN_MS,
+        TRANSITION_DURATION_MAX_MS,
+      ),
+    ),
   );
-  const zoomDurationMs = $derived(safeSlideDurationMs + safeTransitionDurationMs);
+  const zoomDurationMs = $derived(
+    safeSlideDurationMs + safeTransitionDurationMs,
+  );
 
   function hashId(input: string) {
     let hash = 0;
@@ -87,7 +93,7 @@
     const nextSlot: Slot = {
       index,
       version: versionSeed,
-      origin: originForSlide(slides[index])
+      origin: originForSlide(slides[index]),
     };
 
     if (slot === 0) {
@@ -128,9 +134,7 @@
   });
 
   $effect(() => {
-    slides.length;
-    safeSlideDurationMs;
-    safeTransitionDurationMs;
+    void (slides.length, safeSlideDurationMs, safeTransitionDurationMs);
 
     clearTimers();
     slotA = null;
@@ -159,9 +163,13 @@
   }
 </script>
 
-<section class="relative h-[calc(100dvh-var(--site-header-height,var(--size-header)))] w-full overflow-hidden bg-canvas">
+<section
+  class="relative h-[calc(100dvh-var(--site-header-height,var(--size-header)))] w-full overflow-hidden bg-canvas"
+>
   {#if slides.length === 0}
-    <div class="grid h-full place-items-center text-sm uppercase tracking-[var(--tracking-nav)] text-text-subtle">
+    <div
+      class="grid h-full place-items-center text-sm tracking-[var(--tracking-nav)] text-text-subtle uppercase"
+    >
       Add slideshow images in Admin -> Homepage.
     </div>
   {:else}

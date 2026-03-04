@@ -1,17 +1,30 @@
 import { asString } from '$lib/server/admin-helpers';
-import type { PhotoImageRow } from '$lib/server/admin/photos/shared';
-import { isUuid, parseSearch } from '$lib/server/admin/photos/shared';
+import {
+  isUuid,
+  parseSearch,
+  type PhotoImageRow,
+} from '$lib/server/admin/photos/shared';
 
-export const loadAdminPhotosPage = async ({ locals, url }: { locals: App.Locals; url: URL }) => {
+export const loadAdminPhotosPage = async ({
+  locals,
+  url,
+}: {
+  locals: App.Locals;
+  url: URL;
+}) => {
   const showArchived = url.searchParams.get('showArchived') === '1';
   const q = asString(url.searchParams.get('q')).trim();
-  const filterCategoryId = isUuid(asString(url.searchParams.get('category'))) ? asString(url.searchParams.get('category')) : '';
-  const filterTagId = isUuid(asString(url.searchParams.get('tag'))) ? asString(url.searchParams.get('tag')) : '';
+  const filterCategoryId = isUuid(asString(url.searchParams.get('category')))
+    ? asString(url.searchParams.get('category'))
+    : '';
+  const filterTagId = isUuid(asString(url.searchParams.get('tag')))
+    ? asString(url.searchParams.get('tag'))
+    : '';
 
   let photoQuery = locals.supabase
     .from('photos')
     .select(
-      'id, slug, title, capture_date, description, dimensions, license_text, og_title, og_description, og_image_path, status, deleted_at, updated_at, admin_sort_order'
+      'id, slug, title, capture_date, description, dimensions, license_text, og_title, og_description, og_image_path, status, deleted_at, updated_at, admin_sort_order',
     )
     .order('admin_sort_order', { ascending: true, nullsFirst: false })
     .order('updated_at', { ascending: false })
@@ -25,7 +38,9 @@ export const loadAdminPhotosPage = async ({ locals, url }: { locals: App.Locals;
 
   if (q) {
     const searchPattern = parseSearch(q);
-    photoQuery = photoQuery.or(`title.ilike.${searchPattern},description.ilike.${searchPattern},slug.ilike.${searchPattern}`);
+    photoQuery = photoQuery.or(
+      `title.ilike.${searchPattern},description.ilike.${searchPattern},slug.ilike.${searchPattern}`,
+    );
   }
 
   const [
@@ -35,15 +50,35 @@ export const loadAdminPhotosPage = async ({ locals, url }: { locals: App.Locals;
     pendingQuery,
     { data: settings },
     activeCountQuery,
-    archivedCountQuery
+    archivedCountQuery,
   ] = await Promise.all([
     photoQuery,
-    locals.supabase.from('categories').select('id, name, slug, is_active').order('name', { ascending: true }),
-    locals.supabase.from('tags').select('id, name, slug, is_active').order('name', { ascending: true }),
-    locals.supabase.from('photo_images').select('id', { count: 'exact', head: true }).eq('is_active', true).is('delivery_storage_path', null),
-    locals.supabase.from('site_settings').select('max_content_width_px').eq('singleton_id', 1).maybeSingle(),
-    locals.supabase.from('photos').select('id', { count: 'exact', head: true }).is('deleted_at', null),
-    locals.supabase.from('photos').select('id', { count: 'exact', head: true }).not('deleted_at', 'is', null)
+    locals.supabase
+      .from('categories')
+      .select('id, name, slug, is_active')
+      .order('name', { ascending: true }),
+    locals.supabase
+      .from('tags')
+      .select('id, name, slug, is_active')
+      .order('name', { ascending: true }),
+    locals.supabase
+      .from('photo_images')
+      .select('id', { count: 'exact', head: true })
+      .eq('is_active', true)
+      .is('delivery_storage_path', null),
+    locals.supabase
+      .from('site_settings')
+      .select('max_content_width_px')
+      .eq('singleton_id', 1)
+      .maybeSingle(),
+    locals.supabase
+      .from('photos')
+      .select('id', { count: 'exact', head: true })
+      .is('deleted_at', null),
+    locals.supabase
+      .from('photos')
+      .select('id', { count: 'exact', head: true })
+      .not('deleted_at', 'is', null),
   ]);
 
   const photoIds = (photos ?? []).map((photo: { id: string }) => photo.id);
@@ -54,15 +89,21 @@ export const loadAdminPhotosPage = async ({ locals, url }: { locals: App.Locals;
 
   if (photoIds.length) {
     const [categoryLinks, tagLinks, images] = await Promise.all([
-      locals.supabase.from('photo_categories').select('photo_id, category_id').in('photo_id', photoIds),
-      locals.supabase.from('photo_tags').select('photo_id, tag_id').in('photo_id', photoIds),
+      locals.supabase
+        .from('photo_categories')
+        .select('photo_id, category_id')
+        .in('photo_id', photoIds),
+      locals.supabase
+        .from('photo_tags')
+        .select('photo_id, tag_id')
+        .in('photo_id', photoIds),
       locals.supabase
         .from('photo_images')
         .select(
-          'id, photo_id, kind, position, source_storage_path, delivery_storage_path, source_mime_type, source_bytes, alt_text, dimensions, thumb_crop_x, thumb_crop_y, thumb_crop_zoom, created_at'
+          'id, photo_id, kind, position, source_storage_path, delivery_storage_path, source_mime_type, source_bytes, alt_text, dimensions, thumb_crop_x, thumb_crop_y, thumb_crop_zoom, created_at',
         )
         .in('photo_id', photoIds)
-        .order('position', { ascending: true })
+        .order('position', { ascending: true }),
     ]);
 
     photoCategories = categoryLinks.data ?? [];
@@ -89,11 +130,16 @@ export const loadAdminPhotosPage = async ({ locals, url }: { locals: App.Locals;
     photoImageMap[image.photo_id].push(image);
   }
 
-  const photoConversionStateMap: Record<string, 'no-images' | 'pending' | 'ready' | 'mixed'> = {};
+  const photoConversionStateMap: Record<
+    string,
+    'no-images' | 'pending' | 'ready' | 'mixed'
+  > = {};
 
   for (const photo of photos ?? []) {
     const images = photoImageMap[photo.id] ?? [];
-    const hasReady = images.some((image) => Boolean(image.delivery_storage_path));
+    const hasReady = images.some((image) =>
+      Boolean(image.delivery_storage_path),
+    );
     const hasPending = images.some((image) => !image.delivery_storage_path);
 
     if (!images.length) {
@@ -137,7 +183,6 @@ export const loadAdminPhotosPage = async ({ locals, url }: { locals: App.Locals;
     activeCount: activeCountQuery.count ?? 0,
     archivedCount: archivedCountQuery.count ?? 0,
     maxDensity: 20,
-    maxContentWidthPx: settings?.max_content_width_px ?? null
+    maxContentWidthPx: settings?.max_content_width_px ?? null,
   };
 };
-

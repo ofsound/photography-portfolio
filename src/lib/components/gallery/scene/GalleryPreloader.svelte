@@ -1,13 +1,7 @@
 <script lang="ts">
   import { fade } from 'svelte/transition';
 
-  const {
-    visible,
-    enabled,
-    imagesLoaded,
-    totalImages,
-    fadeMs
-  } = $props<{
+  const { visible, enabled, imagesLoaded, totalImages, fadeMs } = $props<{
     visible: boolean;
     enabled: boolean;
     imagesLoaded: number;
@@ -29,7 +23,9 @@
       <div class="preloader-bar-track">
         <div
           class="preloader-bar-fill"
-          style="width: {totalImages > 0 ? (imagesLoaded / totalImages) * 100 : 0}%"
+          style="width: {totalImages > 0
+            ? (imagesLoaded / totalImages) * 100
+            : 0}%"
         ></div>
       </div>
     </div>
@@ -84,7 +80,11 @@
 
   .preloader-bar-fill {
     height: 100%;
-    background: linear-gradient(to bottom, color-mix(in srgb, var(--color-brand) 90%, white), var(--color-brand));
+    background: linear-gradient(
+      to bottom,
+      color-mix(in srgb, var(--color-brand) 90%, white),
+      var(--color-brand)
+    );
     border-radius: 1px;
     transition: width 0.12s ease-out;
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);

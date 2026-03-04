@@ -17,14 +17,20 @@ const deriveSeedFromFilename = (filename: string) => {
 export const POST: RequestHandler = async ({ locals, request }) => {
   const role = await getCmsRole(locals);
   if (role !== 'admin' && role !== 'editor') {
-    return json({ success: false, message: 'CMS access denied.' }, { status: 403 });
+    return json(
+      { success: false, message: 'CMS access denied.' },
+      { status: 403 },
+    );
   }
 
   const form = await request.formData();
   const imageFile = form.get('image_file');
 
   if (!(imageFile instanceof File) || !imageFile.size) {
-    return json({ success: false, message: 'Select an image file.' }, { status: 400 });
+    return json(
+      { success: false, message: 'Select an image file.' },
+      { status: 400 },
+    );
   }
 
   const seed = deriveSeedFromFilename(imageFile.name);
@@ -33,11 +39,12 @@ export const POST: RequestHandler = async ({ locals, request }) => {
   try {
     const created = await createMinimalDraftPhoto(locals, {
       title: seed,
-      slug: seed
+      slug: seed,
     });
     photoId = created.id;
   } catch (cause) {
-    const message = cause instanceof Error ? cause.message : 'Failed to create draft photo.';
+    const message =
+      cause instanceof Error ? cause.message : 'Failed to create draft photo.';
     return json({ success: false, message }, { status: 400 });
   }
 

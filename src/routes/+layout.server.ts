@@ -5,7 +5,9 @@ export const load: LayoutServerLoad = async ({ locals }) => {
     locals.safeGetSession(),
     locals.supabase
       .from('site_settings')
-      .select('theme_default, transition_preset, allow_transition_toggle, show_search_bar, show_photograph_info')
+      .select(
+        'theme_default, transition_preset, allow_transition_toggle, show_search_bar, show_photograph_info',
+      )
       .eq('singleton_id', 1)
       .maybeSingle(),
     locals.supabase
@@ -16,7 +18,7 @@ export const load: LayoutServerLoad = async ({ locals }) => {
       .is('deleted_at', null)
       .neq('kind', 'home')
       .order('nav_order', { ascending: true })
-      .order('title', { ascending: true })
+      .order('title', { ascending: true }),
   ]);
 
   const pendingQuery =
@@ -31,6 +33,6 @@ export const load: LayoutServerLoad = async ({ locals }) => {
     session,
     siteSettings: settingsResult.data ?? null,
     navPages: navPagesResult.data ?? [],
-    pendingConversionCount: pendingQuery?.count ?? 0
+    pendingConversionCount: pendingQuery?.count ?? 0,
   };
 };

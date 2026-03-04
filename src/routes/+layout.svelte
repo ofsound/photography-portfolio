@@ -1,18 +1,30 @@
 <script lang="ts">
   import '../app.css';
-  import {goto, invalidateAll, onNavigate} from '$app/navigation';
-  import {page} from '$app/state';
-  import {setGalleryTransitionContext} from '$lib/context/gallery-transition';
-  import {getGalleryPrefs, galleryDensityStore, setGalleryPrefs} from '$lib/stores/gallery-prefs';
+  import { goto, invalidateAll, onNavigate } from '$app/navigation';
+  import { resolve } from '$app/paths';
+  import { page } from '$app/state';
+  import {
+    setGalleryTransitionContext,
+    type GalleryTransitionPhase,
+  } from '$lib/context/gallery-transition';
+  import {
+    getGalleryPrefs,
+    galleryDensityStore,
+    setGalleryPrefs,
+  } from '$lib/stores/gallery-prefs';
   import ZoomControl from '$lib/components/ZoomControl.svelte';
-  import type {LayoutData} from './$types';
+  import type { LayoutData } from './$types';
 
-  const {data, children} = $props<{data: LayoutData | null; children: import('svelte').Snippet}>();
+  const { data, children } = $props<{
+    data: LayoutData | null;
+    children: import('svelte').Snippet;
+  }>();
 
-  const isDetailRoute = (pathname: string) => /^\/photo\/[^/]+(?:\/[^/]+)?$/.test(pathname);
+  const isDetailRoute = (pathname: string) =>
+    /^\/photo\/[^/]+(?:\/[^/]+)?$/.test(pathname);
 
-  let phase = $state<import('$lib/context/gallery-transition').GalleryTransitionPhase>(
-    isDetailRoute(page.url.pathname) ? 'open' : 'idle'
+  let phase = $state<GalleryTransitionPhase>(
+    isDetailRoute(page.url.pathname) ? 'open' : 'idle',
   );
   setGalleryTransitionContext(
     () => phase,
@@ -20,20 +32,39 @@
       phase = p;
     },
   );
-  const chromeHidden = $derived(phase === 'fade-out-chrome' || phase === 'scale-and-mask' || phase === 'open' || phase === 'closing-chrome' || phase === 'closing-scale');
-  const navPages = $derived((data?.navPages ?? []) as Array<{id: string; slug: string; title: string; nav_order: number}>);
+  const chromeHidden = $derived(
+    phase === 'fade-out-chrome' ||
+      phase === 'scale-and-mask' ||
+      phase === 'open' ||
+      phase === 'closing-chrome' ||
+      phase === 'closing-scale',
+  );
+  const navPages = $derived(
+    (data?.navPages ?? []) as Array<{
+      id: string;
+      slug: string;
+      title: string;
+      nav_order: number;
+    }>,
+  );
   const siteSettings = $derived(data?.siteSettings ?? null);
   const hasSession = $derived(Boolean(data?.session));
-  const pendingConversionCount = $derived((data?.pendingConversionCount as number) ?? 0);
+  const pendingConversionCount = $derived(
+    (data?.pendingConversionCount as number) ?? 0,
+  );
   const maxDensity = 20;
   let themeMode = $state<'light' | 'dark' | 'system'>('system');
-  let transitionPreset = $state<'cinematic' | 'snappy' | 'experimental'>('cinematic');
+  let transitionPreset = $state<'cinematic' | 'snappy' | 'experimental'>(
+    'cinematic',
+  );
   let hasHydratedClientPrefs = $state(false);
   let siteHeaderEl: HTMLElement | null = null;
   let galleryQueryInput = $state('');
 
-  const isGalleryRoute = (pathname: string) => pathname === '/gallery' || pathname.startsWith('/gallery/');
-  const isViewerRoute = (pathname: string) => isGalleryRoute(pathname) || isDetailRoute(pathname);
+  const isGalleryRoute = (pathname: string) =>
+    pathname === '/gallery' || pathname.startsWith('/gallery/');
+  const isViewerRoute = (pathname: string) =>
+    isGalleryRoute(pathname) || isDetailRoute(pathname);
   const isViewer = $derived(isViewerRoute(page.url.pathname));
   const isAdminPage = $derived(page.url.pathname.startsWith('/admin/'));
 
@@ -46,7 +77,17 @@
   const onGallerySearchSubmit = (event: SubmitEvent) => {
     event.preventDefault();
     const q = galleryQueryInput.trim();
-    goto(q ? `/gallery?q=${encodeURIComponent(q)}` : '/gallery', {replaceState: true, noScroll: true, keepFocus: true});
+    goto(
+      /* eslint-disable-next-line svelte/no-navigation-without-resolve -- path uses resolve() */
+      q
+        ? `${resolve('/gallery')}?q=${encodeURIComponent(q)}`
+        : resolve('/gallery'),
+      {
+        replaceState: true,
+        noScroll: true,
+        keepFocus: true,
+      },
+    );
   };
 
   $effect(() => {
@@ -57,7 +98,7 @@
 
   const updateHeaderDensity = (next: number) => {
     const n = Math.max(1, Math.min(maxDensity, Math.round(next)));
-    setGalleryPrefs({density: n}, maxDensity);
+    setGalleryPrefs({ density: n }, maxDensity);
   };
 
   const applyTransitionPreset = () => {
@@ -71,16 +112,19 @@
   };
 
   const applyTheme = (mode: 'light' | 'dark' | 'system') => {
-    const isDarkSystem = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const isDarkSystem = window.matchMedia(
+      '(prefers-color-scheme: dark)',
+    ).matches;
     const active = mode === 'system' ? (isDarkSystem ? 'dark' : 'light') : mode;
     document.documentElement.setAttribute('data-theme', active);
     document.documentElement.style.colorScheme = active;
   };
 
   const siteThemeDefault = $derived(
-    (siteSettings?.theme_default === 'dark' || siteSettings?.theme_default === 'light'
+    (siteSettings?.theme_default === 'dark' ||
+    siteSettings?.theme_default === 'light'
       ? siteSettings.theme_default
-      : 'light') as 'light' | 'dark'
+      : 'light') as 'light' | 'dark',
   );
 
   const setAdminThemeMode = (mode: 'light' | 'dark' | 'system') => {
@@ -89,7 +133,9 @@
     applyTheme(mode);
   };
 
-  const updateTransitionPreset = (preset: 'cinematic' | 'snappy' | 'experimental') => {
+  const updateTransitionPreset = (
+    preset: 'cinematic' | 'snappy' | 'experimental',
+  ) => {
     transitionPreset = preset;
     if (siteSettings?.allow_transition_toggle) {
       localStorage.setItem('transition-preset', preset);
@@ -99,7 +145,10 @@
 
   const syncSiteHeaderHeight = () => {
     if (typeof document === 'undefined' || !siteHeaderEl) return;
-    document.documentElement.style.setProperty('--site-header-height', `${siteHeaderEl.getBoundingClientRect().height}px`);
+    document.documentElement.style.setProperty(
+      '--site-header-height',
+      `${siteHeaderEl.getBoundingClientRect().height}px`,
+    );
   };
 
   $effect(() => {
@@ -112,14 +161,20 @@
     if (onAdmin) {
       const stored = localStorage.getItem('admin-theme');
       themeMode =
-        stored === 'light' || stored === 'dark' || stored === 'system' ? stored : siteThemeDefault;
+        stored === 'light' || stored === 'dark' || stored === 'system'
+          ? stored
+          : siteThemeDefault;
     } else {
       themeMode = siteThemeDefault;
     }
 
     if (siteSettings?.allow_transition_toggle) {
       const storedPreset = localStorage.getItem('transition-preset');
-      if (storedPreset === 'cinematic' || storedPreset === 'snappy' || storedPreset === 'experimental') {
+      if (
+        storedPreset === 'cinematic' ||
+        storedPreset === 'snappy' ||
+        storedPreset === 'experimental'
+      ) {
         transitionPreset = storedPreset;
       }
     } else {
@@ -138,7 +193,9 @@
     if (onAdmin) {
       const stored = localStorage.getItem('admin-theme');
       themeMode =
-        stored === 'light' || stored === 'dark' || stored === 'system' ? stored : siteThemeDefault;
+        stored === 'light' || stored === 'dark' || stored === 'system'
+          ? stored
+          : siteThemeDefault;
     } else {
       themeMode = siteThemeDefault;
     }
@@ -207,7 +264,9 @@
       return;
     }
 
-    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const reducedMotion = window.matchMedia(
+      '(prefers-reduced-motion: reduce)',
+    ).matches;
 
     document.documentElement.dataset.vt = 'default';
     delete document.documentElement.dataset.vtDirection;
@@ -222,7 +281,7 @@
         resolve();
         try {
           await navigation.complete;
-        } catch (e) {
+        } catch {
           // If the navigation is cancelled, the VT is aborted anyway.
         }
       });
@@ -235,16 +294,22 @@
 </script>
 
 <div class="min-h-screen bg-bg text-text">
-  <header bind:this={siteHeaderEl} class="chrome-panel sticky top-0 z-40 border-b border-border px-4 transition-opacity duration-[var(--duration-chrome)] ease-out" class:opacity-0={chromeHidden}>
+  <header
+    bind:this={siteHeaderEl}
+    class="chrome-panel sticky top-0 z-40 border-b border-border px-4 transition-opacity duration-[var(--duration-chrome)] ease-out"
+    class:opacity-0={chromeHidden}
+  >
     <div class="mx-auto flex w-full items-center justify-between gap-3">
-      <nav class=" py-3 flex items-center gap-6 text-sm tracking-[var(--tracking-nav)] uppercase">
-        <a href="/" >Home</a>
-        <a href="/gallery">Gallery</a>
+      <nav
+        class=" flex items-center gap-6 py-3 text-sm tracking-[var(--tracking-nav)] uppercase"
+      >
+        <a href={resolve('/')}>Home</a>
+        <a href={resolve('/gallery')}>Gallery</a>
         {#each navPages as navPage (navPage.id)}
-          <a href={`/${navPage.slug}`}>{navPage.title}</a>
+          <a href={resolve(`/${navPage.slug}`)}>{navPage.title}</a>
         {/each}
         {#if hasSession}
-          <a href="/admin/photos" >Admin</a>
+          <a href={resolve('/admin/photos')}>Admin</a>
         {/if}
       </nav>
 
@@ -258,7 +323,10 @@
             onUpdate={updateHeaderDensity}
           />
           {#if siteSettings?.show_search_bar}
-            <form class="flex h-6 w-full max-w-[200px] items-center gap-2" onsubmit={onGallerySearchSubmit}>
+            <form
+              class="flex h-6 w-full max-w-[200px] items-center gap-2"
+              onsubmit={onGallerySearchSubmit}
+            >
               <input
                 name="q"
                 bind:value={galleryQueryInput}
@@ -266,9 +334,22 @@
                 aria-label="Search title, description, tags, category"
                 class="h-full w-full rounded border border-border bg-transparent px-2 py-0.5 text-xs"
               />
-              <button class="flex h-6 w-6 shrink-0 items-center justify-center rounded border border-border-strong transition-colors hover:bg-surface-muted" type="submit" aria-label="Search">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+              <button
+                class="flex h-6 w-6 shrink-0 items-center justify-center rounded border border-border-strong transition-colors hover:bg-surface-muted"
+                type="submit"
+                aria-label="Search"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-3 w-3"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" />
                 </svg>
               </button>
             </form>
@@ -277,12 +358,22 @@
       {:else}
         <div class="flex items-center justify-end gap-2">
           {#if isAdminPage && hasSession}
-            <label for="header-theme" class="text-xs uppercase tracking-[var(--tracking-tight)]">Admin Theme</label>
+            <label
+              for="header-theme"
+              class="text-xs tracking-[var(--tracking-tight)] uppercase"
+              >Admin Theme</label
+            >
             <select
               id="header-theme"
               class="rounded border border-border-strong bg-transparent px-2 py-1 text-xs"
               value={themeMode}
-              onchange={(e) => setAdminThemeMode((e.currentTarget as HTMLSelectElement).value as 'light' | 'dark' | 'system')}
+              onchange={(e) =>
+                setAdminThemeMode(
+                  (e.currentTarget as HTMLSelectElement).value as
+                    | 'light'
+                    | 'dark'
+                    | 'system',
+                )}
             >
               <option value="light">Light</option>
               <option value="dark">Dark</option>
@@ -290,8 +381,21 @@
             </select>
           {/if}
           {#if siteSettings?.allow_transition_toggle}
-            <label for="transition" class="text-xs uppercase tracking-[var(--tracking-tight)]">Motion</label>
-            <select id="transition" class="rounded border border-border-strong bg-transparent px-2 py-1 text-xs" bind:value={transitionPreset} onchange={(event) => updateTransitionPreset((event.currentTarget as HTMLSelectElement).value as typeof transitionPreset)}>
+            <label
+              for="transition"
+              class="text-xs tracking-[var(--tracking-tight)] uppercase"
+              >Motion</label
+            >
+            <select
+              id="transition"
+              class="rounded border border-border-strong bg-transparent px-2 py-1 text-xs"
+              bind:value={transitionPreset}
+              onchange={(event) =>
+                updateTransitionPreset(
+                  (event.currentTarget as HTMLSelectElement)
+                    .value as typeof transitionPreset,
+                )}
+            >
               <option value="cinematic">Cinematic</option>
               <option value="snappy">Snappy</option>
               <option value="experimental">Experimental</option>
@@ -316,22 +420,22 @@
     --vt-ease: cubic-bezier(0.22, 1, 0.36, 1);
   }
 
-  :global(html[data-vt-preset="cinematic"]) {
+  :global(html[data-vt-preset='cinematic']) {
     --vt-duration: 560ms;
     --vt-ease: cubic-bezier(0.16, 1, 0.3, 1);
   }
 
-  :global(html[data-vt-preset="snappy"]) {
+  :global(html[data-vt-preset='snappy']) {
     --vt-duration: 240ms;
     --vt-ease: cubic-bezier(0.32, 0.72, 0, 1);
   }
 
-  :global(html[data-vt-preset="experimental"]) {
+  :global(html[data-vt-preset='experimental']) {
     --vt-duration: 720ms;
     --vt-ease: cubic-bezier(0.22, 1, 0.36, 1);
   }
 
-  :global(html[data-vt-reduced="1"]) {
+  :global(html[data-vt-reduced='1']) {
     --vt-duration: 140ms;
     --vt-ease: linear;
   }
@@ -372,11 +476,11 @@
     animation-name: vt-fade-in;
   }
 
-  :global(html[data-vt-reduced="1"]::view-transition-old(page-main)) {
+  :global(html[data-vt-reduced='1']::view-transition-old(page-main)) {
     animation-name: vt-fade-out;
   }
 
-  :global(html[data-vt-reduced="1"]::view-transition-new(page-main)) {
+  :global(html[data-vt-reduced='1']::view-transition-new(page-main)) {
     animation-name: vt-fade-in;
   }
 

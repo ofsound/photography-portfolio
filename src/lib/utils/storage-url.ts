@@ -9,9 +9,12 @@ function getStorageClient() {
   if (!_storageClient) {
     const url = publicEnv.PUBLIC_SUPABASE_URL;
     const key =
-      publicEnv.PUBLIC_SUPABASE_PUBLISHABLE_KEY || publicEnv.PUBLIC_SUPABASE_ANON_KEY;
+      publicEnv.PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
+      publicEnv.PUBLIC_SUPABASE_ANON_KEY;
     if (!url || !key) {
-      throw new Error('Missing PUBLIC_SUPABASE_URL and key (PUBLIC_SUPABASE_PUBLISHABLE_KEY or PUBLIC_SUPABASE_ANON_KEY)');
+      throw new Error(
+        'Missing PUBLIC_SUPABASE_URL and key (PUBLIC_SUPABASE_PUBLISHABLE_KEY or PUBLIC_SUPABASE_ANON_KEY)',
+      );
     }
     _storageClient = createClient(url, key);
   }

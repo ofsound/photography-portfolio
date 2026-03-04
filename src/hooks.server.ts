@@ -5,27 +5,44 @@ import type { Database } from '$lib/types/database';
 
 export const handle: Handle = async ({ event, resolve }) => {
   const supabaseUrl = publicEnv.PUBLIC_SUPABASE_URL;
-  const supabaseAnonKey = publicEnv.PUBLIC_SUPABASE_PUBLISHABLE_KEY || publicEnv.PUBLIC_SUPABASE_ANON_KEY;
+  const supabaseAnonKey =
+    publicEnv.PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
+    publicEnv.PUBLIC_SUPABASE_ANON_KEY;
 
   if (!supabaseUrl || !supabaseAnonKey) {
-    throw new Error('Missing PUBLIC_SUPABASE_URL and key (PUBLIC_SUPABASE_PUBLISHABLE_KEY or PUBLIC_SUPABASE_ANON_KEY)');
+    throw new Error(
+      'Missing PUBLIC_SUPABASE_URL and key (PUBLIC_SUPABASE_PUBLISHABLE_KEY or PUBLIC_SUPABASE_ANON_KEY)',
+    );
   }
 
-  event.locals.supabase = createServerClient<Database>(supabaseUrl, supabaseAnonKey, {
-    cookies: {
-      getAll: () => event.cookies.getAll(),
-      setAll: (cookiesToSet: Array<{ name: string; value: string; options?: Record<string, unknown> }>) => {
-        for (const cookie of cookiesToSet) {
-          event.cookies.set(cookie.name, cookie.value, { ...cookie.options, path: '/' });
-        }
-      }
-    }
-  });
+  event.locals.supabase = createServerClient<Database>(
+    supabaseUrl,
+    supabaseAnonKey,
+    {
+      cookies: {
+        getAll: () => event.cookies.getAll(),
+        setAll: (
+          cookiesToSet: Array<{
+            name: string;
+            value: string;
+            options?: Record<string, unknown>;
+          }>,
+        ) => {
+          for (const cookie of cookiesToSet) {
+            event.cookies.set(cookie.name, cookie.value, {
+              ...cookie.options,
+              path: '/',
+            });
+          }
+        },
+      },
+    },
+  );
 
   event.locals.safeGetSession = async () => {
     const {
       data: { user },
-      error: userError
+      error: userError,
     } = await event.locals.supabase.auth.getUser();
 
     if (userError || !user) {
@@ -34,7 +51,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 
     const {
       data: { session },
-      error: sessionError
+      error: sessionError,
     } = await event.locals.supabase.auth.getSession();
 
     if (sessionError || !session) {
@@ -45,6 +62,7 @@ export const handle: Handle = async ({ event, resolve }) => {
   };
 
   return resolve(event, {
-    filterSerializedResponseHeaders: (name) => name === 'content-range' || name === 'x-supabase-api-version'
+    filterSerializedResponseHeaders: (name) =>
+      name === 'content-range' || name === 'x-supabase-api-version',
   });
 };

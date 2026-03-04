@@ -52,7 +52,7 @@ export const load: LayoutServerLoad = async ({ locals, url }) => {
   const settings = settingsQuery.data;
 
   const defaultDensity = settings?.grid_desktop_default ?? 6;
-  const maxDensity = 20;
+  const maxDensity = 10;
   const startPage = asPositiveInt(url.searchParams.get('page'), 1);
   const pageSize = normalizePageSize(60);
   const density = defaultDensity;

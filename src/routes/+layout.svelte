@@ -10,6 +10,7 @@
   import {
     getGalleryPrefs,
     galleryDensityStore,
+    layoutModeStore,
     setGalleryPrefs,
   } from '$lib/stores/gallery-prefs.svelte';
   import ZoomControl from '$lib/components/ZoomControl.svelte';
@@ -52,7 +53,7 @@
   const pendingConversionCount = $derived(
     (data?.pendingConversionCount as number) ?? 0,
   );
-  const maxDensity = 20;
+  const maxDensity = 10;
   let themeMode = $state<'light' | 'dark' | 'system'>('system');
   let transitionPreset = $state<'cinematic' | 'snappy' | 'experimental'>(
     'cinematic',
@@ -93,12 +94,24 @@
   $effect(() => {
     if (typeof window === 'undefined' || !isViewer) return;
     const prefs = getGalleryPrefs(maxDensity);
-    if (prefs) galleryDensityStore.set(prefs.density);
+    if (prefs) {
+      galleryDensityStore.set(prefs.density);
+      if (prefs.layoutMode) layoutModeStore.set(prefs.layoutMode);
+    }
   });
 
-  const updateHeaderDensity = (next: number) => {
-    const n = Math.max(1, Math.min(maxDensity, Math.round(next)));
-    setGalleryPrefs({ density: n }, maxDensity);
+  const toUiZoomValue = (density: number) =>
+    maxDensity + 1 - Math.max(1, Math.min(maxDensity, Math.round(density)));
+
+  const toDensityValue = (uiZoom: number) =>
+    maxDensity + 1 - Math.max(1, Math.min(maxDensity, Math.round(uiZoom)));
+
+  const updateHeaderDensity = (nextUiZoom: number) => {
+    setGalleryPrefs({ density: toDensityValue(nextUiZoom) }, maxDensity);
+  };
+
+  const updateHeaderLayoutMode = (mode: 'uniform' | 'masonry') => {
+    setGalleryPrefs({ layoutMode: mode }, maxDensity);
   };
 
   const applyTransitionPreset = () => {
@@ -320,11 +333,27 @@
 
       {#if isViewer}
         <div class="ml-4 flex items-center justify-end gap-3">
+          <label for="header-layout" class="sr-only">Layout</label>
+          <select
+            id="header-layout"
+            class="h-6 min-w-0 rounded border border-border-strong bg-transparent px-2 py-0.5 text-xs tracking-wider uppercase"
+            aria-label="Gallery layout"
+            value={layoutModeStore.value}
+            onchange={(e) =>
+              updateHeaderLayoutMode(
+                (e.currentTarget as HTMLSelectElement).value as
+                  | 'uniform'
+                  | 'masonry',
+              )}
+          >
+            <option value="uniform">Uniform</option>
+            <option value="masonry">Masonry</option>
+          </select>
           <ZoomControl
             label="Zoom"
             min={1}
             max={maxDensity}
-            value={galleryDensityStore.value}
+            value={toUiZoomValue(galleryDensityStore.value)}
             onUpdate={updateHeaderDensity}
           />
           {#if siteSettings?.show_search_bar}

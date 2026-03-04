@@ -12,12 +12,29 @@ export const galleryDensityStore = {
   },
 };
 
+/** Reactive layout mode for gallery; synced with localStorage when user toggles. */
+let galleryLayoutMode = $state<'uniform' | 'masonry'>('uniform');
+
+export const layoutModeStore = {
+  get value() {
+    return galleryLayoutMode;
+  },
+  set(newValue: 'uniform' | 'masonry') {
+    galleryLayoutMode = newValue;
+  },
+};
+
 type GalleryPrefs = {
   density: number;
   gap: number;
   layoutMode: 'uniform' | 'masonry';
   widthMode: 'full' | 'constrained';
   pageSize: number;
+};
+
+/** Return type for getGalleryPrefs; layoutMode is optional when not explicitly saved. */
+type GalleryPrefsResult = Omit<GalleryPrefs, 'layoutMode'> & {
+  layoutMode?: 'uniform' | 'masonry';
 };
 
 const DEFAULT_PREFS: GalleryPrefs = {
@@ -40,7 +57,9 @@ function isValidWidthMode(v: unknown): v is GalleryPrefs['widthMode'] {
   return v === 'full' || v === 'constrained';
 }
 
-export function getGalleryPrefs(maxDensity: number = 20): GalleryPrefs | null {
+export function getGalleryPrefs(
+  maxDensity: number = 20,
+): GalleryPrefsResult | null {
   if (typeof window === 'undefined') return null;
   try {
     const raw = localStorage.getItem(KEY);
@@ -78,7 +97,7 @@ export function getGalleryPrefs(maxDensity: number = 20): GalleryPrefs | null {
     return {
       density: density ?? DEFAULT_PREFS.density,
       gap: gap ?? DEFAULT_PREFS.gap,
-      layoutMode: layoutMode ?? DEFAULT_PREFS.layoutMode,
+      layoutMode, // undefined when not explicitly saved; use server default
       widthMode: widthMode ?? DEFAULT_PREFS.widthMode,
       pageSize: pageSize ?? DEFAULT_PREFS.pageSize,
     };
@@ -102,7 +121,7 @@ export function setGalleryPrefs(
     layoutMode:
       partial.layoutMode !== undefined && isValidLayoutMode(partial.layoutMode)
         ? partial.layoutMode
-        : current.layoutMode,
+        : (current.layoutMode ?? DEFAULT_PREFS.layoutMode),
     widthMode:
       partial.widthMode !== undefined && isValidWidthMode(partial.widthMode)
         ? partial.widthMode
@@ -115,5 +134,8 @@ export function setGalleryPrefs(
   localStorage.setItem(KEY, JSON.stringify(next));
   if (partial.density !== undefined) {
     galleryDensityStore.set(next.density);
+  }
+  if (partial.layoutMode !== undefined) {
+    layoutModeStore.set(next.layoutMode);
   }
 }

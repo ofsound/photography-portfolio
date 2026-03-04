@@ -10,6 +10,7 @@
   import {
     getGalleryPrefs,
     galleryDensityStore,
+    layoutModeStore,
   } from '$lib/stores/gallery-prefs.svelte';
   import type { GalleryPhoto } from '$lib/types/content';
   import { parseDimensions } from '$lib/utils/parse-dimensions';
@@ -61,9 +62,7 @@
   const readInitialData = () => data;
 
   const gap = $state(readInitialData().gap);
-  const layoutMode = $state<'uniform' | 'masonry'>(
-    readInitialData().layoutMode,
-  );
+  const layoutMode = $derived(layoutModeStore.value);
   const widthMode = $state<'full' | 'constrained'>(readInitialData().widthMode);
   let query = $state(readInitialData().q);
   let pageSize = $state(readInitialData().pageSize);
@@ -877,8 +876,10 @@
     if (prefs) {
       galleryDensityStore.set(prefs.density);
       pageSize = prefs.pageSize;
+      layoutModeStore.set(prefs.layoutMode ?? data.layoutMode);
+    } else {
+      layoutModeStore.set(data.layoutMode);
     }
-    // gap, layoutMode, widthMode come only from server (admin settings)
   });
 
   $effect(() => {

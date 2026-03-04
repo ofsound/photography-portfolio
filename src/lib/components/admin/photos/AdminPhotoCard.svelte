@@ -208,192 +208,13 @@
         }}
         class="flex flex-col gap-3"
       >
-        <div class="mb-20 flex min-w-0 gap-12">
-          <div
-            transition:fade={{
-              duration: FADE_DURATION,
-              delay: 0 * STAGGER_MS,
-              easing: quintOut,
-            }}
-            class="flex min-w-0 flex-[7] flex-col gap-3"
-          >
-            <form
-              id="photo-update-form-{photoFormId}"
-              method="POST"
-              action={isDraft ? '?/create' : '?/update'}
-              class="grid gap-3"
-              use:enhance={() => {
-                return async ({ update }) => {
-                  await update({ reset: false });
-                  await invalidateAll();
-                };
-              }}
-            >
-              {#if !isDraft}
-                <input type="hidden" name="id" value={photo.id} />
-              {/if}
-
-              <AdminPhotoMetadataForm
-                {photoFormId}
-                bind:title={form.title}
-                bind:slug={form.slug}
-                bind:description={form.description}
-                bind:captureDate={form.captureDate}
-                {onTitleInput}
-                {onSlugInput}
-              />
-
-              <FormField
-                label="Dimensions"
-                id="edit-dimensions-{photoFormId}"
-                class="mt-auto"
-              >
-                <FormInput
-                  id="edit-dimensions-{photoFormId}"
-                  name="dimensions"
-                  bind:value={form.dimensions}
-                  type="text"
-                  placeholder="Dimensions"
-                />
-              </FormField>
-            </form>
-
-            {#if !isDraft}
-              <div class="grid gap-3 sm:grid-cols-2">
-                <FormField label="Categories">
-                  <div
-                    class="grid max-h-36 gap-1 overflow-auto rounded border border-border-strong bg-surface px-3 py-2 text-sm"
-                  >
-                    {#each categories as category (category.id)}
-                      <label class="flex cursor-pointer items-center gap-2">
-                        <input
-                          type="checkbox"
-                          value={category.id}
-                          checked={selectedCategoryIds.includes(category.id)}
-                          onchange={() => {
-                            const checked = !selectedCategoryIds.includes(
-                              category.id,
-                            );
-                            const next = checked
-                              ? [...selectedCategoryIds, category.id]
-                              : selectedCategoryIds.filter(
-                                  (id: string) => id !== category.id,
-                                );
-                            onTaxonomyChange(photo.id, next, selectedTagIds);
-                          }}
-                        />
-                        {category.name}
-                      </label>
-                    {/each}
-                  </div>
-                </FormField>
-
-                <FormField label="Tags">
-                  <div
-                    class="grid max-h-36 gap-1 overflow-auto rounded border border-border-strong bg-surface px-3 py-2 text-sm"
-                  >
-                    {#each tags as tag (tag.id)}
-                      <label class="flex cursor-pointer items-center gap-2">
-                        <input
-                          type="checkbox"
-                          value={tag.id}
-                          checked={selectedTagIds.includes(tag.id)}
-                          onchange={() => {
-                            const checked = !selectedTagIds.includes(tag.id);
-                            const next = checked
-                              ? [...selectedTagIds, tag.id]
-                              : selectedTagIds.filter(
-                                  (id: string) => id !== tag.id,
-                                );
-                            onTaxonomyChange(
-                              photo.id,
-                              selectedCategoryIds,
-                              next,
-                            );
-                          }}
-                        />
-                        {tag.name}
-                      </label>
-                    {/each}
-                  </div>
-                </FormField>
-              </div>
-            {:else}
-              <p class="p-3 text-sm text-text-muted">
-                Upload the first image or save the draft first to add categories
-                and tags.
-              </p>
-            {/if}
-          </div>
-
-          <div
-            transition:fade={{
-              duration: FADE_DURATION,
-              delay: 1 * STAGGER_MS,
-              easing: quintOut,
-            }}
-            class="min-w-0 flex-[3]"
-          >
-            <div class="grid gap-3">
-              <div class="grid gap-3">
-                <FormField
-                  label="License text"
-                  id="edit-license_text-{photoFormId}"
-                >
-                  <FormTextarea
-                    id="edit-license_text-{photoFormId}"
-                    name="license_text"
-                    bind:value={form.licenseText}
-                    rows={2}
-                    placeholder="License text"
-                    form="photo-update-form-{photoFormId}"
-                  />
-                </FormField>
-                <FormField label="OG title" id="edit-og_title-{photoFormId}">
-                  <FormInput
-                    id="edit-og_title-{photoFormId}"
-                    name="og_title"
-                    bind:value={form.ogTitle}
-                    placeholder="OG title"
-                    form="photo-update-form-{photoFormId}"
-                  />
-                </FormField>
-                <FormField
-                  label="OG description"
-                  id="edit-og_description-{photoFormId}"
-                >
-                  <FormTextarea
-                    id="edit-og_description-{photoFormId}"
-                    name="og_description"
-                    bind:value={form.ogDescription}
-                    rows={2}
-                    placeholder="OG description"
-                    form="photo-update-form-{photoFormId}"
-                  />
-                </FormField>
-                <FormField
-                  label="OG image path"
-                  id="edit-og_image_path-{photoFormId}"
-                >
-                  <FormInput
-                    id="edit-og_image_path-{photoFormId}"
-                    name="og_image_path"
-                    bind:value={form.ogImagePath}
-                    placeholder="OG image path"
-                    form="photo-update-form-{photoFormId}"
-                  />
-                </FormField>
-              </div>
-            </div>
-          </div>
-        </div>
-
         <div
           transition:fade={{
             duration: FADE_DURATION,
-            delay: 2 * STAGGER_MS,
+            delay: 0 * STAGGER_MS,
             easing: quintOut,
           }}
+          class="mb-8"
         >
           <AdminPhotoImageManager
             {photo}
@@ -403,6 +224,188 @@
             draftTitle={form.title}
             draftSlug={form.slug}
           />
+        </div>
+
+        <div
+          transition:fade={{
+            duration: FADE_DURATION,
+            delay: 1 * STAGGER_MS,
+            easing: quintOut,
+          }}
+        >
+          <h2 class="text-xl tracking-wider uppercase">Details</h2>
+          <div class="mt-3 flex min-w-0 gap-12">
+            <div class="flex min-w-0 flex-[7] flex-col gap-3">
+              <form
+                id="photo-update-form-{photoFormId}"
+                method="POST"
+                action={isDraft ? '?/create' : '?/update'}
+                class="grid gap-3"
+                use:enhance={() => {
+                  return async ({ update }) => {
+                    await update({ reset: false });
+                    await invalidateAll();
+                  };
+                }}
+              >
+                {#if !isDraft}
+                  <input type="hidden" name="id" value={photo.id} />
+                {/if}
+
+                <AdminPhotoMetadataForm
+                  {photoFormId}
+                  bind:title={form.title}
+                  bind:slug={form.slug}
+                  bind:description={form.description}
+                  bind:captureDate={form.captureDate}
+                  {onTitleInput}
+                  {onSlugInput}
+                />
+
+                <FormField
+                  label="Dimensions"
+                  id="edit-dimensions-{photoFormId}"
+                  class="mt-auto"
+                >
+                  <FormInput
+                    id="edit-dimensions-{photoFormId}"
+                    name="dimensions"
+                    bind:value={form.dimensions}
+                    type="text"
+                    placeholder="Dimensions"
+                  />
+                </FormField>
+              </form>
+
+              {#if !isDraft}
+                <div class="grid gap-3 sm:grid-cols-2">
+                  <FormField label="Categories">
+                    <div
+                      class="grid max-h-36 gap-1 overflow-auto rounded border border-border-strong bg-surface px-3 py-2 text-sm"
+                    >
+                      {#each categories as category (category.id)}
+                        <label class="flex cursor-pointer items-center gap-2">
+                          <input
+                            type="checkbox"
+                            value={category.id}
+                            checked={selectedCategoryIds.includes(category.id)}
+                            onchange={() => {
+                              const checked = !selectedCategoryIds.includes(
+                                category.id,
+                              );
+                              const next = checked
+                                ? [...selectedCategoryIds, category.id]
+                                : selectedCategoryIds.filter(
+                                    (id: string) => id !== category.id,
+                                  );
+                              onTaxonomyChange(photo.id, next, selectedTagIds);
+                            }}
+                          />
+                          {category.name}
+                        </label>
+                      {/each}
+                    </div>
+                  </FormField>
+
+                  <FormField label="Tags">
+                    <div
+                      class="grid max-h-36 gap-1 overflow-auto rounded border border-border-strong bg-surface px-3 py-2 text-sm"
+                    >
+                      {#each tags as tag (tag.id)}
+                        <label class="flex cursor-pointer items-center gap-2">
+                          <input
+                            type="checkbox"
+                            value={tag.id}
+                            checked={selectedTagIds.includes(tag.id)}
+                            onchange={() => {
+                              const checked = !selectedTagIds.includes(tag.id);
+                              const next = checked
+                                ? [...selectedTagIds, tag.id]
+                                : selectedTagIds.filter(
+                                    (id: string) => id !== tag.id,
+                                  );
+                              onTaxonomyChange(
+                                photo.id,
+                                selectedCategoryIds,
+                                next,
+                              );
+                            }}
+                          />
+                          {tag.name}
+                        </label>
+                      {/each}
+                    </div>
+                  </FormField>
+                </div>
+              {:else}
+                <p class="p-3 text-sm text-text-muted">
+                  Upload the first image or save the draft first to add
+                  categories and tags.
+                </p>
+              {/if}
+            </div>
+
+            <div
+              transition:fade={{
+                duration: FADE_DURATION,
+                delay: 2 * STAGGER_MS,
+                easing: quintOut,
+              }}
+              class="min-w-0 flex-[3]"
+            >
+              <div class="grid gap-3">
+                <div class="grid gap-3">
+                  <FormField
+                    label="License text"
+                    id="edit-license_text-{photoFormId}"
+                  >
+                    <FormTextarea
+                      id="edit-license_text-{photoFormId}"
+                      name="license_text"
+                      bind:value={form.licenseText}
+                      rows={2}
+                      placeholder="License text"
+                      form="photo-update-form-{photoFormId}"
+                    />
+                  </FormField>
+                  <FormField label="OG title" id="edit-og_title-{photoFormId}">
+                    <FormInput
+                      id="edit-og_title-{photoFormId}"
+                      name="og_title"
+                      bind:value={form.ogTitle}
+                      placeholder="OG title"
+                      form="photo-update-form-{photoFormId}"
+                    />
+                  </FormField>
+                  <FormField
+                    label="OG description"
+                    id="edit-og_description-{photoFormId}"
+                  >
+                    <FormTextarea
+                      id="edit-og_description-{photoFormId}"
+                      name="og_description"
+                      bind:value={form.ogDescription}
+                      rows={2}
+                      placeholder="OG description"
+                      form="photo-update-form-{photoFormId}"
+                    />
+                  </FormField>
+                  <FormField
+                    label="OG image path"
+                    id="edit-og_image_path-{photoFormId}"
+                  >
+                    <FormInput
+                      id="edit-og_image_path-{photoFormId}"
+                      name="og_image_path"
+                      bind:value={form.ogImagePath}
+                      placeholder="OG image path"
+                      form="photo-update-form-{photoFormId}"
+                    />
+                  </FormField>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div

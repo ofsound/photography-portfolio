@@ -1,6 +1,6 @@
 <script lang="ts">
   const baseClass =
-    'w-full rounded border border-border-strong bg-surface px-3 py-2 text-sm text-text placeholder:text-text-muted';
+    'w-full rounded border border-border bg-surface px-3 py-2 text-sm text-text placeholder:text-text-muted';
 
   type Props = {
     id?: string;

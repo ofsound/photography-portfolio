@@ -106,13 +106,18 @@
               checked={category.is_active}
             /> Active
           </label>
+        </div>
+
+        <div class="flex items-center gap-2">
           <AdminButton type="submit">Save</AdminButton>
           <AdminButton
             variant="danger-outline"
             type="submit"
             formaction="?/remove"
-            formmethod="POST">Delete</AdminButton
+            formmethod="POST"
           >
+            Delete
+          </AdminButton>
         </div>
       </form>
     {/each}

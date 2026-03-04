@@ -4,7 +4,6 @@
   import { createSortable, isSortable } from '@dnd-kit/svelte/sortable';
 
   import AdminButton from '$lib/components/admin/AdminButton.svelte';
-  import PhotoConversionBadge from '$lib/components/admin/PhotoConversionBadge.svelte';
   import PhotoUploadZone from '$lib/components/admin/PhotoUploadZone.svelte';
   import ThumbnailCropEditor from '$lib/components/admin/ThumbnailCropEditor.svelte';
 
@@ -34,20 +33,8 @@
   const lead = $derived(
     images.find((image: AdminPhotoImage) => image.kind === 'lead') ?? null,
   );
-  const pendingImageCount = $derived(
-    images.filter((image: AdminPhotoImage) => !image.delivery_storage_path)
-      .length,
-  );
   const imageById = (imageId: string) =>
     images.find((image: AdminPhotoImage) => image.id === imageId) ?? null;
-
-  const imageConversionState = (
-    image: AdminPhotoImage,
-  ): 'ready' | 'converting' | 'unknown' => {
-    if (image.delivery_storage_path) return 'ready';
-    if (image.source_storage_path) return 'converting';
-    return 'unknown';
-  };
 
   const onAdditionalDragEnd = (event: unknown) => {
     if (photo.id == null) return;
@@ -67,17 +54,8 @@
   };
 </script>
 
-<h2 class="text-xl tracking-wider uppercase">Images</h2>
 <div class="flex min-w-0 gap-12">
-  <div class="grid min-w-0 flex-1 gap-3 p-3">
-    <div class="flex flex-wrap items-center gap-2">
-      <span
-        class="rounded border border-border px-2 py-1 text-xs tracking-widest uppercase"
-      >
-        Processing: {pendingImageCount}
-      </span>
-    </div>
-
+  <div class="grid min-w-0 flex-1 gap-3">
     {#if isDraft}
       <p class="text-sm text-text-muted">No lead image set.</p>
       <div class="grid gap-2">
@@ -89,52 +67,24 @@
     {:else}
       {#if lead}
         <div
-          class="grid gap-2 rounded p-2 sm:grid-cols-[auto_1fr_auto] sm:items-start"
+          class="grid gap-2 border border-border bg-surface p-4 sm:grid-cols-[1fr_auto] sm:items-start"
         >
-          {#if lead.delivery_storage_path}
-            <div
-              class="flex h-24 w-32 shrink-0 items-center justify-center overflow-hidden rounded"
-            >
-              <img
-                src={photoPublicUrl(lead.delivery_storage_path, 360)}
-                alt={lead.alt_text ?? photo.title}
-                class="max-h-full max-w-full object-contain"
-              />
-            </div>
-          {:else}
-            <div
-              class="grid h-24 w-32 shrink-0 place-items-center rounded border border-border-strong text-xs uppercase"
-            >
-              pending
-            </div>
-          {/if}
-
           <div class="flex min-w-0 flex-col gap-2 text-xs">
-            <div class="flex items-center gap-2 tracking-widest uppercase">
-              <span>Lead Image</span>
-              <PhotoConversionBadge state={imageConversionState(lead)} />
-            </div>
             {#if lead.delivery_storage_path}
-              <details class="min-w-0">
-                <summary
-                  class="cursor-pointer text-xs tracking-widest uppercase"
-                  >Edit thumbnail crop</summary
-                >
-                <div class="mt-3">
-                  <ThumbnailCropEditor
-                    imageId={lead.id}
-                    deliveryStoragePath={lead.delivery_storage_path}
-                    altText={lead.alt_text ?? photo.title}
-                    dimensions={lead.dimensions}
-                    initialCrop={{
-                      thumb_crop_x: lead.thumb_crop_x,
-                      thumb_crop_y: lead.thumb_crop_y,
-                      thumb_crop_zoom: lead.thumb_crop_zoom,
-                    }}
-                    photoId={photo.id}
-                  />
-                </div>
-              </details>
+              <div class="mt-2">
+                <ThumbnailCropEditor
+                  imageId={lead.id}
+                  deliveryStoragePath={lead.delivery_storage_path}
+                  altText={lead.alt_text ?? photo.title}
+                  dimensions={lead.dimensions}
+                  initialCrop={{
+                    thumb_crop_x: lead.thumb_crop_x,
+                    thumb_crop_y: lead.thumb_crop_y,
+                    thumb_crop_zoom: lead.thumb_crop_zoom,
+                  }}
+                  photoId={photo.id}
+                />
+              </div>
             {/if}
           </div>
 
@@ -168,11 +118,7 @@
                   })}
                   <li
                     {@attach sortable.attach}
-                    class="grid cursor-move gap-2 rounded p-2 sm:grid-cols-[auto_1fr_auto_auto] sm:items-center {i %
-                      2 ===
-                    0
-                      ? 'bg-surface'
-                      : 'bg-surface-muted'}"
+                    class="flex cursor-move flex-col gap-2 rounded border border-border bg-surface p-2 sm:flex-row sm:items-center"
                     class:opacity-50={sortable.isDragging}
                   >
                     {#if image.delivery_storage_path}
@@ -193,23 +139,24 @@
                       </div>
                     {/if}
 
-                    <div></div>
+                    <div class="ml-auto flex shrink-0 items-center gap-2">
+                      <form method="POST" action="?/setLead" use:enhance>
+                        <input type="hidden" name="photo_id" value={photo.id} />
+                        <input type="hidden" name="image_id" value={image.id} />
+                        <AdminButton size="sm" type="submit"
+                          >Set Lead</AdminButton
+                        >
+                      </form>
 
-                    <form method="POST" action="?/setLead" use:enhance>
-                      <input type="hidden" name="photo_id" value={photo.id} />
-                      <input type="hidden" name="image_id" value={image.id} />
-                      <AdminButton size="sm" type="submit">Set Lead</AdminButton
-                      >
-                    </form>
-
-                    <form method="POST" action="?/removeImage" use:enhance>
-                      <input type="hidden" name="image_id" value={image.id} />
-                      <AdminButton
-                        variant="danger-outline"
-                        size="sm"
-                        type="submit">Delete</AdminButton
-                      >
-                    </form>
+                      <form method="POST" action="?/removeImage" use:enhance>
+                        <input type="hidden" name="image_id" value={image.id} />
+                        <AdminButton
+                          variant="danger-outline"
+                          size="sm"
+                          type="submit">Delete</AdminButton
+                        >
+                      </form>
+                    </div>
                   </li>
                 {/if}
               {/each}

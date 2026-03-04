@@ -31,7 +31,7 @@
   method="POST"
   action="?/uploadImage"
   enctype="multipart/form-data"
-  class="grid gap-2 rounded-lg border-2 border-dashed border-border-strong bg-surface p-4"
+  class="grid gap-6 rounded-lg border-2 border-dashed border-border-strong bg-surface p-4"
   use:enhance={() => {
     uploading = true;
     return async ({ update }) => {
@@ -66,7 +66,7 @@
     <div class="grid gap-2 sm:grid-cols-2 sm:items-center">
       <select
         name="kind"
-        class="rounded border border-border-strong px-3 py-2 text-sm"
+        class="border- border-strong rounded border px-3 py-2 text-sm"
       >
         <option value="lead" selected={defaultKind === 'lead'}
           >Lead image</option

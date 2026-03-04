@@ -123,7 +123,7 @@
     {#if pages.length === 0}
       <p class="mt-2 text-sm text-text-muted">No pages yet.</p>
     {:else}
-      <div class="mt-3 flex flex-col gap-2">
+      <div class="mt-3 flex flex-col gap-4">
         {#each pages as page (page.id)}
           <AdminButton
             href={`/admin/pages/edit/${page.slug}`}
@@ -131,13 +131,13 @@
             class="block w-full text-left"
           >
             <div class="flex flex-wrap items-center justify-between gap-2">
-              <span>{page.title} - /{page.slug}</span>
+              <span>{page.title}</span>
               <span class="text-xs tracking-widest text-text-subtle uppercase"
                 >{page.status}</span
               >
             </div>
-            <p class="mt-1 text-xs text-text-subtle">
-              Updated {new Date(page.updated_at).toLocaleString()}
+            <p class="mt-1 text-xs text-text-subtle normal-case">
+              Updated {new Date(page.updated_at).toLocaleDateString()}
             </p>
           </AdminButton>
         {/each}

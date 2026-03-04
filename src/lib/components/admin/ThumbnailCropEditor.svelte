@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { enhance } from '$app/forms';
   import AdminButton from '$lib/components/admin/AdminButton.svelte';
   import { parseDimensions } from '$lib/utils/parse-dimensions';
   import { photoPublicUrl } from '$lib/utils/storage-url';
@@ -162,10 +163,40 @@
       cropY !== (initialCrop?.thumb_crop_y ?? 0.5) ||
       cropZoom !== (initialCrop?.thumb_crop_zoom ?? 1),
   );
+
+  let saveFormRef = $state<HTMLFormElement | null>(null);
+  let isSaving = $state(false);
+
+  const debouncedSave = (() => {
+    let timeout: ReturnType<typeof setTimeout>;
+    return () => {
+      if (timeout) clearTimeout(timeout);
+      timeout = setTimeout(() => {
+        if (saveFormRef && hasChanges) {
+          saveFormRef.requestSubmit();
+        }
+      }, 800);
+    };
+  })();
+
+  $effect(() => {
+    // Track dependencies
+    void cropX;
+    void cropY;
+    void cropZoom;
+    debouncedSave();
+  });
 </script>
 
 <div class="grid gap-3">
-  <p class="text-xs tracking-widest uppercase">Thumbnail crop (grid square)</p>
+  {#if isSaving}
+    <div class="flex items-center justify-end">
+      <span
+        class="animate-pulse text-[10px] font-medium tracking-widest text-text-muted uppercase"
+        >Saving...</span
+      >
+    </div>
+  {/if}
 
   <div
     bind:this={containerRef}
@@ -212,35 +243,49 @@
       />
       <span class="tabular-nums">{cropZoom.toFixed(1)}x</span>
     </label>
-    <AdminButton size="sm" type="button" onclick={resetToDefault}
-      >Reset to default</AdminButton
+
+    <form
+      method="POST"
+      action="?/clearThumbCrop"
+      class="inline"
+      use:enhance={() => {
+        isSaving = true;
+        return async ({ update }) => {
+          await update();
+          resetToDefault();
+          isSaving = false;
+        };
+      }}
     >
+      <input type="hidden" name="photo_id" value={photoId} />
+      <input type="hidden" name="image_id" value={imageId} />
+      <AdminButton
+        size="sm"
+        type="submit"
+        disabled={isSaving || (!hasCustomCrop && !hasChanges)}
+      >
+        Reset to default
+      </AdminButton>
+    </form>
   </div>
 
   <form
+    bind:this={saveFormRef}
     method="POST"
     action="?/saveThumbCrop"
-    class="flex flex-wrap items-center gap-2"
+    class="hidden"
+    use:enhance={() => {
+      isSaving = true;
+      return async ({ update }) => {
+        await update({ reset: false });
+        isSaving = false;
+      };
+    }}
   >
     <input type="hidden" name="photo_id" value={photoId} />
     <input type="hidden" name="image_id" value={imageId} />
     <input type="hidden" name="thumb_crop_x" value={cropX} />
     <input type="hidden" name="thumb_crop_y" value={cropY} />
     <input type="hidden" name="thumb_crop_zoom" value={cropZoom} />
-    <AdminButton
-      type="submit"
-      disabled={!hasChanges}
-      class="disabled:opacity-50">Save thumbnail crop</AdminButton
-    >
   </form>
-
-  {#if hasCustomCrop}
-    <form method="POST" action="?/clearThumbCrop" class="inline">
-      <input type="hidden" name="photo_id" value={photoId} />
-      <input type="hidden" name="image_id" value={imageId} />
-      <AdminButton variant="link" type="submit"
-        >Clear custom crop (use default)</AdminButton
-      >
-    </form>
-  {/if}
 </div>

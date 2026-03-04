@@ -113,17 +113,14 @@
   </p>
 {/if}
 
-<section class="mt-6 rounded border border-border p-4">
-  <h2 class="text-sm tracking-widest uppercase">Slideshow Timing</h2>
-  <form
-    method="POST"
-    action="?/saveTiming"
-    class="mt-3 grid gap-3 sm:grid-cols-[minmax(0,220px)_minmax(0,220px)_auto] sm:items-end"
-  >
-    <label class="grid gap-1 text-xs tracking-widest uppercase">
+<section class="mt-6 shrink-0">
+  <form method="POST" action="?/saveTiming" class="flex items-center gap-6">
+    <label
+      class="grid w-fit gap-1 text-xs tracking-widest whitespace-nowrap uppercase"
+    >
       Slide Duration (ms)
       <input
-        class="rounded border border-border-strong bg-transparent px-3 py-2 text-sm tracking-normal normal-case"
+        class="max-w-[80px] rounded border border-border-strong bg-transparent px-3 py-2 text-sm tracking-normal normal-case"
         type="number"
         min="1000"
         max="30000"
@@ -132,10 +129,12 @@
         bind:value={slideDurationMs}
       />
     </label>
-    <label class="grid gap-1 text-xs tracking-widest uppercase">
+    <label
+      class="grid w-fit gap-1 text-xs tracking-widest whitespace-nowrap uppercase"
+    >
       Transition Duration (ms)
       <input
-        class="rounded border border-border-strong bg-transparent px-3 py-2 text-sm tracking-normal normal-case"
+        class="max-w-[80px] rounded border border-border-strong bg-transparent px-3 py-2 text-sm tracking-normal normal-case"
         type="number"
         min="200"
         max="10000"
@@ -144,118 +143,130 @@
         bind:value={transitionDurationMs}
       />
     </label>
-    <AdminButton size="sm" type="submit">Save Timing</AdminButton>
+    <AdminButton size="sm" type="submit" wFit>Save Timing</AdminButton>
   </form>
 </section>
 
-<section class="mt-6 grid gap-8 lg:grid-cols-[24rem_1fr]">
-  <div class="grid gap-3 rounded border border-border p-4">
-    <div class="flex flex-wrap items-center gap-2">
-      <h2 class="text-sm tracking-widest uppercase">Selected Slides</h2>
-      <AdminButton
-        size="sm"
-        type="button"
-        onclick={undoSelectionChange}
-        disabled={undoStack.length === 0}
-      >
-        Undo
-      </AdminButton>
-      <AdminButton
-        size="sm"
-        type="button"
-        onclick={redoSelectionChange}
-        disabled={redoStack.length === 0}
-      >
-        Redo
-      </AdminButton>
+<section class="mt-6 flex min-h-0 flex-1 flex-col overflow-hidden">
+  <div
+    class="grid min-h-0 flex-1 grid-rows-[1fr] gap-8 lg:grid-cols-[24rem_1fr]"
+  >
+    <div class="flex flex-col gap-3">
+      <div class="flex flex-wrap items-center gap-2">
+        <h2 class="text-sm tracking-widest uppercase">Selected Slides</h2>
+        <AdminButton
+          size="sm"
+          type="button"
+          onclick={undoSelectionChange}
+          disabled={undoStack.length === 0}
+        >
+          Undo
+        </AdminButton>
+        <AdminButton
+          size="sm"
+          type="button"
+          onclick={redoSelectionChange}
+          disabled={redoStack.length === 0}
+        >
+          Redo
+        </AdminButton>
+      </div>
+
+      {#if selectedSlides.length === 0}
+        <p class="text-sm text-text-muted">No slides selected.</p>
+      {:else}
+        <DragDropProvider onDragEnd={onSelectedSlidesDragEnd}>
+          <ul class="grid gap-2">
+            {#each selectedSlides as slide, index (slide.id)}
+              {@const sortable = createSortable({ id: slide.id, index })}
+              <li
+                {@attach sortable.attach}
+                class="grid cursor-move gap-2 rounded border border-border p-2 sm:grid-cols-[auto_1fr_auto] sm:items-center"
+                class:opacity-50={sortable.isDragging}
+              >
+                {#if slide.delivery_storage_path}
+                  <img
+                    src={photoPublicUrl(slide.delivery_storage_path, 180)}
+                    alt={slide.photo_title}
+                    class="h-12 w-16 rounded object-cover"
+                  />
+                {:else}
+                  <div
+                    class="grid h-12 w-16 place-items-center rounded border border-border-strong text-xs uppercase"
+                  >
+                    pending
+                  </div>
+                {/if}
+
+                <div class="text-xs">
+                  <div>#{index + 1}</div>
+                  <div>{slide.photo_title} ({slide.kind})</div>
+                </div>
+
+                <AdminButton
+                  size="sm"
+                  type="button"
+                  onclick={() => removeSlide(slide.id)}>Remove</AdminButton
+                >
+              </li>
+            {/each}
+          </ul>
+        </DragDropProvider>
+      {/if}
+
+      <form method="POST" action="?/save" class="w-fit">
+        <input
+          type="hidden"
+          name="ordered_image_ids"
+          value={selectedIds.join('\n')}
+        />
+        <AdminButton type="submit">Save Slides</AdminButton>
+      </form>
     </div>
 
-    {#if selectedSlides.length === 0}
-      <p class="text-sm text-text-muted">No slides selected.</p>
-    {:else}
-      <DragDropProvider onDragEnd={onSelectedSlidesDragEnd}>
-        <ul class="grid gap-2">
-          {#each selectedSlides as slide, index (slide.id)}
-            {@const sortable = createSortable({ id: slide.id, index })}
-            <li
-              {@attach sortable.attach}
-              class="grid cursor-move gap-2 rounded border border-border p-2 sm:grid-cols-[auto_1fr_auto] sm:items-center"
-              class:opacity-50={sortable.isDragging}
+    <div class="flex min-h-0 flex-col overflow-hidden">
+      <h2 class="mb-2 shrink-0 text-sm tracking-widest uppercase">
+        Available Images
+      </h2>
+      <ul class="flex min-h-0 flex-1 flex-wrap gap-2 overflow-auto">
+        {#each availableImages as image (image.id)}
+          <li class="w-40">
+            <div
+              class="group flex cursor-pointer flex-col gap-2 rounded border border-border p-2"
+              role="button"
+              tabindex="0"
+              onclick={() => addSlide(image.id)}
+              onkeydown={(e) => e.key === 'Enter' && addSlide(image.id)}
             >
-              {#if slide.delivery_storage_path}
+              {#if image.delivery_storage_path}
                 <img
-                  src={photoPublicUrl(slide.delivery_storage_path, 180)}
-                  alt={slide.photo_title}
-                  class="h-12 w-16 rounded object-cover"
+                  src={photoPublicUrl(image.delivery_storage_path, 160)}
+                  alt={image.photo_title}
+                  class="aspect-square w-full rounded object-cover"
                 />
               {:else}
                 <div
-                  class="grid h-12 w-16 place-items-center rounded border border-border-strong text-xs uppercase"
+                  class="grid aspect-square w-full place-items-center rounded border border-border-strong text-xs uppercase"
                 >
                   pending
                 </div>
               {/if}
 
-              <div class="text-xs">
-                <div>#{index + 1}</div>
-                <div><code>{slide.id}</code></div>
-                <div>{slide.photo_title} ({slide.kind})</div>
+              <div class="min-w-0 truncate text-xs">
+                {image.photo_title} ({image.kind})
               </div>
 
               <AdminButton
                 size="sm"
                 type="button"
-                onclick={() => removeSlide(slide.id)}>Remove</AdminButton
+                class="w-full group-hover:bg-border"
               >
-            </li>
-          {/each}
-        </ul>
-      </DragDropProvider>
-    {/if}
-
-    <form method="POST" action="?/save" class="w-fit">
-      <input
-        type="hidden"
-        name="ordered_image_ids"
-        value={selectedIds.join('\n')}
-      />
-      <AdminButton type="submit">Save Slides</AdminButton>
-    </form>
-  </div>
-
-  <div class="rounded border border-border p-4">
-    <h2 class="mb-2 text-sm tracking-widest uppercase">Available Images</h2>
-    <ul class="grid max-h-[40rem] gap-2 overflow-auto">
-      {#each availableImages as image (image.id)}
-        <li
-          class="grid gap-2 rounded border border-border p-2 sm:grid-cols-[auto_1fr_auto] sm:items-center"
-        >
-          {#if image.delivery_storage_path}
-            <img
-              src={photoPublicUrl(image.delivery_storage_path, 160)}
-              alt={image.photo_title}
-              class="h-12 w-16 rounded object-cover"
-            />
-          {:else}
-            <div
-              class="grid h-12 w-16 place-items-center rounded border border-border-strong text-xs uppercase"
-            >
-              pending
+                Add
+              </AdminButton>
             </div>
-          {/if}
-
-          <div class="text-xs">
-            <div><code>{image.id}</code></div>
-            <div>{image.photo_title} ({image.kind})</div>
-          </div>
-
-          <AdminButton
-            size="sm"
-            type="button"
-            onclick={() => addSlide(image.id)}>Add</AdminButton
-          >
-        </li>
-      {/each}
-    </ul>
+          </li>
+        {/each}
+      </ul>
+    </div>
   </div>
 </section>

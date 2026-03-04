@@ -27,7 +27,7 @@
 </script>
 
 <div
-  class="grid min-h-[calc(100vh-var(--site-header-height))] grid-cols-[240px_1fr]"
+  class="grid h-[calc(100vh-var(--site-header-height))] grid-cols-[240px_1fr]"
   style="--font-sans: var(--font-sans-admin); font-family: var(--font-sans)"
 >
   <aside
@@ -73,7 +73,10 @@
     </nav>
   </aside>
 
-  <section class="p-6" style="view-transition-name: admin-content">
+  <section
+    class="flex min-h-0 flex-col overflow-hidden p-6"
+    style="view-transition-name: admin-content"
+  >
     {@render children()}
   </section>
 </div>

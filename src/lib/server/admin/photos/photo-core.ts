@@ -11,7 +11,7 @@ const draftStatusMigrationHint =
 
 export const normalizeDraftStatusErrorMessage = (message: string) =>
   message.includes('invalid input value for enum publish_status') &&
-    message.includes('"draft"')
+  message.includes('"draft"')
     ? draftStatusMigrationHint
     : message;
 

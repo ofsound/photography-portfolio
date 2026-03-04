@@ -104,9 +104,9 @@ export const loadGalleryPage = async (
       capture_date: photo.capture_date,
       thumb: lead?.delivery_storage_path
         ? photoPublicUrl(
-          lead.delivery_storage_path,
-          GALLERY_DETAIL_SHARED_WIDTH,
-        )
+            lead.delivery_storage_path,
+            GALLERY_DETAIL_SHARED_WIDTH,
+          )
         : null,
       thumbAlt: lead?.alt_text ?? photo.title,
       leadImage: lead ?? null,

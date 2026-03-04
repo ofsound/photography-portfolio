@@ -360,7 +360,7 @@
                 imagesForPhoto(photo.id).find((img) => img.kind === 'lead') ??
                 null}
               <div
-                class="border-primary relative flex aspect-square flex-col overflow-hidden rounded border-2 bg-surface shadow-xl"
+                class="relative flex aspect-square flex-col overflow-hidden rounded border-2 border-brand bg-surface shadow-xl"
                 style="width: {overlayCellSize ?? 160}px;"
                 role="presentation"
               >
@@ -383,7 +383,7 @@
                   class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent px-2 pt-6 pb-2"
                 >
                   <p
-                    class="truncate text-xs font-medium tracking-(--tracking-minimal) text-white"
+                    class="truncate text-xs font-medium tracking-minimal text-white"
                   >
                     {photo.title}
                   </p>

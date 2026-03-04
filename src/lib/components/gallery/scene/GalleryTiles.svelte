@@ -80,7 +80,7 @@
                   GALLERY_DETAIL_SHARED_WIDTH,
                 )}
                 alt={photo.leadImage.alt_text ?? photo.title}
-                class="tile-img ease-cinematic transition-transform duration-500 {hasThumbCrop(
+                class="tile-img transition-transform duration-500 ease-cinematic {hasThumbCrop(
                   photo.leadImage,
                 )
                   ? 'tile-img-crop'
@@ -135,7 +135,7 @@
                   GALLERY_DETAIL_SHARED_WIDTH,
                 )}
                 alt={photo.leadImage.alt_text ?? photo.title}
-                class="tile-img tile-img-masonry ease-cinematic transition-transform duration-500 {hasThumbCrop(
+                class="tile-img tile-img-masonry transition-transform duration-500 ease-cinematic {hasThumbCrop(
                   photo.leadImage,
                 )
                   ? 'tile-img-crop'

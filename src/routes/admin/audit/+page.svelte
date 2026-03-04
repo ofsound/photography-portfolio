@@ -1,7 +1,7 @@
 <script lang="ts">
   import AdminHeading from '$lib/components/admin/AdminHeading.svelte';
 
-  let { data } = $props();
+  const { data } = $props();
 </script>
 
 <AdminHeading>Audit Log</AdminHeading>

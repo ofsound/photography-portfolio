@@ -6,7 +6,7 @@
   import { photoPublicUrl } from '$lib/utils/storage-url';
   import type { HomepageImage, HomepageSlide } from '$lib/types/content';
 
-  let { data, form } = $props();
+  const { data, form } = $props();
 
   const slides = $derived(data.slides as HomepageSlide[]);
   const images = $derived(data.images as HomepageImage[]);

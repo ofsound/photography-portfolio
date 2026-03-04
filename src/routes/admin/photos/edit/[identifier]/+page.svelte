@@ -2,7 +2,7 @@
   import AdminButton from '$lib/components/admin/AdminButton.svelte';
   import AdminSinglePhotoEditor from '$lib/components/admin/photos/AdminSinglePhotoEditor.svelte';
 
-  let { data, form } = $props();
+  const { data, form } = $props();
 </script>
 
 <div class="flex flex-col gap-3">

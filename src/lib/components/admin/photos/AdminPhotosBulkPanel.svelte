@@ -1,9 +1,9 @@
 <script lang="ts">
-  import AdminButton from "$lib/components/admin/AdminButton.svelte";
-  import PhotoTaxonomyEditor from "$lib/components/admin/PhotoTaxonomyEditor.svelte";
-  import type { AdminCategory, AdminTag } from "$lib/types/content";
+  import AdminButton from '$lib/components/admin/AdminButton.svelte';
+  import PhotoTaxonomyEditor from '$lib/components/admin/PhotoTaxonomyEditor.svelte';
+  import type { AdminCategory, AdminTag } from '$lib/types/content';
 
-  let {
+  const {
     selectedPhotoIds,
     showArchived = false,
     categories,
@@ -28,8 +28,8 @@
     taxonomyDraftTags: string[];
     categoryById: (id: string) => AdminCategory | null;
     tagById: (id: string) => AdminTag | null;
-    addTaxonomyDraft: (type: "category" | "tag", id: string) => void;
-    removeTaxonomyDraft: (type: "category" | "tag", id: string) => void;
+    addTaxonomyDraft: (type: 'category' | 'tag', id: string) => void;
+    removeTaxonomyDraft: (type: 'category' | 'tag', id: string) => void;
     selectAllVisiblePhotos: () => void;
     clearSelectedPhotos: () => void;
     showBulkTaxonomy?: boolean;
@@ -59,7 +59,7 @@
         <input
           type="hidden"
           name="selected_photo_ids"
-          value={selectedPhotoIds.join("\n")}
+          value={selectedPhotoIds.join('\n')}
         />
         <AdminButton
           size="xs"
@@ -74,7 +74,7 @@
         <input
           type="hidden"
           name="selected_photo_ids"
-          value={selectedPhotoIds.join("\n")}
+          value={selectedPhotoIds.join('\n')}
         />
         <AdminButton
           size="xs"
@@ -89,7 +89,7 @@
         <input
           type="hidden"
           name="selected_photo_ids"
-          value={selectedPhotoIds.join("\n")}
+          value={selectedPhotoIds.join('\n')}
         />
         <AdminButton
           size="xs"
@@ -117,7 +117,7 @@
         <input
           type="hidden"
           name="selected_photo_ids"
-          value={selectedPhotoIds.join("\n")}
+          value={selectedPhotoIds.join('\n')}
         />
         <input type="hidden" name="showArchived" value="1" />
         <AdminButton

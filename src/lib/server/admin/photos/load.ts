@@ -48,8 +48,8 @@ export const loadAdminPhotosPage = async ({ locals, url }: { locals: App.Locals;
 
   const photoIds = (photos ?? []).map((photo: { id: string }) => photo.id);
 
-  let photoCategories: { photo_id: string; category_id: string }[] = [];
-  let photoTags: { photo_id: string; tag_id: string }[] = [];
+  let photoCategories: Array<{ photo_id: string; category_id: string }> = [];
+  let photoTags: Array<{ photo_id: string; tag_id: string }> = [];
   let photoImages: PhotoImageRow[] = [];
 
   if (photoIds.length) {

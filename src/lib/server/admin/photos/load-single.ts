@@ -46,8 +46,8 @@ export const loadSinglePhotoEditorData = async (locals: App.Locals, identifier: 
 
   const categories = (categoriesResult.data ?? []) as CategoryRow[];
   const tags = (tagsResult.data ?? []) as TagRow[];
-  const categoryLinks = (categoryLinksResult.data ?? []) as Pick<PhotoCategoryRow, 'category_id'>[];
-  const tagLinks = (tagLinksResult.data ?? []) as Pick<PhotoTagRow, 'tag_id'>[];
+  const categoryLinks = (categoryLinksResult.data ?? []) as Array<Pick<PhotoCategoryRow, 'category_id'>>;
+  const tagLinks = (tagLinksResult.data ?? []) as Array<Pick<PhotoTagRow, 'tag_id'>>;
   const images = (imagesResult.data ?? []) as PhotoImageRow[];
 
   const hasReady = images.some((img: PhotoImageRow) => Boolean(img.delivery_storage_path));

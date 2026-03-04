@@ -1,7 +1,7 @@
 <script lang="ts">
   import ZoomControl from '$lib/components/ZoomControl.svelte';
 
-  let {
+  const {
     query,
     chromeHidden,
     maxDensity,

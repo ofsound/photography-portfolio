@@ -3,7 +3,7 @@
   import GalleryScene from '$lib/components/gallery/GalleryScene.svelte';
   import type { LayoutData } from './$types';
 
-  let { data, children } = $props<{ data: LayoutData; children: Snippet }>();
+  const { data, children } = $props<{ data: LayoutData; children: Snippet }>();
 </script>
 
 <GalleryScene data={data} />

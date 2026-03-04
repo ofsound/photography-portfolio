@@ -1,5 +1,5 @@
 <script lang="ts">
-  let { state } = $props<{
+  const { state } = $props<{
     state: 'ready' | 'pending' | 'mixed' | 'no-images' | 'converting' | 'unknown' | string;
   }>();
 

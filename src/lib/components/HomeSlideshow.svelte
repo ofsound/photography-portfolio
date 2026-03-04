@@ -20,7 +20,7 @@
   const TRANSITION_DURATION_MIN_MS = 200;
   const TRANSITION_DURATION_MAX_MS = 10000;
 
-  let {
+  const {
     slides,
     slideDurationMs = DEFAULT_SLIDE_DURATION_MS,
     transitionDurationMs = DEFAULT_TRANSITION_DURATION_MS

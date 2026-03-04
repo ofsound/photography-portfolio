@@ -1,16 +1,16 @@
 <script lang="ts">
-  import {enhance} from "$app/forms";
-  import {invalidateAll} from "$app/navigation";
-  import AdminButton from "$lib/components/admin/AdminButton.svelte";
+  import {enhance} from '$app/forms';
+  import {invalidateAll} from '$app/navigation';
+  import AdminButton from '$lib/components/admin/AdminButton.svelte';
 
-  let {photoId, existingImageCount = 0, draftTitle = "", draftSlug = ""} = $props<{
+  const {photoId, existingImageCount = 0, draftTitle = '', draftSlug = ''} = $props<{
     photoId: string;
     existingImageCount?: number;
     draftTitle?: string;
     draftSlug?: string;
   }>();
 
-  const defaultKind = $derived(existingImageCount === 0 ? "lead" : "additional");
+  const defaultKind = $derived(existingImageCount === 0 ? 'lead' : 'additional');
   let fileName = $state<string | null>(null);
   let uploading = $state(false);
 
@@ -46,19 +46,19 @@
         Choose file
       </AdminButton>
       <span class="min-w-0 truncate text-sm text-text-muted">
-        {fileName ?? "No file chosen"}
+        {fileName ?? 'No file chosen'}
       </span>
     </div>
     <div class="grid gap-2 sm:grid-cols-2 sm:items-center">
       <select name="kind" class="rounded border border-border-strong px-3 py-2 text-sm">
-        <option value="lead" selected={defaultKind === "lead"}>Lead image</option>
-        <option value="additional" selected={defaultKind === "additional"}>Additional image</option>
+        <option value="lead" selected={defaultKind === 'lead'}>Lead image</option>
+        <option value="additional" selected={defaultKind === 'additional'}>Additional image</option>
       </select>
       <input name="alt_text" placeholder="Alt text" class="rounded border border-border-strong px-3 py-2" />
     </div>
   </div>
   <p class="text-xs text-text-muted">
-    {#if defaultKind === "lead"}
+    {#if defaultKind === 'lead'}
       First image defaults to <strong>Lead</strong>
       (cover). Subsequent uploads default to Additional.
     {:else}
@@ -70,7 +70,7 @@
   </p>
   <div class="flex justify-center">
     <AdminButton type="submit" variant="submit" wFit disabled={uploading}>
-      {uploading ? "Uploading…" : "Upload"}
+      {uploading ? 'Uploading…' : 'Upload'}
     </AdminButton>
   </div>
 </form>

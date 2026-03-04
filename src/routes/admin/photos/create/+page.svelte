@@ -4,7 +4,7 @@
   import AdminSinglePhotoEditor from '$lib/components/admin/photos/AdminSinglePhotoEditor.svelte';
   import type { PageProps } from './$types';
 
-  let { data, form }: PageProps = $props();
+  const { data, form }: PageProps = $props();
   const formMessage = $derived(
     form && 'message' in form && typeof form.message === 'string' ? form.message : null
   );

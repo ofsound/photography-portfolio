@@ -2,7 +2,7 @@
   import AdminButton from '$lib/components/admin/AdminButton.svelte';
   import type { AdminCategory, AdminTag } from '$lib/types/content';
 
-  let {
+  const {
     categories,
     tags,
     taxonomyDraftCategories,

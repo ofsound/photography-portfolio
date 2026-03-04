@@ -4,7 +4,7 @@
   import FormField from '$lib/components/FormField.svelte';
   import FormInput from '$lib/components/FormInput.svelte';
 
-  let { data, form } = $props();
+  const { data, form } = $props();
 
   const settings = $derived(
     data.settings ?? {

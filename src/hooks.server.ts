@@ -14,7 +14,7 @@ export const handle: Handle = async ({ event, resolve }) => {
   event.locals.supabase = createServerClient<Database>(supabaseUrl, supabaseAnonKey, {
     cookies: {
       getAll: () => event.cookies.getAll(),
-      setAll: (cookiesToSet: { name: string; value: string; options?: Record<string, unknown> }[]) => {
+      setAll: (cookiesToSet: Array<{ name: string; value: string; options?: Record<string, unknown> }>) => {
         for (const cookie of cookiesToSet) {
           event.cookies.set(cookie.name, cookie.value, { ...cookie.options, path: '/' });
         }

@@ -1,7 +1,7 @@
 <script lang="ts">
   import HomeSlideshow from '$lib/components/HomeSlideshow.svelte';
 
-  let { data } = $props();
+  const { data } = $props();
 </script>
 
 <HomeSlideshow

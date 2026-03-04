@@ -2,7 +2,7 @@
   import { baseClasses, sizeClasses, variantClasses } from '$lib/styles/admin-buttons';
   import type { Size, Variant } from '$lib/styles/admin-buttons';
 
-  let {
+  const {
     size = 'md',
     variant = 'default',
     wFit = false,

@@ -24,7 +24,7 @@
   import { photoPublicUrl } from '$lib/utils/storage-url';
   import type { AdminCategory, AdminPhoto, AdminPhotoImage, AdminTag } from '$lib/types/content';
 
-  let { data, form } = $props();
+  const { data, form } = $props();
 
   const photos = $derived(data.photos as AdminPhoto[]);
   const categories = $derived(data.categories as AdminCategory[]);

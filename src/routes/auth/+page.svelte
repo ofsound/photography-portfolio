@@ -3,7 +3,7 @@
   import FormField from '$lib/components/FormField.svelte';
   import FormInput from '$lib/components/FormInput.svelte';
 
-  let { data, form } = $props();
+  const { data, form } = $props();
 </script>
 
 <section class="mx-auto grid w-full max-w-[var(--max-width-form)] gap-4 px-5 py-14">

@@ -4,7 +4,7 @@
   import { persistAdditionalOrder, persistTaxonomy } from '$lib/components/admin/photos/persist';
   import type { AdminCategory, AdminPhoto, AdminPhotoImage, AdminTag } from '$lib/types/content';
 
-  let {
+  const {
     data
   } = $props<{
     data: {

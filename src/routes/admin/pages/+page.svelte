@@ -5,7 +5,7 @@
   import FormInput from '$lib/components/FormInput.svelte';
   import FormTextarea from '$lib/components/FormTextarea.svelte';
 
-  let { data, form } = $props();
+  const { data, form } = $props();
   const pages = $derived(
     data.pages as Array<{ id: string; slug: string; title: string; status: 'published' | 'archived'; updated_at: string }>
   );

@@ -9,7 +9,7 @@
     children: Snippet;
   };
 
-  let { label, id, helper, class: className, children }: Props = $props();
+  const { label, id, helper, class: className, children }: Props = $props();
 </script>
 
 <div class="flex flex-col gap-1 {className ?? ''}">

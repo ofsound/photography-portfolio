@@ -1,5 +1,5 @@
 <script lang="ts">
-  let {
+  const {
     value,
     min = 1,
     max = 20,

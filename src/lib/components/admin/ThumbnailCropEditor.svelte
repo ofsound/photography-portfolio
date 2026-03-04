@@ -9,7 +9,7 @@
     thumb_crop_zoom: number | null;
   };
 
-  let {
+  const {
     imageId,
     deliveryStoragePath,
     altText,

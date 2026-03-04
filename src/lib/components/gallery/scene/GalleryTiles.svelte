@@ -6,7 +6,7 @@
   type GalleryImage = NonNullable<GalleryPhoto['leadImage']>;
   const CASCADE_STAGGER_MS = 42;
 
-  let {
+  const {
     photos,
     layoutMode,
     colCount,

@@ -6,7 +6,7 @@
   import FormTextarea from '$lib/components/FormTextarea.svelte';
   import type { ContentRevision } from '$lib/types/content';
 
-  let { data, form } = $props();
+  const { data, form } = $props();
   const page = $derived(data.page);
   const revisions = $derived(data.revisions as ContentRevision[]);
 

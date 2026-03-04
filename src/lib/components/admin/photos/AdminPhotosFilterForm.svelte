@@ -8,7 +8,7 @@
   const selectClass =
     'w-full min-w-0 rounded border border-border-strong bg-surface px-3 py-2 text-sm';
 
-  let {
+  const {
     q,
     categories,
     tags,

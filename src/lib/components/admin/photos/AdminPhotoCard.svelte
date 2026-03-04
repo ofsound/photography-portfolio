@@ -1,25 +1,25 @@
 <script lang="ts">
-  import {goto, invalidateAll} from "$app/navigation";
-  import {enhance} from "$app/forms";
+  import {goto, invalidateAll} from '$app/navigation';
+  import {enhance} from '$app/forms';
   import { DragDropProvider, DragOverlay } from '@dnd-kit/svelte';
   import { createSortable, isSortable } from '@dnd-kit/svelte/sortable';
-  import {fade, slide} from "svelte/transition";
-  import {quintOut} from "svelte/easing";
-  import AdminButton from "$lib/components/admin/AdminButton.svelte";
-  import FormField from "$lib/components/FormField.svelte";
-  import FormInput from "$lib/components/FormInput.svelte";
-  import FormTextarea from "$lib/components/FormTextarea.svelte";
-  import PhotoConversionBadge from "$lib/components/admin/PhotoConversionBadge.svelte";
-  import PhotoUploadZone from "$lib/components/admin/PhotoUploadZone.svelte";
-  import ThumbnailCropEditor from "$lib/components/admin/ThumbnailCropEditor.svelte";
-  import type {AdminCategory, AdminPhoto, AdminPhotoImage, AdminTag} from "$lib/types/content";
-  import {photoPublicUrl} from "$lib/utils/storage-url";
+  import {fade, slide} from 'svelte/transition';
+  import {quintOut} from 'svelte/easing';
+  import AdminButton from '$lib/components/admin/AdminButton.svelte';
+  import FormField from '$lib/components/FormField.svelte';
+  import FormInput from '$lib/components/FormInput.svelte';
+  import FormTextarea from '$lib/components/FormTextarea.svelte';
+  import PhotoConversionBadge from '$lib/components/admin/PhotoConversionBadge.svelte';
+  import PhotoUploadZone from '$lib/components/admin/PhotoUploadZone.svelte';
+  import ThumbnailCropEditor from '$lib/components/admin/ThumbnailCropEditor.svelte';
+  import type {AdminCategory, AdminPhoto, AdminPhotoImage, AdminTag} from '$lib/types/content';
+  import {photoPublicUrl} from '$lib/utils/storage-url';
 
   const SLIDE_DURATION = 280;
   const FADE_DURATION = 200;
   const STAGGER_MS = 60;
 
-  let {
+  const {
     photo,
     images,
     categories,
@@ -47,7 +47,7 @@
     selectedCategoryIds: string[];
     selectedTagIds: string[];
     onTaxonomyChange: (photoId: string, categoryIds: string[], tagIds: string[]) => void;
-    photoConversionState: "no-images" | "pending" | "ready" | "mixed";
+    photoConversionState: 'no-images' | 'pending' | 'ready' | 'mixed';
     additionalOrder: string[];
     onTogglePhotoSelected: (photoId: string, checked: boolean) => void;
     onAdditionalReorder: (photoId: string, orderedImageIds: string[]) => void | Promise<void>;
@@ -59,42 +59,42 @@
     isDraggingPhoto?: boolean;
   }>();
 
-  const lead = $derived(images.find((image: AdminPhotoImage) => image.kind === "lead") ?? null);
-  const additionalImages = $derived(images.filter((image: AdminPhotoImage) => image.kind === "additional"));
+  const lead = $derived(images.find((image: AdminPhotoImage) => image.kind === 'lead') ?? null);
+  const additionalImages = $derived(images.filter((image: AdminPhotoImage) => image.kind === 'additional'));
   const pendingImageCount = $derived(images.filter((image: AdminPhotoImage) => !image.delivery_storage_path).length);
   const readyImageCount = $derived(images.filter((image: AdminPhotoImage) => Boolean(image.delivery_storage_path)).length);
   const imageById = (imageId: string) => images.find((image: AdminPhotoImage) => image.id === imageId) ?? null;
 
-  const imageConversionState = (image: AdminPhotoImage): "ready" | "converting" | "unknown" => {
-    if (image.delivery_storage_path) return "ready";
-    if (image.source_storage_path) return "converting";
-    return "unknown";
+  const imageConversionState = (image: AdminPhotoImage): 'ready' | 'converting' | 'unknown' => {
+    if (image.delivery_storage_path) return 'ready';
+    if (image.source_storage_path) return 'converting';
+    return 'unknown';
   };
 
   const clientSlugify = (input: string) =>
     input
       .trim()
       .toLowerCase()
-      .replace(/['"]/g, "")
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-+|-+$/g, "");
+      .replace(/['"]/g, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
 
   // Local form state to avoid overwriting user edits on re-renders (e.g. taxonomy checkbox changes)
-  let formTitle = $state("");
-  let formSlug = $state("");
-  let formDescription = $state("");
-  let formCaptureDate = $state("");
-  let formDimensions = $state("");
-  let formLicenseText = $state("");
-  let formOgTitle = $state("");
-  let formOgDescription = $state("");
-  let formOgImagePath = $state("");
+  let formTitle = $state('');
+  let formSlug = $state('');
+  let formDescription = $state('');
+  let formCaptureDate = $state('');
+  let formDimensions = $state('');
+  let formLicenseText = $state('');
+  let formOgTitle = $state('');
+  let formOgDescription = $state('');
+  let formOgImagePath = $state('');
   let hasManualSlugEdit = $state(false);
   const isDraft = $derived(photo.id === null || photo.id === undefined);
   const photoStatus = $derived(
-    photo.deleted_at ? "archived" : photo.status === "published" ? "published" : "draft"
+    photo.deleted_at ? 'archived' : photo.status === 'published' ? 'published' : 'draft'
   );
-  const isPublic = $derived(photoStatus === "published");
+  const isPublic = $derived(photoStatus === 'published');
   const photoFormId = $derived(isDraft ? 'draft' : photo.id);
   let prevPhotoId = $state<string | null>(null);
   let prevUpdatedAt = $state<string | null>(null);
@@ -109,16 +109,16 @@
     if (isNewPhoto || serverDataRefreshed) {
       prevPhotoId = idKey;
       prevUpdatedAt = updatedAt;
-      formTitle = p.title ?? "";
-      formSlug = p.slug ?? "";
-      formDescription = p.description ?? "";
-      formCaptureDate = p.capture_date ?? "";
-      formDimensions = p.dimensions ?? "";
-      formLicenseText = p.license_text ?? "";
-      formOgTitle = p.og_title ?? "";
-      formOgDescription = p.og_description ?? "";
-      formOgImagePath = p.og_image_path ?? "";
-      hasManualSlugEdit = Boolean((p.slug ?? "").trim()) && p.slug !== clientSlugify(p.title ?? "");
+      formTitle = p.title ?? '';
+      formSlug = p.slug ?? '';
+      formDescription = p.description ?? '';
+      formCaptureDate = p.capture_date ?? '';
+      formDimensions = p.dimensions ?? '';
+      formLicenseText = p.license_text ?? '';
+      formOgTitle = p.og_title ?? '';
+      formOgDescription = p.og_description ?? '';
+      formOgImagePath = p.og_image_path ?? '';
+      hasManualSlugEdit = Boolean((p.slug ?? '').trim()) && p.slug !== clientSlugify(p.title ?? '');
     }
   });
 
@@ -148,7 +148,7 @@
 
   const onHeaderClick = (e: MouseEvent) => {
     const target = e.target as HTMLElement;
-    if (target.closest('input[type="checkbox"]') || target.closest('a[href^="/photo/"]') || target.closest("button")) return;
+    if (target.closest('input[type="checkbox"]') || target.closest('a[href^="/photo/"]') || target.closest('button')) return;
     if (editHref) {
       goto(editHref);
       return;
@@ -179,10 +179,10 @@
     role="button"
     tabindex="0"
     onclick={(e) => {
-      if ((e.target as HTMLElement).closest('input[type="checkbox"]') || (e.target as HTMLElement).closest("a")) return;
+      if ((e.target as HTMLElement).closest('input[type="checkbox"]') || (e.target as HTMLElement).closest('a')) return;
       if (editHref) goto(editHref);
     }}
-    onkeydown={(e) => e.key === "Enter" && editHref && goto(editHref)}
+    onkeydown={(e) => e.key === 'Enter' && editHref && goto(editHref)}
   >
     <div class="absolute left-2 top-2 z-10 flex items-center gap-1">
       <input type="checkbox" class="size-5 rounded border-border-strong" checked={selectedPhotoIds.includes(photo.id)} onchange={(event) => onTogglePhotoSelected(photo.id, (event.currentTarget as HTMLInputElement).checked)} onclick={(e) => e.stopPropagation()} />
@@ -202,7 +202,7 @@
         <a href="/photo/{photo.slug}" class="block truncate text-xs text-white/80 hover:underline" target="_blank" rel="noopener noreferrer" onclick={(e) => e.stopPropagation()}>/{photo.slug}</a>
       {:else}
         <span class="block truncate text-xs text-white/75">
-          {photoStatus === "archived" ? "Archived" : "Private draft"}
+          {photoStatus === 'archived' ? 'Archived' : 'Private draft'}
         </span>
       {/if}
     </div>
@@ -213,7 +213,7 @@
       <span class="absolute left-2 top-2 text-xs font-medium tabular-nums text-text-muted">{index + 1}</span>
     {/if}
     {#if !editorOnly}
-      <div role="button" tabindex="0" class="grid cursor-pointer gap-2 rounded p-3 sm:grid-cols-[auto_auto_1fr_auto] sm:items-center" onclick={onHeaderClick} onkeydown={(e) => e.key === "Enter" && toggleExpanded()}>
+      <div role="button" tabindex="0" class="grid cursor-pointer gap-2 rounded p-3 sm:grid-cols-[auto_auto_1fr_auto] sm:items-center" onclick={onHeaderClick} onkeydown={(e) => e.key === 'Enter' && toggleExpanded()}>
         <div class="flex items-center sm:justify-center">
           <input type="checkbox" class="size-8" checked={selectedPhotoIds.includes(photo.id)} onchange={(event) => onTogglePhotoSelected(photo.id, (event.currentTarget as HTMLInputElement).checked)} />
         </div>
@@ -234,13 +234,13 @@
             <a href="/photo/{photo.slug}" class="inline-block text-xs text-text-muted hover:underline" target="_blank" rel="noopener noreferrer">/{photo.slug}</a>
           {:else}
             <span class="inline-block text-xs text-text-muted">
-              {photoStatus === "archived" ? "Archived (not public)" : "Not public until published"}
+              {photoStatus === 'archived' ? 'Archived (not public)' : 'Not public until published'}
             </span>
           {/if}
         </div>
 
         <div class="flex items-center justify-end gap-2">
-          <AdminButton variant="ghost" type="button" onclick={toggleExpanded} class="flex size-8 items-center justify-center p-0" aria-label={editHref ? "Open" : isExpanded ? "Collapse" : "Edit"}>
+          <AdminButton variant="ghost" type="button" onclick={toggleExpanded} class="flex size-8 items-center justify-center p-0" aria-label={editHref ? 'Open' : isExpanded ? 'Collapse' : 'Edit'}>
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="transition-transform duration-200" style="transform: rotate({isExpanded ? 90 : 0}deg)">
               <polyline points="9 18 15 12 9 6" />
             </svg>
@@ -250,10 +250,10 @@
     {/if}
 
     {#if isExpanded}
-      <div transition:slide={{duration: SLIDE_DURATION, easing: quintOut, axis: "y"}} class="flex flex-col gap-3">
+      <div transition:slide={{duration: SLIDE_DURATION, easing: quintOut, axis: 'y'}} class="flex flex-col gap-3">
         <div class="flex min-w-0 gap-12 mb-20">
           <div transition:fade={{duration: FADE_DURATION, delay: 0 * STAGGER_MS, easing: quintOut}} class="min-w-0 flex-[7] flex flex-col gap-3">
-            <form id="photo-update-form-{photoFormId}" method="POST" action={isDraft ? "?/create" : "?/update"} class="grid gap-3" use:enhance={() => {
+            <form id="photo-update-form-{photoFormId}" method="POST" action={isDraft ? '?/create' : '?/update'} class="grid gap-3" use:enhance={() => {
   return async ({ update }) => {
     await update({ reset: false });
     await invalidateAll();
@@ -508,18 +508,18 @@
 
         <div transition:fade={{duration: FADE_DURATION, delay: 4 * STAGGER_MS, easing: quintOut}} class="mt-8 flex flex-wrap items-center justify-center gap-2">
           <AdminButton form="photo-update-form-{photoFormId}" variant="submit" type="submit">
-            {photoStatus === "draft" || isDraft ? "Save Draft" : "Save"}
+            {photoStatus === 'draft' || isDraft ? 'Save Draft' : 'Save'}
           </AdminButton>
           {#if !isDraft}
-            {#if photoStatus === "draft"}
+            {#if photoStatus === 'draft'}
               <AdminButton form="photo-update-form-{photoFormId}" variant="submit" type="submit" formaction="?/publish">
                 Publish
               </AdminButton>
             {/if}
-            {#if photoStatus === "published"}
+            {#if photoStatus === 'published'}
               <AdminButton form="photo-update-form-{photoFormId}" variant="danger" type="submit" formaction="?/archive">Archive</AdminButton>
             {/if}
-            {#if photoStatus === "archived"}
+            {#if photoStatus === 'archived'}
               <AdminButton form="photo-update-form-{photoFormId}" type="submit" formaction="?/restore">Restore</AdminButton>
             {/if}
           {/if}

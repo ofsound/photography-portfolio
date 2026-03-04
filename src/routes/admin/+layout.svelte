@@ -2,7 +2,7 @@
   import { page } from '$app/state';
   import AdminButton from '$lib/components/admin/AdminButton.svelte';
 
-  let { data, children } = $props();
+  const { data, children } = $props();
 
   const links = [
     { href: '/admin/photos', label: 'Photos' },

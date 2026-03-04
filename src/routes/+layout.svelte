@@ -1,18 +1,18 @@
 <script lang="ts">
-  import "../app.css";
-  import {goto, invalidateAll, onNavigate} from "$app/navigation";
-  import {page} from "$app/state";
-  import {setGalleryTransitionContext} from "$lib/context/gallery-transition";
-  import {getGalleryPrefs, galleryDensityStore, setGalleryPrefs} from "$lib/stores/gallery-prefs";
-  import ZoomControl from "$lib/components/ZoomControl.svelte";
-  import type {LayoutData} from "./$types";
+  import '../app.css';
+  import {goto, invalidateAll, onNavigate} from '$app/navigation';
+  import {page} from '$app/state';
+  import {setGalleryTransitionContext} from '$lib/context/gallery-transition';
+  import {getGalleryPrefs, galleryDensityStore, setGalleryPrefs} from '$lib/stores/gallery-prefs';
+  import ZoomControl from '$lib/components/ZoomControl.svelte';
+  import type {LayoutData} from './$types';
 
-  let {data, children} = $props<{data: LayoutData | null; children: import("svelte").Snippet}>();
+  const {data, children} = $props<{data: LayoutData | null; children: import('svelte').Snippet}>();
 
   const isDetailRoute = (pathname: string) => /^\/photo\/[^/]+(?:\/[^/]+)?$/.test(pathname);
 
-  let phase = $state<import("$lib/context/gallery-transition").GalleryTransitionPhase>(
-    isDetailRoute(page.url.pathname) ? "open" : "idle"
+  let phase = $state<import('$lib/context/gallery-transition').GalleryTransitionPhase>(
+    isDetailRoute(page.url.pathname) ? 'open' : 'idle'
   );
   setGalleryTransitionContext(
     () => phase,
@@ -20,37 +20,37 @@
       phase = p;
     },
   );
-  const chromeHidden = $derived(phase === "fade-out-chrome" || phase === "scale-and-mask" || phase === "open" || phase === "closing-chrome" || phase === "closing-scale");
+  const chromeHidden = $derived(phase === 'fade-out-chrome' || phase === 'scale-and-mask' || phase === 'open' || phase === 'closing-chrome' || phase === 'closing-scale');
   const navPages = $derived((data?.navPages ?? []) as Array<{id: string; slug: string; title: string; nav_order: number}>);
   const siteSettings = $derived(data?.siteSettings ?? null);
   const hasSession = $derived(Boolean(data?.session));
   const pendingConversionCount = $derived((data?.pendingConversionCount as number) ?? 0);
   const maxDensity = 20;
-  let themeMode = $state<"light" | "dark" | "system">("system");
-  let transitionPreset = $state<"cinematic" | "snappy" | "experimental">("cinematic");
+  let themeMode = $state<'light' | 'dark' | 'system'>('system');
+  let transitionPreset = $state<'cinematic' | 'snappy' | 'experimental'>('cinematic');
   let hasHydratedClientPrefs = $state(false);
   let siteHeaderEl: HTMLElement | null = null;
-  let galleryQueryInput = $state("");
+  let galleryQueryInput = $state('');
 
-  const isGalleryRoute = (pathname: string) => pathname === "/gallery" || pathname.startsWith("/gallery/");
+  const isGalleryRoute = (pathname: string) => pathname === '/gallery' || pathname.startsWith('/gallery/');
   const isViewerRoute = (pathname: string) => isGalleryRoute(pathname) || isDetailRoute(pathname);
   const isViewer = $derived(isViewerRoute(page.url.pathname));
-  const isAdminPage = $derived(page.url.pathname.startsWith("/admin/"));
+  const isAdminPage = $derived(page.url.pathname.startsWith('/admin/'));
 
   $effect(() => {
     if (!isViewerRoute(page.url.pathname)) return;
-    const q = page.url.searchParams.get("q") ?? "";
+    const q = page.url.searchParams.get('q') ?? '';
     galleryQueryInput = q;
   });
 
   const onGallerySearchSubmit = (event: SubmitEvent) => {
     event.preventDefault();
     const q = galleryQueryInput.trim();
-    goto(q ? `/gallery?q=${encodeURIComponent(q)}` : "/gallery", {replaceState: true, noScroll: true, keepFocus: true});
+    goto(q ? `/gallery?q=${encodeURIComponent(q)}` : '/gallery', {replaceState: true, noScroll: true, keepFocus: true});
   };
 
   $effect(() => {
-    if (typeof window === "undefined" || !isViewer) return;
+    if (typeof window === 'undefined' || !isViewer) return;
     const prefs = getGalleryPrefs(maxDensity);
     if (prefs) galleryDensityStore.set(prefs.density);
   });
@@ -70,60 +70,60 @@
     delete document.documentElement.dataset.vtReduced;
   };
 
-  const applyTheme = (mode: "light" | "dark" | "system") => {
-    const isDarkSystem = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    const active = mode === "system" ? (isDarkSystem ? "dark" : "light") : mode;
-    document.documentElement.setAttribute("data-theme", active);
+  const applyTheme = (mode: 'light' | 'dark' | 'system') => {
+    const isDarkSystem = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const active = mode === 'system' ? (isDarkSystem ? 'dark' : 'light') : mode;
+    document.documentElement.setAttribute('data-theme', active);
     document.documentElement.style.colorScheme = active;
   };
 
   const siteThemeDefault = $derived(
-    (siteSettings?.theme_default === "dark" || siteSettings?.theme_default === "light"
+    (siteSettings?.theme_default === 'dark' || siteSettings?.theme_default === 'light'
       ? siteSettings.theme_default
-      : "light") as "light" | "dark"
+      : 'light') as 'light' | 'dark'
   );
 
-  const setAdminThemeMode = (mode: "light" | "dark" | "system") => {
+  const setAdminThemeMode = (mode: 'light' | 'dark' | 'system') => {
     themeMode = mode;
-    localStorage.setItem("admin-theme", mode);
+    localStorage.setItem('admin-theme', mode);
     applyTheme(mode);
   };
 
-  const updateTransitionPreset = (preset: "cinematic" | "snappy" | "experimental") => {
+  const updateTransitionPreset = (preset: 'cinematic' | 'snappy' | 'experimental') => {
     transitionPreset = preset;
     if (siteSettings?.allow_transition_toggle) {
-      localStorage.setItem("transition-preset", preset);
+      localStorage.setItem('transition-preset', preset);
     }
     applyTransitionPreset();
   };
 
   const syncSiteHeaderHeight = () => {
-    if (typeof document === "undefined" || !siteHeaderEl) return;
-    document.documentElement.style.setProperty("--site-header-height", `${siteHeaderEl.getBoundingClientRect().height}px`);
+    if (typeof document === 'undefined' || !siteHeaderEl) return;
+    document.documentElement.style.setProperty('--site-header-height', `${siteHeaderEl.getBoundingClientRect().height}px`);
   };
 
   $effect(() => {
-    if (typeof window === "undefined" || hasHydratedClientPrefs) return;
+    if (typeof window === 'undefined' || hasHydratedClientPrefs) return;
 
     const pathname = page.url.pathname;
-    const onAdmin = pathname.startsWith("/admin/");
-    transitionPreset = siteSettings?.transition_preset ?? "cinematic";
+    const onAdmin = pathname.startsWith('/admin/');
+    transitionPreset = siteSettings?.transition_preset ?? 'cinematic';
 
     if (onAdmin) {
-      const stored = localStorage.getItem("admin-theme");
+      const stored = localStorage.getItem('admin-theme');
       themeMode =
-        stored === "light" || stored === "dark" || stored === "system" ? stored : siteThemeDefault;
+        stored === 'light' || stored === 'dark' || stored === 'system' ? stored : siteThemeDefault;
     } else {
       themeMode = siteThemeDefault;
     }
 
     if (siteSettings?.allow_transition_toggle) {
-      const storedPreset = localStorage.getItem("transition-preset");
-      if (storedPreset === "cinematic" || storedPreset === "snappy" || storedPreset === "experimental") {
+      const storedPreset = localStorage.getItem('transition-preset');
+      if (storedPreset === 'cinematic' || storedPreset === 'snappy' || storedPreset === 'experimental') {
         transitionPreset = storedPreset;
       }
     } else {
-      localStorage.removeItem("transition-preset");
+      localStorage.removeItem('transition-preset');
     }
 
     applyTransitionPreset();
@@ -132,13 +132,13 @@
   });
 
   $effect(() => {
-    if (typeof window === "undefined" || !hasHydratedClientPrefs) return;
+    if (typeof window === 'undefined' || !hasHydratedClientPrefs) return;
     const pathname = page.url.pathname;
-    const onAdmin = pathname.startsWith("/admin/");
+    const onAdmin = pathname.startsWith('/admin/');
     if (onAdmin) {
-      const stored = localStorage.getItem("admin-theme");
+      const stored = localStorage.getItem('admin-theme');
       themeMode =
-        stored === "light" || stored === "dark" || stored === "system" ? stored : siteThemeDefault;
+        stored === 'light' || stored === 'dark' || stored === 'system' ? stored : siteThemeDefault;
     } else {
       themeMode = siteThemeDefault;
     }
@@ -146,7 +146,7 @@
   });
 
   $effect(() => {
-    if (typeof window === "undefined") return;
+    if (typeof window === 'undefined') return;
     if (!hasSession || pendingConversionCount <= 0) return;
 
     const timer = setInterval(() => {
@@ -157,20 +157,20 @@
   });
 
   $effect(() => {
-    if (typeof window === "undefined") return;
-    const media = window.matchMedia("(prefers-color-scheme: dark)");
+    if (typeof window === 'undefined') return;
+    const media = window.matchMedia('(prefers-color-scheme: dark)');
     const listener = () => {
-      if (themeMode === "system") {
-        applyTheme("system");
+      if (themeMode === 'system') {
+        applyTheme('system');
       }
     };
 
-    media.addEventListener("change", listener);
-    return () => media.removeEventListener("change", listener);
+    media.addEventListener('change', listener);
+    return () => media.removeEventListener('change', listener);
   });
 
   $effect(() => {
-    if (typeof document === "undefined") return;
+    if (typeof document === 'undefined') return;
     if (!siteSettings?.allow_transition_toggle) {
       transitionPreset = siteSettings?.transition_preset ?? transitionPreset;
     }
@@ -178,14 +178,14 @@
   });
 
   $effect(() => {
-    if (typeof window === "undefined" || !siteHeaderEl) return;
+    if (typeof window === 'undefined' || !siteHeaderEl) return;
     syncSiteHeaderHeight();
     const observer = new ResizeObserver(syncSiteHeaderHeight);
     observer.observe(siteHeaderEl);
-    window.addEventListener("resize", syncSiteHeaderHeight);
+    window.addEventListener('resize', syncSiteHeaderHeight);
     return () => {
       observer.disconnect();
-      window.removeEventListener("resize", syncSiteHeaderHeight);
+      window.removeEventListener('resize', syncSiteHeaderHeight);
     };
   });
 
@@ -207,12 +207,12 @@
       return;
     }
 
-    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-    document.documentElement.dataset.vt = "default";
+    document.documentElement.dataset.vt = 'default';
     delete document.documentElement.dataset.vtDirection;
     if (reducedMotion) {
-      document.documentElement.dataset.vtReduced = "1";
+      document.documentElement.dataset.vtReduced = '1';
     } else {
       delete document.documentElement.dataset.vtReduced;
     }
@@ -282,7 +282,7 @@
               id="header-theme"
               class="rounded border border-border-strong bg-transparent px-2 py-1 text-xs"
               value={themeMode}
-              onchange={(e) => setAdminThemeMode((e.currentTarget as HTMLSelectElement).value as "light" | "dark" | "system")}
+              onchange={(e) => setAdminThemeMode((e.currentTarget as HTMLSelectElement).value as 'light' | 'dark' | 'system')}
             >
               <option value="light">Light</option>
               <option value="dark">Dark</option>

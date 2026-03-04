@@ -1,15 +1,15 @@
 <script lang="ts">
-  import {goto} from "$app/navigation";
-  import {onDestroy, onMount} from "svelte";
-  import {getGalleryTransitionContext} from "$lib/context/gallery-transition";
-  import {getGalleryPrefs, galleryDensityStore} from "$lib/stores/gallery-prefs";
-  import GalleryDetailOverlay from "./scene/GalleryDetailOverlay.svelte";
-  import GalleryPreloader from "./scene/GalleryPreloader.svelte";
-  import GalleryTiles from "./scene/GalleryTiles.svelte";
+  import {goto} from '$app/navigation';
+  import {onDestroy, onMount} from 'svelte';
+  import {getGalleryTransitionContext} from '$lib/context/gallery-transition';
+  import {getGalleryPrefs, galleryDensityStore} from '$lib/stores/gallery-prefs';
+  import GalleryDetailOverlay from './scene/GalleryDetailOverlay.svelte';
+  import GalleryPreloader from './scene/GalleryPreloader.svelte';
+  import GalleryTiles from './scene/GalleryTiles.svelte';
 
   /** Portals the element to document.body so it can stack above the promoted tile (z-70). */
   const portal = (node: HTMLElement) => {
-    if (typeof document !== "undefined" && document.body) {
+    if (typeof document !== 'undefined' && document.body) {
       document.body.appendChild(node);
     }
     return {
@@ -18,11 +18,11 @@
       },
     };
   };
-  import type {GalleryPhoto} from "$lib/types/content";
-  import {parseDimensions} from "$lib/utils/parse-dimensions";
-  import {thumbCropTransform} from "$lib/utils/thumb-crop";
-  import {GALLERY_DETAIL_SHARED_WIDTH, photoPublicUrl} from "$lib/utils/storage-url";
-  import {computeContainRect, cropToImgTransform, demoteTile, movePromotedTile, promoteTile, releasePromotedTile, reinsertPromotedTile, type TileAnimationSession} from "./tile-animator";
+  import type {GalleryPhoto} from '$lib/types/content';
+  import {parseDimensions} from '$lib/utils/parse-dimensions';
+  import {thumbCropTransform} from '$lib/utils/thumb-crop';
+  import {GALLERY_DETAIL_SHARED_WIDTH, photoPublicUrl} from '$lib/utils/storage-url';
+  import {computeContainRect, cropToImgTransform, demoteTile, movePromotedTile, promoteTile, releasePromotedTile, reinsertPromotedTile, type TileAnimationSession} from './tile-animator';
 
   type ActiveRoute = {
     photoSlug: string;
@@ -39,8 +39,8 @@
     density: number;
     gap: number;
     q: string;
-    layoutMode: "uniform" | "masonry";
-    widthMode: "full" | "constrained";
+    layoutMode: 'uniform' | 'masonry';
+    widthMode: 'full' | 'constrained';
     maxContentWidthPx: number | null;
     uniformThumbRatio: number;
     maxDensity: number;
@@ -48,14 +48,14 @@
     active: ActiveRoute | null;
   };
 
-  type GalleryImage = NonNullable<GalleryPhoto["leadImage"]>;
+  type GalleryImage = NonNullable<GalleryPhoto['leadImage']>;
 
-  let {data} = $props<{data: ViewerData}>();
+  const {data} = $props<{data: ViewerData}>();
   const readInitialData = () => data;
 
-  let gap = $state(readInitialData().gap);
-  let layoutMode = $state<"uniform" | "masonry">(readInitialData().layoutMode);
-  let widthMode = $state<"full" | "constrained">(readInitialData().widthMode);
+  const gap = $state(readInitialData().gap);
+  const layoutMode = $state<'uniform' | 'masonry'>(readInitialData().layoutMode);
+  const widthMode = $state<'full' | 'constrained'>(readInitialData().widthMode);
   let query = $state(readInitialData().q);
   let pageSize = $state(readInitialData().pageSize);
   let photos = $state<GalleryPhoto[]>(readInitialData().photos);
@@ -72,8 +72,8 @@
   let nextGalleryHref = $state<string | null>(readInitialData().active?.nextGalleryHref ?? null);
   let controlsVisible = $state(true);
   let promoted = $state<TileAnimationSession | null>(null);
-  let routeKey = $state(readInitialData().active ? `${readInitialData().active!.photoSlug}:${readInitialData().active!.imageId ?? ""}` : "");
-  let querySignature = $state("");
+  let routeKey = $state(readInitialData().active ? `${readInitialData().active!.photoSlug}:${readInitialData().active!.imageId ?? ''}` : '');
+  let querySignature = $state('');
   let mounted = $state(false);
   let hasHydratedRoute = Boolean(readInitialData().active);
   let skipNextRouteAnimation = false;
@@ -99,12 +99,12 @@
   let totalImages = $state(0);
   let preloaderVisible = $state(false);
   let galleryRevealed = $state(false);
-  let preloadKey = $state("");
+  let preloadKey = $state('');
 
   let transitionQueue = Promise.resolve();
   let transitionsInFlight = $state(0);
   let pendingRouteApply = $state(false);
-  const pendingDirectionQueue: Array<"prev" | "next"> = [];
+  const pendingDirectionQueue: Array<'prev' | 'next'> = [];
   let directionDrainScheduled = false;
   let isClosing = $state(false);
 
@@ -135,7 +135,7 @@
     }
     directionDrainScheduled = true;
     const direction = pendingDirectionQueue.shift()!;
-    const neighbors = direction === "next" ? localNeighborsFor(activeSlug ?? "").nextGalleryHref : localNeighborsFor(activeSlug ?? "").prevGalleryHref;
+    const neighbors = direction === 'next' ? localNeighborsFor(activeSlug ?? '').nextGalleryHref : localNeighborsFor(activeSlug ?? '').prevGalleryHref;
     const targetSlug = parseSlugFromPhotoHref(neighbors);
     if (!targetSlug) {
       drainDirectionQueue();
@@ -165,7 +165,7 @@
       })
       .catch((error) => {
         transitionsInFlight = 0;
-        console.error("gallery-transition-failed", error);
+        console.error('gallery-transition-failed', error);
         flushPendingRouteApply();
       });
     return transitionQueue;
@@ -176,8 +176,8 @@
   const transitionCtx = getGalleryTransitionContext();
   const transitionPhase = $derived(transitionCtx.phase);
   const setPhase = transitionCtx.setPhase;
-  const chromePanelHidden = $derived(transitionPhase === "fade-out-chrome" || transitionPhase === "scale-and-mask" || transitionPhase === "open" || transitionPhase === "closing-chrome" || transitionPhase === "closing-scale");
-  const overlayChromeHidden = $derived(transitionPhase === "closing-chrome" || transitionPhase === "closing-scale");
+  const chromePanelHidden = $derived(transitionPhase === 'fade-out-chrome' || transitionPhase === 'scale-and-mask' || transitionPhase === 'open' || transitionPhase === 'closing-chrome' || transitionPhase === 'closing-scale');
+  const overlayChromeHidden = $derived(transitionPhase === 'closing-chrome' || transitionPhase === 'closing-scale');
 
   const registerTile = (node: HTMLElement, slug: string) => {
     tileRefs.set(slug, node);
@@ -205,27 +205,27 @@
     };
   };
 
-  const reducedMotion = () => (typeof window !== "undefined" ? window.matchMedia("(prefers-reduced-motion: reduce)").matches : false);
+  const reducedMotion = () => (typeof window !== 'undefined' ? window.matchMedia('(prefers-reduced-motion: reduce)').matches : false);
 
   const readHeaderHeight = () => {
-    if (typeof window === "undefined") return 54;
-    const raw = getComputedStyle(document.documentElement).getPropertyValue("--site-header-height").trim();
+    if (typeof window === 'undefined') return 54;
+    const raw = getComputedStyle(document.documentElement).getPropertyValue('--site-header-height').trim();
     const parsed = Number.parseFloat(raw);
     return Number.isFinite(parsed) ? parsed : 54;
   };
 
   const buildUrlParams = (includePage = false) => {
     const params = new URLSearchParams();
-    if (query.trim()) params.set("q", query.trim());
-    if (includePage && currentPage > 1) params.set("page", String(currentPage));
+    if (query.trim()) params.set('q', query.trim());
+    if (includePage && currentPage > 1) params.set('page', String(currentPage));
     return params;
   };
 
   const buildFeedParams = () => {
     const params = new URLSearchParams();
-    params.set("page", String(currentPage + 1));
-    params.set("pageSize", String(pageSize));
-    if (query.trim()) params.set("q", query.trim());
+    params.set('page', String(currentPage + 1));
+    params.set('pageSize', String(pageSize));
+    if (query.trim()) params.set('q', query.trim());
     return params;
   };
 
@@ -236,15 +236,15 @@
 
   const navigateGalleryWithParams = (mutate: (params: URLSearchParams) => void) => {
     const params = new URLSearchParams();
-    if (query.trim()) params.set("q", query.trim());
-    if (currentPage > 1) params.set("page", String(currentPage));
+    if (query.trim()) params.set('q', query.trim());
+    if (currentPage > 1) params.set('page', String(currentPage));
     mutate(params);
 
-    query = params.get("q")?.trim() ?? "";
-    const pageParam = params.get("page");
+    query = params.get('q')?.trim() ?? '';
+    const pageParam = params.get('page');
     currentPage = pageParam !== null && Number.isFinite(Number.parseInt(pageParam, 10)) ? Number.parseInt(pageParam, 10) : 1;
 
-    goto(params.toString() ? `/gallery?${params.toString()}` : "/gallery", {
+    goto(params.toString() ? `/gallery?${params.toString()}` : '/gallery', {
       replaceState: true,
       noScroll: true,
       keepFocus: true,
@@ -255,7 +255,7 @@
   const placeholderCount = $derived(Math.max(colCount, 6));
   const uniformRatio = $derived(Math.max(0.2, Number(data.uniformThumbRatio ?? 1)));
   const constrainedMax = $derived(data.maxContentWidthPx ?? 1600);
-  const sectionMaxWidthStyle = $derived(widthMode === "constrained" ? `max-width: min(100%, ${constrainedMax}px);` : "max-width: 100%;");
+  const sectionMaxWidthStyle = $derived(widthMode === 'constrained' ? `max-width: min(100%, ${constrainedMax}px);` : 'max-width: 100%;');
   const canCycleGallery = $derived(Boolean(prevGalleryHref && nextGalleryHref));
 
   const activePhoto = $derived(activeSlug ? (photos.find((photo) => photo.slug === activeSlug) ?? null) : null);
@@ -321,7 +321,7 @@
 
   /** Full browser window size for detail view (body overflow hidden when open = stable). */
   const getViewportSize = () => {
-    if (typeof window === "undefined") return {width: 0, height: 0};
+    if (typeof window === 'undefined') return {width: 0, height: 0};
     return {
       width: window.innerWidth,
       height: window.innerHeight,
@@ -341,7 +341,7 @@
         imgW = parsed.width;
         imgH = parsed.height;
       } else if (node) {
-        const imgEl = node.querySelector("img");
+        const imgEl = node.querySelector('img');
         if (imgEl && imgEl.naturalWidth) {
           imgW = imgEl.naturalWidth;
           imgH = imgEl.naturalHeight;
@@ -369,7 +369,7 @@
     const baseMotion = {
       reducedMotion: reducedMotion(),
       durationMs: duration,
-      easing: "cubic-bezier(0.16, 1, 0.3, 1)",
+      easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
     };
 
     if (promoted && promoted.slug !== slug) {
@@ -378,7 +378,7 @@
     }
 
     if (!promoted) {
-      const containerAspect = layoutMode === "uniform" ? uniformRatio : tileAspectRatio(photo);
+      const containerAspect = layoutMode === 'uniform' ? uniformRatio : tileAspectRatio(photo);
       const imgCrop = imgCropFromForPhoto(photo, imageId, containerAspect);
       promoted = await promoteTile({
         slug,
@@ -406,8 +406,8 @@
     if (!promoted) {
       activeSlug = null;
       activeImageId = null;
-      if (typeof document !== "undefined") document.body.style.overflow = "";
-      setPhase("idle");
+      if (typeof document !== 'undefined') document.body.style.overflow = '';
+      setPhase('idle');
       return;
     }
 
@@ -416,29 +416,29 @@
     const placeholderRect = session.placeholder.getBoundingClientRect();
     const outOfView = placeholderRect.bottom < 0 || placeholderRect.top > window.innerHeight;
     if (outOfView) {
-      session.placeholder.scrollIntoView({behavior: reducedMotion() ? "auto" : "smooth", block: "center"});
+      session.placeholder.scrollIntoView({behavior: reducedMotion() ? 'auto' : 'smooth', block: 'center'});
       if (!reducedMotion()) {
         await wait(260);
       }
     }
 
     if (!reducedMotion()) {
-      setPhase("closing-chrome");
+      setPhase('closing-chrome');
       await wait(CLOSING_CHROME_MS);
     }
 
-    setPhase("closing-scale");
+    setPhase('closing-scale');
     activeSlug = null;
     activeImageId = null;
 
-    if (typeof document !== "undefined") document.body.style.overflow = "";
+    if (typeof document !== 'undefined') document.body.style.overflow = '';
 
     await demoteTile(session, {
       reducedMotion: reducedMotion(),
       durationMs: animate ? SCALE_MASK_MS : 0,
-      easing: "cubic-bezier(0.16, 1, 0.3, 1)",
-      imgEasing: "cubic-bezier(0.5, 0, 1, 1)",
-      useCover: layoutMode === "uniform",
+      easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
+      imgEasing: 'cubic-bezier(0.5, 0, 1, 1)',
+      useCover: layoutMode === 'uniform',
     });
 
     if (reducedMotion()) {
@@ -447,13 +447,13 @@
 
     reinsertPromotedTile(session);
     promoted = null;
-    setPhase("idle");
+    setPhase('idle');
   };
 
   const applyRouteState = async (route: ActiveRoute | null, animate: boolean) => {
     if (!route) {
       isClosing = true;
-      if (typeof document !== "undefined") document.body.style.overflow = "";
+      if (typeof document !== 'undefined') document.body.style.overflow = '';
       await collapsePromotedTile(animate);
       prevGalleryHref = null;
       nextGalleryHref = null;
@@ -461,8 +461,8 @@
     }
 
     isClosing = false;
-    if (typeof document !== "undefined") document.body.style.overflow = "hidden";
-    setPhase("open");
+    if (typeof document !== 'undefined') document.body.style.overflow = 'hidden';
+    setPhase('open');
     const switchingPhotos = Boolean(activeSlug && activeSlug !== route.photoSlug);
     await ensurePromotedTile(route.photoSlug, route.imageId, animate && !switchingPhotos);
 
@@ -475,12 +475,12 @@
   const onSearchSubmit = (event: SubmitEvent) => {
     event.preventDefault();
     navigateGalleryWithParams((params) => {
-      params.delete("page");
+      params.delete('page');
       if (!query.trim()) {
-        params.delete("q");
+        params.delete('q');
         return;
       }
-      params.set("q", query.trim());
+      params.set('q', query.trim());
     });
   };
 
@@ -500,21 +500,21 @@
         if (reducedMotion()) {
           activeSlug = slug;
           activeImageId = null;
-          if (typeof document !== "undefined") document.body.style.overflow = "hidden";
+          if (typeof document !== 'undefined') document.body.style.overflow = 'hidden';
           await ensurePromotedTile(slug, null, true);
-          setPhase("open");
+          setPhase('open');
           return;
         }
 
-        setPhase("fade-out-chrome");
+        setPhase('fade-out-chrome');
         await wait(FADE_OUT_CHROME_MS);
 
-        setPhase("scale-and-mask");
+        setPhase('scale-and-mask');
         activeSlug = slug;
         activeImageId = null;
 
         // Lock body scroll immediately so viewport is stable before computing rect
-        if (typeof document !== "undefined") document.body.style.overflow = "hidden";
+        if (typeof document !== 'undefined') document.body.style.overflow = 'hidden';
 
         // Wait for overlay to render and layout to settle before computing target rect
         await new Promise<void>((r) => {
@@ -523,7 +523,7 @@
 
         await ensurePromotedTile(slug, null, true, SCALE_MASK_MS);
 
-        setPhase("open");
+        setPhase('open');
       });
 
       skipNextRouteAnimation = true;
@@ -543,12 +543,12 @@
       });
 
       skipNextRouteAnimation = true;
-      expectedRouteKeyFromGoto = "";
-      await goto(withCurrentSearch("/gallery", true), {noScroll: true, keepFocus: true});
+      expectedRouteKeyFromGoto = '';
+      await goto(withCurrentSearch('/gallery', true), {noScroll: true, keepFocus: true});
     })();
   };
 
-  const slideToNeighbor = async (targetSlug: string, direction: "prev" | "next") => {
+  const slideToNeighbor = async (targetSlug: string, direction: 'prev' | 'next') => {
     const targetPhoto = findPhoto(targetSlug);
     if (!targetPhoto) return false;
 
@@ -561,12 +561,12 @@
     const incomingFinalRect = targetRectFor(targetPhoto, null, targetNode);
     const {width: vw} = getViewportSize();
     const travel = Math.max(vw, incomingFinalRect.width + 72);
-    const isNext = direction === "next";
+    const isNext = direction === 'next';
     const incomingStartRect = offsetRect(incomingFinalRect, isNext ? travel : -travel);
     const outgoingEndRect = offsetRect(promoted.currentRect, isNext ? -travel : travel);
 
     const outgoingSession = promoted;
-    const incomingContainerAspect = layoutMode === "uniform" ? uniformRatio : tileAspectRatio(targetPhoto);
+    const incomingContainerAspect = layoutMode === 'uniform' ? uniformRatio : tileAspectRatio(targetPhoto);
     const incomingImgCrop = imgCropFromForPhoto(targetPhoto, null, incomingContainerAspect);
     const incomingSession = await promoteTile({
       slug: targetSlug,
@@ -581,7 +581,7 @@
     const motion = {
       reducedMotion: reducedMotion(),
       durationMs: 360,
-      easing: "cubic-bezier(0.22, 1, 0.36, 1)",
+      easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
     };
 
     await Promise.all([movePromotedTile(outgoingSession, outgoingEndRect, motion), movePromotedTile(incomingSession, incomingFinalRect, motion)]);
@@ -595,7 +595,7 @@
     return true;
   };
 
-  const onNeighborNavigate = (event: MouseEvent, _href: string | null, direction: "prev" | "next") => {
+  const onNeighborNavigate = (event: MouseEvent, _href: string | null, direction: 'prev' | 'next') => {
     event.preventDefault();
     if (!canCycleGallery || isClosing) return;
 
@@ -619,7 +619,7 @@
           await movePromotedTile(promoted, nextRect, {
             reducedMotion: reducedMotion(),
             durationMs: 260,
-            easing: "cubic-bezier(0.2, 0.8, 0.2, 1)",
+            easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)',
           });
         }
       });
@@ -638,22 +638,22 @@
   const onKeydown = (event: KeyboardEvent) => {
     if (!activeSlug || event.repeat) return;
 
-    if (event.key === "Escape") {
+    if (event.key === 'Escape') {
       closeToGallery(event);
       return;
     }
 
-    if (event.key === "ArrowLeft" && prevGalleryHref) {
-      onNeighborNavigate(event as unknown as MouseEvent, prevGalleryHref, "prev");
+    if (event.key === 'ArrowLeft' && prevGalleryHref) {
+      onNeighborNavigate(event as unknown as MouseEvent, prevGalleryHref, 'prev');
       return;
     }
 
-    if (event.key === "ArrowRight" && nextGalleryHref) {
-      onNeighborNavigate(event as unknown as MouseEvent, nextGalleryHref, "next");
+    if (event.key === 'ArrowRight' && nextGalleryHref) {
+      onNeighborNavigate(event as unknown as MouseEvent, nextGalleryHref, 'next');
     }
   };
 
-  const shouldIgnoreSwipe = (target: EventTarget | null) => target instanceof HTMLElement && !!target.closest("[data-swipe-ignore]");
+  const shouldIgnoreSwipe = (target: EventTarget | null) => target instanceof HTMLElement && !!target.closest('[data-swipe-ignore]');
 
   const onTouchStart = (event: TouchEvent) => {
     if (!activeSlug || shouldIgnoreSwipe(event.target) || event.touches.length !== 1) {
@@ -686,12 +686,12 @@
     if (!isHorizontalSwipe) return;
 
     if (deltaX < 0 && nextGalleryHref) {
-      void onNeighborNavigate(new MouseEvent("click"), nextGalleryHref, "next");
+      void onNeighborNavigate(new MouseEvent('click'), nextGalleryHref, 'next');
       return;
     }
 
     if (prevGalleryHref) {
-      void onNeighborNavigate(new MouseEvent("click"), prevGalleryHref, "prev");
+      void onNeighborNavigate(new MouseEvent('click'), prevGalleryHref, 'prev');
     }
   };
 
@@ -710,14 +710,14 @@
   };
 
   const setupViewportListeners = () => {
-    if (typeof window === "undefined") return () => {};
+    if (typeof window === 'undefined') return () => {};
     const vv = window.visualViewport;
     if (vv) {
-      vv.addEventListener("resize", onResize);
-      vv.addEventListener("scroll", onResize);
+      vv.addEventListener('resize', onResize);
+      vv.addEventListener('scroll', onResize);
       return () => {
-        vv.removeEventListener("resize", onResize);
-        vv.removeEventListener("scroll", onResize);
+        vv.removeEventListener('resize', onResize);
+        vv.removeEventListener('scroll', onResize);
       };
     }
     return () => {};
@@ -734,7 +734,7 @@
 
       const response = await fetch(`/gallery/feed?${params.toString()}`);
       if (!response.ok) {
-        throw new Error("request-failed");
+        throw new Error('request-failed');
       }
 
       const payload = (await response.json()) as {
@@ -749,7 +749,7 @@
       currentPage = payload.page;
       hasMore = payload.hasMore;
     } catch {
-      loadError = "Could not load more photos.";
+      loadError = 'Could not load more photos.';
     } finally {
       isLoadingMore = false;
     }
@@ -766,7 +766,7 @@
     if (parsed) return Math.max(0.2, parsed.width / parsed.height);
     // Fallback: read from the DOM img element's natural dimensions
     const node = tileRefs.get(photo.slug);
-    const imgEl = node?.querySelector("img");
+    const imgEl = node?.querySelector('img');
     if (imgEl && imgEl.naturalWidth && imgEl.naturalHeight) {
       return Math.max(0.2, imgEl.naturalWidth / imgEl.naturalHeight);
     }
@@ -784,7 +784,7 @@
     Boolean(img && img.thumb_crop_x != null && img.thumb_crop_y != null && img.thumb_crop_zoom != null && img.thumb_crop_zoom >= 1);
 
   const thumbCropStyle = (img: GalleryImage | null, containerAspect: number) => {
-    if (!img || !hasThumbCrop(img)) return "";
+    if (!img || !hasThumbCrop(img)) return '';
     const parsed = parseDimensions(img.dimensions);
     const w = parsed?.width ?? 1;
     const h = parsed?.height ?? 1;
@@ -802,7 +802,7 @@
       imgAspect = parsed.width / parsed.height;
     } else {
       const node = tileRefs.get(photo.slug);
-      const imgEl = node?.querySelector("img");
+      const imgEl = node?.querySelector('img');
       if (imgEl && imgEl.naturalWidth) {
         imgAspect = imgEl.naturalWidth / imgEl.naturalHeight;
       }
@@ -874,8 +874,8 @@
 
   onMount(() => {
     mounted = true;
-    if (activeSlug && typeof document !== "undefined") {
-      document.body.style.overflow = "hidden";
+    if (activeSlug && typeof document !== 'undefined') {
+      document.body.style.overflow = 'hidden';
     }
     const prefs = getGalleryPrefs(data.maxDensity ?? 20);
     if (prefs) {
@@ -887,7 +887,7 @@
 
   $effect(() => {
     if (!mounted) return;
-    const key = (data.q ?? "") || "\0";
+    const key = (data.q ?? '') || '\0';
     if (!shouldShowPreloader) {
       if (photos.length > 0) {
         galleryRevealed = true;
@@ -904,7 +904,7 @@
   $effect(() => {
     if (!mounted) return;
 
-    const nextQuerySignature = [data.q, data.page].join("|");
+    const nextQuerySignature = [data.q, data.page].join('|');
     if (nextQuerySignature !== querySignature) {
       querySignature = nextQuerySignature;
       query = data.q;
@@ -928,11 +928,11 @@
       }
     }
 
-    const nextRouteKey = data.active ? `${data.active.photoSlug}:${data.active.imageId ?? ""}` : "";
+    const nextRouteKey = data.active ? `${data.active.photoSlug}:${data.active.imageId ?? ''}` : '';
     if (nextRouteKey === routeKey) return;
 
     if (expectedRouteKeyFromGoto !== null) {
-      const match = nextRouteKey === expectedRouteKeyFromGoto || (expectedRouteKeyFromGoto.endsWith(":") && nextRouteKey.startsWith(expectedRouteKeyFromGoto));
+      const match = nextRouteKey === expectedRouteKeyFromGoto || (expectedRouteKeyFromGoto.endsWith(':') && nextRouteKey.startsWith(expectedRouteKeyFromGoto));
       if (match) {
         expectedRouteKeyFromGoto = null;
         routeKey = nextRouteKey;
@@ -972,7 +972,7 @@
         if (!entry?.isIntersecting) return;
         void loadNextPage();
       },
-      {rootMargin: "600px 0px"},
+      {rootMargin: '600px 0px'},
     );
 
     observer.observe(loadSentinel);
@@ -982,7 +982,7 @@
   onDestroy(() => {
     teardownObserver();
     if (hideTimer) clearTimeout(hideTimer);
-    if (typeof document !== "undefined") document.body.style.overflow = "";
+    if (typeof document !== 'undefined') document.body.style.overflow = '';
     if (promoted) {
       releasePromotedTile(promoted);
       promoted = null;

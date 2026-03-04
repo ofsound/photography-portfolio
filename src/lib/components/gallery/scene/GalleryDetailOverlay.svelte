@@ -6,7 +6,7 @@
 
   type PortalAction = (node: HTMLElement) => { destroy: () => void };
 
-  let {
+  const {
     activePhoto,
     currentImage,
     promoted,

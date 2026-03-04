@@ -1,7 +1,7 @@
 <script lang="ts">
   import { fade } from 'svelte/transition';
 
-  let {
+  const {
     visible,
     enabled,
     imagesLoaded,

@@ -565,10 +565,10 @@ export type Database = {
       cms_is_admin: { Args: Record<string, never>; Returns: boolean };
       gallery_photo_neighbors: {
         Args: { p_photo_id: string };
-        Returns: {
+        Returns: Array<{
           prev_slug: string | null;
           next_slug: string | null;
-        }[];
+        }>;
       };
       insert_photo_image: {
         Args: {

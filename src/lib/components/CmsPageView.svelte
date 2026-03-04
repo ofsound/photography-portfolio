@@ -8,7 +8,7 @@
     slug?: string;
   };
 
-  let { page } = $props<{ page: CmsPageData }>();
+  const { page } = $props<{ page: CmsPageData }>();
   const scopeKey = $derived(createCmsScopeKey(page.slug));
 
   $effect(() => {

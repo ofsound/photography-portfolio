@@ -16,13 +16,12 @@
   </p>
 {/if}
 
-<section class="mt-6 grid gap-8 lg:grid-cols-[24rem_1fr]">
+<section class="mt-6 flex flex-col gap-8 lg:flex-row">
   <form
     method="POST"
     action="?/create"
-    class="grid gap-3 rounded border border-border p-4"
+    class="grid h-fit gap-3 lg:w-96 lg:shrink-0"
   >
-    <h2 class="text-sm tracking-widest uppercase">New Category</h2>
     <FormField label="Name" id="cat-create-name">
       <FormInput id="cat-create-name" name="name" placeholder="Name" required />
     </FormField>
@@ -51,10 +50,10 @@
     <label class="flex items-center gap-2 text-sm">
       <input name="is_active" type="checkbox" checked /> Active
     </label>
-    <AdminButton wFit type="submit">Create</AdminButton>
+    <AdminButton wFit type="submit">Create Category</AdminButton>
   </form>
 
-  <div class="grid gap-3">
+  <div class="flex flex-1 flex-col gap-3">
     {#each data.categories as category (category.id)}
       <form
         method="POST"

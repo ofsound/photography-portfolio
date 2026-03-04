@@ -1,4 +1,5 @@
 <script lang="ts">
+  import CodeEditor from '$lib/components/admin/CodeEditor.svelte';
   import AdminButton from '$lib/components/admin/AdminButton.svelte';
   import AdminHeading from '$lib/components/admin/AdminHeading.svelte';
   import FormField from '$lib/components/FormField.svelte';
@@ -47,11 +48,7 @@
   </p>
 {/if}
 
-<form
-  method="POST"
-  action="?/update"
-  class="mt-6 grid gap-3 rounded border border-border p-4"
->
+<form method="POST" action="?/update" class="mt-6 grid gap-3">
   <input type="hidden" name="id" value={page.id} />
 
   <div class="grid gap-3 sm:grid-cols-2">
@@ -91,21 +88,19 @@
   </div>
 
   <FormField label="HTML" id="page-edit-html_content">
-    <FormTextarea
-      id="page-edit-html_content"
+    <CodeEditor
       name="html_content"
       bind:value={formHtmlContent}
-      rows={8}
-      class="font-mono text-xs"
+      lang="html"
+      height="32rem"
     />
   </FormField>
   <FormField label="Scoped CSS" id="page-edit-css_module">
-    <FormTextarea
-      id="page-edit-css_module"
+    <CodeEditor
       name="css_module"
       bind:value={formCssModule}
-      rows={4}
-      class="font-mono text-xs"
+      lang="css"
+      height="16rem"
     />
   </FormField>
   <FormField label="SEO description" id="page-edit-seo_description">

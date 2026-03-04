@@ -1,6 +1,7 @@
 <script lang="ts">
   import AdminButton from '$lib/components/admin/AdminButton.svelte';
   import AdminHeading from '$lib/components/admin/AdminHeading.svelte';
+  import CodeEditor from '$lib/components/admin/CodeEditor.svelte';
   import FormField from '$lib/components/FormField.svelte';
   import FormInput from '$lib/components/FormInput.svelte';
   import FormTextarea from '$lib/components/FormTextarea.svelte';
@@ -33,14 +34,12 @@
   </p>
 {/if}
 
-<section class="mt-6 grid gap-8 lg:grid-cols-[24rem_1fr]">
+<section class="mt-6 flex flex-col gap-8 lg:flex-row">
   <form
     method="POST"
     action="?/create"
-    class="grid gap-3 rounded border border-border p-4"
+    class="grid h-fit gap-3 lg:w-96 lg:shrink-0"
   >
-    <h2 class="text-sm tracking-widest uppercase">Create Page</h2>
-
     <FormField label="Title" id="page-create-title">
       <FormInput
         id="page-create-title"
@@ -65,21 +64,19 @@
     </FormField>
 
     <FormField label="HTML" id="page-create-html_content">
-      <FormTextarea
-        id="page-create-html_content"
+      <CodeEditor
+        lang="html"
         name="html_content"
-        rows={6}
         placeholder="HTML"
-        class="font-mono text-xs"
+        height="24rem"
       />
     </FormField>
     <FormField label="Scoped CSS" id="page-create-css_module">
-      <FormTextarea
-        id="page-create-css_module"
+      <CodeEditor
+        lang="css"
         name="css_module"
-        rows={4}
         placeholder="Scoped CSS"
-        class="font-mono text-xs"
+        height="12rem"
       />
     </FormField>
     <FormField label="SEO title" id="page-create-seo_title">
@@ -117,24 +114,24 @@
           class="w-24 rounded border border-border-strong px-2 py-1"
         /></label
       >
-      <AdminButton type="submit">Create</AdminButton>
+      <AdminButton wFit type="submit">Create Page</AdminButton>
     </div>
   </form>
 
-  <section class="rounded border border-border p-4">
+  <section class="flex-1">
     <h2 class="text-sm tracking-widest uppercase">Existing Pages</h2>
     {#if pages.length === 0}
       <p class="mt-2 text-sm text-text-muted">No pages yet.</p>
     {:else}
-      <div class="mt-3 grid gap-2">
+      <div class="mt-3 flex flex-col gap-2">
         {#each pages as page (page.id)}
           <AdminButton
             href={`/admin/pages/edit/${page.slug}`}
             variant="subtle"
-            class="block text-left"
+            class="block w-full text-left"
           >
             <div class="flex flex-wrap items-center justify-between gap-2">
-              <span>/{page.slug} - {page.title}</span>
+              <span>{page.title} - /{page.slug}</span>
               <span class="text-xs tracking-widest text-text-subtle uppercase"
                 >{page.status}</span
               >

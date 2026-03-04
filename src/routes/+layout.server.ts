@@ -1,3 +1,4 @@
+import { throwLoaderError } from '$lib/server/load-error';
 import type { LayoutServerLoad } from './$types';
 
 export const load: LayoutServerLoad = async ({ locals }) => {
@@ -21,6 +22,20 @@ export const load: LayoutServerLoad = async ({ locals }) => {
       .order('title', { ascending: true }),
   ]);
 
+  if (settingsResult.error) {
+    throwLoaderError(
+      { route: '/+layout', operation: 'load site settings' },
+      settingsResult.error,
+    );
+  }
+
+  if (navPagesResult.error) {
+    throwLoaderError(
+      { route: '/+layout', operation: 'load nav pages' },
+      navPagesResult.error,
+    );
+  }
+
   const pendingQuery =
     session &&
     (await locals.supabase
@@ -28,6 +43,13 @@ export const load: LayoutServerLoad = async ({ locals }) => {
       .select('id', { count: 'exact', head: true })
       .eq('is_active', true)
       .is('delivery_storage_path', null));
+
+  if (pendingQuery && pendingQuery.error) {
+    throwLoaderError(
+      { route: '/+layout', operation: 'load pending conversion count' },
+      pendingQuery.error,
+    );
+  }
 
   return {
     session,

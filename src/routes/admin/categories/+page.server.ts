@@ -6,16 +6,24 @@ import {
   assertTitle,
   toSlug,
 } from '$lib/server/admin-helpers';
+import { throwLoaderError } from '$lib/server/load-error';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals }) => {
-  const { data: categories } = await locals.supabase
+  const categoriesQuery = await locals.supabase
     .from('categories')
     .select('id, slug, name, description, sort_order, is_active, updated_at')
     .order('sort_order', { ascending: true })
     .order('name', { ascending: true });
 
-  return { categories: categories ?? [] };
+  if (categoriesQuery.error) {
+    throwLoaderError(
+      { route: '/admin/categories', operation: 'load categories' },
+      categoriesQuery.error,
+    );
+  }
+
+  return { categories: categoriesQuery.data ?? [] };
 };
 
 export const actions: Actions = {

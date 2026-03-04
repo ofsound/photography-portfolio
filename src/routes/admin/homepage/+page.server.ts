@@ -13,41 +13,69 @@ import {
   TRANSITION_DURATION_MAX_MS,
   clampInt,
 } from '$lib/server/slideshow-constants';
+import { throwLoaderError } from '$lib/server/load-error';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals }) => {
-  const [
-    { data: slidesRaw },
-    { data: imagesRaw },
-    pendingQuery,
-    settingsQuery,
-  ] = await Promise.all([
-    locals.supabase
-      .from('homepage_slides')
-      .select(
-        'id, photo_image_id, position, is_active, photo_images:photo_image_id(id, kind, delivery_storage_path, photo_id, photos:photo_id(title, slug))',
-      )
-      .order('position', { ascending: true }),
-    locals.supabase
-      .from('photo_images')
-      .select(
-        'id, kind, position, delivery_storage_path, photo_id, photos:photo_id(title, slug)',
-      )
-      .eq('is_active', true)
-      .not('delivery_storage_path', 'is', null)
-      .order('created_at', { ascending: false })
-      .limit(300),
-    locals.supabase
-      .from('photo_images')
-      .select('id', { count: 'exact', head: true })
-      .eq('is_active', true)
-      .is('delivery_storage_path', null),
-    locals.supabase
-      .from('site_settings')
-      .select('homepage_slide_duration_ms, homepage_transition_duration_ms')
-      .eq('singleton_id', 1)
-      .maybeSingle(),
-  ]);
+  const [slidesQuery, imagesQuery, pendingQuery, settingsQuery] =
+    await Promise.all([
+      locals.supabase
+        .from('homepage_slides')
+        .select(
+          'id, photo_image_id, position, is_active, photo_images:photo_image_id(id, kind, delivery_storage_path, photo_id, photos:photo_id(title, slug))',
+        )
+        .order('position', { ascending: true }),
+      locals.supabase
+        .from('photo_images')
+        .select(
+          'id, kind, position, delivery_storage_path, photo_id, photos:photo_id(title, slug)',
+        )
+        .eq('is_active', true)
+        .not('delivery_storage_path', 'is', null)
+        .order('created_at', { ascending: false })
+        .limit(300),
+      locals.supabase
+        .from('photo_images')
+        .select('id', { count: 'exact', head: true })
+        .eq('is_active', true)
+        .is('delivery_storage_path', null),
+      locals.supabase
+        .from('site_settings')
+        .select('homepage_slide_duration_ms, homepage_transition_duration_ms')
+        .eq('singleton_id', 1)
+        .maybeSingle(),
+    ]);
+
+  if (slidesQuery.error) {
+    throwLoaderError(
+      { route: '/admin/homepage', operation: 'load homepage slides' },
+      slidesQuery.error,
+    );
+  }
+
+  if (imagesQuery.error) {
+    throwLoaderError(
+      { route: '/admin/homepage', operation: 'load image options' },
+      imagesQuery.error,
+    );
+  }
+
+  if (pendingQuery.error) {
+    throwLoaderError(
+      { route: '/admin/homepage', operation: 'load pending conversion count' },
+      pendingQuery.error,
+    );
+  }
+
+  if (settingsQuery.error) {
+    throwLoaderError(
+      { route: '/admin/homepage', operation: 'load slideshow timing settings' },
+      settingsQuery.error,
+    );
+  }
+
+  const slidesRaw = slidesQuery.data;
+  const imagesRaw = imagesQuery.data;
 
   const slides = (slidesRaw ?? []).map(
     (row: {

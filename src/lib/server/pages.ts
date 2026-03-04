@@ -1,4 +1,5 @@
 import { sanitizeCmsCss, sanitizeCmsHtml } from '$lib/server/cms-sanitize';
+import { throwLoaderError } from '$lib/server/load-error';
 
 type CmsPage = {
   id: string;
@@ -10,13 +11,26 @@ type CmsPage = {
 };
 
 export const loadPageBySlug = async (locals: App.Locals, slug: string) => {
-  const { data } = await locals.supabase
+  const pageQuery = await locals.supabase
     .from('pages')
     .select('id, slug, title, html_content, css_module, kind')
     .eq('slug', slug)
     .eq('status', 'published')
     .is('deleted_at', null)
     .maybeSingle();
+
+  if (pageQuery.error) {
+    throwLoaderError(
+      {
+        route: '/[staticPageSlug]',
+        operation: 'loadPageBySlug',
+        details: { slug },
+      },
+      pageQuery.error,
+    );
+  }
+
+  const data = pageQuery.data;
 
   if (!data) return null;
   return {

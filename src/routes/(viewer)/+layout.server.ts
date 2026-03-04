@@ -5,6 +5,7 @@ import {
   loadGalleryPhotoNeighbors,
   normalizePageSize,
 } from '$lib/server/gallery';
+import { throwLoaderError } from '$lib/server/load-error';
 import type { LayoutServerLoad } from './$types';
 
 type GalleryLayoutMode = 'uniform' | 'masonry';
@@ -33,13 +34,22 @@ const readActivePhotoRoute = (
 };
 
 export const load: LayoutServerLoad = async ({ locals, url }) => {
-  const { data: settings } = await locals.supabase
+  const settingsQuery = await locals.supabase
     .from('site_settings')
     .select(
       'grid_desktop_default, max_content_width_px, gallery_layout_mode, gallery_gap_px, uniform_thumb_ratio',
     )
     .eq('singleton_id', 1)
     .maybeSingle();
+
+  if (settingsQuery.error) {
+    throwLoaderError(
+      { route: '/(viewer)', operation: 'load gallery settings' },
+      settingsQuery.error,
+    );
+  }
+
+  const settings = settingsQuery.data;
 
   const defaultDensity = settings?.grid_desktop_default ?? 6;
   const maxDensity = 20;
@@ -64,8 +74,10 @@ export const load: LayoutServerLoad = async ({ locals, url }) => {
     const payload = await loadGalleryPage(locals, { page, pageSize, q });
     hasMore = payload.hasMore;
 
-    const seen = new Set(photos.map((photo) => photo.id));
-    photos.push(...payload.photos.filter((photo) => !seen.has(photo.id)));
+    const seenIds = photos.map((photo) => photo.id);
+    photos.push(
+      ...payload.photos.filter((photo) => !seenIds.includes(photo.id)),
+    );
 
     const foundActive = activeRoute
       ? photos.some((photo) => photo.slug === activeRoute.photoSlug)

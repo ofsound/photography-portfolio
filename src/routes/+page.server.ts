@@ -8,6 +8,7 @@ import {
   TRANSITION_DURATION_MAX_MS,
   clampInt,
 } from '$lib/server/slideshow-constants';
+import { throwLoaderError } from '$lib/server/load-error';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals }) => {
@@ -26,6 +27,13 @@ export const load: PageServerLoad = async ({ locals }) => {
       .maybeSingle(),
   ]);
 
+  if (settingsQuery.error) {
+    throwLoaderError(
+      { route: '/', operation: 'load homepage settings' },
+      settingsQuery.error,
+    );
+  }
+
   const slideDurationMs = clampInt(
     settingsQuery.data?.homepage_slide_duration_ms ?? DEFAULT_SLIDE_DURATION_MS,
     SLIDE_DURATION_MIN_MS,
@@ -42,7 +50,10 @@ export const load: PageServerLoad = async ({ locals }) => {
   );
 
   if (slidesQuery.error) {
-    return { slides: [], slideDurationMs, transitionDurationMs };
+    throwLoaderError(
+      { route: '/', operation: 'load homepage slides' },
+      slidesQuery.error,
+    );
   }
 
   const slides = (slidesQuery.data ?? [])

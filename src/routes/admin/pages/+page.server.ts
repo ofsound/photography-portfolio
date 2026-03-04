@@ -1,16 +1,24 @@
 import { fail, type Actions } from '@sveltejs/kit';
 import { pagePayloadFromForm } from '$lib/server/admin/page-form';
+import { throwLoaderError } from '$lib/server/load-error';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals, url }) => {
-  const { data: pages } = await locals.supabase
+  const pagesQuery = await locals.supabase
     .from('pages')
     .select('id, slug, title, kind, status, updated_at')
     .neq('kind', 'home')
     .order('updated_at', { ascending: false });
 
+  if (pagesQuery.error) {
+    throwLoaderError(
+      { route: '/admin/pages', operation: 'load pages list' },
+      pagesQuery.error,
+    );
+  }
+
   return {
-    pages: pages ?? [],
+    pages: pagesQuery.data ?? [],
     message: url.searchParams.get('message'),
   };
 };

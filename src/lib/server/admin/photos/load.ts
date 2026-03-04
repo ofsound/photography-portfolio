@@ -1,4 +1,5 @@
 import { asString } from '$lib/server/admin-helpers';
+import { throwLoaderError } from '$lib/server/load-error';
 import {
   isUuid,
   parseSearch,
@@ -44,11 +45,11 @@ export const loadAdminPhotosPage = async ({
   }
 
   const [
-    { data: photos },
-    { data: categories },
-    { data: tags },
+    photosQuery,
+    categoriesQuery,
+    tagsQuery,
     pendingQuery,
-    { data: settings },
+    settingsQuery,
     activeCountQuery,
     archivedCountQuery,
   ] = await Promise.all([
@@ -81,7 +82,59 @@ export const loadAdminPhotosPage = async ({
       .not('deleted_at', 'is', null),
   ]);
 
-  const photoIds = (photos ?? []).map((photo: { id: string }) => photo.id);
+  if (photosQuery.error) {
+    throwLoaderError(
+      {
+        route: '/admin/photos',
+        operation: 'load photos list',
+        details: { showArchived, q: q || null },
+      },
+      photosQuery.error,
+    );
+  }
+  if (categoriesQuery.error) {
+    throwLoaderError(
+      { route: '/admin/photos', operation: 'load categories' },
+      categoriesQuery.error,
+    );
+  }
+  if (tagsQuery.error) {
+    throwLoaderError(
+      { route: '/admin/photos', operation: 'load tags' },
+      tagsQuery.error,
+    );
+  }
+  if (pendingQuery.error) {
+    throwLoaderError(
+      { route: '/admin/photos', operation: 'load pending conversion count' },
+      pendingQuery.error,
+    );
+  }
+  if (settingsQuery.error) {
+    throwLoaderError(
+      { route: '/admin/photos', operation: 'load site settings' },
+      settingsQuery.error,
+    );
+  }
+  if (activeCountQuery.error) {
+    throwLoaderError(
+      { route: '/admin/photos', operation: 'load active photo count' },
+      activeCountQuery.error,
+    );
+  }
+  if (archivedCountQuery.error) {
+    throwLoaderError(
+      { route: '/admin/photos', operation: 'load archived photo count' },
+      archivedCountQuery.error,
+    );
+  }
+
+  const photos = photosQuery.data ?? [];
+  const categories = categoriesQuery.data ?? [];
+  const tags = tagsQuery.data ?? [];
+  const settings = settingsQuery.data;
+
+  const photoIds = photos.map((photo: { id: string }) => photo.id);
 
   let photoCategories: Array<{ photo_id: string; category_id: string }> = [];
   let photoTags: Array<{ photo_id: string; tag_id: string }> = [];
@@ -105,6 +158,25 @@ export const loadAdminPhotosPage = async ({
         .in('photo_id', photoIds)
         .order('position', { ascending: true }),
     ]);
+
+    if (categoryLinks.error) {
+      throwLoaderError(
+        { route: '/admin/photos', operation: 'load photo_categories links' },
+        categoryLinks.error,
+      );
+    }
+    if (tagLinks.error) {
+      throwLoaderError(
+        { route: '/admin/photos', operation: 'load photo_tags links' },
+        tagLinks.error,
+      );
+    }
+    if (images.error) {
+      throwLoaderError(
+        { route: '/admin/photos', operation: 'load photo images' },
+        images.error,
+      );
+    }
 
     photoCategories = categoryLinks.data ?? [];
     photoTags = tagLinks.data ?? [];
@@ -135,7 +207,7 @@ export const loadAdminPhotosPage = async ({
     'no-images' | 'pending' | 'ready' | 'mixed'
   > = {};
 
-  for (const photo of photos ?? []) {
+  for (const photo of photos) {
     const images = photoImageMap[photo.id] ?? [];
     const hasReady = images.some((image) =>
       Boolean(image.delivery_storage_path),
@@ -153,7 +225,7 @@ export const loadAdminPhotosPage = async ({
     }
   }
 
-  const filteredPhotos = (photos ?? []).filter((photo) => {
+  const filteredPhotos = photos.filter((photo) => {
     if (filterCategoryId) {
       const categoryIds = photoCategoryIds[photo.id] ?? [];
       if (!categoryIds.includes(filterCategoryId)) return false;
@@ -169,8 +241,8 @@ export const loadAdminPhotosPage = async ({
 
   return {
     photos: filteredPhotos,
-    categories: categories ?? [],
-    tags: tags ?? [],
+    categories,
+    tags,
     photoCategoryIds,
     photoTagIds,
     photoImageMap,

@@ -5,15 +5,23 @@ import {
   assertTitle,
   toSlug,
 } from '$lib/server/admin-helpers';
+import { throwLoaderError } from '$lib/server/load-error';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals }) => {
-  const { data: tags } = await locals.supabase
+  const tagsQuery = await locals.supabase
     .from('tags')
     .select('id, slug, name, description, is_active, updated_at')
     .order('name', { ascending: true });
 
-  return { tags: tags ?? [] };
+  if (tagsQuery.error) {
+    throwLoaderError(
+      { route: '/admin/tags', operation: 'load tags' },
+      tagsQuery.error,
+    );
+  }
+
+  return { tags: tagsQuery.data ?? [] };
 };
 
 export const actions: Actions = {

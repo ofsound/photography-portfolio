@@ -1,3 +1,4 @@
+import { throwLoaderError } from '$lib/server/load-error';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals, url }) => {
@@ -7,7 +8,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
     return { q, results: [] };
   }
 
-  const { data } = await locals.supabase
+  const query = await locals.supabase
     .from('photos')
     .select('id, slug, title, description')
     .eq('status', 'published')
@@ -15,8 +16,15 @@ export const load: PageServerLoad = async ({ locals, url }) => {
     .textSearch('search_tsv', q, { type: 'websearch' })
     .limit(80);
 
+  if (query.error) {
+    throwLoaderError(
+      { route: '/search', operation: 'search photos', details: { q } },
+      query.error,
+    );
+  }
+
   return {
     q,
-    results: data ?? [],
+    results: query.data ?? [],
   };
 };

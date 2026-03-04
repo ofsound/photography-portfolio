@@ -2,30 +2,7 @@ import {
   GALLERY_DETAIL_SHARED_WIDTH,
   photoPublicUrl,
 } from '$lib/utils/storage-url';
-
-type GalleryPhotoCardImage = {
-  id: string;
-  kind: 'lead' | 'additional';
-  position: number;
-  delivery_storage_path: string;
-  alt_text: string | null;
-  dimensions: string | null;
-  thumb_crop_x: number | null;
-  thumb_crop_y: number | null;
-  thumb_crop_zoom: number | null;
-};
-
-type GalleryPhotoCard = {
-  id: string;
-  slug: string;
-  title: string;
-  description: string | null;
-  capture_date: string | null;
-  thumb: string | null;
-  thumbAlt: string;
-  leadImage: GalleryPhotoCardImage | null;
-  additionalImages: GalleryPhotoCardImage[];
-};
+import { throwLoaderError } from '$lib/server/load-error';
 
 type GalleryPhotoNeighbors = {
   prevSlug: string | null;
@@ -76,7 +53,14 @@ export const loadGalleryPage = async (
 
   const { data, error } = await query;
   if (error) {
-    return { photos: [] as GalleryPhotoCard[], hasMore: false };
+    throwLoaderError(
+      {
+        route: '/(viewer)',
+        operation: 'loadGalleryPage',
+        details: { page, pageSize, query: options.q || null },
+      },
+      error,
+    );
   }
 
   const rows = data ?? [];
@@ -125,7 +109,18 @@ export const loadGalleryPhotoNeighbors = async (
     p_photo_id: photoId,
   });
 
-  if (error || !Array.isArray(data) || data.length === 0) {
+  if (error) {
+    throwLoaderError(
+      {
+        route: '/(viewer)',
+        operation: 'loadGalleryPhotoNeighbors',
+        details: { photoId },
+      },
+      error,
+    );
+  }
+
+  if (!Array.isArray(data) || data.length === 0) {
     return { prevSlug: null, nextSlug: null };
   }
 

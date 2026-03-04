@@ -5,6 +5,7 @@ import {
   asString,
   getCmsRole,
 } from '$lib/server/admin-helpers';
+import { throwLoaderError } from '$lib/server/load-error';
 import type { PageServerLoad } from './$types';
 
 const asThemeMode = (value: FormDataEntryValue | null) => {
@@ -29,7 +30,7 @@ const asTransitionPreset = (value: FormDataEntryValue | null) => {
 };
 
 export const load: PageServerLoad = async ({ locals }) => {
-  const [{ data: settings }, role] = await Promise.all([
+  const [settingsQuery, role] = await Promise.all([
     locals.supabase
       .from('site_settings')
       .select(
@@ -40,8 +41,15 @@ export const load: PageServerLoad = async ({ locals }) => {
     getCmsRole(locals),
   ]);
 
+  if (settingsQuery.error) {
+    throwLoaderError(
+      { route: '/admin/settings', operation: 'load site settings' },
+      settingsQuery.error,
+    );
+  }
+
   return {
-    settings,
+    settings: settingsQuery.data,
     role,
   };
 };

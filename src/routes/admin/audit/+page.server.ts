@@ -1,3 +1,4 @@
+import { throwLoaderError } from '$lib/server/load-error';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals, url }) => {
@@ -13,7 +14,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
     ),
   );
 
-  const { data: logs } = await locals.supabase
+  const logsQuery = await locals.supabase
     .from('audit_log')
     .select(
       'id, created_at, action, entity_type, entity_pk, actor_user_id, changes',
@@ -21,8 +22,15 @@ export const load: PageServerLoad = async ({ locals, url }) => {
     .order('created_at', { ascending: false })
     .range((page - 1) * pageSize, page * pageSize - 1);
 
+  if (logsQuery.error) {
+    throwLoaderError(
+      { route: '/admin/audit', operation: 'load audit logs' },
+      logsQuery.error,
+    );
+  }
+
   return {
-    logs: logs ?? [],
+    logs: logsQuery.data ?? [],
     page,
     pageSize,
   };

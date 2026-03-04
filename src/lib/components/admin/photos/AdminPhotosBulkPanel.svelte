@@ -40,7 +40,7 @@
 
 <section class="mt-4 grid gap-3">
   <div
-    class="flex flex-wrap items-center gap-2 text-xs tracking-(--tracking-tight) uppercase"
+    class="flex flex-wrap items-center gap-2 text-xs tracking-widest uppercase"
   >
     <span class="inline-block w-40 font-bold"
       >Selected photos: {selectedPhotoIds.length}</span
@@ -133,7 +133,7 @@
 
     {#if onToggleShowBulkTaxonomy}
       <label
-        class="ml-auto flex cursor-pointer items-center gap-2 text-xs tracking-(--tracking-tight) uppercase"
+        class="ml-auto flex cursor-pointer items-center gap-2 text-xs tracking-widest uppercase"
       >
         <input
           type="checkbox"

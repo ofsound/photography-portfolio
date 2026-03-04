@@ -383,7 +383,7 @@
                   class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent px-2 pt-6 pb-2"
                 >
                   <p
-                    class="truncate text-xs font-medium tracking-minimal text-white"
+                    class="truncate text-xs font-medium tracking-wider text-white"
                   >
                     {photo.title}
                   </p>

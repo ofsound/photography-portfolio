@@ -67,12 +67,12 @@
   };
 </script>
 
-<h2 class="text-xl tracking-heading uppercase">Images</h2>
+<h2 class="text-xl tracking-wider uppercase">Images</h2>
 <div class="flex min-w-0 gap-12">
   <div class="grid min-w-0 flex-1 gap-3 p-3">
     <div class="flex flex-wrap items-center gap-2">
       <span
-        class="rounded border border-border px-2 py-1 text-xs tracking-tight uppercase"
+        class="rounded border border-border px-2 py-1 text-xs tracking-widest uppercase"
       >
         Processing: {pendingImageCount}
       </span>
@@ -81,7 +81,7 @@
     {#if isDraft}
       <p class="text-sm text-text-muted">No lead image set.</p>
       <div class="grid gap-2">
-        <p class="text-xs tracking-tight uppercase">
+        <p class="text-xs tracking-widest uppercase">
           Additional Images (drag to reorder)
         </p>
         <p class="text-sm text-text-muted">No additional images.</p>
@@ -110,13 +110,14 @@
           {/if}
 
           <div class="flex min-w-0 flex-col gap-2 text-xs">
-            <div class="flex items-center gap-2 tracking-tight uppercase">
+            <div class="flex items-center gap-2 tracking-widest uppercase">
               <span>Lead Image</span>
               <PhotoConversionBadge state={imageConversionState(lead)} />
             </div>
             {#if lead.delivery_storage_path}
               <details class="min-w-0">
-                <summary class="cursor-pointer text-xs tracking-tight uppercase"
+                <summary
+                  class="cursor-pointer text-xs tracking-widest uppercase"
                   >Edit thumbnail crop</summary
                 >
                 <div class="mt-3">
@@ -149,7 +150,7 @@
       {/if}
 
       <div class="grid gap-2">
-        <p class="text-xs tracking-tight uppercase">
+        <p class="text-xs tracking-widest uppercase">
           Additional Images (drag to reorder)
         </p>
 
@@ -243,7 +244,7 @@
                       </div>
                     {/if}
                     <p
-                      class="truncate text-xs tracking-tight text-text-muted uppercase"
+                      class="truncate text-xs tracking-widest text-text-muted uppercase"
                     >
                       Additional image
                     </p>

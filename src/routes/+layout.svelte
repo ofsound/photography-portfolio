@@ -306,7 +306,7 @@
   >
     <div class="mx-auto flex w-full items-center justify-between gap-3">
       <nav
-        class=" flex items-center gap-6 py-3 text-sm tracking-(--tracking-nav) uppercase"
+        class=" flex items-center gap-6 py-3 text-sm tracking-widest uppercase"
       >
         <a href={resolve('/')}>Home</a>
         <a href={resolve('/gallery')}>Gallery</a>
@@ -363,9 +363,7 @@
       {:else}
         <div class="flex items-center justify-end gap-2">
           {#if isAdminPage && hasSession}
-            <label
-              for="header-theme"
-              class="text-xs tracking-(--tracking-tight) uppercase"
+            <label for="header-theme" class="text-xs tracking-widest uppercase"
               >Admin Theme</label
             >
             <select
@@ -386,9 +384,7 @@
             </select>
           {/if}
           {#if siteSettings?.allow_transition_toggle}
-            <label
-              for="transition"
-              class="text-xs tracking-(--tracking-tight) uppercase"
+            <label for="transition" class="text-xs tracking-widest uppercase"
               >Motion</label
             >
             <select

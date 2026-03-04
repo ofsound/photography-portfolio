@@ -6,8 +6,8 @@
   const { data, form } = $props();
 </script>
 
-<section class="mx-auto grid w-full max-w-form gap-4 px-5 py-14">
-  <h1 class="text-2xl tracking-(--tracking-nav) uppercase">CMS Auth</h1>
+<section class="mx-auto grid w-full max-w-lg gap-4 px-5 py-14">
+  <h1 class="text-2xl tracking-widest uppercase">CMS Auth</h1>
 
   {#if form?.message}
     <p class="rounded border border-border px-3 py-2 text-sm">{form.message}</p>

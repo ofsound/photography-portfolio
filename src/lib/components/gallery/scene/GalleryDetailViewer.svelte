@@ -178,7 +178,7 @@
     <a
       href={resolve(withCurrentSearch('/gallery') as `/${string}`)}
       onclick={onClose}
-      class="chrome-panel pointer-events-auto fixed top-5 left-5 rounded px-3 py-2 text-xs tracking-(--tracking-heading) uppercase"
+      class="chrome-panel pointer-events-auto fixed top-5 left-5 rounded px-3 py-2 text-xs tracking-wider uppercase"
       class:pointer-events-none={isTransitioning}
       class:opacity-50={isTransitioning}
     >
@@ -210,13 +210,13 @@
 {#if showPhotographInfo}
   <aside
     use:portal
-    class="chrome-panel fixed bottom-(--inset-overlay) left-(--inset-overlay) z-(--z-overlay) w-fit max-w-[min(90vw,var(--max-width-prose))] rounded px-4 py-3 transition-opacity ease-out"
+    class="chrome-panel fixed bottom-[5%] left-[5%] z-[80] w-fit max-w-[90vw] rounded px-4 py-3 transition-opacity ease-out sm:max-w-prose"
     class:opacity-0={overlayChromeHidden}
     style="transition-duration: {closingChromeMs}ms"
   >
     <div class="flex flex-wrap items-center justify-between gap-3">
       <div>
-        <h1 class="text-sm tracking-(--tracking-nav) uppercase">
+        <h1 class="text-sm tracking-widest uppercase">
           {activePhoto.title}
         </h1>
         {#if activePhoto.description}

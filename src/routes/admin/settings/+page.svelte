@@ -34,7 +34,7 @@
   </p>
 {/if}
 
-<form method="POST" action="?/save" class="mt-6 grid max-w-content gap-4">
+<form method="POST" action="?/save" class="mt-6 grid max-w-4xl gap-4">
   <div class="grid gap-3 sm:grid-cols-2">
     <FormField label="Site Theme" id="settings-theme_default">
       <select

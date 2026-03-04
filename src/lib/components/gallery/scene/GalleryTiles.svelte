@@ -80,7 +80,7 @@
                   GALLERY_DETAIL_SHARED_WIDTH,
                 )}
                 alt={photo.leadImage.alt_text ?? photo.title}
-                class="tile-img transition-transform duration-500 ease-cinematic {hasThumbCrop(
+                class="block h-full w-full object-cover transition-transform duration-500 ease-cinematic {hasThumbCrop(
                   photo.leadImage,
                 )
                   ? 'tile-img-crop'
@@ -135,7 +135,7 @@
                   GALLERY_DETAIL_SHARED_WIDTH,
                 )}
                 alt={photo.leadImage.alt_text ?? photo.title}
-                class="tile-img tile-img-masonry transition-transform duration-500 ease-cinematic {hasThumbCrop(
+                class="block h-auto w-full object-cover transition-transform duration-500 ease-cinematic {hasThumbCrop(
                   photo.leadImage,
                 )
                   ? 'tile-img-crop'
@@ -175,17 +175,6 @@
 {/if}
 
 <style>
-  .tile-img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-  }
-
-  .tile-img-masonry {
-    height: auto;
-  }
-
   .tile-img-crop {
     object-fit: contain !important;
   }

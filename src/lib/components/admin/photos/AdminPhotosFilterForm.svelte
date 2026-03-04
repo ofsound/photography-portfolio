@@ -36,7 +36,7 @@
 <div class="mt-6 mb-6 flex w-full flex-wrap items-end gap-3">
   <form method="GET" class="flex min-w-0 flex-1 flex-wrap items-end gap-3">
     <input type="hidden" name="showArchived" value={showArchived ? '1' : '0'} />
-    <div class="max-w-[300px] min-w-[180px] flex-1">
+    <div class="max-w-xs min-w-44 flex-1">
       <FormField label="Search" id="filter-q">
         <FormInput
           id="filter-q"
@@ -46,7 +46,7 @@
         />
       </FormField>
     </div>
-    <div class="max-w-[200px] min-w-[140px] flex-1">
+    <div class="max-w-56 min-w-36 flex-1">
       <FormField label="Category" id="filter-category">
         <select id="filter-category" name="category" class={selectClass}>
           <option value="">all</option>
@@ -60,7 +60,7 @@
         </select>
       </FormField>
     </div>
-    <div class="max-w-[200px] min-w-[140px] flex-1">
+    <div class="max-w-56 min-w-36 flex-1">
       <FormField label="Tag" id="filter-tag">
         <select id="filter-tag" name="tag" class={selectClass}>
           <option value="">all</option>

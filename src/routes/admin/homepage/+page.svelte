@@ -114,15 +114,13 @@
 {/if}
 
 <section class="mt-6 rounded border border-border p-4">
-  <h2 class="text-sm tracking-(--tracking-label) uppercase">
-    Slideshow Timing
-  </h2>
+  <h2 class="text-sm tracking-widest uppercase">Slideshow Timing</h2>
   <form
     method="POST"
     action="?/saveTiming"
     class="mt-3 grid gap-3 sm:grid-cols-[minmax(0,220px)_minmax(0,220px)_auto] sm:items-end"
   >
-    <label class="grid gap-1 text-xs tracking-(--tracking-tight) uppercase">
+    <label class="grid gap-1 text-xs tracking-widest uppercase">
       Slide Duration (ms)
       <input
         class="rounded border border-border-strong bg-transparent px-3 py-2 text-sm tracking-normal normal-case"
@@ -134,7 +132,7 @@
         bind:value={slideDurationMs}
       />
     </label>
-    <label class="grid gap-1 text-xs tracking-(--tracking-tight) uppercase">
+    <label class="grid gap-1 text-xs tracking-widest uppercase">
       Transition Duration (ms)
       <input
         class="rounded border border-border-strong bg-transparent px-3 py-2 text-sm tracking-normal normal-case"
@@ -150,12 +148,10 @@
   </form>
 </section>
 
-<section class="mt-6 grid gap-8 lg:grid-cols-[440px_1fr]">
+<section class="mt-6 grid gap-8 lg:grid-cols-[24rem_1fr]">
   <div class="grid gap-3 rounded border border-border p-4">
     <div class="flex flex-wrap items-center gap-2">
-      <h2 class="text-sm tracking-(--tracking-label) uppercase">
-        Selected Slides
-      </h2>
+      <h2 class="text-sm tracking-widest uppercase">Selected Slides</h2>
       <AdminButton
         size="sm"
         type="button"
@@ -228,10 +224,8 @@
   </div>
 
   <div class="rounded border border-border p-4">
-    <h2 class="mb-2 text-sm tracking-(--tracking-label) uppercase">
-      Available Images
-    </h2>
-    <ul class="grid max-h-drawer gap-2 overflow-auto">
+    <h2 class="mb-2 text-sm tracking-widest uppercase">Available Images</h2>
+    <ul class="grid max-h-[40rem] gap-2 overflow-auto">
       {#each availableImages as image (image.id)}
         <li
           class="grid gap-2 rounded border border-border p-2 sm:grid-cols-[auto_1fr_auto] sm:items-center"

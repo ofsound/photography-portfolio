@@ -168,14 +168,14 @@
 >
   {#if slides.length === 0}
     <div
-      class="grid h-full place-items-center text-sm tracking-(--tracking-nav) text-text-subtle uppercase"
+      class="grid h-full place-items-center text-sm tracking-widest text-text-subtle uppercase"
     >
       Add slideshow images in Admin -> Homepage.
     </div>
   {:else}
-    <div class="hero-stage absolute inset-0">
+    <div class="absolute inset-0 isolate [contain:paint]">
       <figure
-        class="absolute inset-0"
+        class="absolute inset-0 will-change-[opacity]"
         style={`opacity: ${activeSlot === 0 ? 1 : 0}; transition: opacity ${safeTransitionDurationMs}ms cubic-bezier(0.16, 1, 0.3, 1);`}
       >
         {#if slotA}
@@ -191,7 +191,7 @@
         {/if}
       </figure>
       <figure
-        class="absolute inset-0"
+        class="absolute inset-0 will-change-[opacity]"
         style={`opacity: ${activeSlot === 1 ? 1 : 0}; transition: opacity ${safeTransitionDurationMs}ms cubic-bezier(0.16, 1, 0.3, 1);`}
       >
         {#if slotB}
@@ -237,15 +237,6 @@
     animation-iteration-count: 1;
     animation-timing-function: linear;
     will-change: transform;
-  }
-
-  .hero-stage {
-    contain: paint;
-    isolation: isolate;
-  }
-
-  figure {
-    will-change: opacity;
   }
 
   .kenburns-in {

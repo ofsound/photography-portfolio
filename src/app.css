@@ -49,27 +49,8 @@
   --ease-cinematic: cubic-bezier(0.22, 1, 0.36, 1);
   --duration-chrome: 280ms;
 
-  /* Letter-spacing */
-  --tracking-minimal: 0.1em;
-  --tracking-tight: 0.12em;
-  --tracking-label: 0.14em;
-  --tracking-heading: 0.08em;
-  --tracking-nav: 0.16em;
-  --tracking-hero: 0.18em;
-
   /* Layout */
-  --max-width-form: 520px;
-  --max-width-content: 900px;
-  --max-width-cms: 1000px;
-  --max-width-search: 1300px;
-  --max-height-drawer: 620px;
-  --size-btn-tall: 42px;
   --size-header: 54px;
-
-  /* Overlay / modal */
-  --inset-overlay: 5%;
-  --max-width-prose: 70ch;
-  --z-overlay: 80;
 }
 
 html,

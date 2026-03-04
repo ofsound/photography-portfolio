@@ -31,7 +31,7 @@
 </script>
 
 <div
-  class="flex items-center gap-2 text-xs tracking-(--tracking-heading) uppercase"
+  class="flex items-center gap-2 text-xs tracking-wider uppercase"
   role="group"
   aria-label={label}
 >

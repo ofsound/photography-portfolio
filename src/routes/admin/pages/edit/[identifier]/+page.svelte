@@ -149,9 +149,7 @@
 
   {#if revisions.length}
     <div class="rounded border border-border p-3">
-      <p class="mb-2 text-xs tracking-(--tracking-tight) uppercase">
-        Recent Revisions
-      </p>
+      <p class="mb-2 text-xs tracking-widest uppercase">Recent Revisions</p>
       <div class="grid gap-2">
         {#each revisions.slice(0, 10) as rev (rev.id)}
           <div

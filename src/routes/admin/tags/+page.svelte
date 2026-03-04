@@ -16,13 +16,13 @@
   </p>
 {/if}
 
-<section class="mt-6 grid gap-8 lg:grid-cols-[360px_1fr]">
+<section class="mt-6 grid gap-8 lg:grid-cols-[24rem_1fr]">
   <form
     method="POST"
     action="?/create"
     class="grid gap-3 rounded border border-border p-4"
   >
-    <h2 class="text-sm tracking-(--tracking-label) uppercase">New Tag</h2>
+    <h2 class="text-sm tracking-widest uppercase">New Tag</h2>
     <FormField label="Name" id="tag-create-name">
       <FormInput id="tag-create-name" name="name" placeholder="Name" required />
     </FormField>

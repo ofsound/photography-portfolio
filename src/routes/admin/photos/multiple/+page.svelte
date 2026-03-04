@@ -210,7 +210,7 @@
 
 <section class="mt-6 grid gap-4 rounded border border-border p-4">
   <div class="grid gap-2">
-    <p class="text-xs tracking-(--tracking-tight) uppercase">Choose Images</p>
+    <p class="text-xs tracking-widest uppercase">Choose Images</p>
     <input
       type="file"
       accept={ACCEPTED_TYPES}

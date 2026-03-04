@@ -45,7 +45,7 @@
   <input type="hidden" name="photo_id" value={photoId} />
   <input type="hidden" name="draft_title" value={draftTitle} />
   <input type="hidden" name="draft_slug" value={draftSlug} />
-  <p class="text-xs tracking-(--tracking-tight) uppercase">Upload Image</p>
+  <p class="text-xs tracking-widest uppercase">Upload Image</p>
   <div class="grid gap-2">
     <div class="flex flex-wrap items-center gap-2">
       <AdminButton as="label" class="relative">

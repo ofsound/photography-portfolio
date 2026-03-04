@@ -7,7 +7,7 @@
 
 <div class="flex flex-col gap-3">
   <AdminButton href="/admin/photos">Back to Photos</AdminButton>
-  <h2 class="text-xl tracking-(--tracking-heading) uppercase">Details</h2>
+  <h2 class="text-xl tracking-wider uppercase">Details</h2>
 </div>
 
 {#if form?.message}

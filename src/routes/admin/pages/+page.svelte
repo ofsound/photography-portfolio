@@ -33,13 +33,13 @@
   </p>
 {/if}
 
-<section class="mt-6 grid gap-8 lg:grid-cols-[420px_1fr]">
+<section class="mt-6 grid gap-8 lg:grid-cols-[24rem_1fr]">
   <form
     method="POST"
     action="?/create"
     class="grid gap-3 rounded border border-border p-4"
   >
-    <h2 class="text-sm tracking-(--tracking-label) uppercase">Create Page</h2>
+    <h2 class="text-sm tracking-widest uppercase">Create Page</h2>
 
     <FormField label="Title" id="page-create-title">
       <FormInput
@@ -122,9 +122,7 @@
   </form>
 
   <section class="rounded border border-border p-4">
-    <h2 class="text-sm tracking-(--tracking-label) uppercase">
-      Existing Pages
-    </h2>
+    <h2 class="text-sm tracking-widest uppercase">Existing Pages</h2>
     {#if pages.length === 0}
       <p class="mt-2 text-sm text-text-muted">No pages yet.</p>
     {:else}
@@ -137,8 +135,7 @@
           >
             <div class="flex flex-wrap items-center justify-between gap-2">
               <span>/{page.slug} - {page.title}</span>
-              <span
-                class="text-xs tracking-(--tracking-tight) text-text-subtle uppercase"
+              <span class="text-xs tracking-widest text-text-subtle uppercase"
                 >{page.status}</span
               >
             </div>

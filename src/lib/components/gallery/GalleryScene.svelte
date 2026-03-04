@@ -10,7 +10,7 @@
   import {
     getGalleryPrefs,
     galleryDensityStore,
-  } from '$lib/stores/gallery-prefs';
+  } from '$lib/stores/gallery-prefs.svelte';
   import type { GalleryPhoto } from '$lib/types/content';
   import { parseDimensions } from '$lib/utils/parse-dimensions';
   import {
@@ -242,7 +242,7 @@
   const colCount = $derived(
     Math.max(
       1,
-      Math.min(data.maxDensity ?? 20, Number($galleryDensityStore) || 6),
+      Math.min(data.maxDensity ?? 20, Number(galleryDensityStore.value) || 6),
     ),
   );
   const placeholderCount = $derived(Math.max(colCount, 6));

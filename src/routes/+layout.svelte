@@ -11,7 +11,7 @@
     getGalleryPrefs,
     galleryDensityStore,
     setGalleryPrefs,
-  } from '$lib/stores/gallery-prefs';
+  } from '$lib/stores/gallery-prefs.svelte';
   import ZoomControl from '$lib/components/ZoomControl.svelte';
   import type { LayoutData } from './$types';
 
@@ -319,7 +319,7 @@
             label="Zoom"
             min={1}
             max={maxDensity}
-            value={$galleryDensityStore}
+            value={galleryDensityStore.value}
             onUpdate={updateHeaderDensity}
           />
           {#if siteSettings?.show_search_bar}

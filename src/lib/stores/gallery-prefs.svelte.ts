@@ -1,9 +1,16 @@
-import { writable } from 'svelte/store';
-
 const KEY = 'gallery_prefs';
 
 /** Reactive density for gallery; synced with localStorage. Header and GalleryScene both use this. */
-export const galleryDensityStore = writable<number>(6);
+let galleryDensity = $state<number>(6);
+
+export const galleryDensityStore = {
+  get value() {
+    return galleryDensity;
+  },
+  set(newValue: number) {
+    galleryDensity = newValue;
+  },
+};
 
 type GalleryPrefs = {
   density: number;

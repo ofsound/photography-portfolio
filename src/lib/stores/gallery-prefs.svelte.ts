@@ -13,13 +13,13 @@ export const galleryDensityStore = {
 };
 
 /** Reactive layout mode for gallery; synced with localStorage when user toggles. */
-let galleryLayoutMode = $state<'uniform' | 'masonry'>('uniform');
+let galleryLayoutMode = $state<'uniform' | 'masonry' | 'coverage' | 'bins' | 'columns'>('uniform');
 
 export const layoutModeStore = {
   get value() {
     return galleryLayoutMode;
   },
-  set(newValue: 'uniform' | 'masonry') {
+  set(newValue: 'uniform' | 'masonry' | 'coverage' | 'bins' | 'columns') {
     galleryLayoutMode = newValue;
   },
 };
@@ -27,14 +27,14 @@ export const layoutModeStore = {
 type GalleryPrefs = {
   density: number;
   gap: number;
-  layoutMode: 'uniform' | 'masonry';
+  layoutMode: 'uniform' | 'masonry' | 'coverage' | 'bins' | 'columns';
   widthMode: 'full' | 'constrained';
   pageSize: number;
 };
 
 /** Return type for getGalleryPrefs; layoutMode is optional when not explicitly saved. */
 type GalleryPrefsResult = Omit<GalleryPrefs, 'layoutMode'> & {
-  layoutMode?: 'uniform' | 'masonry';
+  layoutMode?: 'uniform' | 'masonry' | 'coverage' | 'bins' | 'columns';
 };
 
 const DEFAULT_PREFS: GalleryPrefs = {
@@ -50,7 +50,7 @@ const clampGap = (n: number) => Math.max(0, Math.min(20, n));
 const clampPageSize = (n: number) => Math.max(1, Math.min(120, n));
 
 function isValidLayoutMode(v: unknown): v is GalleryPrefs['layoutMode'] {
-  return v === 'uniform' || v === 'masonry';
+  return v === 'uniform' || v === 'masonry' || v === 'coverage' || v === 'bins' || v === 'columns';
 }
 
 function isValidWidthMode(v: unknown): v is GalleryPrefs['widthMode'] {

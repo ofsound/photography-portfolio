@@ -17,7 +17,9 @@ const asThemeMode = (value: FormDataEntryValue | null) => {
 
 const asLayoutMode = (value: FormDataEntryValue | null) => {
   const mode = asString(value, 'uniform');
-  return mode === 'uniform' || mode === 'masonry' ? mode : 'uniform';
+  return mode === 'uniform' || mode === 'masonry' || mode === 'coverage' || mode === 'bins' || mode === 'columns'
+    ? mode
+    : 'uniform';
 };
 
 const asTransitionPreset = (value: FormDataEntryValue | null) => {

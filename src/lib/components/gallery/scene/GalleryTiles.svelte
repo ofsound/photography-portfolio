@@ -6,6 +6,7 @@
     photoPublicUrl,
   } from '$lib/utils/storage-url';
   import type { GalleryPhoto } from '$lib/types/content';
+  import type { BinResult } from '$lib/utils/bin-solver';
 
   type GalleryImage = NonNullable<GalleryPhoto['leadImage']>;
   const CASCADE_STAGGER_MS = 42;
@@ -26,9 +27,17 @@
     hasThumbCrop,
     thumbCropStyle,
     tileAspectRatio,
+    coverageRows,
+    coverageCols,
+    coverageAspect,
+    coveragePlaceholderCount,
+    binsResult,
+    binsDisplayAspect,
+    columnsResult,
+    columnsDisplayAspect,
   } = $props<{
     photos: GalleryPhoto[];
-    layoutMode: 'uniform' | 'masonry';
+    layoutMode: 'uniform' | 'masonry' | 'coverage' | 'bins' | 'columns';
     colCount: number;
     gap: number;
     uniformRatio: number;
@@ -48,7 +57,22 @@
       containerAspect: number,
     ) => string;
     tileAspectRatio: (photo: GalleryPhoto) => number;
+    coverageRows: number;
+    coverageCols: number;
+    coverageAspect: number;
+    coveragePlaceholderCount: number;
+    binsResult: BinResult | null;
+    binsDisplayAspect: (photo: GalleryPhoto) => number;
+    columnsResult: BinResult | null;
+    columnsDisplayAspect: (photo: GalleryPhoto) => number;
   }>();
+
+  /** Lookup map from photo id to GalleryPhoto for bins mode. */
+  const photosById = $derived.by<Map<string, GalleryPhoto>>(() => {
+    const m = new Map<string, GalleryPhoto>();
+    for (const p of photos) m.set(p.id, p);
+    return m;
+  });
 </script>
 
 {#if layoutMode === 'uniform'}
@@ -103,6 +127,159 @@
       {/each}
     {/if}
   </ul>
+{:else if layoutMode === 'coverage'}
+  <ul
+    class="grid h-full w-full"
+    style={`grid-template-columns: repeat(${coverageCols}, minmax(0, 1fr)); grid-template-rows: repeat(${coverageRows}, minmax(0, 1fr)); gap: ${gap}px;`}
+  >
+    {#each photos as photo, index (photo.id)}
+      <li class="min-h-0 min-w-0">
+        <div
+          class="tile-cascade h-full"
+          class:revealed={galleryRevealed}
+          class:no-motion={reducedMotion}
+          style="animation-delay: {galleryRevealed && !reducedMotion
+            ? index * CASCADE_STAGGER_MS
+            : 0}ms"
+        >
+          <a
+            href={withCurrentSearch(`/photo/${photo.slug}`)}
+            use:registerTile={photo.slug}
+            class="group relative block h-full w-full overflow-hidden"
+            onclick={(event: MouseEvent) => onOpenPhoto(event, photo.slug)}
+          >
+            {#if photo.leadImage}
+              <img
+                src={photoPublicUrl(
+                  photo.leadImage.delivery_storage_path,
+                  GALLERY_DETAIL_SHARED_WIDTH,
+                )}
+                alt={photo.leadImage.alt_text ?? photo.title}
+                class="block h-full w-full object-cover transition-transform duration-500 ease-cinematic {hasThumbCrop(
+                  photo.leadImage,
+                )
+                  ? 'tile-img-crop'
+                  : 'group-hover:scale-[1.03]'}"
+                style={thumbCropStyle(photo.leadImage, coverageAspect)}
+                loading="eager"
+              />
+            {/if}
+          </a>
+        </div>
+      </li>
+    {/each}
+
+    {#each Array.from( { length: coveragePlaceholderCount }, ) as _, index (`placeholder-${index}`)}
+      <li class="min-h-0 min-w-0 bg-surface-muted"></li>
+    {/each}
+  </ul>
+{:else if layoutMode === 'bins'}
+  {#if binsResult}
+    <ul class="flex h-full w-full flex-col" style={`gap: ${gap}px;`}>
+      {#each binsResult.rows as row, rowIdx (`bins-row-${rowIdx}`)}
+        <li class="flex min-h-0 flex-1" style={`gap: ${gap}px;`}>
+          {#each row.photos as entry, entryIdx (`bins-${entry.id}`)}
+            {@const photo = photosById.get(entry.id)}
+            {#if photo}
+              {@const cascadeIdx =
+                rowIdx * (binsResult.rows[0]?.photos.length ?? 1) + entryIdx}
+              <div
+                class="tile-cascade min-w-0"
+                class:revealed={galleryRevealed}
+                class:no-motion={reducedMotion}
+                style="flex: {entry.displayAspect} 1 0%; animation-delay: {galleryRevealed &&
+                !reducedMotion
+                  ? cascadeIdx * CASCADE_STAGGER_MS
+                  : 0}ms"
+              >
+                <a
+                  href={withCurrentSearch(`/photo/${photo.slug}`)}
+                  use:registerTile={photo.slug}
+                  class="group relative block h-full w-full overflow-hidden"
+                  onclick={(event: MouseEvent) =>
+                    onOpenPhoto(event, photo.slug)}
+                >
+                  {#if photo.leadImage}
+                    <img
+                      src={photoPublicUrl(
+                        photo.leadImage.delivery_storage_path,
+                        GALLERY_DETAIL_SHARED_WIDTH,
+                      )}
+                      alt={photo.leadImage.alt_text ?? photo.title}
+                      class="block h-full w-full object-cover transition-transform duration-500 ease-cinematic {hasThumbCrop(
+                        photo.leadImage,
+                      )
+                        ? 'tile-img-crop'
+                        : 'group-hover:scale-[1.03]'}"
+                      style={thumbCropStyle(
+                        photo.leadImage,
+                        entry.displayAspect,
+                      )}
+                      loading="eager"
+                    />
+                  {/if}
+                </a>
+              </div>
+            {/if}
+          {/each}
+        </li>
+      {/each}
+    </ul>
+  {/if}
+{:else if layoutMode === 'columns'}
+  {#if columnsResult}
+    <ul class="flex h-full w-full flex-row" style={`gap: ${gap}px;`}>
+      {#each columnsResult.rows as col, colIdx (`cols-col-${colIdx}`)}
+        <li class="flex min-w-0 flex-1 flex-col" style={`gap: ${gap}px;`}>
+          {#each col.photos as entry, entryIdx (`cols-${entry.id}`)}
+            {@const photo = photosById.get(entry.id)}
+            {#if photo}
+              {@const cascadeIdx =
+                colIdx * (columnsResult.rows[0]?.photos.length ?? 1) + entryIdx}
+              <div
+                class="tile-cascade min-h-0"
+                class:revealed={galleryRevealed}
+                class:no-motion={reducedMotion}
+                style="flex: {1 /
+                  entry.displayAspect} 1 0%; animation-delay: {galleryRevealed &&
+                !reducedMotion
+                  ? cascadeIdx * CASCADE_STAGGER_MS
+                  : 0}ms"
+              >
+                <a
+                  href={withCurrentSearch(`/photo/${photo.slug}`)}
+                  use:registerTile={photo.slug}
+                  class="group relative block h-full w-full overflow-hidden"
+                  onclick={(event: MouseEvent) =>
+                    onOpenPhoto(event, photo.slug)}
+                >
+                  {#if photo.leadImage}
+                    <img
+                      src={photoPublicUrl(
+                        photo.leadImage.delivery_storage_path,
+                        GALLERY_DETAIL_SHARED_WIDTH,
+                      )}
+                      alt={photo.leadImage.alt_text ?? photo.title}
+                      class="block h-full w-full object-cover transition-transform duration-500 ease-cinematic {hasThumbCrop(
+                        photo.leadImage,
+                      )
+                        ? 'tile-img-crop'
+                        : 'group-hover:scale-[1.03]'}"
+                      style={thumbCropStyle(
+                        photo.leadImage,
+                        entry.displayAspect,
+                      )}
+                      loading="eager"
+                    />
+                  {/if}
+                </a>
+              </div>
+            {/if}
+          {/each}
+        </li>
+      {/each}
+    </ul>
+  {/if}
 {:else}
   <ul
     class="columns-2 md:columns-4 lg:columns-6"

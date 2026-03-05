@@ -1,6 +1,7 @@
 <script lang="ts">
   import GalleryTiles from './GalleryTiles.svelte';
   import type { GalleryPhoto } from '$lib/types/content';
+  import type { BinResult } from '$lib/utils/bin-solver';
 
   type GalleryImage = NonNullable<GalleryPhoto['leadImage']>;
 
@@ -25,9 +26,19 @@
     detailOpen,
     onLoadMore,
     sectionMaxWidthStyle,
+    coverageRows,
+    coverageCols,
+    coverageAspect,
+    coveragePlaceholderCount,
+    onCoverageContainer,
+    onCoverageResize,
+    binsResult,
+    binsDisplayAspect,
+    columnsResult,
+    columnsDisplayAspect,
   } = $props<{
     photos: GalleryPhoto[];
-    layoutMode: 'uniform' | 'masonry';
+    layoutMode: 'uniform' | 'masonry' | 'coverage' | 'bins' | 'columns';
     colCount: number;
     gap: number;
     uniformRatio: number;
@@ -52,7 +63,33 @@
     detailOpen: boolean;
     onLoadMore: () => Promise<void>;
     sectionMaxWidthStyle: string;
+    coverageRows: number;
+    coverageCols: number;
+    coverageAspect: number;
+    coveragePlaceholderCount: number;
+    onCoverageContainer: (el: HTMLElement) => void;
+    onCoverageResize: () => void;
+    binsResult: BinResult | null;
+    binsDisplayAspect: (photo: GalleryPhoto) => number;
+    columnsResult: BinResult | null;
+    columnsDisplayAspect: (photo: GalleryPhoto) => number;
   }>();
+
+  let coverageSectionEl: HTMLElement | null = null;
+
+  const bindCoverageSection = (node: HTMLElement) => {
+    coverageSectionEl = node;
+    onCoverageContainer(node);
+
+    const ro = new ResizeObserver(() => onCoverageResize());
+    ro.observe(node);
+
+    return {
+      destroy() {
+        ro.disconnect();
+      },
+    };
+  };
 
   const observeLoadSentinel = (
     node: HTMLElement,
@@ -104,56 +141,109 @@
   };
 </script>
 
-<section class="mx-auto w-full px-4 py-5" style={sectionMaxWidthStyle}>
-  {#if photos.length === 0}
-    <p
-      class="py-16 text-center text-sm tracking-widest text-text-muted uppercase"
-    >
-      No photos found.
-    </p>
-  {:else}
-    <GalleryTiles
-      {photos}
-      {layoutMode}
-      {colCount}
-      {gap}
-      {uniformRatio}
-      {placeholderCount}
-      {isLoadingMore}
-      {galleryRevealed}
-      {reducedMotion}
-      {withCurrentSearch}
-      {onOpenPhoto}
-      {registerTile}
-      {hasThumbCrop}
-      {thumbCropStyle}
-      {tileAspectRatio}
-    />
-
-    {#if hasMore}
-      <div
-        class="h-10 w-full"
-        use:observeLoadSentinel={{ hasMore, detailOpen, onLoadMore }}
-      ></div>
-    {/if}
-
-    {#if isLoadingMore}
+{#if layoutMode === 'coverage' || layoutMode === 'bins' || layoutMode === 'columns'}
+  <section class="coverage-container w-full" use:bindCoverageSection>
+    {#if photos.length === 0}
       <p
-        class="py-4 text-center text-xs tracking-widest text-text-subtle uppercase"
+        class="flex h-full items-center justify-center text-sm tracking-widest text-text-muted uppercase"
       >
-        Loading more
+        No photos found.
       </p>
+    {:else}
+      <GalleryTiles
+        {photos}
+        {layoutMode}
+        {colCount}
+        {gap}
+        {uniformRatio}
+        {placeholderCount}
+        {isLoadingMore}
+        {galleryRevealed}
+        {reducedMotion}
+        {withCurrentSearch}
+        {onOpenPhoto}
+        {registerTile}
+        {hasThumbCrop}
+        {thumbCropStyle}
+        {tileAspectRatio}
+        {coverageRows}
+        {coverageCols}
+        {coverageAspect}
+        {coveragePlaceholderCount}
+        {binsResult}
+        {binsDisplayAspect}
+        {columnsResult}
+        {columnsDisplayAspect}
+      />
     {/if}
+  </section>
+{:else}
+  <section class="mx-auto w-full px-4 py-5" style={sectionMaxWidthStyle}>
+    {#if photos.length === 0}
+      <p
+        class="py-16 text-center text-sm tracking-widest text-text-muted uppercase"
+      >
+        No photos found.
+      </p>
+    {:else}
+      <GalleryTiles
+        {photos}
+        {layoutMode}
+        {colCount}
+        {gap}
+        {uniformRatio}
+        {placeholderCount}
+        {isLoadingMore}
+        {galleryRevealed}
+        {reducedMotion}
+        {withCurrentSearch}
+        {onOpenPhoto}
+        {registerTile}
+        {hasThumbCrop}
+        {thumbCropStyle}
+        {tileAspectRatio}
+        {coverageRows}
+        {coverageCols}
+        {coverageAspect}
+        {coveragePlaceholderCount}
+        {binsResult}
+        {binsDisplayAspect}
+        {columnsResult}
+        {columnsDisplayAspect}
+      />
 
-    {#if loadError}
-      <div class="py-4 text-center text-sm">
-        <p>{loadError}</p>
-        <button
-          class="mt-2 rounded border border-border-strong px-3 py-1 text-xs tracking-widest uppercase"
-          type="button"
-          onclick={() => void onLoadMore()}>Retry</button
+      {#if hasMore}
+        <div
+          class="h-10 w-full"
+          use:observeLoadSentinel={{ hasMore, detailOpen, onLoadMore }}
+        ></div>
+      {/if}
+
+      {#if isLoadingMore}
+        <p
+          class="py-4 text-center text-xs tracking-widest text-text-subtle uppercase"
         >
-      </div>
+          Loading more
+        </p>
+      {/if}
+
+      {#if loadError}
+        <div class="py-4 text-center text-sm">
+          <p>{loadError}</p>
+          <button
+            class="mt-2 rounded border border-border-strong px-3 py-1 text-xs tracking-widest uppercase"
+            type="button"
+            onclick={() => void onLoadMore()}>Retry</button
+          >
+        </div>
+      {/if}
     {/if}
-  {/if}
-</section>
+  </section>
+{/if}
+
+<style>
+  .coverage-container {
+    height: calc(100vh - var(--site-header-height, 56px));
+    overflow: hidden;
+  }
+</style>

@@ -110,7 +110,9 @@
     setGalleryPrefs({ density: toDensityValue(nextUiZoom) }, maxDensity);
   };
 
-  const updateHeaderLayoutMode = (mode: 'uniform' | 'masonry') => {
+  const updateHeaderLayoutMode = (
+    mode: 'uniform' | 'masonry' | 'coverage' | 'bins' | 'columns',
+  ) => {
     setGalleryPrefs({ layoutMode: mode }, maxDensity);
   };
 
@@ -343,11 +345,17 @@
               updateHeaderLayoutMode(
                 (e.currentTarget as HTMLSelectElement).value as
                   | 'uniform'
-                  | 'masonry',
+                  | 'masonry'
+                  | 'coverage'
+                  | 'bins'
+                  | 'columns',
               )}
           >
             <option value="uniform">Uniform</option>
             <option value="masonry">Masonry</option>
+            <option value="coverage">Coverage</option>
+            <option value="bins">Bins</option>
+            <option value="columns">Columns</option>
           </select>
           <ZoomControl
             label="Zoom"

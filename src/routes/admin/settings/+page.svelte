@@ -67,6 +67,17 @@
           selected={settings.gallery_layout_mode === 'masonry'}
           value="masonry">masonry</option
         >
+        <option
+          selected={settings.gallery_layout_mode === 'coverage'}
+          value="coverage">coverage</option
+        >
+        <option selected={settings.gallery_layout_mode === 'bins'} value="bins"
+          >bins</option
+        >
+        <option
+          selected={settings.gallery_layout_mode === 'columns'}
+          value="columns">columns</option
+        >
       </select>
     </FormField>
     <FormField label="Gallery gap (px)" id="settings-gallery_gap_px">

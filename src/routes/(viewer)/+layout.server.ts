@@ -1,6 +1,7 @@
 import { error } from '@sveltejs/kit';
 import {
   asPositiveInt,
+  loadAllGalleryPhotos,
   loadGalleryPage,
   loadGalleryPhotoNeighbors,
   normalizePageSize,
@@ -8,7 +9,7 @@ import {
 import { throwLoaderError } from '$lib/server/load-error';
 import type { LayoutServerLoad } from './$types';
 
-type GalleryLayoutMode = 'uniform' | 'masonry';
+type GalleryLayoutMode = 'uniform' | 'masonry' | 'coverage' | 'bins' | 'columns';
 type GalleryWidthMode = 'full' | 'constrained';
 
 type ActivePhotoRoute = {
@@ -70,23 +71,31 @@ export const load: LayoutServerLoad = async ({ locals, url }) => {
   let hasMore: boolean;
   const photos: Awaited<ReturnType<typeof loadGalleryPage>>['photos'] = [];
 
-  while (true) {
-    const payload = await loadGalleryPage(locals, { page, pageSize, q });
-    hasMore = payload.hasMore;
+  if (layoutMode === 'coverage' || layoutMode === 'bins' || layoutMode === 'columns') {
+    // Coverage/Bins mode: load all photos in one shot (no pagination)
+    const allPayload = await loadAllGalleryPhotos(locals, q);
+    photos.push(...allPayload.photos);
+    hasMore = false;
+    page = 1;
+  } else {
+    while (true) {
+      const payload = await loadGalleryPage(locals, { page, pageSize, q });
+      hasMore = payload.hasMore;
 
-    const seenIds = photos.map((photo) => photo.id);
-    photos.push(
-      ...payload.photos.filter((photo) => !seenIds.includes(photo.id)),
-    );
+      const seenIds = photos.map((photo) => photo.id);
+      photos.push(
+        ...payload.photos.filter((photo) => !seenIds.includes(photo.id)),
+      );
 
-    const foundActive = activeRoute
-      ? photos.some((photo) => photo.slug === activeRoute.photoSlug)
-      : true;
-    if (foundActive || !hasMore) {
-      break;
+      const foundActive = activeRoute
+        ? photos.some((photo) => photo.slug === activeRoute.photoSlug)
+        : true;
+      if (foundActive || !hasMore) {
+        break;
+      }
+
+      page += 1;
     }
-
-    page += 1;
   }
 
   const baseParams = new URLSearchParams();

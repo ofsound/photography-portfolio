@@ -625,7 +625,7 @@ export type Database = {
     Enums: {
       app_role: 'admin' | 'editor';
       asset_kind: 'lead' | 'additional';
-      layout_mode: 'uniform' | 'masonry';
+      layout_mode: 'uniform' | 'masonry' | 'coverage' | 'bins' | 'columns';
       page_kind: 'home' | 'about' | 'contact' | 'custom';
       publish_status: 'draft' | 'published' | 'archived';
       theme_mode: 'light' | 'dark' | 'system';

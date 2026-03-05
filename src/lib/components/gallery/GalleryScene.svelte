@@ -1,8 +1,12 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
   import { resolve } from '$app/paths';
-  import { onDestroy, onMount } from 'svelte';
-  import { SvelteMap, SvelteURLSearchParams } from 'svelte/reactivity';
+  import { onDestroy, onMount, untrack } from 'svelte';
+  import {
+    SvelteMap,
+    SvelteSet,
+    SvelteURLSearchParams,
+  } from 'svelte/reactivity';
   import GalleryDetailViewer from './scene/GalleryDetailViewer.svelte';
   import GalleryGrid from './scene/GalleryGrid.svelte';
   import GalleryPreloader from './scene/GalleryPreloader.svelte';
@@ -19,6 +23,11 @@
     photoPublicUrl,
   } from '$lib/utils/storage-url';
   import { thumbCropTransform } from '$lib/utils/thumb-crop';
+  import {
+    solveBins,
+    solveColumns,
+    type BinResult,
+  } from '$lib/utils/bin-solver';
   import {
     computeContainRect,
     cropToImgTransform,
@@ -46,7 +55,7 @@
     density: number;
     gap: number;
     q: string;
-    layoutMode: 'uniform' | 'masonry';
+    layoutMode: 'uniform' | 'masonry' | 'coverage' | 'bins' | 'columns';
     widthMode: 'full' | 'constrained';
     maxContentWidthPx: number | null;
     uniformThumbRatio: number;
@@ -248,6 +257,159 @@
   const uniformRatio = $derived(
     Math.max(0.2, Number(data.uniformThumbRatio ?? 1)),
   );
+
+  /* ── Coverage mode: viewport-filling grid ── */
+  let coverageAvailW = $state(0);
+  let coverageAvailH = $state(0);
+  let coverageContainerEl: HTMLElement | null = null;
+
+  const coverageRows = $derived.by(() => {
+    if (layoutMode !== 'coverage') return 0;
+
+    const requestedRows = Math.max(
+      1,
+      Math.min(20, Number(galleryDensityStore.value) || 3),
+    );
+    const photoCount = photos.length;
+    if (photoCount <= 0) return requestedRows;
+
+    // Ensure placeholders only fill part of the last row, never an entire row.
+    let rows = Math.min(requestedRows, photoCount);
+    while (rows > 1) {
+      const cols = Math.max(1, Math.ceil(photoCount / rows));
+      const placeholders = rows * cols - photoCount;
+      if (placeholders < cols) break;
+      rows -= 1;
+    }
+
+    return rows;
+  });
+  const coverageCols = $derived(
+    coverageRows > 0 ? Math.max(1, Math.ceil(photos.length / coverageRows)) : 0,
+  );
+  const coverageTotalCells = $derived(coverageRows * coverageCols);
+  const coveragePlaceholderCount = $derived(
+    Math.max(0, coverageTotalCells - photos.length),
+  );
+  const coverageCellW = $derived(
+    coverageCols > 0 && coverageAvailW > 0
+      ? (coverageAvailW - (coverageCols - 1) * gap) / coverageCols
+      : 0,
+  );
+  const coverageCellH = $derived(
+    coverageRows > 0 && coverageAvailH > 0
+      ? (coverageAvailH - (coverageRows - 1) * gap) / coverageRows
+      : 0,
+  );
+  const coverageAspect = $derived(
+    coverageCellH > 0 ? coverageCellW / coverageCellH : 1,
+  );
+
+  /* ── Bins mode: viewport-filling, aspect-balanced rows ── */
+  const binsRows = $derived(
+    layoutMode === 'bins'
+      ? Math.max(1, Math.min(20, Number(galleryDensityStore.value) || 3))
+      : 0,
+  );
+
+  const binsResult = $derived.by<BinResult | null>(() => {
+    if (
+      layoutMode !== 'bins' ||
+      binsRows === 0 ||
+      coverageAvailW <= 0 ||
+      coverageAvailH <= 0
+    )
+      return null;
+    const seen = new SvelteSet<string>();
+    const binPhotos = photos
+      .filter((p) => p.leadImage)
+      .filter((p) => {
+        if (seen.has(p.id)) {
+          console.warn('[bins] duplicate photo id in input:', p.id);
+          return false;
+        }
+        seen.add(p.id);
+        return true;
+      })
+      .map((p) => ({ id: p.id, aspect: tileAspectRatio(p) }));
+    if (binPhotos.length === 0) return null;
+    return solveBins(binPhotos, binsRows, coverageAvailW, coverageAvailH, gap);
+  });
+
+  /** Lookup map: photoId → displayAspect from the bins solver. */
+  const binsAspectMap = $derived.by<SvelteMap<string, number>>(() => {
+    const map = new SvelteMap<string, number>();
+    if (!binsResult) return map;
+    for (const row of binsResult.rows) {
+      for (const entry of row.photos) {
+        map.set(entry.id, entry.displayAspect);
+      }
+    }
+    return map;
+  });
+
+  /** Get the display aspect for a photo in bins mode, falling back to natural. */
+  const binsDisplayAspect = (photo: GalleryPhoto): number =>
+    binsAspectMap.get(photo.id) ?? tileAspectRatio(photo);
+
+  /* ── Columns mode: viewport-filling, aspect-balanced columns ── */
+  const columnsCols = $derived(
+    layoutMode === 'columns'
+      ? Math.max(1, Math.min(20, Number(galleryDensityStore.value) || 3))
+      : 0,
+  );
+
+  const columnsResult = $derived.by<BinResult | null>(() => {
+    if (
+      layoutMode !== 'columns' ||
+      columnsCols === 0 ||
+      coverageAvailW <= 0 ||
+      coverageAvailH <= 0
+    )
+      return null;
+    const seen = new SvelteSet<string>();
+    const colPhotos = photos
+      .filter((p) => p.leadImage)
+      .filter((p) => {
+        if (seen.has(p.id)) {
+          console.warn('[columns] duplicate photo id in input:', p.id);
+          return false;
+        }
+        seen.add(p.id);
+        return true;
+      })
+      .map((p) => ({ id: p.id, aspect: tileAspectRatio(p) }));
+    if (colPhotos.length === 0) return null;
+    return solveColumns(
+      colPhotos,
+      columnsCols,
+      coverageAvailW,
+      coverageAvailH,
+      gap,
+    );
+  });
+
+  /** Lookup map: photoId → displayAspect from the columns solver. */
+  const columnsAspectMap = $derived.by<SvelteMap<string, number>>(() => {
+    const map = new SvelteMap<string, number>();
+    if (!columnsResult) return map;
+    for (const col of columnsResult.rows) {
+      for (const entry of col.photos) {
+        map.set(entry.id, entry.displayAspect);
+      }
+    }
+    return map;
+  });
+
+  /** Get the display aspect for a photo in columns mode, falling back to natural. */
+  const columnsDisplayAspect = (photo: GalleryPhoto): number =>
+    columnsAspectMap.get(photo.id) ?? tileAspectRatio(photo);
+
+  const measureCoverageContainer = () => {
+    if (!coverageContainerEl) return;
+    coverageAvailW = coverageContainerEl.clientWidth;
+    coverageAvailH = coverageContainerEl.clientHeight;
+  };
   const constrainedMax = $derived(data.maxContentWidthPx ?? 1600);
   const sectionMaxWidthStyle = $derived(
     widthMode === 'constrained'
@@ -392,7 +554,15 @@
 
     if (!promoted) {
       const containerAspect =
-        layoutMode === 'uniform' ? uniformRatio : tileAspectRatio(photo);
+        layoutMode === 'bins'
+          ? binsDisplayAspect(photo)
+          : layoutMode === 'columns'
+            ? columnsDisplayAspect(photo)
+            : layoutMode === 'coverage'
+              ? coverageAspect
+              : layoutMode === 'uniform'
+                ? uniformRatio
+                : tileAspectRatio(photo);
       const imgCrop = imgCropFromForPhoto(photo, imageId, containerAspect);
       promoted = await promoteTile({
         slug,
@@ -456,7 +626,11 @@
       durationMs: animate ? SCALE_MASK_MS : 0,
       easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
       imgEasing: 'cubic-bezier(0.5, 0, 1, 1)',
-      useCover: layoutMode === 'uniform',
+      useCover:
+        layoutMode === 'uniform' ||
+        layoutMode === 'coverage' ||
+        layoutMode === 'bins' ||
+        layoutMode === 'columns',
     });
 
     if (reducedMotion()) {
@@ -602,7 +776,11 @@
 
     const outgoingSession = promoted;
     const incomingContainerAspect =
-      layoutMode === 'uniform' ? uniformRatio : tileAspectRatio(targetPhoto);
+      layoutMode === 'coverage'
+        ? coverageAspect
+        : layoutMode === 'uniform'
+          ? uniformRatio
+          : tileAspectRatio(targetPhoto);
     const incomingImgCrop = imgCropFromForPhoto(
       targetPhoto,
       null,
@@ -694,7 +872,15 @@
   };
 
   const loadNextPage = async () => {
-    if (isLoadingMore || !hasMore || activeSlug) return;
+    if (
+      isLoadingMore ||
+      !hasMore ||
+      activeSlug ||
+      layoutMode === 'coverage' ||
+      layoutMode === 'bins' ||
+      layoutMode === 'columns'
+    )
+      return;
 
     isLoadingMore = true;
     loadError = null;
@@ -730,8 +916,8 @@
   const tileAspectRatio = (photo: GalleryPhoto) => {
     const parsed = parseDimensions(photo.leadImage?.dimensions);
     if (parsed) return Math.max(0.2, parsed.width / parsed.height);
-    // Fallback: read from the DOM img element's natural dimensions
-    const node = tileRefs.get(photo.slug);
+    // Avoid subscribing layout solvers to tileRefs writes to prevent update loops.
+    const node = untrack(() => tileRefs.get(photo.slug));
     const imgEl = node?.querySelector('img');
     if (imgEl && imgEl.naturalWidth && imgEl.naturalHeight) {
       return Math.max(0.2, imgEl.naturalWidth / imgEl.naturalHeight);
@@ -993,6 +1179,19 @@
   detailOpen={Boolean(activeSlug)}
   onLoadMore={loadNextPage}
   {sectionMaxWidthStyle}
+  {coverageRows}
+  {coverageCols}
+  {coverageAspect}
+  {coveragePlaceholderCount}
+  onCoverageContainer={(el) => {
+    coverageContainerEl = el;
+    measureCoverageContainer();
+  }}
+  onCoverageResize={measureCoverageContainer}
+  {binsResult}
+  {binsDisplayAspect}
+  {columnsResult}
+  {columnsDisplayAspect}
 />
 
 {#if activePhoto && currentImage}

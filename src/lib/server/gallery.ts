@@ -101,6 +101,75 @@ export const loadGalleryPage = async (
   return { photos, hasMore };
 };
 
+/** Load all published photos in one query (no pagination). Used by coverage layout mode. */
+export const loadAllGalleryPhotos = async (
+  locals: App.Locals,
+  q: string,
+) => {
+  let query = locals.supabase
+    .from('photos')
+    .select(
+      'id, slug, title, description, capture_date, photo_images(id, kind, position, delivery_storage_path, alt_text, dimensions, thumb_crop_x, thumb_crop_y, thumb_crop_zoom)',
+    )
+    .eq('status', 'published')
+    .is('deleted_at', null)
+    .order('capture_date', { ascending: false, nullsFirst: false })
+    .order('created_at', { ascending: false })
+    .order('id', { ascending: false })
+    .limit(1000);
+
+  if (q) {
+    query = query.textSearch('search_tsv', q, { type: 'websearch' });
+  }
+
+  const { data, error } = await query;
+  if (error) {
+    throwLoaderError(
+      {
+        route: '/(viewer)',
+        operation: 'loadAllGalleryPhotos',
+        details: { query: q || null },
+      },
+      error,
+    );
+  }
+
+  const rows = data ?? [];
+
+  const photos = rows.map((photo) => {
+    const sortedImages = [...(photo.photo_images ?? [])]
+      .filter((image) => Boolean(image.delivery_storage_path))
+      .map((image) => ({
+        ...image,
+        delivery_storage_path: image.delivery_storage_path as string,
+      }))
+      .sort((a, b) => a.position - b.position);
+    const lead = sortedImages.find((image) => image.kind === 'lead');
+    const additionalImages = sortedImages.filter(
+      (image) => image.kind === 'additional',
+    );
+
+    return {
+      id: photo.id,
+      slug: photo.slug,
+      title: photo.title,
+      description: photo.description,
+      capture_date: photo.capture_date,
+      thumb: lead?.delivery_storage_path
+        ? photoPublicUrl(
+            lead.delivery_storage_path,
+            GALLERY_DETAIL_SHARED_WIDTH,
+          )
+        : null,
+      thumbAlt: lead?.alt_text ?? photo.title,
+      leadImage: lead ?? null,
+      additionalImages,
+    };
+  });
+
+  return { photos, hasMore: false };
+};
+
 export const loadGalleryPhotoNeighbors = async (
   locals: App.Locals,
   photoId: string,

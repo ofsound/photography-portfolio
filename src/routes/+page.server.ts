@@ -43,7 +43,7 @@ export const load: PageServerLoad = async ({ locals }) => {
     slideDurationMs,
     clampInt(
       settingsQuery.data?.homepage_transition_duration_ms ??
-        DEFAULT_TRANSITION_DURATION_MS,
+      DEFAULT_TRANSITION_DURATION_MS,
       TRANSITION_DURATION_MIN_MS,
       TRANSITION_DURATION_MAX_MS,
     ),

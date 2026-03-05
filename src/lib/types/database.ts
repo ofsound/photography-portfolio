@@ -7,6 +7,8 @@ export type Json =
   | Json[];
 
 export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: '14.1';
   };
@@ -464,8 +466,6 @@ export type Database = {
         Row: {
           allow_transition_toggle: boolean;
           created_at: string;
-          show_photograph_info: boolean;
-          show_search_bar: boolean;
           gallery_gap_px: number;
           gallery_layout_mode: Database['public']['Enums']['layout_mode'];
           grid_desktop_default: number;
@@ -473,6 +473,9 @@ export type Database = {
           homepage_slide_duration_ms: number;
           homepage_transition_duration_ms: number;
           max_content_width_px: number | null;
+          show_photograph_info: boolean;
+          show_search_bar: boolean;
+          show_thumbnail_zoom_hover: boolean;
           singleton_id: number;
           theme_default: Database['public']['Enums']['theme_mode'];
           transition_preset: Database['public']['Enums']['transition_preset'];
@@ -483,8 +486,6 @@ export type Database = {
         Insert: {
           allow_transition_toggle?: boolean;
           created_at?: string;
-          show_photograph_info?: boolean;
-          show_search_bar?: boolean;
           gallery_gap_px?: number;
           gallery_layout_mode?: Database['public']['Enums']['layout_mode'];
           grid_desktop_default?: number;
@@ -492,6 +493,9 @@ export type Database = {
           homepage_slide_duration_ms?: number;
           homepage_transition_duration_ms?: number;
           max_content_width_px?: number | null;
+          show_photograph_info?: boolean;
+          show_search_bar?: boolean;
+          show_thumbnail_zoom_hover?: boolean;
           singleton_id?: number;
           theme_default?: Database['public']['Enums']['theme_mode'];
           transition_preset?: Database['public']['Enums']['transition_preset'];
@@ -502,8 +506,6 @@ export type Database = {
         Update: {
           allow_transition_toggle?: boolean;
           created_at?: string;
-          show_photograph_info?: boolean;
-          show_search_bar?: boolean;
           gallery_gap_px?: number;
           gallery_layout_mode?: Database['public']['Enums']['layout_mode'];
           grid_desktop_default?: number;
@@ -511,6 +513,9 @@ export type Database = {
           homepage_slide_duration_ms?: number;
           homepage_transition_duration_ms?: number;
           max_content_width_px?: number | null;
+          show_photograph_info?: boolean;
+          show_search_bar?: boolean;
+          show_thumbnail_zoom_hover?: boolean;
           singleton_id?: number;
           theme_default?: Database['public']['Enums']['theme_mode'];
           transition_preset?: Database['public']['Enums']['transition_preset'];
@@ -561,64 +566,57 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
-      cms_can_edit: { Args: Record<string, never>; Returns: boolean };
-      cms_is_admin: { Args: Record<string, never>; Returns: boolean };
+      cms_can_edit: { Args: never; Returns: boolean };
+      cms_is_admin: { Args: never; Returns: boolean };
       gallery_photo_neighbors: {
         Args: { p_photo_id: string };
         Returns: Array<{
-          prev_slug: string | null;
-          next_slug: string | null;
+          next_slug: string;
+          prev_slug: string;
         }>;
       };
       insert_photo_image: {
         Args: {
-          p_photo_id: string;
-          p_source_path: string;
-          p_source_mime: string;
-          p_source_bytes: number;
+          p_alt_text?: string;
           p_kind: Database['public']['Enums']['asset_kind'];
+          p_photo_id: string;
           p_position: number;
-          p_alt_text?: string | null;
+          p_source_bytes: number;
+          p_source_mime: string;
+          p_source_path: string;
         };
         Returns: string;
       };
       normalize_photo_image_positions: {
-        Args: {
-          p_photo_id: string;
-        };
-        Returns: undefined;
-      };
-      reorder_additional_images: {
-        Args: {
-          p_photo_id: string;
-          p_ordered_image_ids: string[];
-        };
-        Returns: undefined;
-      };
-      reorder_photos: {
-        Args: {
-          p_ordered_photo_ids: string[];
-        };
+        Args: { p_photo_id: string };
         Returns: undefined;
       };
       refresh_photo_search: {
         Args: { p_photo_id: string };
         Returns: undefined;
       };
+      reorder_additional_images: {
+        Args: { p_ordered_image_ids: string[]; p_photo_id: string };
+        Returns: undefined;
+      };
+      reorder_photos: {
+        Args: { p_ordered_photo_ids: string[] };
+        Returns: undefined;
+      };
       save_homepage_slides: { Args: { p_slides: Json }; Returns: undefined };
       save_photo_relations: {
         Args: {
-          p_photo_id: string;
           p_category_ids: string[];
+          p_photo_id: string;
           p_tag_ids: string[];
         };
         Returns: undefined;
       };
       set_lead_image: {
-        Args: { p_photo_id: string; p_image_id: string };
+        Args: { p_image_id: string; p_photo_id: string };
         Returns: undefined;
       };
-      show_limit: { Args: Record<string, never>; Returns: number };
+      show_limit: { Args: never; Returns: number };
       show_trgm: { Args: { '': string }; Returns: string[] };
       unaccent: { Args: { '': string }; Returns: string };
     };
@@ -627,7 +625,7 @@ export type Database = {
       asset_kind: 'lead' | 'additional';
       layout_mode: 'uniform' | 'masonry' | 'coverage' | 'bins' | 'columns';
       page_kind: 'home' | 'about' | 'contact' | 'custom';
-      publish_status: 'draft' | 'published' | 'archived';
+      publish_status: 'published' | 'archived' | 'draft';
       theme_mode: 'light' | 'dark' | 'system';
       transition_preset: 'cinematic' | 'snappy' | 'experimental';
     };
@@ -636,3 +634,137 @@ export type Database = {
     };
   };
 };
+
+type DatabaseWithoutInternals = Omit<Database, '__InternalSupabase'>;
+
+type DefaultSchema = DatabaseWithoutInternals[Extract<
+  keyof Database,
+  'public'
+>];
+
+export type Tables<
+  DefaultSchemaTableNameOrOptions extends
+  | keyof (DefaultSchema['Tables'] & DefaultSchema['Views'])
+  | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals;
+  }
+  ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
+    DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])
+  : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals;
+}
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
+    DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])[TableName] extends {
+      Row: infer R;
+    }
+  ? R
+  : never
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema['Tables'] &
+    DefaultSchema['Views'])
+  ? (DefaultSchema['Tables'] &
+    DefaultSchema['Views'])[DefaultSchemaTableNameOrOptions] extends {
+      Row: infer R;
+    }
+  ? R
+  : never
+  : never;
+
+export type TablesInsert<
+  DefaultSchemaTableNameOrOptions extends
+  | keyof DefaultSchema['Tables']
+  | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals;
+  }
+  ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
+  : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals;
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
+    Insert: infer I;
+  }
+  ? I
+  : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema['Tables']
+  ? DefaultSchema['Tables'][DefaultSchemaTableNameOrOptions] extends {
+    Insert: infer I;
+  }
+  ? I
+  : never
+  : never;
+
+export type TablesUpdate<
+  DefaultSchemaTableNameOrOptions extends
+  | keyof DefaultSchema['Tables']
+  | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals;
+  }
+  ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
+  : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals;
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
+    Update: infer U;
+  }
+  ? U
+  : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema['Tables']
+  ? DefaultSchema['Tables'][DefaultSchemaTableNameOrOptions] extends {
+    Update: infer U;
+  }
+  ? U
+  : never
+  : never;
+
+export type Enums<
+  DefaultSchemaEnumNameOrOptions extends
+  | keyof DefaultSchema['Enums']
+  | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals;
+  }
+  ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums']
+  : never = never,
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals;
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums'][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema['Enums']
+  ? DefaultSchema['Enums'][DefaultSchemaEnumNameOrOptions]
+  : never;
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+  | keyof DefaultSchema['CompositeTypes']
+  | { schema: keyof DatabaseWithoutInternals },
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals;
+  }
+  ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes']
+  : never = never,
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals;
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes'][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema['CompositeTypes']
+  ? DefaultSchema['CompositeTypes'][PublicCompositeTypeNameOrOptions]
+  : never;
+
+export const Constants = {
+  public: {
+    Enums: {
+      app_role: ['admin', 'editor'],
+      asset_kind: ['lead', 'additional'],
+      layout_mode: ['uniform', 'masonry', 'coverage', 'bins', 'columns'],
+      page_kind: ['home', 'about', 'contact', 'custom'],
+      publish_status: ['published', 'archived', 'draft'],
+      theme_mode: ['light', 'dark', 'system'],
+      transition_preset: ['cinematic', 'snappy', 'experimental'],
+    },
+  },
+} as const;

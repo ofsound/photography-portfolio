@@ -62,7 +62,10 @@
     maxDensity: number;
     baseQueryString: string;
     active: ActiveRoute | null;
-    siteSettings?: { show_photograph_info?: boolean | null } | null;
+    siteSettings?: {
+      show_photograph_info?: boolean | null;
+      show_thumbnail_zoom_hover?: boolean | null;
+    } | null;
   };
 
   type GalleryImage = NonNullable<GalleryPhoto['leadImage']>;
@@ -1167,6 +1170,7 @@
   {placeholderCount}
   {isLoadingMore}
   {galleryRevealed}
+  showThumbnailZoomHover={data.siteSettings?.show_thumbnail_zoom_hover ?? true}
   reducedMotion={reducedMotion()}
   withCurrentSearch={withCurrentSearchResolved}
   {onOpenPhoto}
@@ -1189,9 +1193,7 @@
   }}
   onCoverageResize={measureCoverageContainer}
   {binsResult}
-  {binsDisplayAspect}
   {columnsResult}
-  {columnsDisplayAspect}
 />
 
 {#if activePhoto && currentImage}

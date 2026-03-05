@@ -17,7 +17,7 @@ export async function uploadImageWithForm(
   const kind = asString(form.get('kind'), 'additional') as
     | 'lead'
     | 'additional';
-  const altText = asString(form.get('alt_text')).trim() || null;
+  const altText = asString(form.get('alt_text')).trim() || undefined;
   const imageFile = form.get('image_file');
 
   if (!photoId) return fail(400, { message: 'Missing photo id.' });

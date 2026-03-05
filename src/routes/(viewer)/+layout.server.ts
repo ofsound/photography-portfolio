@@ -9,7 +9,12 @@ import {
 import { throwLoaderError } from '$lib/server/load-error';
 import type { LayoutServerLoad } from './$types';
 
-type GalleryLayoutMode = 'uniform' | 'masonry' | 'coverage' | 'bins' | 'columns';
+type GalleryLayoutMode =
+  | 'uniform'
+  | 'masonry'
+  | 'coverage'
+  | 'bins'
+  | 'columns';
 type GalleryWidthMode = 'full' | 'constrained';
 
 type ActivePhotoRoute = {
@@ -38,7 +43,7 @@ export const load: LayoutServerLoad = async ({ locals, url }) => {
   const settingsQuery = await locals.supabase
     .from('site_settings')
     .select(
-      'grid_desktop_default, max_content_width_px, gallery_layout_mode, gallery_gap_px, uniform_thumb_ratio',
+      'grid_desktop_default, max_content_width_px, gallery_layout_mode, gallery_gap_px, uniform_thumb_ratio, show_thumbnail_zoom_hover, show_photograph_info',
     )
     .eq('singleton_id', 1)
     .maybeSingle();
@@ -71,7 +76,11 @@ export const load: LayoutServerLoad = async ({ locals, url }) => {
   let hasMore: boolean;
   const photos: Awaited<ReturnType<typeof loadGalleryPage>>['photos'] = [];
 
-  if (layoutMode === 'coverage' || layoutMode === 'bins' || layoutMode === 'columns') {
+  if (
+    layoutMode === 'coverage' ||
+    layoutMode === 'bins' ||
+    layoutMode === 'columns'
+  ) {
     // Coverage/Bins mode: load all photos in one shot (no pagination)
     const allPayload = await loadAllGalleryPhotos(locals, q);
     photos.push(...allPayload.photos);
@@ -147,5 +156,9 @@ export const load: LayoutServerLoad = async ({ locals, url }) => {
     maxDensity,
     baseQueryString: baseParams.toString(),
     active,
+    siteSettings: {
+      show_photograph_info: settings?.show_photograph_info ?? true,
+      show_thumbnail_zoom_hover: settings?.show_thumbnail_zoom_hover ?? true,
+    },
   };
 };

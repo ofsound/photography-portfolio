@@ -13,7 +13,9 @@ export const galleryDensityStore = {
 };
 
 /** Reactive layout mode for gallery; synced with localStorage when user toggles. */
-let galleryLayoutMode = $state<'uniform' | 'masonry' | 'coverage' | 'bins' | 'columns'>('uniform');
+let galleryLayoutMode = $state<
+  'uniform' | 'masonry' | 'coverage' | 'bins' | 'columns'
+>('uniform');
 
 export const layoutModeStore = {
   get value() {
@@ -50,7 +52,13 @@ const clampGap = (n: number) => Math.max(0, Math.min(20, n));
 const clampPageSize = (n: number) => Math.max(1, Math.min(120, n));
 
 function isValidLayoutMode(v: unknown): v is GalleryPrefs['layoutMode'] {
-  return v === 'uniform' || v === 'masonry' || v === 'coverage' || v === 'bins' || v === 'columns';
+  return (
+    v === 'uniform' ||
+    v === 'masonry' ||
+    v === 'coverage' ||
+    v === 'bins' ||
+    v === 'columns'
+  );
 }
 
 function isValidWidthMode(v: unknown): v is GalleryPrefs['widthMode'] {

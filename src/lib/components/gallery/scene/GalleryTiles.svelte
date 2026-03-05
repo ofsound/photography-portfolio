@@ -1,6 +1,7 @@
 <script lang="ts">
   /* eslint-disable svelte/no-navigation-without-resolve -- withCurrentSearch resolves internally */
   import { parseDimensions } from '$lib/utils/parse-dimensions';
+  import { SvelteMap } from 'svelte/reactivity';
   import {
     GALLERY_DETAIL_SHARED_WIDTH,
     photoPublicUrl,
@@ -32,9 +33,8 @@
     coverageAspect,
     coveragePlaceholderCount,
     binsResult,
-    binsDisplayAspect,
     columnsResult,
-    columnsDisplayAspect,
+    showThumbnailZoomHover,
   } = $props<{
     photos: GalleryPhoto[];
     layoutMode: 'uniform' | 'masonry' | 'coverage' | 'bins' | 'columns';
@@ -62,14 +62,13 @@
     coverageAspect: number;
     coveragePlaceholderCount: number;
     binsResult: BinResult | null;
-    binsDisplayAspect: (photo: GalleryPhoto) => number;
     columnsResult: BinResult | null;
-    columnsDisplayAspect: (photo: GalleryPhoto) => number;
+    showThumbnailZoomHover: boolean;
   }>();
 
   /** Lookup map from photo id to GalleryPhoto for bins mode. */
-  const photosById = $derived.by<Map<string, GalleryPhoto>>(() => {
-    const m = new Map<string, GalleryPhoto>();
+  const photosById = $derived.by<SvelteMap<string, GalleryPhoto>>(() => {
+    const m = new SvelteMap<string, GalleryPhoto>();
     for (const p of photos) m.set(p.id, p);
     return m;
   });
@@ -108,7 +107,9 @@
                   photo.leadImage,
                 )
                   ? 'tile-img-crop'
-                  : 'group-hover:scale-[1.03]'}"
+                  : showThumbnailZoomHover
+                    ? 'group-hover:scale-[1.03]'
+                    : ''}"
                 style={thumbCropStyle(photo.leadImage, uniformRatio)}
                 loading="eager"
               />
@@ -159,7 +160,9 @@
                   photo.leadImage,
                 )
                   ? 'tile-img-crop'
-                  : 'group-hover:scale-[1.03]'}"
+                  : showThumbnailZoomHover
+                    ? 'group-hover:scale-[1.03]'
+                    : ''}"
                 style={thumbCropStyle(photo.leadImage, coverageAspect)}
                 loading="eager"
               />
@@ -316,7 +319,9 @@
                   photo.leadImage,
                 )
                   ? 'tile-img-crop'
-                  : 'group-hover:scale-[1.02]'}"
+                  : showThumbnailZoomHover
+                    ? 'group-hover:scale-[1.02]'
+                    : ''}"
                 style={thumbCropStyle(photo.leadImage, tileAspectRatio(photo))}
                 loading="eager"
                 onload={(event) => {

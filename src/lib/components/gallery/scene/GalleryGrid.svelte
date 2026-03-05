@@ -33,9 +33,8 @@
     onCoverageContainer,
     onCoverageResize,
     binsResult,
-    binsDisplayAspect,
     columnsResult,
-    columnsDisplayAspect,
+    showThumbnailZoomHover,
   } = $props<{
     photos: GalleryPhoto[];
     layoutMode: 'uniform' | 'masonry' | 'coverage' | 'bins' | 'columns';
@@ -70,15 +69,11 @@
     onCoverageContainer: (el: HTMLElement) => void;
     onCoverageResize: () => void;
     binsResult: BinResult | null;
-    binsDisplayAspect: (photo: GalleryPhoto) => number;
+    showThumbnailZoomHover: boolean;
     columnsResult: BinResult | null;
-    columnsDisplayAspect: (photo: GalleryPhoto) => number;
   }>();
 
-  let coverageSectionEl: HTMLElement | null = null;
-
   const bindCoverageSection = (node: HTMLElement) => {
-    coverageSectionEl = node;
     onCoverageContainer(node);
 
     const ro = new ResizeObserver(() => onCoverageResize());
@@ -171,9 +166,8 @@
         {coverageAspect}
         {coveragePlaceholderCount}
         {binsResult}
-        {binsDisplayAspect}
         {columnsResult}
-        {columnsDisplayAspect}
+        {showThumbnailZoomHover}
       />
     {/if}
   </section>
@@ -207,9 +201,8 @@
         {coverageAspect}
         {coveragePlaceholderCount}
         {binsResult}
-        {binsDisplayAspect}
         {columnsResult}
-        {columnsDisplayAspect}
+        {showThumbnailZoomHover}
       />
 
       {#if hasMore}

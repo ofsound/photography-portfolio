@@ -102,10 +102,7 @@ export const loadGalleryPage = async (
 };
 
 /** Load all published photos in one query (no pagination). Used by coverage layout mode. */
-export const loadAllGalleryPhotos = async (
-  locals: App.Locals,
-  q: string,
-) => {
+export const loadAllGalleryPhotos = async (locals: App.Locals, q: string) => {
   let query = locals.supabase
     .from('photos')
     .select(

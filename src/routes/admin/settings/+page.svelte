@@ -19,6 +19,7 @@
       allow_transition_toggle: true,
       show_search_bar: true,
       show_photograph_info: true,
+      show_thumbnail_zoom_hover: true,
     },
   );
 
@@ -179,6 +180,14 @@
       name="show_photograph_info"
       checked={settings.show_photograph_info}
     /> Show Photograph Info
+  </label>
+
+  <label class="flex items-center gap-2 text-sm">
+    <input
+      type="checkbox"
+      name="show_thumbnail_zoom_hover"
+      checked={settings.show_thumbnail_zoom_hover}
+    /> Show Thumbnail Zoom Hover
   </label>
 
   <AdminButton wFit type="submit">Save Settings</AdminButton>

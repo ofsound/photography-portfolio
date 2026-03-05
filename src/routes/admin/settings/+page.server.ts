@@ -17,7 +17,11 @@ const asThemeMode = (value: FormDataEntryValue | null) => {
 
 const asLayoutMode = (value: FormDataEntryValue | null) => {
   const mode = asString(value, 'uniform');
-  return mode === 'uniform' || mode === 'masonry' || mode === 'coverage' || mode === 'bins' || mode === 'columns'
+  return mode === 'uniform' ||
+    mode === 'masonry' ||
+    mode === 'coverage' ||
+    mode === 'bins' ||
+    mode === 'columns'
     ? mode
     : 'uniform';
 };
@@ -36,7 +40,7 @@ export const load: PageServerLoad = async ({ locals }) => {
     locals.supabase
       .from('site_settings')
       .select(
-        'singleton_id, theme_default, grid_desktop_default, grid_mobile_default, max_content_width_px, gallery_layout_mode, gallery_gap_px, uniform_thumb_ratio, transition_preset, allow_transition_toggle, show_search_bar, show_photograph_info',
+        'singleton_id, theme_default, grid_desktop_default, grid_mobile_default, max_content_width_px, gallery_layout_mode, gallery_gap_px, uniform_thumb_ratio, transition_preset, allow_transition_toggle, show_search_bar, show_photograph_info, show_thumbnail_zoom_hover',
       )
       .eq('singleton_id', 1)
       .maybeSingle(),
@@ -83,6 +87,9 @@ export const actions: Actions = {
       allow_transition_toggle: asBoolean(form.get('allow_transition_toggle')),
       show_search_bar: asBoolean(form.get('show_search_bar')),
       show_photograph_info: asBoolean(form.get('show_photograph_info')),
+      show_thumbnail_zoom_hover: asBoolean(
+        form.get('show_thumbnail_zoom_hover'),
+      ),
     };
 
     if (role === 'admin') {

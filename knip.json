@@ -10,5 +10,14 @@
   ],
   "ignoreDependencies": [
     "@sveltejs/eslint-config"
-  ]
+  ],
+  "ignoreIssues": {
+    "src/lib/types/database.ts": [
+      "exports",
+      "types"
+    ],
+    "src/lib/utils/row-solver.ts": [
+      "types"
+    ]
+  }
 }

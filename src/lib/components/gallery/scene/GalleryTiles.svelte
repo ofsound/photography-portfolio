@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { resolve } from '$app/paths';
   import { parseDimensions } from '$lib/utils/parse-dimensions';
   import { SvelteMap } from 'svelte/reactivity';
   import {
@@ -89,7 +90,9 @@
             : 0}ms"
         >
           <a
-            href={withCurrentSearch(`/photo/${photo.slug}`)}
+            href={resolve(
+              withCurrentSearch(`/photo/${photo.slug}`) as `/${string}`,
+            )}
             use:registerTile={photo.slug}
             class="group relative block overflow-hidden"
             style={`aspect-ratio: ${uniformRatio};`}
@@ -143,7 +146,9 @@
             : 0}ms"
         >
           <a
-            href={withCurrentSearch(`/photo/${photo.slug}`)}
+            href={resolve(
+              withCurrentSearch(`/photo/${photo.slug}`) as `/${string}`,
+            )}
             use:registerTile={photo.slug}
             class="group relative block h-full w-full overflow-hidden"
             onclick={(event: MouseEvent) => onOpenPhoto(event, photo.slug)}
@@ -195,7 +200,9 @@
                   : 0}ms"
               >
                 <a
-                  href={withCurrentSearch(`/photo/${photo.slug}`)}
+                  href={resolve(
+                    withCurrentSearch(`/photo/${photo.slug}`) as `/${string}`,
+                  )}
                   use:registerTile={photo.slug}
                   class="group relative block h-full w-full overflow-hidden"
                   onclick={(event: MouseEvent) =>
@@ -251,7 +258,9 @@
                   : 0}ms"
               >
                 <a
-                  href={withCurrentSearch(`/photo/${photo.slug}`)}
+                  href={resolve(
+                    withCurrentSearch(`/photo/${photo.slug}`) as `/${string}`,
+                  )}
                   use:registerTile={photo.slug}
                   class="group relative block h-full w-full overflow-hidden"
                   onclick={(event: MouseEvent) =>
@@ -304,7 +313,9 @@
               : 0}ms"
           >
             <a
-              href={withCurrentSearch(`/photo/${photo.slug}`)}
+              href={resolve(
+                withCurrentSearch(`/photo/${photo.slug}`) as `/${string}`,
+              )}
               use:registerTile={photo.slug}
               class="group relative block overflow-hidden"
               style={knownRatio

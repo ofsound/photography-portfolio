@@ -20,7 +20,7 @@ const asLayoutMode = (value: FormDataEntryValue | null) => {
   return mode === 'uniform' ||
     mode === 'masonry' ||
     mode === 'coverage' ||
-    mode === 'bins' ||
+    mode === 'rows' ||
     mode === 'columns'
     ? mode
     : 'uniform';

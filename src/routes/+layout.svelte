@@ -111,7 +111,7 @@
   };
 
   const updateHeaderLayoutMode = (
-    mode: 'uniform' | 'masonry' | 'coverage' | 'bins' | 'columns',
+    mode: 'uniform' | 'masonry' | 'coverage' | 'rows' | 'columns',
   ) => {
     setGalleryPrefs({ layoutMode: mode }, maxDensity);
   };
@@ -347,14 +347,14 @@
                   | 'uniform'
                   | 'masonry'
                   | 'coverage'
-                  | 'bins'
+                  | 'rows'
                   | 'columns',
               )}
           >
             <option value="uniform">Uniform</option>
             <option value="masonry">Masonry</option>
             <option value="coverage">Coverage</option>
-            <option value="bins">Bins</option>
+            <option value="rows">Rows</option>
             <option value="columns">Columns</option>
           </select>
           <ZoomControl

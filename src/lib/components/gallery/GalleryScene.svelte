@@ -24,10 +24,10 @@
   } from '$lib/utils/storage-url';
   import { thumbCropTransform } from '$lib/utils/thumb-crop';
   import {
-    solveBins,
+    solveRows,
     solveColumns,
-    type BinResult,
-  } from '$lib/utils/bin-solver';
+    type RowLayoutResult,
+  } from '$lib/utils/row-solver';
   import {
     computeContainRect,
     cropToImgTransform,
@@ -55,7 +55,7 @@
     density: number;
     gap: number;
     q: string;
-    layoutMode: 'uniform' | 'masonry' | 'coverage' | 'bins' | 'columns';
+    layoutMode: 'uniform' | 'masonry' | 'coverage' | 'rows' | 'columns';
     widthMode: 'full' | 'constrained';
     maxContentWidthPx: number | null;
     uniformThumbRatio: number;
@@ -308,42 +308,48 @@
     coverageCellH > 0 ? coverageCellW / coverageCellH : 1,
   );
 
-  /* ── Bins mode: viewport-filling, aspect-balanced rows ── */
-  const binsRows = $derived(
-    layoutMode === 'bins'
+  /* ── Rows mode: viewport-filling, aspect-balanced rows ── */
+  const rowsRowCount = $derived(
+    layoutMode === 'rows'
       ? Math.max(1, Math.min(20, Number(galleryDensityStore.value) || 3))
       : 0,
   );
 
-  const binsResult = $derived.by<BinResult | null>(() => {
+  const rowsResult = $derived.by<RowLayoutResult | null>(() => {
     if (
-      layoutMode !== 'bins' ||
-      binsRows === 0 ||
+      layoutMode !== 'rows' ||
+      rowsRowCount === 0 ||
       coverageAvailW <= 0 ||
       coverageAvailH <= 0
     )
       return null;
     const seen = new SvelteSet<string>();
-    const binPhotos = photos
+    const rowPhotos = photos
       .filter((p) => p.leadImage)
       .filter((p) => {
         if (seen.has(p.id)) {
-          console.warn('[bins] duplicate photo id in input:', p.id);
+          console.warn('[rows] duplicate photo id in input:', p.id);
           return false;
         }
         seen.add(p.id);
         return true;
       })
       .map((p) => ({ id: p.id, aspect: tileAspectRatio(p) }));
-    if (binPhotos.length === 0) return null;
-    return solveBins(binPhotos, binsRows, coverageAvailW, coverageAvailH, gap);
+    if (rowPhotos.length === 0) return null;
+    return solveRows(
+      rowPhotos,
+      rowsRowCount,
+      coverageAvailW,
+      coverageAvailH,
+      gap,
+    );
   });
 
-  /** Lookup map: photoId → displayAspect from the bins solver. */
-  const binsAspectMap = $derived.by<SvelteMap<string, number>>(() => {
+  /** Lookup map: photoId → displayAspect from the rows solver. */
+  const rowsAspectMap = $derived.by<SvelteMap<string, number>>(() => {
     const map = new SvelteMap<string, number>();
-    if (!binsResult) return map;
-    for (const row of binsResult.rows) {
+    if (!rowsResult) return map;
+    for (const row of rowsResult.rows) {
       for (const entry of row.photos) {
         map.set(entry.id, entry.displayAspect);
       }
@@ -351,9 +357,9 @@
     return map;
   });
 
-  /** Get the display aspect for a photo in bins mode, falling back to natural. */
-  const binsDisplayAspect = (photo: GalleryPhoto): number =>
-    binsAspectMap.get(photo.id) ?? tileAspectRatio(photo);
+  /** Get the display aspect for a photo in rows mode, falling back to natural. */
+  const rowsDisplayAspect = (photo: GalleryPhoto): number =>
+    rowsAspectMap.get(photo.id) ?? tileAspectRatio(photo);
 
   /* ── Columns mode: viewport-filling, aspect-balanced columns ── */
   const columnsCols = $derived(
@@ -362,7 +368,7 @@
       : 0,
   );
 
-  const columnsResult = $derived.by<BinResult | null>(() => {
+  const columnsResult = $derived.by<RowLayoutResult | null>(() => {
     if (
       layoutMode !== 'columns' ||
       columnsCols === 0 ||
@@ -557,8 +563,8 @@
 
     if (!promoted) {
       const containerAspect =
-        layoutMode === 'bins'
-          ? binsDisplayAspect(photo)
+        layoutMode === 'rows'
+          ? rowsDisplayAspect(photo)
           : layoutMode === 'columns'
             ? columnsDisplayAspect(photo)
             : layoutMode === 'coverage'
@@ -632,7 +638,7 @@
       useCover:
         layoutMode === 'uniform' ||
         layoutMode === 'coverage' ||
-        layoutMode === 'bins' ||
+        layoutMode === 'rows' ||
         layoutMode === 'columns',
     });
 
@@ -880,7 +886,7 @@
       !hasMore ||
       activeSlug ||
       layoutMode === 'coverage' ||
-      layoutMode === 'bins' ||
+      layoutMode === 'rows' ||
       layoutMode === 'columns'
     )
       return;
@@ -1192,7 +1198,7 @@
     measureCoverageContainer();
   }}
   onCoverageResize={measureCoverageContainer}
-  {binsResult}
+  {rowsResult}
   {columnsResult}
 />
 

@@ -1,7 +1,7 @@
 <script lang="ts">
   import GalleryTiles from './GalleryTiles.svelte';
   import type { GalleryPhoto } from '$lib/types/content';
-  import type { BinResult } from '$lib/utils/bin-solver';
+  import type { RowLayoutResult } from '$lib/utils/row-solver';
 
   type GalleryImage = NonNullable<GalleryPhoto['leadImage']>;
 
@@ -32,12 +32,12 @@
     coveragePlaceholderCount,
     onCoverageContainer,
     onCoverageResize,
-    binsResult,
+    rowsResult,
     columnsResult,
     showThumbnailZoomHover,
   } = $props<{
     photos: GalleryPhoto[];
-    layoutMode: 'uniform' | 'masonry' | 'coverage' | 'bins' | 'columns';
+    layoutMode: 'uniform' | 'masonry' | 'coverage' | 'rows' | 'columns';
     colCount: number;
     gap: number;
     uniformRatio: number;
@@ -68,9 +68,9 @@
     coveragePlaceholderCount: number;
     onCoverageContainer: (el: HTMLElement) => void;
     onCoverageResize: () => void;
-    binsResult: BinResult | null;
+    rowsResult: RowLayoutResult | null;
     showThumbnailZoomHover: boolean;
-    columnsResult: BinResult | null;
+    columnsResult: RowLayoutResult | null;
   }>();
 
   const bindCoverageSection = (node: HTMLElement) => {
@@ -136,7 +136,7 @@
   };
 </script>
 
-{#if layoutMode === 'coverage' || layoutMode === 'bins' || layoutMode === 'columns'}
+{#if layoutMode === 'coverage' || layoutMode === 'rows' || layoutMode === 'columns'}
   <section class="coverage-container w-full" use:bindCoverageSection>
     {#if photos.length === 0}
       <p
@@ -165,7 +165,7 @@
         {coverageCols}
         {coverageAspect}
         {coveragePlaceholderCount}
-        {binsResult}
+        {rowsResult}
         {columnsResult}
         {showThumbnailZoomHover}
       />
@@ -200,7 +200,7 @@
         {coverageCols}
         {coverageAspect}
         {coveragePlaceholderCount}
-        {binsResult}
+        {rowsResult}
         {columnsResult}
         {showThumbnailZoomHover}
       />

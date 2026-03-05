@@ -1,5 +1,5 @@
 /**
- * Bin-packing solver for the BINS gallery layout mode.
+ * Row-packing solver for the ROWS gallery layout mode.
  *
  * Partitions N photos into R equal-height rows so the total grid
  * fills the viewport exactly. Photos may be freely reordered across
@@ -12,9 +12,9 @@
  *      whenever it reduces max |s − 1| across all rows.  Capped at MAX_SWAP_PASSES.
  */
 
-export type BinPhoto = { id: string; aspect: number };
+export type RowPhoto = { id: string; aspect: number };
 
-export type BinEntry = {
+export type RowEntry = {
   id: string;
   /** Original natural aspect ratio of the photo. */
   aspect: number;
@@ -22,14 +22,14 @@ export type BinEntry = {
   displayAspect: number;
 };
 
-export type BinRow = {
-  photos: BinEntry[];
+export type RowGroup = {
+  photos: RowEntry[];
   /** Scale factor applied to all photos in this row.  1 = no crop. */
   scale: number;
 };
 
-export type BinResult = {
-  rows: BinRow[];
+export type RowLayoutResult = {
+  rows: RowGroup[];
   rowHeight: number;
 };
 
@@ -42,7 +42,7 @@ const MAX_SWAPS_PER_PASS = 200;
  * scale > 1 → photos cropped vertically (too narrow naturally).
  */
 function rowScale(
-  rowPhotos: BinPhoto[],
+  rowPhotos: RowPhoto[],
   rowHeight: number,
   targetWidth: number,
   gap: number,
@@ -56,7 +56,7 @@ function rowScale(
 
 /** Max |scale − 1| across all rows (the metric we minimise). */
 function maxDeviation(
-  rows: BinPhoto[][],
+  rows: RowPhoto[][],
   rowHeight: number,
   targetWidth: number,
   gap: number,
@@ -74,14 +74,14 @@ function maxDeviation(
  * place each into the row with the most remaining capacity.
  */
 function lptAssign(
-  photos: BinPhoto[],
+  photos: RowPhoto[],
   rowCount: number,
   rowHeight: number,
   targetWidth: number,
   gap: number,
-): BinPhoto[][] {
+): RowPhoto[][] {
   const sorted = [...photos].sort((a, b) => b.aspect - a.aspect);
-  const rows: BinPhoto[][] = Array.from({ length: rowCount }, () => []);
+  const rows: RowPhoto[][] = Array.from({ length: rowCount }, () => []);
   const rowWidths: number[] = new Array(rowCount).fill(0);
 
   for (const photo of sorted) {
@@ -107,7 +107,7 @@ function lptAssign(
  * worst-case deviation, commit the swap.  Repeat until no improvement is found.
  */
 function swapImprove(
-  rows: BinPhoto[][],
+  rows: RowPhoto[][],
   rowHeight: number,
   targetWidth: number,
   gap: number,
@@ -162,7 +162,7 @@ function swapImprove(
  * This handles the case where rows should have different photo counts.
  */
 function moveImprove(
-  rows: BinPhoto[][],
+  rows: RowPhoto[][],
   rowHeight: number,
   targetWidth: number,
   gap: number,
@@ -211,15 +211,15 @@ function moveImprove(
  * @param viewportWidth  Available width in px.
  * @param viewportHeight  Available height in px.
  * @param gap  Gap between tiles in px.
- * @returns  BinResult — R rows, each with ordered photo entries including displayAspect.
+ * @returns  RowLayoutResult — R rows, each with ordered photo entries including displayAspect.
  */
-export function solveBins(
-  photos: BinPhoto[],
+export function solveRows(
+  photos: RowPhoto[],
   rowCount: number,
   viewportWidth: number,
   viewportHeight: number,
   gap: number,
-): BinResult {
+): RowLayoutResult {
   const R = Math.max(1, Math.min(photos.length, rowCount));
   const rowHeight = (viewportHeight - (R - 1) * gap) / R;
 
@@ -241,7 +241,7 @@ export function solveBins(
   }
 
   // Build result with display aspect ratios.
-  const result: BinRow[] = rows.map((row) => {
+  const result: RowGroup[] = rows.map((row) => {
     const s = rowScale(row, rowHeight, viewportWidth, gap);
     return {
       scale: s,
@@ -259,7 +259,7 @@ export function solveBins(
 /**
  * Transpose wrapper: solve for equal-width *columns* that fill the viewport.
  *
- * Strategy: invert every aspect ratio (1/a), swap vw↔vh, call solveBins
+ * Strategy: invert every aspect ratio (1/a), swap vw↔vh, call solveRows
  * (which solves rows), then invert displayAspect values back so the
  * caller gets correct landscape/portrait ratios for column layout.
  */
@@ -269,9 +269,9 @@ export function solveColumns(
   viewportW: number,
   viewportH: number,
   gap: number,
-): BinResult {
+): RowLayoutResult {
   const transposed = photos.map((p) => ({ id: p.id, aspect: 1 / p.aspect }));
-  const result = solveBins(transposed, numCols, viewportH, viewportW, gap);
+  const result = solveRows(transposed, numCols, viewportH, viewportW, gap);
   return {
     rows: result.rows.map((row) => ({
       scale: row.scale,

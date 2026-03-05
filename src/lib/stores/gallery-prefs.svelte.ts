@@ -14,14 +14,14 @@ export const galleryDensityStore = {
 
 /** Reactive layout mode for gallery; synced with localStorage when user toggles. */
 let galleryLayoutMode = $state<
-  'uniform' | 'masonry' | 'coverage' | 'bins' | 'columns'
+  'uniform' | 'masonry' | 'coverage' | 'rows' | 'columns'
 >('uniform');
 
 export const layoutModeStore = {
   get value() {
     return galleryLayoutMode;
   },
-  set(newValue: 'uniform' | 'masonry' | 'coverage' | 'bins' | 'columns') {
+  set(newValue: 'uniform' | 'masonry' | 'coverage' | 'rows' | 'columns') {
     galleryLayoutMode = newValue;
   },
 };
@@ -29,14 +29,14 @@ export const layoutModeStore = {
 type GalleryPrefs = {
   density: number;
   gap: number;
-  layoutMode: 'uniform' | 'masonry' | 'coverage' | 'bins' | 'columns';
+  layoutMode: 'uniform' | 'masonry' | 'coverage' | 'rows' | 'columns';
   widthMode: 'full' | 'constrained';
   pageSize: number;
 };
 
 /** Return type for getGalleryPrefs; layoutMode is optional when not explicitly saved. */
 type GalleryPrefsResult = Omit<GalleryPrefs, 'layoutMode'> & {
-  layoutMode?: 'uniform' | 'masonry' | 'coverage' | 'bins' | 'columns';
+  layoutMode?: 'uniform' | 'masonry' | 'coverage' | 'rows' | 'columns';
 };
 
 const DEFAULT_PREFS: GalleryPrefs = {
@@ -56,7 +56,7 @@ function isValidLayoutMode(v: unknown): v is GalleryPrefs['layoutMode'] {
     v === 'uniform' ||
     v === 'masonry' ||
     v === 'coverage' ||
-    v === 'bins' ||
+    v === 'rows' ||
     v === 'columns'
   );
 }

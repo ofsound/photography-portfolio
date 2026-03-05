@@ -13,7 +13,7 @@ type GalleryLayoutMode =
   | 'uniform'
   | 'masonry'
   | 'coverage'
-  | 'bins'
+  | 'rows'
   | 'columns';
 type GalleryWidthMode = 'full' | 'constrained';
 
@@ -78,10 +78,10 @@ export const load: LayoutServerLoad = async ({ locals, url }) => {
 
   if (
     layoutMode === 'coverage' ||
-    layoutMode === 'bins' ||
+    layoutMode === 'rows' ||
     layoutMode === 'columns'
   ) {
-    // Coverage/Bins mode: load all photos in one shot (no pagination)
+    // Coverage/Rows mode: load all photos in one shot (no pagination)
     const allPayload = await loadAllGalleryPhotos(locals, q);
     photos.push(...allPayload.photos);
     hasMore = false;

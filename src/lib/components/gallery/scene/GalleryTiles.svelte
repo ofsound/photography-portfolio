@@ -1,5 +1,4 @@
 <script lang="ts">
-  /* eslint-disable svelte/no-navigation-without-resolve -- withCurrentSearch resolves internally */
   import { parseDimensions } from '$lib/utils/parse-dimensions';
   import { SvelteMap } from 'svelte/reactivity';
   import {
@@ -7,7 +6,7 @@
     photoPublicUrl,
   } from '$lib/utils/storage-url';
   import type { GalleryPhoto } from '$lib/types/content';
-  import type { BinResult } from '$lib/utils/bin-solver';
+  import type { RowLayoutResult } from '$lib/utils/row-solver';
 
   type GalleryImage = NonNullable<GalleryPhoto['leadImage']>;
   const CASCADE_STAGGER_MS = 42;
@@ -32,12 +31,12 @@
     coverageCols,
     coverageAspect,
     coveragePlaceholderCount,
-    binsResult,
+    rowsResult,
     columnsResult,
     showThumbnailZoomHover,
   } = $props<{
     photos: GalleryPhoto[];
-    layoutMode: 'uniform' | 'masonry' | 'coverage' | 'bins' | 'columns';
+    layoutMode: 'uniform' | 'masonry' | 'coverage' | 'rows' | 'columns';
     colCount: number;
     gap: number;
     uniformRatio: number;
@@ -61,12 +60,12 @@
     coverageCols: number;
     coverageAspect: number;
     coveragePlaceholderCount: number;
-    binsResult: BinResult | null;
-    columnsResult: BinResult | null;
+    rowsResult: RowLayoutResult | null;
+    columnsResult: RowLayoutResult | null;
     showThumbnailZoomHover: boolean;
   }>();
 
-  /** Lookup map from photo id to GalleryPhoto for bins mode. */
+  /** Lookup map from photo id to GalleryPhoto for rows mode. */
   const photosById = $derived.by<SvelteMap<string, GalleryPhoto>>(() => {
     const m = new SvelteMap<string, GalleryPhoto>();
     for (const p of photos) m.set(p.id, p);
@@ -176,16 +175,16 @@
       <li class="min-h-0 min-w-0 bg-surface-muted"></li>
     {/each}
   </ul>
-{:else if layoutMode === 'bins'}
-  {#if binsResult}
+{:else if layoutMode === 'rows'}
+  {#if rowsResult}
     <ul class="flex h-full w-full flex-col" style={`gap: ${gap}px;`}>
-      {#each binsResult.rows as row, rowIdx (`bins-row-${rowIdx}`)}
+      {#each rowsResult.rows as row, rowIdx (`rows-row-${rowIdx}`)}
         <li class="flex min-h-0 flex-1" style={`gap: ${gap}px;`}>
-          {#each row.photos as entry, entryIdx (`bins-${entry.id}`)}
+          {#each row.photos as entry, entryIdx (`rows-${entry.id}`)}
             {@const photo = photosById.get(entry.id)}
             {#if photo}
               {@const cascadeIdx =
-                rowIdx * (binsResult.rows[0]?.photos.length ?? 1) + entryIdx}
+                rowIdx * (rowsResult.rows[0]?.photos.length ?? 1) + entryIdx}
               <div
                 class="tile-cascade min-w-0"
                 class:revealed={galleryRevealed}
@@ -213,7 +212,9 @@
                         photo.leadImage,
                       )
                         ? 'tile-img-crop'
-                        : 'group-hover:scale-[1.03]'}"
+                        : showThumbnailZoomHover
+                          ? 'group-hover:scale-[1.03]'
+                          : ''}"
                       style={thumbCropStyle(
                         photo.leadImage,
                         entry.displayAspect,
@@ -267,7 +268,9 @@
                         photo.leadImage,
                       )
                         ? 'tile-img-crop'
-                        : 'group-hover:scale-[1.03]'}"
+                        : showThumbnailZoomHover
+                          ? 'group-hover:scale-[1.03]'
+                          : ''}"
                       style={thumbCropStyle(
                         photo.leadImage,
                         entry.displayAspect,

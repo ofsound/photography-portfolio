@@ -72,8 +72,8 @@
           selected={settings.gallery_layout_mode === 'coverage'}
           value="coverage">coverage</option
         >
-        <option selected={settings.gallery_layout_mode === 'bins'} value="bins"
-          >bins</option
+        <option selected={settings.gallery_layout_mode === 'rows'} value="rows"
+          >rows</option
         >
         <option
           selected={settings.gallery_layout_mode === 'columns'}

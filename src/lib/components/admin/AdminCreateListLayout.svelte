@@ -43,7 +43,9 @@
 
 {#if overflow}
   <section class="mt-6 flex min-h-0 flex-1 flex-col overflow-hidden">
-    <div class="grid min-h-0 flex-1 gap-8 lg:grid-cols-[24rem_1fr]">
+    <div
+      class="grid min-h-0 flex-1 grid-rows-[1fr] gap-8 lg:grid-cols-[24rem_1fr]"
+    >
       <div class="min-w-0">
         {@render create()}
       </div>

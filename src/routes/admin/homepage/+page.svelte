@@ -167,8 +167,7 @@
               {/if}
 
               <div class="text-xs">
-                <div>#{index + 1}</div>
-                <div>{slide.photo_title} ({slide.kind})</div>
+                <div>{slide.photo_title}</div>
               </div>
 
               <AdminButton

@@ -44,6 +44,13 @@
       slug: string;
     } | null,
   );
+  const filteredGallerySlug = $derived(
+    data.filterGalleryId
+      ? ((data.galleries as Array<{ id: string; slug: string }>).find(
+          (g) => g.id === data.filterGalleryId,
+        )?.slug ?? null)
+      : null,
+  );
   const galleryScopeId = $derived(
     data.scopeKind === 'gallery' ? (galleryContext?.id ?? '') : '',
   );
@@ -300,6 +307,24 @@
       Archived ({data.archivedCount})
     </AdminButton>
   </div>
+  {#if filteredGallerySlug}
+    <div class="flex gap-2">
+      <AdminButton
+        href={`/admin/${filteredGallerySlug}/photos/create`}
+        variant="submit"
+        size="xs"
+      >
+        New
+      </AdminButton>
+      <AdminButton
+        href={`/admin/${filteredGallerySlug}/photos/multiple`}
+        variant="submit"
+        size="xs"
+      >
+        Bulk
+      </AdminButton>
+    </div>
+  {/if}
 </div>
 
 {#if form?.message}

@@ -493,7 +493,7 @@
   $effect(() => {
     if (!state.mounted) return;
 
-    const key = data.q || '\0';
+    const key = [routeScopeSlug, data.q || '\0'].join('|');
     if (!shouldShowPreloader) {
       if (state.photos.length > 0) {
         state.galleryRevealed = true;
@@ -511,7 +511,7 @@
   $effect(() => {
     if (!state.mounted) return;
 
-    const nextQuerySignature = [data.q, data.page].join('|');
+    const nextQuerySignature = [routeScopeSlug, data.q, data.page].join('|');
 
     if (nextQuerySignature !== state.querySignature) {
       state.querySignature = nextQuerySignature;

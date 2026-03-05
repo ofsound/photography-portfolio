@@ -294,6 +294,24 @@
       Archived ({data.archivedCount})
     </AdminButton>
   </div>
+  {#if data.scopeKind === 'gallery'}
+    <div class="flex gap-2">
+      <AdminButton
+        href={`/admin/${data.gallery.slug}/photos/create`}
+        variant="submit"
+        size="xs"
+      >
+        Add Photo
+      </AdminButton>
+      <AdminButton
+        href={`/admin/${data.gallery.slug}/photos/multiple`}
+        variant="submit"
+        size="xs"
+      >
+        Add Multple
+      </AdminButton>
+    </div>
+  {/if}
 </div>
 
 {#if form?.message}

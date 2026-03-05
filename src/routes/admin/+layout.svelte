@@ -1,7 +1,6 @@
 <script lang="ts">
   import { resolve } from '$app/paths';
   import { page } from '$app/state';
-  import AdminButton from '$lib/components/admin/AdminButton.svelte';
 
   const { data, children } = $props();
 
@@ -23,12 +22,6 @@
 
     return list;
   });
-
-  const scopedPhotosMatch = (pathname: string) =>
-    pathname.match(/^\/admin\/([^/]+)\/photos(?:\/.*)?$/);
-  const currentScopedGallerySlug = $derived(
-    scopedPhotosMatch(page.url.pathname)?.[1] ?? null,
-  );
 
   const isActiveLink = (href: string) => {
     if (href === '/admin/all/photos') {
@@ -69,24 +62,6 @@
             aria-label={link.label}
           ></a>
           <span class="pointer-events-none z-10 px-4 py-3">{link.label}</span>
-          {#if link.href === '/admin/all/photos' && currentScopedGallerySlug && currentScopedGallerySlug !== 'all'}
-            <div class="relative z-20 flex gap-2 pr-4">
-              <AdminButton
-                href={`/admin/${currentScopedGallerySlug}/photos/create`}
-                variant="submit"
-                size="xs"
-              >
-                New
-              </AdminButton>
-              <AdminButton
-                href={`/admin/${currentScopedGallerySlug}/photos/multiple`}
-                variant="submit"
-                size="xs"
-              >
-                Bulk
-              </AdminButton>
-            </div>
-          {/if}
         </div>
       {/each}
     </nav>

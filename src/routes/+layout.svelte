@@ -388,7 +388,6 @@
             >{navGallery.name}</a
           >
         {/each}
-        <a href={resolve('/all')}>All</a>
         {#each navPages as navPage (navPage.id)}
           <a href={resolve(`/${navPage.slug}`)}>{navPage.title}</a>
         {/each}

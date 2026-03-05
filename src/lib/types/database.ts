@@ -167,6 +167,7 @@ export type Database = {
       gallery_settings: {
         Row: {
           allow_transition_toggle: boolean;
+          created_at: string;
           gallery_gap_px: number;
           gallery_id: string | null;
           gallery_layout_mode: Database['public']['Enums']['layout_mode'];
@@ -174,19 +175,21 @@ export type Database = {
           grid_mobile_default: number;
           id: string;
           max_content_width_px: number | null;
+          nav_order: number;
           scope: Database['public']['Enums']['gallery_settings_scope'];
           show_photograph_info: boolean;
           show_search_bar: boolean;
+          show_in_nav: boolean;
           show_thumbnail_zoom_hover: boolean;
           theme_default: Database['public']['Enums']['theme_mode'];
           transition_preset: Database['public']['Enums']['transition_preset'];
           uniform_thumb_ratio: number;
           updated_at: string;
           updated_by: string | null;
-          created_at: string;
         };
         Insert: {
           allow_transition_toggle?: boolean;
+          created_at?: string;
           gallery_gap_px?: number;
           gallery_id?: string | null;
           gallery_layout_mode?: Database['public']['Enums']['layout_mode'];
@@ -194,19 +197,21 @@ export type Database = {
           grid_mobile_default?: number;
           id?: string;
           max_content_width_px?: number | null;
+          nav_order?: number;
           scope: Database['public']['Enums']['gallery_settings_scope'];
           show_photograph_info?: boolean;
           show_search_bar?: boolean;
+          show_in_nav?: boolean;
           show_thumbnail_zoom_hover?: boolean;
           theme_default?: Database['public']['Enums']['theme_mode'];
           transition_preset?: Database['public']['Enums']['transition_preset'];
           uniform_thumb_ratio?: number;
           updated_at?: string;
           updated_by?: string | null;
-          created_at?: string;
         };
         Update: {
           allow_transition_toggle?: boolean;
+          created_at?: string;
           gallery_gap_px?: number;
           gallery_id?: string | null;
           gallery_layout_mode?: Database['public']['Enums']['layout_mode'];
@@ -214,16 +219,17 @@ export type Database = {
           grid_mobile_default?: number;
           id?: string;
           max_content_width_px?: number | null;
+          nav_order?: number;
           scope?: Database['public']['Enums']['gallery_settings_scope'];
           show_photograph_info?: boolean;
           show_search_bar?: boolean;
+          show_in_nav?: boolean;
           show_thumbnail_zoom_hover?: boolean;
           theme_default?: Database['public']['Enums']['theme_mode'];
           transition_preset?: Database['public']['Enums']['transition_preset'];
           uniform_thumb_ratio?: number;
           updated_at?: string;
           updated_by?: string | null;
-          created_at?: string;
         };
         Relationships: [
           {

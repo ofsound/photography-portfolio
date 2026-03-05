@@ -62,6 +62,43 @@
 {/snippet}
 
 {#snippet galleryList()}
+  <article class="rounded border border-border p-4">
+    <div class="mb-3 flex items-center justify-between gap-3">
+      <div>
+        <h2 class="text-sm tracking-widest uppercase">ALL</h2>
+        <p class="text-xs text-text-muted">/all</p>
+      </div>
+      <div class="flex items-center gap-2">
+        <AdminButton href="/admin/all/photos" size="sm">Photos</AdminButton>
+        <AdminButton href="/admin/all/settings" size="sm">Settings</AdminButton>
+      </div>
+    </div>
+
+    <form method="POST" action="?/updateAll" class="grid gap-3">
+      <div class="grid gap-3 sm:grid-cols-2">
+        <FormField label="Nav Order" id="all-gallery-nav-order">
+          <FormInput
+            id="all-gallery-nav-order"
+            name="nav_order"
+            type="number"
+            value={String(data.allScopeNav?.nav_order ?? 0)}
+          />
+        </FormField>
+        <label class="mt-6 flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            name="show_in_nav"
+            checked={data.allScopeNav?.show_in_nav ?? true}
+          />
+          Show In Nav
+        </label>
+      </div>
+      <div class="flex flex-wrap gap-2">
+        <AdminButton type="submit" wFit>Save</AdminButton>
+      </div>
+    </form>
+  </article>
+
   {#each data.galleries as gallery (gallery.id)}
     <article class="rounded border border-border p-4">
       <div class="mb-3 flex items-center justify-between gap-3">

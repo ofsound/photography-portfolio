@@ -355,13 +355,20 @@ export const loadGallerySettings = async (
 };
 
 export const loadActiveNavGalleries = async (locals: App.Locals) => {
-  const galleriesQuery = await locals.supabase
-    .from('galleries')
-    .select('id, slug, name, nav_order')
-    .eq('is_active', true)
-    .eq('show_in_nav', true)
-    .order('nav_order', { ascending: true })
-    .order('name', { ascending: true });
+  const [galleriesQuery, allSettingsQuery] = await Promise.all([
+    locals.supabase
+      .from('galleries')
+      .select('id, slug, name, nav_order')
+      .eq('is_active', true)
+      .eq('show_in_nav', true)
+      .order('nav_order', { ascending: true })
+      .order('name', { ascending: true }),
+    locals.supabase
+      .from('gallery_settings')
+      .select('*')
+      .eq('scope', 'all')
+      .maybeSingle(),
+  ]);
 
   if (galleriesQuery.error) {
     throwLoaderError(
@@ -373,9 +380,36 @@ export const loadActiveNavGalleries = async (locals: App.Locals) => {
     );
   }
 
-  return (galleriesQuery.data ?? []) as Array<
+  const navItems = (galleriesQuery.data ?? []) as Array<
     Pick<GalleryRow, 'id' | 'slug' | 'name' | 'nav_order'>
   >;
+  let allShowInNav = true;
+  let allNavOrder = 0;
+  if (!allSettingsQuery.error && allSettingsQuery.data) {
+    const row = allSettingsQuery.data as Record<string, unknown>;
+    allShowInNav =
+      typeof row.show_in_nav === 'boolean' ? row.show_in_nav : true;
+    const parsedNavOrder = Number(row.nav_order);
+    allNavOrder = Number.isFinite(parsedNavOrder) ? parsedNavOrder : 0;
+  }
+
+  if (allShowInNav) {
+    navItems.push({
+      id: 'all',
+      slug: 'all',
+      name: 'All',
+      nav_order: allNavOrder,
+    });
+  }
+
+  navItems.sort((a, b) => {
+    if (a.nav_order !== b.nav_order) {
+      return a.nav_order - b.nav_order;
+    }
+    return a.name.localeCompare(b.name);
+  });
+
+  return navItems;
 };
 
 const buildPhotosQuery = (

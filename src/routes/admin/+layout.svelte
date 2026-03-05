@@ -6,13 +6,11 @@
 
   const links = $derived.by(() => {
     const list = [
-      { href: '/admin/all/photos', label: 'Photos' },
       { href: '/admin/categories', label: 'Categories' },
       { href: '/admin/tags', label: 'Tags' },
       { href: '/admin/homepage', label: 'Homepage' },
       { href: '/admin/pages', label: 'Pages' },
       { href: '/admin/settings/defaults', label: 'Defaults' },
-      { href: '/admin/all/settings', label: '/all Settings' },
       { href: '/admin/audit', label: 'Audit' },
     ];
 

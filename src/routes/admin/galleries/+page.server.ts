@@ -26,14 +26,41 @@ const requireAdmin = async (locals: App.Locals) => {
   return true;
 };
 
+const loadAllScopeNav = async (locals: App.Locals) => {
+  const allSettings = await locals.supabase
+    .from('gallery_settings')
+    .select('*')
+    .eq('scope', 'all')
+    .maybeSingle();
+
+  if (allSettings.error || !allSettings.data) {
+    return {
+      show_in_nav: true,
+      nav_order: 0,
+    };
+  }
+
+  const row = allSettings.data as Record<string, unknown>;
+  const parsedNavOrder = Number(row.nav_order);
+
+  return {
+    show_in_nav: typeof row.show_in_nav === 'boolean' ? row.show_in_nav : true,
+    nav_order: Number.isFinite(parsedNavOrder) ? parsedNavOrder : 0,
+  };
+};
+
 export const load: PageServerLoad = async ({ locals }) => {
   if (!(await requireAdmin(locals))) {
     throw error(403, 'Only admins can manage galleries.');
   }
   await ensureAllSettingsSeeded(locals);
-  const galleries = await listGalleriesForAdmin(locals);
+  const [galleries, allScopeNav] = await Promise.all([
+    listGalleriesForAdmin(locals),
+    loadAllScopeNav(locals),
+  ]);
   return {
     galleries,
+    allScopeNav,
   };
 };
 
@@ -149,6 +176,38 @@ export const actions: Actions = {
           cause instanceof Error ? cause.message : 'Failed to update gallery.',
       });
     }
+  },
+
+  updateAll: async ({ locals, request }) => {
+    if (!(await requireAdmin(locals))) {
+      return fail(403, { message: 'Only admins can manage galleries.' });
+    }
+
+    await ensureAllSettingsSeeded(locals);
+
+    const form = await request.formData();
+    const navOrder = asOptionalNumber(form.get('nav_order')) ?? 0;
+    const showInNav = asBoolean(form.get('show_in_nav'));
+
+    const update = await locals.supabase
+      .from('gallery_settings')
+      .update({
+        nav_order: navOrder,
+        show_in_nav: showInNav,
+      })
+      .eq('scope', 'all');
+
+    if (update.error) {
+      if ((update.error as { code?: string }).code === '42703') {
+        return fail(400, {
+          message:
+            'Database migration required: add /all nav fields to gallery_settings first.',
+        });
+      }
+      return fail(400, { message: update.error.message });
+    }
+
+    return { success: true, message: '/all nav settings updated.' };
   },
 
   delete: async ({ locals, request }) => {

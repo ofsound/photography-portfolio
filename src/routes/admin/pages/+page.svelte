@@ -1,6 +1,6 @@
 <script lang="ts">
   import AdminButton from '$lib/components/admin/AdminButton.svelte';
-  import AdminHeading from '$lib/components/admin/AdminHeading.svelte';
+  import AdminCreateListLayout from '$lib/components/admin/AdminCreateListLayout.svelte';
   import CodeEditor from '$lib/components/admin/CodeEditor.svelte';
   import FormField from '$lib/components/FormField.svelte';
   import FormInput from '$lib/components/FormInput.svelte';
@@ -18,28 +18,18 @@
   );
 </script>
 
-<AdminHeading>Pages</AdminHeading>
-<p class="mt-2 text-sm text-text-muted">
-  Create pages here, then edit each page on its own route editor.
-</p>
+<AdminCreateListLayout
+  title="Pages"
+  subtitle="Create pages here, then edit each page on its own route editor."
+  formMessage={form?.message}
+  dataMessage={data.message}
+  listHeading="Existing Pages"
+  create={createForm}
+  list={pageList}
+/>
 
-{#if form?.message}
-  <p class="mt-3 rounded border border-border px-3 py-2 text-sm">
-    {form.message}
-  </p>
-{/if}
-{#if data.message}
-  <p class="mt-3 rounded border border-border px-3 py-2 text-sm">
-    {data.message}
-  </p>
-{/if}
-
-<section class="mt-6 flex flex-col gap-8 lg:flex-row">
-  <form
-    method="POST"
-    action="?/create"
-    class="grid h-fit gap-3 lg:w-96 lg:shrink-0"
-  >
+{#snippet createForm()}
+  <form method="POST" action="?/create" class="grid h-fit gap-3">
     <FormField label="Title" id="page-create-title">
       <FormInput
         id="page-create-title"
@@ -117,31 +107,30 @@
       <AdminButton wFit type="submit">Create Page</AdminButton>
     </div>
   </form>
+{/snippet}
 
-  <section class="flex-1">
-    <h2 class="text-sm tracking-widest uppercase">Existing Pages</h2>
-    {#if pages.length === 0}
-      <p class="mt-2 text-sm text-text-muted">No pages yet.</p>
-    {:else}
-      <div class="mt-3 flex flex-col gap-4">
-        {#each pages as page (page.id)}
-          <AdminButton
-            href={`/admin/pages/edit/${page.slug}`}
-            variant="subtle"
-            class="block w-full text-left"
-          >
-            <div class="flex flex-wrap items-center justify-between gap-2">
-              <span>{page.title}</span>
-              <span class="text-xs tracking-widest text-text-subtle uppercase"
-                >{page.status}</span
-              >
-            </div>
-            <p class="mt-1 text-xs text-text-subtle normal-case">
-              Updated {new Date(page.updated_at).toLocaleDateString()}
-            </p>
-          </AdminButton>
-        {/each}
-      </div>
-    {/if}
-  </section>
-</section>
+{#snippet pageList()}
+  {#if pages.length === 0}
+    <p class="mt-2 text-sm text-text-muted">No pages yet.</p>
+  {:else}
+    <div class="mt-3 flex flex-col gap-4">
+      {#each pages as page (page.id)}
+        <AdminButton
+          href={`/admin/pages/edit/${page.slug}`}
+          variant="subtle"
+          class="block w-full text-left"
+        >
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <span>{page.title}</span>
+            <span class="text-xs tracking-widest text-text-subtle uppercase"
+              >{page.status}</span
+            >
+          </div>
+          <p class="mt-1 text-xs text-text-subtle normal-case">
+            Updated {new Date(page.updated_at).toLocaleDateString()}
+          </p>
+        </AdminButton>
+      {/each}
+    </div>
+  {/if}
+{/snippet}

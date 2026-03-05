@@ -3,7 +3,7 @@ import { asBoolean, asString, toSlug } from '$lib/server/admin-helpers';
 import { sanitizeCmsCss, sanitizeCmsHtml } from '$lib/server/cms-sanitize';
 import { RESERVED_SLUGS } from '$lib/server/reserved-slugs';
 
-const ALLOWED_SYSTEM_SLUGS = new Set(['about', 'contact']);
+const ALLOWED_SYSTEM_SLUGS = new Set(['about']);
 
 type PageKind = Database['public']['Enums']['page_kind'];
 export type PublishStatus = Database['public']['Enums']['publish_status'];

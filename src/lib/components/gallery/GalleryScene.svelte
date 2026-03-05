@@ -1,15 +1,11 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
   import { resolve } from '$app/paths';
-  import { onDestroy, onMount, untrack } from 'svelte';
-  import {
-    SvelteMap,
-    SvelteSet,
-    SvelteURLSearchParams,
-  } from 'svelte/reactivity';
+  import { onDestroy, onMount } from 'svelte';
   import GalleryDetailViewer from './scene/GalleryDetailViewer.svelte';
   import GalleryGrid from './scene/GalleryGrid.svelte';
   import GalleryPreloader from './scene/GalleryPreloader.svelte';
+  import { createGalleryTransitionQueue } from './scene/GalleryTransitionQueue.svelte';
   import { getGalleryTransitionContext } from '$lib/context/gallery-transition';
   import {
     getGalleryPrefs,
@@ -17,177 +13,60 @@
     layoutModeStore,
   } from '$lib/stores/gallery-prefs.svelte';
   import type { GalleryPhoto } from '$lib/types/content';
-  import {
-    buildGalleryFeedPath,
-    buildGalleryPath,
-    buildGalleryPhotoPath,
-  } from '$lib/utils/gallery-routes';
   import { parseDimensions } from '$lib/utils/parse-dimensions';
   import {
     GALLERY_DETAIL_SHARED_WIDTH,
     photoPublicUrl,
   } from '$lib/utils/storage-url';
-  import { thumbCropTransform } from '$lib/utils/thumb-crop';
   import {
-    solveRows,
-    solveColumns,
-    type RowLayoutResult,
-  } from '$lib/utils/row-solver';
+    createGallerySceneState,
+    routeKeyFromActive,
+  } from './scene/createGallerySceneState.svelte';
+  import type { GalleryGridModel } from './scene/gallery-grid-model';
+  import type {
+    ActiveRoute,
+    GalleryImage,
+    ViewerData,
+  } from './scene/gallery-scene.types';
+  import { createGalleryLayout } from './scene/useGalleryLayout.svelte';
+  import { createGalleryNavigation } from './scene/useGalleryNavigation.svelte';
+  import { createGalleryPagination } from './scene/useGalleryPagination.svelte';
   import {
-    computeContainRect,
-    cropToImgTransform,
-    demoteTile,
-    movePromotedTile,
-    promoteTile,
-    releasePromotedTile,
-    reinsertPromotedTile,
-    type TileAnimationSession,
-  } from './tile-animator';
-  import { createGalleryTransitionQueue } from './scene/GalleryTransitionQueue.svelte';
-
-  type ActiveRoute = {
-    photoSlug: string;
-    imageId: string | null;
-    prevGalleryHref: string | null;
-    nextGalleryHref: string | null;
-  };
-
-  type ViewerData = {
-    galleryScope: {
-      slug: string;
-    } | null;
-    photos: GalleryPhoto[];
-    hasMore: boolean;
-    page: number;
-    pageSize: number;
-    density: number;
-    gap: number;
-    q: string;
-    layoutMode: 'uniform' | 'masonry' | 'coverage' | 'rows' | 'columns';
-    widthMode: 'full' | 'constrained';
-    maxContentWidthPx: number | null;
-    uniformThumbRatio: number;
-    maxDensity: number;
-    baseQueryString: string;
-    active: ActiveRoute | null;
-    gallerySettings?: {
-      show_photograph_info?: boolean | null;
-      show_thumbnail_zoom_hover?: boolean | null;
-    } | null;
-  };
-
-  type GalleryImage = NonNullable<GalleryPhoto['leadImage']>;
+    createGalleryRouter,
+    matchesExpectedRouteKey,
+    routeKeyFor,
+  } from './scene/useGalleryRouter.svelte';
+  import { createGalleryTileAnimator } from './scene/useGalleryTileAnimator.svelte';
 
   const { data } = $props<{ data: ViewerData }>();
   const readInitialData = () => data;
 
-  const gap = $state(readInitialData().gap);
+  const state = createGallerySceneState(readInitialData());
   const layoutMode = $derived(layoutModeStore.value);
-  const widthMode = $state<'full' | 'constrained'>(readInitialData().widthMode);
-  let query = $state(readInitialData().q);
-  let pageSize = $state(readInitialData().pageSize);
-  let photos = $state<GalleryPhoto[]>(readInitialData().photos);
-  let currentPage = $state(readInitialData().page);
-  let hasMore = $state(readInitialData().hasMore);
-  let loadError = $state<string | null>(null);
-  let isLoadingMore = $state(false);
 
-  let activeSlug = $state<string | null>(
-    readInitialData().active?.photoSlug ?? null,
-  );
-  let activeImageId = $state<string | null>(
-    readInitialData().active?.imageId ?? null,
-  );
-  let prevGalleryHref = $state<string | null>(
-    readInitialData().active?.prevGalleryHref ?? null,
-  );
-  let nextGalleryHref = $state<string | null>(
-    readInitialData().active?.nextGalleryHref ?? null,
-  );
-  let promoted = $state<TileAnimationSession | null>(null);
-  let routeKey = $state(
-    readInitialData().active
-      ? `${readInitialData().active!.photoSlug}:${readInitialData().active!.imageId ?? ''}`
-      : '',
-  );
-  let querySignature = $state('');
-  let mounted = $state(false);
-  let hasHydratedRoute = Boolean(readInitialData().active);
-  let skipNextRouteAnimation = false;
-  let expectedRouteKeyFromGoto: string | null = null;
   const routeScopeSlug = $derived(
     readInitialData().galleryScope?.slug ?? 'all',
   );
-  const galleryBasePath = $derived(buildGalleryPath(routeScopeSlug));
-  const photoPath = (photoSlug: string, imageId?: string | null) =>
-    buildGalleryPhotoPath(routeScopeSlug, photoSlug, imageId);
+
+  const router = createGalleryRouter({
+    getRouteScopeSlug: () => routeScopeSlug,
+    getQuery: () => state.query,
+    getCurrentPage: () => state.currentPage,
+    getPageSize: () => state.pageSize,
+    getPhotos: () => state.photos,
+  });
 
   const FADE_OUT_CHROME_MS = 280;
   const SCALE_MASK_MS = 520;
   const CLOSING_CHROME_MS = 180;
 
-  /** Macromedia Flash-style preloader: only when on gallery grid (no active photo). */
   const PRELOADER_FADE_MS = 420;
-
-  let imagesLoaded = $state(0);
-  let totalImages = $state(0);
-  let preloaderVisible = $state(false);
-  let galleryRevealed = $state(false);
-  let preloadKey = $state('');
 
   const transitionQueue = createGalleryTransitionQueue({
     onError: (error) => {
       console.error('gallery-transition-failed', error);
     },
   });
-  const pendingDirectionQueue: Array<'prev' | 'next'> = [];
-  let directionDrainScheduled = false;
-  let isClosing = $state(false);
-
-  const tileRefs = new SvelteMap<string, HTMLElement>();
-
-  const drainDirectionQueue = () => {
-    if (isClosing || !activeSlug) {
-      pendingDirectionQueue.length = 0;
-      directionDrainScheduled = false;
-      return;
-    }
-    if (pendingDirectionQueue.length === 0) {
-      directionDrainScheduled = false;
-      if (!isClosing) {
-        skipNextRouteAnimation = true;
-        expectedRouteKeyFromGoto = `${activeSlug}:`;
-        void goto(
-          resolve(withCurrentSearch(photoPath(activeSlug)) as `/${string}`),
-          {
-            noScroll: true,
-            keepFocus: true,
-          },
-        );
-      }
-      return;
-    }
-    directionDrainScheduled = true;
-    const direction = pendingDirectionQueue.shift()!;
-    const neighbors =
-      direction === 'next'
-        ? localNeighborsFor(activeSlug ?? '').nextGalleryHref
-        : localNeighborsFor(activeSlug ?? '').prevGalleryHref;
-    const targetSlug = parseSlugFromPhotoHref(neighbors);
-    if (!targetSlug) {
-      drainDirectionQueue();
-      return;
-    }
-    void transitionQueue
-      .enqueue(async () => {
-        if (isClosing) return;
-        const localNeighbors = localNeighborsFor(targetSlug);
-        prevGalleryHref = localNeighbors.prevGalleryHref;
-        nextGalleryHref = localNeighbors.nextGalleryHref;
-        await slideToNeighbor(targetSlug, direction);
-      })
-      .then(() => drainDirectionQueue());
-  };
 
   const isTransitioning = $derived(transitionQueue.isTransitioning);
 
@@ -198,40 +77,14 @@
     transitionPhase === 'closing-chrome' || transitionPhase === 'closing-scale',
   );
 
-  /** Portals the element to document.body so it can stack above the promoted tile (z-70). */
   const portal = (node: HTMLElement) => {
     if (typeof document !== 'undefined' && document.body) {
       document.body.appendChild(node);
     }
+
     return {
       destroy() {
         node.remove();
-      },
-    };
-  };
-
-  const registerTile = (node: HTMLElement, slug: string) => {
-    tileRefs.set(slug, node);
-    let currentSlug = slug;
-
-    // Retroactively promote the tile if this is a direct photo entry and the gallery tile just mounted
-    if (activeSlug === slug && !promoted) {
-      void ensurePromotedTile(slug, activeImageId, false);
-    }
-
-    return {
-      update(nextSlug: string) {
-        if (nextSlug === currentSlug) return;
-        if (tileRefs.get(currentSlug) === node) {
-          tileRefs.delete(currentSlug);
-        }
-        currentSlug = nextSlug;
-        tileRefs.set(currentSlug, node);
-      },
-      destroy() {
-        if (tileRefs.get(currentSlug) === node) {
-          tileRefs.delete(currentSlug);
-        }
       },
     };
   };
@@ -241,481 +94,205 @@
       ? window.matchMedia('(prefers-reduced-motion: reduce)').matches
       : false;
 
-  const buildUrlParams = (includePage = false) => {
-    const params = new SvelteURLSearchParams();
-    if (query.trim()) params.set('q', query.trim());
-    if (includePage && currentPage > 1) params.set('page', String(currentPage));
-    return params;
-  };
-
-  const buildFeedParams = () => {
-    const params = new SvelteURLSearchParams();
-    params.set('page', String(currentPage + 1));
-    params.set('pageSize', String(pageSize));
-    if (query.trim()) params.set('q', query.trim());
-    return params;
-  };
-
-  const withCurrentSearch = (href: string, includePage = false) => {
-    const base = buildUrlParams(includePage).toString();
-    return base ? `${href}?${base}` : href;
-  };
-
-  const withCurrentSearchResolved = (href: string, includePage = false) =>
-    resolve(withCurrentSearch(href, includePage) as `/${string}`);
-
   const colCount = $derived(
     Math.max(
       1,
       Math.min(data.maxDensity ?? 20, Number(galleryDensityStore.value) || 6),
     ),
   );
+
   const placeholderCount = $derived(Math.max(colCount, 6));
+
   const uniformRatio = $derived(
     Math.max(0.2, Number(data.uniformThumbRatio ?? 1)),
   );
 
-  /* ── Coverage mode: viewport-filling grid ── */
-  let coverageAvailW = $state(0);
-  let coverageAvailH = $state(0);
-  let coverageContainerEl: HTMLElement | null = null;
-
-  const coverageRows = $derived.by(() => {
-    if (layoutMode !== 'coverage') return 0;
-
-    const requestedRows = Math.max(
-      1,
-      Math.min(20, Number(galleryDensityStore.value) || 3),
-    );
-    const photoCount = photos.length;
-    if (photoCount <= 0) return requestedRows;
-
-    // Ensure placeholders only fill part of the last row, never an entire row.
-    let rows = Math.min(requestedRows, photoCount);
-    while (rows > 1) {
-      const cols = Math.max(1, Math.ceil(photoCount / rows));
-      const placeholders = rows * cols - photoCount;
-      if (placeholders < cols) break;
-      rows -= 1;
+  const naturalAspectRatio = (photo: GalleryPhoto) => {
+    const parsed = parseDimensions(photo.leadImage?.dimensions);
+    if (parsed) {
+      return Math.max(0.2, parsed.width / parsed.height);
     }
-
-    return rows;
-  });
-  const coverageCols = $derived(
-    coverageRows > 0 ? Math.max(1, Math.ceil(photos.length / coverageRows)) : 0,
-  );
-  const coverageTotalCells = $derived(coverageRows * coverageCols);
-  const coveragePlaceholderCount = $derived(
-    Math.max(0, coverageTotalCells - photos.length),
-  );
-  const coverageCellW = $derived(
-    coverageCols > 0 && coverageAvailW > 0
-      ? (coverageAvailW - (coverageCols - 1) * gap) / coverageCols
-      : 0,
-  );
-  const coverageCellH = $derived(
-    coverageRows > 0 && coverageAvailH > 0
-      ? (coverageAvailH - (coverageRows - 1) * gap) / coverageRows
-      : 0,
-  );
-  const coverageAspect = $derived(
-    coverageCellH > 0 ? coverageCellW / coverageCellH : 1,
-  );
-
-  /* ── Rows mode: viewport-filling, aspect-balanced rows ── */
-  const rowsRowCount = $derived(
-    layoutMode === 'rows'
-      ? Math.max(1, Math.min(20, Number(galleryDensityStore.value) || 3))
-      : 0,
-  );
-
-  const rowsResult = $derived.by<RowLayoutResult | null>(() => {
-    if (
-      layoutMode !== 'rows' ||
-      rowsRowCount === 0 ||
-      coverageAvailW <= 0 ||
-      coverageAvailH <= 0
-    )
-      return null;
-    const seen = new SvelteSet<string>();
-    const rowPhotos = photos
-      .filter((p) => p.leadImage)
-      .filter((p) => {
-        if (seen.has(p.id)) {
-          console.warn('[rows] duplicate photo id in input:', p.id);
-          return false;
-        }
-        seen.add(p.id);
-        return true;
-      })
-      .map((p) => ({ id: p.id, aspect: tileAspectRatio(p) }));
-    if (rowPhotos.length === 0) return null;
-    return solveRows(
-      rowPhotos,
-      rowsRowCount,
-      coverageAvailW,
-      coverageAvailH,
-      gap,
-    );
-  });
-
-  /** Lookup map: photoId → displayAspect from the rows solver. */
-  const rowsAspectMap = $derived.by<SvelteMap<string, number>>(() => {
-    const map = new SvelteMap<string, number>();
-    if (!rowsResult) return map;
-    for (const row of rowsResult.rows) {
-      for (const entry of row.photos) {
-        map.set(entry.id, entry.displayAspect);
-      }
-    }
-    return map;
-  });
-
-  /** Get the display aspect for a photo in rows mode, falling back to natural. */
-  const rowsDisplayAspect = (photo: GalleryPhoto): number =>
-    rowsAspectMap.get(photo.id) ?? tileAspectRatio(photo);
-
-  /* ── Columns mode: viewport-filling, aspect-balanced columns ── */
-  const columnsCols = $derived(
-    layoutMode === 'columns'
-      ? Math.max(1, Math.min(20, Number(galleryDensityStore.value) || 3))
-      : 0,
-  );
-
-  const columnsResult = $derived.by<RowLayoutResult | null>(() => {
-    if (
-      layoutMode !== 'columns' ||
-      columnsCols === 0 ||
-      coverageAvailW <= 0 ||
-      coverageAvailH <= 0
-    )
-      return null;
-    const seen = new SvelteSet<string>();
-    const colPhotos = photos
-      .filter((p) => p.leadImage)
-      .filter((p) => {
-        if (seen.has(p.id)) {
-          console.warn('[columns] duplicate photo id in input:', p.id);
-          return false;
-        }
-        seen.add(p.id);
-        return true;
-      })
-      .map((p) => ({ id: p.id, aspect: tileAspectRatio(p) }));
-    if (colPhotos.length === 0) return null;
-    return solveColumns(
-      colPhotos,
-      columnsCols,
-      coverageAvailW,
-      coverageAvailH,
-      gap,
-    );
-  });
-
-  /** Lookup map: photoId → displayAspect from the columns solver. */
-  const columnsAspectMap = $derived.by<SvelteMap<string, number>>(() => {
-    const map = new SvelteMap<string, number>();
-    if (!columnsResult) return map;
-    for (const col of columnsResult.rows) {
-      for (const entry of col.photos) {
-        map.set(entry.id, entry.displayAspect);
-      }
-    }
-    return map;
-  });
-
-  /** Get the display aspect for a photo in columns mode, falling back to natural. */
-  const columnsDisplayAspect = (photo: GalleryPhoto): number =>
-    columnsAspectMap.get(photo.id) ?? tileAspectRatio(photo);
-
-  const measureCoverageContainer = () => {
-    if (!coverageContainerEl) return;
-    coverageAvailW = coverageContainerEl.clientWidth;
-    coverageAvailH = coverageContainerEl.clientHeight;
+    return uniformRatio;
   };
+
+  let layout!: ReturnType<typeof createGalleryLayout>;
+
+  const getContainerAspectForPhoto = (photo: GalleryPhoto) => {
+    if (layoutMode === 'rows') {
+      return layout.rowsDisplayAspect(photo);
+    }
+
+    if (layoutMode === 'columns') {
+      return layout.columnsDisplayAspect(photo);
+    }
+
+    if (layoutMode === 'coverage') {
+      return layout.coverageAspect;
+    }
+
+    if (layoutMode === 'uniform') {
+      return uniformRatio;
+    }
+
+    return naturalAspectRatio(photo);
+  };
+
+  const tileAnimator = createGalleryTileAnimator({
+    state,
+    getLayoutMode: () => layoutMode,
+    getUniformRatio: () => uniformRatio,
+    getContainerAspect: getContainerAspectForPhoto,
+    reducedMotion,
+    setPhase,
+    scaleMaskMs: SCALE_MASK_MS,
+    closingChromeMs: CLOSING_CHROME_MS,
+  });
+
+  layout = createGalleryLayout({
+    state,
+    getLayoutMode: () => layoutMode,
+    getTileAspectRatio: tileAnimator.tileAspectRatio,
+  });
+
   const constrainedMax = $derived(data.maxContentWidthPx ?? 1600);
+
   const sectionMaxWidthStyle = $derived(
-    widthMode === 'constrained'
+    state.widthMode === 'constrained'
       ? `max-width: min(100%, ${constrainedMax}px);`
       : 'max-width: 100%;',
   );
-  const canCycleGallery = $derived(Boolean(prevGalleryHref && nextGalleryHref));
+
+  const canCycleGallery = $derived(
+    Boolean(state.prevGalleryHref && state.nextGalleryHref),
+  );
 
   const activePhoto = $derived(
-    activeSlug
-      ? (photos.find((photo) => photo.slug === activeSlug) ?? null)
+    state.activeSlug
+      ? (state.photos.find((photo) => photo.slug === state.activeSlug) ?? null)
       : null,
   );
+
   const currentImage = $derived.by<GalleryImage | null>(() => {
     if (!activePhoto || !activePhoto.leadImage) return null;
-    if (!activeImageId) return activePhoto.leadImage;
+    if (!state.activeImageId) return activePhoto.leadImage;
     return (
       activePhoto.additionalImages.find(
-        (image) => image.id === activeImageId,
+        (image) => image.id === state.activeImageId,
       ) ?? activePhoto.leadImage
     );
   });
 
-  const findPhoto = (slug: string | null | undefined) => {
-    if (!slug) return null;
-    return photos.find((photo) => photo.slug === slug) ?? null;
-  };
+  const wait = (ms: number) =>
+    new Promise<void>((resolvePromise) => setTimeout(resolvePromise, ms));
 
-  const offsetRect = (
-    rect: { top: number; left: number; width: number; height: number },
-    deltaX: number,
-  ) => ({
-    top: rect.top,
-    left: rect.left + deltaX,
-    width: rect.width,
-    height: rect.height,
-  });
-
-  const imageFor = (
-    photo: GalleryPhoto,
-    imageId: string | null,
-  ): GalleryImage | null => {
-    if (!photo.leadImage) return null;
-    if (!imageId) return photo.leadImage;
-    return (
-      photo.additionalImages.find((image) => image.id === imageId) ??
-      photo.leadImage
+  const gotoPhotoRoute = async (slug: string, imageId?: string | null) => {
+    const resolvedImageId = imageId ?? null;
+    state.skipNextRouteAnimation = true;
+    state.expectedRouteKeyFromGoto = routeKeyFor(slug, resolvedImageId);
+    await goto(
+      resolve(
+        router.withCurrentSearch(
+          router.photoPath(slug, resolvedImageId),
+        ) as `/${string}`,
+      ),
+      {
+        noScroll: true,
+        keepFocus: true,
+      },
     );
   };
 
-  const parseSlugFromPhotoHref = (href: string | null) => {
-    if (!href) return null;
-    const match = href.match(/^\/[^/]+\/photo\/([^/]+)/);
-    if (!match) return null;
-    return decodeURIComponent(match[1]);
+  const gotoGalleryRoute = async () => {
+    state.skipNextRouteAnimation = true;
+    state.expectedRouteKeyFromGoto = '';
+    await goto(
+      resolve(
+        router.withCurrentSearch(
+          router.galleryBasePath(),
+          true,
+        ) as `/${string}`,
+      ),
+      {
+        noScroll: true,
+        keepFocus: true,
+      },
+    );
   };
 
-  const localNeighborsFor = (slug: string) => {
-    if (photos.length <= 1) {
-      return { prevGalleryHref: null, nextGalleryHref: null };
-    }
+  const navigation = createGalleryNavigation({
+    state,
+    transitionQueue,
+    canCycleGallery: () => canCycleGallery,
+    localNeighborsFor: router.localNeighborsFor,
+    parseSlugFromPhotoHref: router.parseSlugFromPhotoHref,
+    slideToNeighbor: tileAnimator.slideToNeighbor,
+    gotoPhotoRoute,
+  });
 
-    const index = photos.findIndex((photo) => photo.slug === slug);
-    if (index === -1) {
-      return { prevGalleryHref: null, nextGalleryHref: null };
-    }
-
-    const prev = photos[(index - 1 + photos.length) % photos.length];
-    const next = photos[(index + 1) % photos.length];
-    return {
-      prevGalleryHref: prev?.slug ? photoPath(prev.slug) : null,
-      nextGalleryHref: next?.slug ? photoPath(next.slug) : null,
-    };
-  };
-
-  /** Full browser window size for detail view (body overflow hidden when open = stable). */
-  const getViewportSize = () => {
-    if (typeof window === 'undefined') return { width: 0, height: 0 };
-    return {
-      width: window.innerWidth,
-      height: window.innerHeight,
-    };
-  };
-
-  /** Target rect for promoted photo: exact size and position of the contained scaled image. */
-  const targetRectFor = (
-    photo: GalleryPhoto,
-    imageId: string | null,
-    node?: HTMLElement | null,
-  ) => {
-    const { width: vw, height: vh } = getViewportSize();
-    const img = imageFor(photo, imageId);
-    let imgW = 1000;
-    let imgH = 1000;
-
-    if (img) {
-      const parsed = parseDimensions(img.dimensions);
-      if (parsed) {
-        imgW = parsed.width;
-        imgH = parsed.height;
-      } else if (node) {
-        const imgEl = node.querySelector('img');
-        if (imgEl && imgEl.naturalWidth) {
-          imgW = imgEl.naturalWidth;
-          imgH = imgEl.naturalHeight;
-        }
-      }
-    }
-
-    // We pass 0 padding for top/bottom chrome since we want it completely full screen and centered
-    return computeContainRect(vw, vh, imgW, imgH, 0, 0, 0, 0);
-  };
-
-  const ensurePromotedTile = async (
-    slug: string,
-    imageId: string | null,
-    animate: boolean,
-    durationMsOverride?: number,
-  ) => {
-    const photo = findPhoto(slug);
-    if (!photo) return;
-
-    const node = tileRefs.get(slug);
-    if (!node) {
-      activeSlug = slug;
-      activeImageId = imageId;
-      return;
-    }
-
-    const nextRect = targetRectFor(photo, imageId, node);
-    const duration = durationMsOverride ?? (animate ? 520 : 0);
-    const baseMotion = {
-      reducedMotion: reducedMotion(),
-      durationMs: duration,
-      easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
-    };
-
-    if (promoted && promoted.slug !== slug) {
-      releasePromotedTile(promoted);
-      promoted = null;
-    }
-
-    if (!promoted) {
-      const containerAspect =
-        layoutMode === 'rows'
-          ? rowsDisplayAspect(photo)
-          : layoutMode === 'columns'
-            ? columnsDisplayAspect(photo)
-            : layoutMode === 'coverage'
-              ? coverageAspect
-              : layoutMode === 'uniform'
-                ? uniformRatio
-                : tileAspectRatio(photo);
-      const imgCrop = imgCropFromForPhoto(photo, imageId, containerAspect);
-      promoted = await promoteTile({
-        slug,
-        node,
-        targetRect: nextRect,
-        ...baseMotion,
-        aspectRatio: containerAspect,
-        imgCropFrom: imgCrop ?? undefined,
-      });
-    } else {
-      await movePromotedTile(promoted, nextRect, baseMotion);
-    }
-
-    activeSlug = slug;
-    activeImageId = imageId;
-  };
-
-  const wait = (ms: number) =>
-    new Promise<void>((resolve) => setTimeout(resolve, ms));
-
-  const collapsePromotedTile = async (animate: boolean) => {
-    pendingDirectionQueue.length = 0;
-    directionDrainScheduled = false;
-
-    if (!promoted) {
-      activeSlug = null;
-      activeImageId = null;
-      if (typeof document !== 'undefined') document.body.style.overflow = '';
-      setPhase('idle');
-      return;
-    }
-
-    const session = promoted;
-
-    const placeholderRect = session.placeholder.getBoundingClientRect();
-    const outOfView =
-      placeholderRect.bottom < 0 || placeholderRect.top > window.innerHeight;
-    if (outOfView) {
-      session.placeholder.scrollIntoView({
-        behavior: reducedMotion() ? 'auto' : 'smooth',
-        block: 'center',
-      });
-      if (!reducedMotion()) {
-        await wait(260);
-      }
-    }
-
-    if (!reducedMotion()) {
-      setPhase('closing-chrome');
-      await wait(CLOSING_CHROME_MS);
-    }
-
-    setPhase('closing-scale');
-    activeSlug = null;
-    activeImageId = null;
-
-    if (typeof document !== 'undefined') document.body.style.overflow = '';
-
-    await demoteTile(session, {
-      reducedMotion: reducedMotion(),
-      durationMs: animate ? SCALE_MASK_MS : 0,
-      easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
-      imgEasing: 'cubic-bezier(0.5, 0, 1, 1)',
-      useCover:
-        layoutMode === 'uniform' ||
-        layoutMode === 'coverage' ||
-        layoutMode === 'rows' ||
-        layoutMode === 'columns',
-    });
-
-    if (reducedMotion()) {
-      await wait(150);
-    }
-
-    reinsertPromotedTile(session);
-    promoted = null;
-    setPhase('idle');
-  };
+  const pagination = createGalleryPagination({
+    state,
+    getLayoutMode: () => layoutMode,
+    buildFeedUrl: router.buildFeedUrl,
+  });
 
   const applyRouteState = async (
     route: ActiveRoute | null,
     animate: boolean,
   ) => {
     if (!route) {
-      isClosing = true;
-      if (typeof document !== 'undefined') document.body.style.overflow = '';
-      await collapsePromotedTile(animate);
-      prevGalleryHref = null;
-      nextGalleryHref = null;
+      state.isClosing = true;
+      navigation.clearDirectionQueue();
+      if (typeof document !== 'undefined') {
+        document.body.style.overflow = '';
+      }
+      await tileAnimator.collapsePromotedTile(animate);
+      state.prevGalleryHref = null;
+      state.nextGalleryHref = null;
       return;
     }
 
-    isClosing = false;
-    if (typeof document !== 'undefined')
+    state.isClosing = false;
+    if (typeof document !== 'undefined') {
       document.body.style.overflow = 'hidden';
+    }
     setPhase('open');
+
     const switchingPhotos = Boolean(
-      activeSlug && activeSlug !== route.photoSlug,
+      state.activeSlug && state.activeSlug !== route.photoSlug,
     );
-    await ensurePromotedTile(
+
+    await tileAnimator.ensurePromotedTile(
       route.photoSlug,
       route.imageId,
       animate && !switchingPhotos,
     );
 
-    activeSlug = route.photoSlug;
-    activeImageId = route.imageId;
-    prevGalleryHref = route.prevGalleryHref;
-    nextGalleryHref = route.nextGalleryHref;
+    state.activeSlug = route.photoSlug;
+    state.activeImageId = route.imageId;
+    state.prevGalleryHref = route.prevGalleryHref;
+    state.nextGalleryHref = route.nextGalleryHref;
   };
 
   const onOpenPhoto = (event: MouseEvent, slug: string) => {
     event.preventDefault();
-    isClosing = false;
+    state.isClosing = false;
 
     void (async () => {
       await transitionQueue.enqueue(async () => {
-        const photo = findPhoto(slug);
+        const photo = state.photos.find((item) => item.slug === slug) ?? null;
         if (!photo) return;
 
-        const localNeighbors = localNeighborsFor(slug);
-        prevGalleryHref = localNeighbors.prevGalleryHref;
-        nextGalleryHref = localNeighbors.nextGalleryHref;
+        const neighbors = router.localNeighborsFor(slug);
+        state.prevGalleryHref = neighbors.prevGalleryHref;
+        state.nextGalleryHref = neighbors.nextGalleryHref;
 
         if (reducedMotion()) {
-          activeSlug = slug;
-          activeImageId = null;
-          if (typeof document !== 'undefined')
+          state.activeSlug = slug;
+          state.activeImageId = null;
+          if (typeof document !== 'undefined') {
             document.body.style.overflow = 'hidden';
-          await ensurePromotedTile(slug, null, true);
+          }
+          await tileAnimator.ensurePromotedTile(slug, null, true);
           setPhase('open');
           return;
         }
@@ -724,294 +301,75 @@
         await wait(FADE_OUT_CHROME_MS);
 
         setPhase('scale-and-mask');
-        activeSlug = slug;
-        activeImageId = null;
+        state.activeSlug = slug;
+        state.activeImageId = null;
 
-        // Lock body scroll immediately so viewport is stable before computing rect
-        if (typeof document !== 'undefined')
+        if (typeof document !== 'undefined') {
           document.body.style.overflow = 'hidden';
+        }
 
-        // Wait for overlay to render and layout to settle before computing target rect
         await new Promise<void>((resolveAnimation) => {
-          requestAnimationFrame(() =>
-            requestAnimationFrame(() => resolveAnimation()),
-          );
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              resolveAnimation();
+            });
+          });
         });
 
-        await ensurePromotedTile(slug, null, true, SCALE_MASK_MS);
-
+        await tileAnimator.ensurePromotedTile(slug, null, true, SCALE_MASK_MS);
         setPhase('open');
       });
 
-      skipNextRouteAnimation = true;
-      expectedRouteKeyFromGoto = `${slug}:`;
-      await goto(resolve(withCurrentSearch(photoPath(slug)) as `/${string}`), {
-        noScroll: true,
-        keepFocus: true,
-      });
+      await gotoPhotoRoute(slug);
     })();
   };
 
   const closeToGallery = (event?: MouseEvent | KeyboardEvent) => {
     event?.preventDefault();
-    isClosing = true;
-    pendingDirectionQueue.length = 0;
+    state.isClosing = true;
+    navigation.clearDirectionQueue();
 
     void (async () => {
       await transitionQueue.enqueue(async () => {
-        await collapsePromotedTile(true);
+        await tileAnimator.collapsePromotedTile(true);
       });
 
-      skipNextRouteAnimation = true;
-      expectedRouteKeyFromGoto = '';
-      await goto(
-        resolve(withCurrentSearch(galleryBasePath, true) as `/${string}`),
-        {
-          noScroll: true,
-          keepFocus: true,
-        },
-      );
+      await gotoGalleryRoute();
     })();
   };
 
-  const slideToNeighbor = async (
-    targetSlug: string,
-    direction: 'prev' | 'next',
-  ) => {
-    const targetPhoto = findPhoto(targetSlug);
-    if (!targetPhoto) return false;
-
-    const targetNode = tileRefs.get(targetSlug);
-    if (!targetNode || !promoted || promoted.slug === targetSlug) {
-      await ensurePromotedTile(targetSlug, null, false);
-      return true;
-    }
-
-    const incomingFinalRect = targetRectFor(targetPhoto, null, targetNode);
-    const { width: vw } = getViewportSize();
-    const travel = Math.max(vw, incomingFinalRect.width + 72);
-    const isNext = direction === 'next';
-    const incomingStartRect = offsetRect(
-      incomingFinalRect,
-      isNext ? travel : -travel,
-    );
-    const outgoingEndRect = offsetRect(
-      promoted.currentRect,
-      isNext ? -travel : travel,
-    );
-
-    const outgoingSession = promoted;
-    const incomingContainerAspect =
-      layoutMode === 'coverage'
-        ? coverageAspect
-        : layoutMode === 'uniform'
-          ? uniformRatio
-          : tileAspectRatio(targetPhoto);
-    const incomingImgCrop = imgCropFromForPhoto(
-      targetPhoto,
-      null,
-      incomingContainerAspect,
-    );
-    const incomingSession = await promoteTile({
-      slug: targetSlug,
-      node: targetNode,
-      targetRect: incomingStartRect,
-      reducedMotion: true,
-      durationMs: 0,
-      aspectRatio: incomingContainerAspect,
-      imgCropFrom: incomingImgCrop ?? undefined,
-    });
-
-    const motion = {
-      reducedMotion: reducedMotion(),
-      durationMs: 360,
-      easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
-    };
-
-    await Promise.all([
-      movePromotedTile(outgoingSession, outgoingEndRect, motion),
-      movePromotedTile(incomingSession, incomingFinalRect, motion),
-    ]);
-
-    // Atomic update to avoid one-frame flash of empty detail layer
-    promoted = incomingSession;
-    activeSlug = targetSlug;
-    activeImageId = null;
-    releasePromotedTile(outgoingSession);
-
-    return true;
-  };
-
-  const onNeighborNavigate = (direction: 'prev' | 'next') => {
-    if (!canCycleGallery || isClosing) return;
-
-    pendingDirectionQueue.push(direction);
-    if (!directionDrainScheduled) {
-      drainDirectionQueue();
-    }
-  };
-
   const onSelectAdditionalImage = (imageId: string) => {
+    const activeSlug = state.activeSlug;
     if (!activeSlug) return;
-    isClosing = false;
+    state.isClosing = false;
 
     void (async () => {
       await transitionQueue.enqueue(async () => {
-        activeImageId = imageId;
-        const photo = findPhoto(activeSlug);
-        if (photo && promoted) {
-          const nextRect = targetRectFor(photo, imageId, promoted.node);
-          await movePromotedTile(promoted, nextRect, {
-            reducedMotion: reducedMotion(),
-            durationMs: 260,
-            easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)',
-          });
+        state.activeImageId = imageId;
+        if (tileAnimator.promoted) {
+          await tileAnimator.ensurePromotedTile(
+            activeSlug,
+            imageId,
+            false,
+            260,
+          );
         }
       });
 
-      skipNextRouteAnimation = true;
-      expectedRouteKeyFromGoto = `${activeSlug}:${imageId}`;
-      await goto(
-        resolve(
-          withCurrentSearch(photoPath(activeSlug, imageId)) as `/${string}`,
-        ),
-        {
-          noScroll: true,
-          keepFocus: true,
-        },
-      );
+      await gotoPhotoRoute(activeSlug, imageId);
     })();
   };
 
   const onResizePromoted = () => {
-    if (!activeSlug || !promoted) return;
+    if (!state.activeSlug || !tileAnimator.promoted) return;
 
     void transitionQueue.enqueue(async () => {
-      const photo = findPhoto(activeSlug);
-      if (!photo || !promoted) return;
-      const nextRect = targetRectFor(photo, activeImageId, promoted.node);
-      await movePromotedTile(promoted, nextRect, {
-        reducedMotion: true,
-        durationMs: 0,
-      });
+      await tileAnimator.resizePromotedNow();
     });
   };
 
-  const loadNextPage = async () => {
-    if (
-      isLoadingMore ||
-      !hasMore ||
-      activeSlug ||
-      layoutMode === 'coverage' ||
-      layoutMode === 'rows' ||
-      layoutMode === 'columns'
-    )
-      return;
-
-    isLoadingMore = true;
-    loadError = null;
-
-    try {
-      const params = buildFeedParams();
-
-      const response = await fetch(
-        `${buildGalleryFeedPath(routeScopeSlug)}?${params.toString()}`,
-      );
-      if (!response.ok) {
-        throw new Error('request-failed');
-      }
-
-      const payload = (await response.json()) as {
-        photos: GalleryPhoto[];
-        hasMore: boolean;
-        page: number;
-      };
-
-      const existing = new Set(photos.map((photo) => photo.id));
-      const nextPhotos = payload.photos.filter(
-        (photo) => !existing.has(photo.id),
-      );
-      photos = [...photos, ...nextPhotos];
-      currentPage = payload.page;
-      hasMore = payload.hasMore;
-    } catch {
-      loadError = 'Could not load more photos.';
-    } finally {
-      isLoadingMore = false;
-    }
-  };
-
-  const tileAspectRatio = (photo: GalleryPhoto) => {
-    const parsed = parseDimensions(photo.leadImage?.dimensions);
-    if (parsed) return Math.max(0.2, parsed.width / parsed.height);
-    // Avoid subscribing layout solvers to tileRefs writes to prevent update loops.
-    const node = untrack(() => tileRefs.get(photo.slug));
-    const imgEl = node?.querySelector('img');
-    if (imgEl && imgEl.naturalWidth && imgEl.naturalHeight) {
-      return Math.max(0.2, imgEl.naturalWidth / imgEl.naturalHeight);
-    }
-    return uniformRatio;
-  };
-
-  const hasThumbCrop = (img: GalleryImage | null): boolean =>
-    Boolean(
-      img &&
-      img.thumb_crop_x != null &&
-      img.thumb_crop_y != null &&
-      img.thumb_crop_zoom != null &&
-      img.thumb_crop_zoom >= 1,
-    );
-
-  const thumbCropStyle = (
-    img: GalleryImage | null,
-    containerAspect: number,
-  ) => {
-    if (!img || !hasThumbCrop(img)) return '';
-    const parsed = parseDimensions(img.dimensions);
-    const w = parsed?.width ?? 1;
-    const h = parsed?.height ?? 1;
-    const transform = thumbCropTransform(
-      img.thumb_crop_x ?? 0.5,
-      img.thumb_crop_y ?? 0.5,
-      img.thumb_crop_zoom ?? 1,
-      w,
-      h,
-      containerAspect,
-    );
-    return `object-fit: contain !important; transform: translate(${transform.translateX}%, ${transform.translateY}%) scale(${transform.scale}); transform-origin: ${transform.originX * 100}% ${transform.originY * 100}%;`;
-  };
-
-  const imgCropFromForPhoto = (
-    photo: GalleryPhoto,
-    imageId: string | null,
-    containerAspect: number,
-  ) => {
-    const img = imageFor(photo, imageId);
-    if (!img || !hasThumbCrop(img)) return null;
-
-    let imgAspect = 1;
-    const parsed = parseDimensions(img.dimensions);
-    if (parsed) {
-      imgAspect = parsed.width / parsed.height;
-    } else {
-      const node = tileRefs.get(photo.slug);
-      const imgEl = node?.querySelector('img');
-      if (imgEl && imgEl.naturalWidth) {
-        imgAspect = imgEl.naturalWidth / imgEl.naturalHeight;
-      }
-    }
-
-    return cropToImgTransform(
-      img.thumb_crop_x!,
-      img.thumb_crop_y!,
-      img.thumb_crop_zoom!,
-      imgAspect,
-      containerAspect,
-    );
-  };
-
   const preloadImages = async () => {
-    const toPreload = photos
+    const toPreload = state.photos
       .filter((photo) => photo.leadImage)
       .map((photo) =>
         photoPublicUrl(
@@ -1019,15 +377,16 @@
           GALLERY_DETAIL_SHARED_WIDTH,
         ),
       );
+
     if (toPreload.length === 0) {
-      preloaderVisible = false;
-      galleryRevealed = true;
+      state.preloaderVisible = false;
+      state.galleryRevealed = true;
       return;
     }
 
-    totalImages = toPreload.length;
-    imagesLoaded = 0;
-    galleryRevealed = false;
+    state.totalImages = toPreload.length;
+    state.imagesLoaded = 0;
+    state.galleryRevealed = false;
 
     const loadTasks = toPreload.map((url) => {
       const img = new Image();
@@ -1038,7 +397,7 @@
         const finish = () => {
           if (settled) return;
           settled = true;
-          imagesLoaded += 1;
+          state.imagesLoaded += 1;
           resolveImage();
         };
 
@@ -1058,38 +417,73 @@
       (count, task) => count + (task.completedSynchronously ? 1 : 0),
       0,
     );
-    if (synchronouslyLoaded === totalImages) {
-      preloaderVisible = false;
-      galleryRevealed = true;
+
+    if (synchronouslyLoaded === state.totalImages) {
+      state.preloaderVisible = false;
+      state.galleryRevealed = true;
       return;
     }
 
-    preloaderVisible = true;
+    state.preloaderVisible = true;
 
     await Promise.all(loadTasks.map((task) => task.promise));
 
     await new Promise((resolveFade) =>
       setTimeout(resolveFade, PRELOADER_FADE_MS),
     );
-    preloaderVisible = false;
+    state.preloaderVisible = false;
 
     await new Promise((resolveReveal) => setTimeout(resolveReveal, 80));
-    galleryRevealed = true;
+    state.galleryRevealed = true;
   };
 
   const shouldShowPreloader = $derived(
-    !data.active && photos.length > 0 && !reducedMotion(),
+    !data.active && state.photos.length > 0 && !reducedMotion(),
   );
 
+  const gridModel = $derived<GalleryGridModel>({
+    photos: state.photos,
+    layoutMode,
+    colCount,
+    gap: state.gap,
+    uniformRatio,
+    placeholderCount,
+    isLoadingMore: state.isLoadingMore,
+    galleryRevealed: state.galleryRevealed,
+    reducedMotion: reducedMotion(),
+    withCurrentSearch: router.withCurrentSearchResolved,
+    photoPath: router.photoPath,
+    onOpenPhoto,
+    registerTile: tileAnimator.registerTile,
+    hasThumbCrop: tileAnimator.hasThumbCrop,
+    thumbCropStyle: tileAnimator.thumbCropStyle,
+    tileAspectRatio: tileAnimator.tileAspectRatio,
+    hasMore: state.hasMore,
+    loadError: state.loadError,
+    detailOpen: Boolean(state.activeSlug),
+    onLoadMore: pagination.loadNextPage,
+    sectionMaxWidthStyle,
+    coverageRows: layout.coverageRows,
+    coverageCols: layout.coverageCols,
+    coverageAspect: layout.coverageAspect,
+    coveragePlaceholderCount: layout.coveragePlaceholderCount,
+    bindCoverageSection: layout.bindCoverageSection,
+    rowsResult: layout.rowsResult,
+    columnsResult: layout.columnsResult,
+    showThumbnailZoomHover:
+      data.gallerySettings?.show_thumbnail_zoom_hover ?? true,
+  });
+
   onMount(() => {
-    mounted = true;
-    if (activeSlug && typeof document !== 'undefined') {
+    state.mounted = true;
+    if (state.activeSlug && typeof document !== 'undefined') {
       document.body.style.overflow = 'hidden';
     }
+
     const prefs = getGalleryPrefs(data.maxDensity ?? 20);
     if (prefs) {
       galleryDensityStore.set(prefs.density);
-      pageSize = prefs.pageSize;
+      state.pageSize = prefs.pageSize;
       layoutModeStore.set(prefs.layoutMode ?? data.layoutMode);
     } else {
       layoutModeStore.set(data.layoutMode);
@@ -1097,72 +491,73 @@
   });
 
   $effect(() => {
-    if (!mounted) return;
-    const key = (data.q ?? '') || '\0';
+    if (!state.mounted) return;
+
+    const key = data.q || '\0';
     if (!shouldShowPreloader) {
-      if (photos.length > 0) {
-        galleryRevealed = true;
-        preloaderVisible = false;
-        preloadKey = key;
+      if (state.photos.length > 0) {
+        state.galleryRevealed = true;
+        state.preloaderVisible = false;
+        state.preloadKey = key;
       }
       return;
     }
-    if (key === preloadKey) return;
-    preloadKey = key;
+
+    if (key === state.preloadKey) return;
+    state.preloadKey = key;
     void preloadImages();
   });
 
   $effect(() => {
-    if (!mounted) return;
+    if (!state.mounted) return;
 
     const nextQuerySignature = [data.q, data.page].join('|');
-    if (nextQuerySignature !== querySignature) {
-      querySignature = nextQuerySignature;
-      query = data.q;
-      photos = data.photos;
-      currentPage = data.page;
-      hasMore = data.hasMore;
-      loadError = null;
+
+    if (nextQuerySignature !== state.querySignature) {
+      state.querySignature = nextQuerySignature;
+      state.query = data.q;
+      state.photos = data.photos;
+      state.currentPage = data.page;
+      state.hasMore = data.hasMore;
+      state.loadError = null;
     } else {
-      const existing = new Set(photos.map((photo) => photo.id));
+      const existing = new Set(state.photos.map((photo) => photo.id));
       const nextPhotos = data.photos.filter(
         (photo: GalleryPhoto) => !existing.has(photo.id),
       );
       if (nextPhotos.length > 0) {
-        photos = [...photos, ...nextPhotos];
+        state.photos = [...state.photos, ...nextPhotos];
       }
 
-      if (data.page > currentPage) {
-        currentPage = data.page;
+      if (data.page > state.currentPage) {
+        state.currentPage = data.page;
       }
 
-      if (hasMore !== data.hasMore) {
-        hasMore = data.hasMore;
+      if (state.hasMore !== data.hasMore) {
+        state.hasMore = data.hasMore;
       }
     }
 
-    const nextRouteKey = data.active
-      ? `${data.active.photoSlug}:${data.active.imageId ?? ''}`
-      : '';
-    if (nextRouteKey === routeKey) return;
+    const nextRouteKey = routeKeyFromActive(data.active);
+    if (nextRouteKey === state.routeKey) return;
 
-    if (expectedRouteKeyFromGoto !== null) {
-      const match =
-        nextRouteKey === expectedRouteKeyFromGoto ||
-        (expectedRouteKeyFromGoto.endsWith(':') &&
-          nextRouteKey.startsWith(expectedRouteKeyFromGoto));
+    if (state.expectedRouteKeyFromGoto !== null) {
+      const match = matchesExpectedRouteKey(
+        state.expectedRouteKeyFromGoto,
+        nextRouteKey,
+      );
       if (match) {
-        expectedRouteKeyFromGoto = null;
-        routeKey = nextRouteKey;
-        hasHydratedRoute = true;
+        state.expectedRouteKeyFromGoto = null;
+        state.routeKey = nextRouteKey;
+        state.hasHydratedRoute = true;
         return;
       }
     }
 
-    const animate = hasHydratedRoute && !skipNextRouteAnimation;
-    skipNextRouteAnimation = false;
-    routeKey = nextRouteKey;
-    hasHydratedRoute = true;
+    const animate = state.hasHydratedRoute && !state.skipNextRouteAnimation;
+    state.skipNextRouteAnimation = false;
+    state.routeKey = nextRouteKey;
+    state.hasHydratedRoute = true;
 
     transitionQueue.deferRouteApply(async () => {
       await applyRouteState(data.active, animate);
@@ -1170,76 +565,40 @@
   });
 
   onDestroy(() => {
-    if (typeof document !== 'undefined') document.body.style.overflow = '';
-    if (promoted) {
-      releasePromotedTile(promoted);
-      promoted = null;
+    if (typeof document !== 'undefined') {
+      document.body.style.overflow = '';
     }
+    tileAnimator.releaseAnyPromoted();
   });
 </script>
 
 <GalleryPreloader
-  visible={preloaderVisible}
+  visible={state.preloaderVisible}
   enabled={shouldShowPreloader}
-  {imagesLoaded}
-  {totalImages}
+  imagesLoaded={state.imagesLoaded}
+  totalImages={state.totalImages}
   fadeMs={PRELOADER_FADE_MS}
 />
 
-<GalleryGrid
-  {photos}
-  {layoutMode}
-  {colCount}
-  {gap}
-  {uniformRatio}
-  {placeholderCount}
-  {isLoadingMore}
-  {galleryRevealed}
-  showThumbnailZoomHover={data.gallerySettings?.show_thumbnail_zoom_hover ??
-    true}
-  reducedMotion={reducedMotion()}
-  withCurrentSearch={withCurrentSearchResolved}
-  {photoPath}
-  {onOpenPhoto}
-  {registerTile}
-  {hasThumbCrop}
-  {thumbCropStyle}
-  {tileAspectRatio}
-  {hasMore}
-  {loadError}
-  detailOpen={Boolean(activeSlug)}
-  onLoadMore={loadNextPage}
-  {sectionMaxWidthStyle}
-  {coverageRows}
-  {coverageCols}
-  {coverageAspect}
-  {coveragePlaceholderCount}
-  onCoverageContainer={(el) => {
-    coverageContainerEl = el;
-    measureCoverageContainer();
-  }}
-  onCoverageResize={measureCoverageContainer}
-  {rowsResult}
-  {columnsResult}
-/>
+<GalleryGrid model={gridModel} />
 
 {#if activePhoto && currentImage}
   <GalleryDetailViewer
     {activePhoto}
     {currentImage}
-    promoted={Boolean(promoted)}
+    promoted={Boolean(tileAnimator.promoted)}
     {transitionPhase}
     {overlayChromeHidden}
     showPhotographInfo={data.gallerySettings?.show_photograph_info ?? true}
     {isTransitioning}
     {canCycleGallery}
-    {prevGalleryHref}
-    {nextGalleryHref}
-    {withCurrentSearch}
-    {galleryBasePath}
-    {photoPath}
+    prevGalleryHref={state.prevGalleryHref}
+    nextGalleryHref={state.nextGalleryHref}
+    withCurrentSearch={router.withCurrentSearch}
+    galleryBasePath={router.galleryBasePath()}
+    photoPath={router.photoPath}
     onClose={closeToGallery}
-    onNavigateNeighbor={onNeighborNavigate}
+    onNavigateNeighbor={navigation.onNeighborNavigate}
     {onSelectAdditionalImage}
     {onResizePromoted}
     {portal}

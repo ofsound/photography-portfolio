@@ -1,104 +1,45 @@
 <script lang="ts">
   import { resolve } from '$app/paths';
   import { parseDimensions } from '$lib/utils/parse-dimensions';
-  import { SvelteMap } from 'svelte/reactivity';
   import {
     GALLERY_DETAIL_SHARED_WIDTH,
     photoPublicUrl,
   } from '$lib/utils/storage-url';
-  import type { GalleryPhoto } from '$lib/types/content';
-  import type { RowLayoutResult } from '$lib/utils/row-solver';
+  import GalleryColumns from './layout/GalleryColumns.svelte';
+  import GalleryCoverage from './layout/GalleryCoverage.svelte';
+  import GalleryRows from './layout/GalleryRows.svelte';
+  import type { GalleryGridModel } from './gallery-grid-model';
 
-  type GalleryImage = NonNullable<GalleryPhoto['leadImage']>;
+  const { model } = $props<{ model: GalleryGridModel }>();
   const CASCADE_STAGGER_MS = 42;
-
-  const {
-    photos,
-    layoutMode,
-    colCount,
-    gap,
-    uniformRatio,
-    placeholderCount,
-    isLoadingMore,
-    galleryRevealed,
-    reducedMotion,
-    withCurrentSearch,
-    photoPath,
-    onOpenPhoto,
-    registerTile,
-    hasThumbCrop,
-    thumbCropStyle,
-    tileAspectRatio,
-    coverageRows,
-    coverageCols,
-    coverageAspect,
-    coveragePlaceholderCount,
-    rowsResult,
-    columnsResult,
-    showThumbnailZoomHover,
-  } = $props<{
-    photos: GalleryPhoto[];
-    layoutMode: 'uniform' | 'masonry' | 'coverage' | 'rows' | 'columns';
-    colCount: number;
-    gap: number;
-    uniformRatio: number;
-    placeholderCount: number;
-    isLoadingMore: boolean;
-    galleryRevealed: boolean;
-    reducedMotion: boolean;
-    withCurrentSearch: (href: string) => string;
-    photoPath: (photoSlug: string) => string;
-    onOpenPhoto: (event: MouseEvent, slug: string) => void;
-    registerTile: (
-      node: HTMLElement,
-      slug: string,
-    ) => { update?: (slug: string) => void; destroy?: () => void };
-    hasThumbCrop: (img: GalleryImage | null) => boolean;
-    thumbCropStyle: (
-      img: GalleryImage | null,
-      containerAspect: number,
-    ) => string;
-    tileAspectRatio: (photo: GalleryPhoto) => number;
-    coverageRows: number;
-    coverageCols: number;
-    coverageAspect: number;
-    coveragePlaceholderCount: number;
-    rowsResult: RowLayoutResult | null;
-    columnsResult: RowLayoutResult | null;
-    showThumbnailZoomHover: boolean;
-  }>();
-
-  /** Lookup map from photo id to GalleryPhoto for rows mode. */
-  const photosById = $derived.by<SvelteMap<string, GalleryPhoto>>(() => {
-    const m = new SvelteMap<string, GalleryPhoto>();
-    for (const p of photos) m.set(p.id, p);
-    return m;
-  });
 </script>
 
-{#if layoutMode === 'uniform'}
+{#if model.layoutMode === 'uniform'}
   <ul
     class="grid"
-    style={`grid-template-columns: repeat(${colCount}, minmax(0, 1fr)); gap: ${gap}px;`}
+    style={`grid-template-columns: repeat(${model.colCount}, minmax(0, 1fr)); gap: ${model.gap}px;`}
   >
-    {#each photos as photo, index (photo.id)}
+    {#each model.photos as photo, index (photo.id)}
       <li>
         <div
           class="tile-cascade"
-          class:revealed={galleryRevealed}
-          class:no-motion={reducedMotion}
-          style="animation-delay: {galleryRevealed && !reducedMotion
+          class:revealed={model.galleryRevealed}
+          class:no-motion={model.reducedMotion}
+          style="animation-delay: {model.galleryRevealed && !model.reducedMotion
             ? index * CASCADE_STAGGER_MS
             : 0}ms"
         >
           <a
             href={resolve(
-              withCurrentSearch(photoPath(photo.slug)) as `/${string}`,
+              model.withCurrentSearch(
+                model.photoPath(photo.slug),
+              ) as `/${string}`,
             )}
-            use:registerTile={photo.slug}
+            use:model.registerTile={photo.slug}
             class="group relative block overflow-hidden"
-            style={`aspect-ratio: ${uniformRatio};`}
-            onclick={(event: MouseEvent) => onOpenPhoto(event, photo.slug)}
+            style={`aspect-ratio: ${model.uniformRatio};`}
+            onclick={(event: MouseEvent) =>
+              model.onOpenPhoto(event, photo.slug)}
           >
             {#if photo.leadImage}
               <img
@@ -107,14 +48,17 @@
                   GALLERY_DETAIL_SHARED_WIDTH,
                 )}
                 alt={photo.leadImage.alt_text ?? photo.title}
-                class="block h-full w-full object-cover transition-transform duration-500 ease-cinematic {hasThumbCrop(
+                class="block h-full w-full object-cover transition-transform duration-500 ease-cinematic {model.hasThumbCrop(
                   photo.leadImage,
                 )
                   ? 'tile-img-crop'
-                  : showThumbnailZoomHover
+                  : model.showThumbnailZoomHover
                     ? 'group-hover:scale-[1.03]'
                     : ''}"
-                style={thumbCropStyle(photo.leadImage, uniformRatio)}
+                style={model.thumbCropStyle(
+                  photo.leadImage,
+                  model.uniformRatio,
+                )}
                 loading="eager"
               />
             {/if}
@@ -123,207 +67,52 @@
       </li>
     {/each}
 
-    {#if isLoadingMore}
-      {#each Array.from({ length: placeholderCount }) as _, index (index)}
+    {#if model.isLoadingMore}
+      {#each Array.from({ length: model.placeholderCount }) as _, index (index)}
         <li
           class="animate-pulse bg-surface-muted"
-          style={`aspect-ratio: ${uniformRatio};`}
+          style={`aspect-ratio: ${model.uniformRatio};`}
         ></li>
       {/each}
     {/if}
   </ul>
-{:else if layoutMode === 'coverage'}
-  <ul
-    class="grid h-full w-full"
-    style={`grid-template-columns: repeat(${coverageCols}, minmax(0, 1fr)); grid-template-rows: repeat(${coverageRows}, minmax(0, 1fr)); gap: ${gap}px;`}
-  >
-    {#each photos as photo, index (photo.id)}
-      <li class="min-h-0 min-w-0">
-        <div
-          class="tile-cascade h-full"
-          class:revealed={galleryRevealed}
-          class:no-motion={reducedMotion}
-          style="animation-delay: {galleryRevealed && !reducedMotion
-            ? index * CASCADE_STAGGER_MS
-            : 0}ms"
-        >
-          <a
-            href={resolve(
-              withCurrentSearch(photoPath(photo.slug)) as `/${string}`,
-            )}
-            use:registerTile={photo.slug}
-            class="group relative block h-full w-full overflow-hidden"
-            onclick={(event: MouseEvent) => onOpenPhoto(event, photo.slug)}
-          >
-            {#if photo.leadImage}
-              <img
-                src={photoPublicUrl(
-                  photo.leadImage.delivery_storage_path,
-                  GALLERY_DETAIL_SHARED_WIDTH,
-                )}
-                alt={photo.leadImage.alt_text ?? photo.title}
-                class="block h-full w-full object-cover transition-transform duration-500 ease-cinematic {hasThumbCrop(
-                  photo.leadImage,
-                )
-                  ? 'tile-img-crop'
-                  : showThumbnailZoomHover
-                    ? 'group-hover:scale-[1.03]'
-                    : ''}"
-                style={thumbCropStyle(photo.leadImage, coverageAspect)}
-                loading="eager"
-              />
-            {/if}
-          </a>
-        </div>
-      </li>
-    {/each}
-
-    {#each Array.from( { length: coveragePlaceholderCount }, ) as _, index (`placeholder-${index}`)}
-      <li class="min-h-0 min-w-0 bg-surface-muted"></li>
-    {/each}
-  </ul>
-{:else if layoutMode === 'rows'}
-  {#if rowsResult}
-    <ul class="flex h-full w-full flex-col" style={`gap: ${gap}px;`}>
-      {#each rowsResult.rows as row, rowIdx (`rows-row-${rowIdx}`)}
-        <li class="flex min-h-0 flex-1" style={`gap: ${gap}px;`}>
-          {#each row.photos as entry, entryIdx (`rows-${entry.id}`)}
-            {@const photo = photosById.get(entry.id)}
-            {#if photo}
-              {@const cascadeIdx =
-                rowIdx * (rowsResult.rows[0]?.photos.length ?? 1) + entryIdx}
-              <div
-                class="tile-cascade min-w-0"
-                class:revealed={galleryRevealed}
-                class:no-motion={reducedMotion}
-                style="flex: {entry.displayAspect} 1 0%; animation-delay: {galleryRevealed &&
-                !reducedMotion
-                  ? cascadeIdx * CASCADE_STAGGER_MS
-                  : 0}ms"
-              >
-                <a
-                  href={resolve(
-                    withCurrentSearch(photoPath(photo.slug)) as `/${string}`,
-                  )}
-                  use:registerTile={photo.slug}
-                  class="group relative block h-full w-full overflow-hidden"
-                  onclick={(event: MouseEvent) =>
-                    onOpenPhoto(event, photo.slug)}
-                >
-                  {#if photo.leadImage}
-                    <img
-                      src={photoPublicUrl(
-                        photo.leadImage.delivery_storage_path,
-                        GALLERY_DETAIL_SHARED_WIDTH,
-                      )}
-                      alt={photo.leadImage.alt_text ?? photo.title}
-                      class="block h-full w-full object-cover transition-transform duration-500 ease-cinematic {hasThumbCrop(
-                        photo.leadImage,
-                      )
-                        ? 'tile-img-crop'
-                        : showThumbnailZoomHover
-                          ? 'group-hover:scale-[1.03]'
-                          : ''}"
-                      style={thumbCropStyle(
-                        photo.leadImage,
-                        entry.displayAspect,
-                      )}
-                      loading="eager"
-                    />
-                  {/if}
-                </a>
-              </div>
-            {/if}
-          {/each}
-        </li>
-      {/each}
-    </ul>
-  {/if}
-{:else if layoutMode === 'columns'}
-  {#if columnsResult}
-    <ul class="flex h-full w-full flex-row" style={`gap: ${gap}px;`}>
-      {#each columnsResult.rows as col, colIdx (`cols-col-${colIdx}`)}
-        <li class="flex min-w-0 flex-1 flex-col" style={`gap: ${gap}px;`}>
-          {#each col.photos as entry, entryIdx (`cols-${entry.id}`)}
-            {@const photo = photosById.get(entry.id)}
-            {#if photo}
-              {@const cascadeIdx =
-                colIdx * (columnsResult.rows[0]?.photos.length ?? 1) + entryIdx}
-              <div
-                class="tile-cascade min-h-0"
-                class:revealed={galleryRevealed}
-                class:no-motion={reducedMotion}
-                style="flex: {1 /
-                  entry.displayAspect} 1 0%; animation-delay: {galleryRevealed &&
-                !reducedMotion
-                  ? cascadeIdx * CASCADE_STAGGER_MS
-                  : 0}ms"
-              >
-                <a
-                  href={resolve(
-                    withCurrentSearch(photoPath(photo.slug)) as `/${string}`,
-                  )}
-                  use:registerTile={photo.slug}
-                  class="group relative block h-full w-full overflow-hidden"
-                  onclick={(event: MouseEvent) =>
-                    onOpenPhoto(event, photo.slug)}
-                >
-                  {#if photo.leadImage}
-                    <img
-                      src={photoPublicUrl(
-                        photo.leadImage.delivery_storage_path,
-                        GALLERY_DETAIL_SHARED_WIDTH,
-                      )}
-                      alt={photo.leadImage.alt_text ?? photo.title}
-                      class="block h-full w-full object-cover transition-transform duration-500 ease-cinematic {hasThumbCrop(
-                        photo.leadImage,
-                      )
-                        ? 'tile-img-crop'
-                        : showThumbnailZoomHover
-                          ? 'group-hover:scale-[1.03]'
-                          : ''}"
-                      style={thumbCropStyle(
-                        photo.leadImage,
-                        entry.displayAspect,
-                      )}
-                      loading="eager"
-                    />
-                  {/if}
-                </a>
-              </div>
-            {/if}
-          {/each}
-        </li>
-      {/each}
-    </ul>
-  {/if}
+{:else if model.layoutMode === 'coverage'}
+  <GalleryCoverage {model} />
+{:else if model.layoutMode === 'rows'}
+  <GalleryRows {model} />
+{:else if model.layoutMode === 'columns'}
+  <GalleryColumns {model} />
 {:else}
   <ul
     class="columns-2 md:columns-4 lg:columns-6"
-    style={`columns: ${colCount}; column-gap: ${gap}px;`}
+    style={`columns: ${model.colCount}; column-gap: ${model.gap}px;`}
   >
-    {#each photos as photo, index (photo.id)}
+    {#each model.photos as photo, index (photo.id)}
       {#if photo.leadImage}
         {@const knownRatio = parseDimensions(photo.leadImage.dimensions)}
-        <li class="break-inside-avoid" style="margin-bottom: {gap}px">
+        <li class="break-inside-avoid" style="margin-bottom: {model.gap}px">
           <div
             class="tile-cascade"
-            class:revealed={galleryRevealed}
-            class:no-motion={reducedMotion}
-            style="animation-delay: {galleryRevealed && !reducedMotion
+            class:revealed={model.galleryRevealed}
+            class:no-motion={model.reducedMotion}
+            style="animation-delay: {model.galleryRevealed &&
+            !model.reducedMotion
               ? index * CASCADE_STAGGER_MS
               : 0}ms"
           >
             <a
               href={resolve(
-                withCurrentSearch(photoPath(photo.slug)) as `/${string}`,
+                model.withCurrentSearch(
+                  model.photoPath(photo.slug),
+                ) as `/${string}`,
               )}
-              use:registerTile={photo.slug}
+              use:model.registerTile={photo.slug}
               class="group relative block overflow-hidden"
               style={knownRatio
                 ? `aspect-ratio: ${knownRatio.width / knownRatio.height};`
                 : ''}
-              onclick={(event: MouseEvent) => onOpenPhoto(event, photo.slug)}
+              onclick={(event: MouseEvent) =>
+                model.onOpenPhoto(event, photo.slug)}
             >
               <img
                 src={photoPublicUrl(
@@ -331,14 +120,17 @@
                   GALLERY_DETAIL_SHARED_WIDTH,
                 )}
                 alt={photo.leadImage.alt_text ?? photo.title}
-                class="block h-auto w-full object-cover transition-transform duration-500 ease-cinematic {hasThumbCrop(
+                class="block h-auto w-full object-cover transition-transform duration-500 ease-cinematic {model.hasThumbCrop(
                   photo.leadImage,
                 )
                   ? 'tile-img-crop'
-                  : showThumbnailZoomHover
+                  : model.showThumbnailZoomHover
                     ? 'group-hover:scale-[1.02]'
                     : ''}"
-                style={thumbCropStyle(photo.leadImage, tileAspectRatio(photo))}
+                style={model.thumbCropStyle(
+                  photo.leadImage,
+                  model.tileAspectRatio(photo),
+                )}
                 loading="eager"
                 onload={(event) => {
                   if (
@@ -361,11 +153,11 @@
       {/if}
     {/each}
 
-    {#if isLoadingMore}
-      {#each Array.from({ length: placeholderCount }) as _, index (index)}
+    {#if model.isLoadingMore}
+      {#each Array.from({ length: model.placeholderCount }) as _, index (index)}
         <li
           class="animate-pulse break-inside-avoid bg-surface-muted"
-          style={`height: ${120 + (index % 5) * 34}px; margin-bottom: ${gap}px;`}
+          style={`height: ${120 + (index % 5) * 34}px; margin-bottom: ${model.gap}px;`}
         ></li>
       {/each}
     {/if}

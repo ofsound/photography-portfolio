@@ -1,92 +1,8 @@
 <script lang="ts">
   import GalleryTiles from './GalleryTiles.svelte';
-  import type { GalleryPhoto } from '$lib/types/content';
-  import type { RowLayoutResult } from '$lib/utils/row-solver';
+  import type { GalleryGridModel } from './gallery-grid-model';
 
-  type GalleryImage = NonNullable<GalleryPhoto['leadImage']>;
-
-  const {
-    photos,
-    layoutMode,
-    colCount,
-    gap,
-    uniformRatio,
-    placeholderCount,
-    isLoadingMore,
-    galleryRevealed,
-    reducedMotion,
-    withCurrentSearch,
-    photoPath,
-    onOpenPhoto,
-    registerTile,
-    hasThumbCrop,
-    thumbCropStyle,
-    tileAspectRatio,
-    hasMore,
-    loadError,
-    detailOpen,
-    onLoadMore,
-    sectionMaxWidthStyle,
-    coverageRows,
-    coverageCols,
-    coverageAspect,
-    coveragePlaceholderCount,
-    onCoverageContainer,
-    onCoverageResize,
-    rowsResult,
-    columnsResult,
-    showThumbnailZoomHover,
-  } = $props<{
-    photos: GalleryPhoto[];
-    layoutMode: 'uniform' | 'masonry' | 'coverage' | 'rows' | 'columns';
-    colCount: number;
-    gap: number;
-    uniformRatio: number;
-    placeholderCount: number;
-    isLoadingMore: boolean;
-    galleryRevealed: boolean;
-    reducedMotion: boolean;
-    withCurrentSearch: (href: string) => string;
-    photoPath: (photoSlug: string) => string;
-    onOpenPhoto: (event: MouseEvent, slug: string) => void;
-    registerTile: (
-      node: HTMLElement,
-      slug: string,
-    ) => { update?: (slug: string) => void; destroy?: () => void };
-    hasThumbCrop: (img: GalleryImage | null) => boolean;
-    thumbCropStyle: (
-      img: GalleryImage | null,
-      containerAspect: number,
-    ) => string;
-    tileAspectRatio: (photo: GalleryPhoto) => number;
-    hasMore: boolean;
-    loadError: string | null;
-    detailOpen: boolean;
-    onLoadMore: () => Promise<void>;
-    sectionMaxWidthStyle: string;
-    coverageRows: number;
-    coverageCols: number;
-    coverageAspect: number;
-    coveragePlaceholderCount: number;
-    onCoverageContainer: (el: HTMLElement) => void;
-    onCoverageResize: () => void;
-    rowsResult: RowLayoutResult | null;
-    showThumbnailZoomHover: boolean;
-    columnsResult: RowLayoutResult | null;
-  }>();
-
-  const bindCoverageSection = (node: HTMLElement) => {
-    onCoverageContainer(node);
-
-    const ro = new ResizeObserver(() => onCoverageResize());
-    ro.observe(node);
-
-    return {
-      destroy() {
-        ro.disconnect();
-      },
-    };
-  };
+  const { model } = $props<{ model: GalleryGridModel }>();
 
   const observeLoadSentinel = (
     node: HTMLElement,
@@ -138,85 +54,41 @@
   };
 </script>
 
-{#if layoutMode === 'coverage' || layoutMode === 'rows' || layoutMode === 'columns'}
-  <section class="coverage-container w-full" use:bindCoverageSection>
-    {#if photos.length === 0}
+{#if model.layoutMode === 'coverage' || model.layoutMode === 'rows' || model.layoutMode === 'columns'}
+  <section class="coverage-container w-full" use:model.bindCoverageSection>
+    {#if model.photos.length === 0}
       <p
         class="flex h-full items-center justify-center text-sm tracking-widest text-text-muted uppercase"
       >
         No photos found.
       </p>
     {:else}
-      <GalleryTiles
-        {photos}
-        {layoutMode}
-        {colCount}
-        {gap}
-        {uniformRatio}
-        {placeholderCount}
-        {isLoadingMore}
-        {galleryRevealed}
-        {reducedMotion}
-        {withCurrentSearch}
-        {photoPath}
-        {onOpenPhoto}
-        {registerTile}
-        {hasThumbCrop}
-        {thumbCropStyle}
-        {tileAspectRatio}
-        {coverageRows}
-        {coverageCols}
-        {coverageAspect}
-        {coveragePlaceholderCount}
-        {rowsResult}
-        {columnsResult}
-        {showThumbnailZoomHover}
-      />
+      <GalleryTiles {model} />
     {/if}
   </section>
 {:else}
-  <section class="mx-auto w-full px-4 py-5" style={sectionMaxWidthStyle}>
-    {#if photos.length === 0}
+  <section class="mx-auto w-full px-4 py-5" style={model.sectionMaxWidthStyle}>
+    {#if model.photos.length === 0}
       <p
         class="py-16 text-center text-sm tracking-widest text-text-muted uppercase"
       >
         No photos found.
       </p>
     {:else}
-      <GalleryTiles
-        {photos}
-        {layoutMode}
-        {colCount}
-        {gap}
-        {uniformRatio}
-        {placeholderCount}
-        {isLoadingMore}
-        {galleryRevealed}
-        {reducedMotion}
-        {withCurrentSearch}
-        {photoPath}
-        {onOpenPhoto}
-        {registerTile}
-        {hasThumbCrop}
-        {thumbCropStyle}
-        {tileAspectRatio}
-        {coverageRows}
-        {coverageCols}
-        {coverageAspect}
-        {coveragePlaceholderCount}
-        {rowsResult}
-        {columnsResult}
-        {showThumbnailZoomHover}
-      />
+      <GalleryTiles {model} />
 
-      {#if hasMore}
+      {#if model.hasMore}
         <div
           class="h-10 w-full"
-          use:observeLoadSentinel={{ hasMore, detailOpen, onLoadMore }}
+          use:observeLoadSentinel={{
+            hasMore: model.hasMore,
+            detailOpen: model.detailOpen,
+            onLoadMore: model.onLoadMore,
+          }}
         ></div>
       {/if}
 
-      {#if isLoadingMore}
+      {#if model.isLoadingMore}
         <p
           class="py-4 text-center text-xs tracking-widest text-text-subtle uppercase"
         >
@@ -224,13 +96,13 @@
         </p>
       {/if}
 
-      {#if loadError}
+      {#if model.loadError}
         <div class="py-4 text-center text-sm">
-          <p>{loadError}</p>
+          <p>{model.loadError}</p>
           <button
             class="mt-2 rounded border border-border-strong px-3 py-1 text-xs tracking-widest uppercase"
             type="button"
-            onclick={() => void onLoadMore()}>Retry</button
+            onclick={() => void model.onLoadMore()}>Retry</button
           >
         </div>
       {/if}

@@ -1,27 +1,33 @@
 import { fail, type Actions } from '@sveltejs/kit';
 import { asString, parseUuidList } from '$lib/server/admin-helpers';
+import { movePhotosToGalleryWithAutoSuffix } from '$lib/server/admin/galleries';
 
 export const bulkPhotoActions: Actions = {
   bulkPublishPhotos: async ({ locals, request }) => {
     const form = await request.formData();
     const photoIds = parseUuidList(asString(form.get('selected_photo_ids')));
+    const galleryId = asString(form.get('gallery_id'));
     if (!photoIds.length)
       return fail(400, { message: 'Select at least one photo.' });
 
-    const [
-      { data: photos, error: photosError },
-      { data: leads, error: leadsError },
-    ] = await Promise.all([
-      locals.supabase
-        .from('photos')
-        .select('id, title, status, deleted_at')
-        .in('id', photoIds),
+    let photosQuery = locals.supabase
+      .from('photos')
+      .select('id, title, status, deleted_at')
+      .in('id', photoIds);
+    if (galleryId) {
+      photosQuery = photosQuery.eq('gallery_id', galleryId);
+    }
+
+    const [photosResult, leadsResult] = await Promise.all([
+      photosQuery,
       locals.supabase
         .from('photo_images')
         .select('photo_id, delivery_storage_path')
         .in('photo_id', photoIds)
         .eq('kind', 'lead'),
     ]);
+    const { data: photos, error: photosError } = photosResult;
+    const { data: leads, error: leadsError } = leadsResult;
 
     if (photosError) return fail(400, { message: photosError.message });
     if (leadsError) return fail(400, { message: leadsError.message });
@@ -47,10 +53,12 @@ export const bulkPhotoActions: Actions = {
       });
     }
 
-    const { error } = await locals.supabase
+    let updateQuery = locals.supabase
       .from('photos')
       .update({ status: 'published', deleted_at: null })
       .in('id', publishable);
+    if (galleryId) updateQuery = updateQuery.eq('gallery_id', galleryId);
+    const { error } = await updateQuery;
 
     if (error) return fail(400, { message: error.message });
 
@@ -67,13 +75,16 @@ export const bulkPhotoActions: Actions = {
   bulkArchivePhotos: async ({ locals, request }) => {
     const form = await request.formData();
     const photoIds = parseUuidList(asString(form.get('selected_photo_ids')));
+    const galleryId = asString(form.get('gallery_id'));
     if (!photoIds.length)
       return fail(400, { message: 'Select at least one photo.' });
 
-    const { error } = await locals.supabase
+    let query = locals.supabase
       .from('photos')
       .update({ status: 'archived', deleted_at: new Date().toISOString() })
       .in('id', photoIds);
+    if (galleryId) query = query.eq('gallery_id', galleryId);
+    const { error } = await query;
 
     if (error) return fail(400, { message: error.message });
     return { success: true, message: `Archived ${photoIds.length} photo(s).` };
@@ -82,13 +93,16 @@ export const bulkPhotoActions: Actions = {
   bulkRestorePhotos: async ({ locals, request }) => {
     const form = await request.formData();
     const photoIds = parseUuidList(asString(form.get('selected_photo_ids')));
+    const galleryId = asString(form.get('gallery_id'));
     if (!photoIds.length)
       return fail(400, { message: 'Select at least one photo.' });
 
-    const { error } = await locals.supabase
+    let query = locals.supabase
       .from('photos')
       .update({ status: 'draft', deleted_at: null })
       .in('id', photoIds);
+    if (galleryId) query = query.eq('gallery_id', galleryId);
+    const { error } = await query;
 
     if (error) return fail(400, { message: error.message });
     return {
@@ -99,6 +113,7 @@ export const bulkPhotoActions: Actions = {
 
   bulkDeletePhotos: async ({ locals, request }) => {
     const form = await request.formData();
+    const galleryId = asString(form.get('gallery_id'));
     if (asString(form.get('showArchived')) !== '1') {
       return fail(400, {
         message: 'Delete is only allowed when viewing archived photos.',
@@ -108,10 +123,12 @@ export const bulkPhotoActions: Actions = {
     if (!photoIds.length)
       return fail(400, { message: 'Select at least one photo.' });
 
-    const { data: photos, error: photosError } = await locals.supabase
+    let photosQuery = locals.supabase
       .from('photos')
       .select('id, status, deleted_at')
       .in('id', photoIds);
+    if (galleryId) photosQuery = photosQuery.eq('gallery_id', galleryId);
+    const { data: photos, error: photosError } = await photosQuery;
 
     if (photosError) return fail(400, { message: photosError.message });
     const notArchived = (photos ?? []).filter(
@@ -124,10 +141,11 @@ export const bulkPhotoActions: Actions = {
       });
     }
 
-    const { data: images, error: imagesError } = await locals.supabase
+    const imagesQuery = locals.supabase
       .from('photo_images')
       .select('source_storage_path, delivery_storage_path')
       .in('photo_id', photoIds);
+    const { data: images, error: imagesError } = await imagesQuery;
 
     if (imagesError) return fail(400, { message: imagesError.message });
 
@@ -145,10 +163,12 @@ export const bulkPhotoActions: Actions = {
       if (storageError) return fail(400, { message: storageError.message });
     }
 
-    const { error: deleteError } = await locals.supabase
+    let deleteQuery = locals.supabase
       .from('photos')
       .delete()
       .in('id', photoIds);
+    if (galleryId) deleteQuery = deleteQuery.eq('gallery_id', galleryId);
+    const { error: deleteError } = await deleteQuery;
     if (deleteError) return fail(400, { message: deleteError.message });
     return {
       success: true,
@@ -159,14 +179,57 @@ export const bulkPhotoActions: Actions = {
   reorderPhotos: async ({ locals, request }) => {
     const form = await request.formData();
     const orderedIds = parseUuidList(asString(form.get('ordered_photo_ids')));
+    const galleryId = asString(form.get('gallery_id'));
     if (!orderedIds.length)
       return fail(400, { message: 'No photo IDs provided.' });
 
-    const { error } = await locals.supabase.rpc('reorder_photos', {
+    if (!galleryId) {
+      return fail(400, { message: 'Reorder requires a gallery scope.' });
+    }
+
+    const { error } = await locals.supabase.rpc('reorder_gallery_photos', {
+      p_gallery_id: galleryId,
       p_ordered_photo_ids: orderedIds,
     });
     if (error) return fail(400, { message: error.message });
 
     return { success: true, message: 'Photo order saved.' };
+  },
+
+  bulkMovePhotos: async ({ locals, request }) => {
+    const form = await request.formData();
+    const photoIds = parseUuidList(asString(form.get('selected_photo_ids')));
+    const destinationGalleryId = asString(form.get('destination_gallery_id'));
+    if (!photoIds.length) {
+      return fail(400, { message: 'Select at least one photo.' });
+    }
+    if (!destinationGalleryId) {
+      return fail(400, { message: 'Choose a destination gallery.' });
+    }
+
+    try {
+      const result = await movePhotosToGalleryWithAutoSuffix(
+        locals,
+        photoIds,
+        destinationGalleryId,
+      );
+      const suffixCount = result.suffixed.length;
+      const collisionPreview = result.suffixed
+        .slice(0, 5)
+        .map((item) => `${item.fromSlug} -> ${item.toSlug}`)
+        .join(', ');
+      return {
+        success: true,
+        message:
+          suffixCount > 0
+            ? `Moved ${result.moved} photo(s) (${result.updated} updated). Auto-suffixed ${suffixCount} slug conflict(s): ${collisionPreview}${suffixCount > 5 ? ', ...' : ''}`
+            : `Moved ${result.moved} photo(s) (${result.updated} updated).`,
+      };
+    } catch (cause) {
+      return fail(400, {
+        message:
+          cause instanceof Error ? cause.message : 'Failed to move photos.',
+      });
+    }
   },
 };

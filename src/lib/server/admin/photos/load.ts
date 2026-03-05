@@ -6,12 +6,32 @@ import {
   type PhotoImageRow,
 } from '$lib/server/admin/photos/shared';
 
+type AdminPhotosScope =
+  | { kind: 'gallery'; galleryId: string; gallerySlug: string }
+  | { kind: 'all' };
+
+type GalleryRelation =
+  | {
+      slug: string;
+      name: string;
+    }
+  | Array<{
+      slug: string;
+      name: string;
+    }>
+  | null;
+
+const readGallery = (value: GalleryRelation) =>
+  Array.isArray(value) ? (value[0] ?? null) : value;
+
 export const loadAdminPhotosPage = async ({
   locals,
   url,
+  scope,
 }: {
   locals: App.Locals;
   url: URL;
+  scope: AdminPhotosScope;
 }) => {
   const showArchived = url.searchParams.get('showArchived') === '1';
   const q = asString(url.searchParams.get('q')).trim();
@@ -21,20 +41,40 @@ export const loadAdminPhotosPage = async ({
   const filterTagId = isUuid(asString(url.searchParams.get('tag')))
     ? asString(url.searchParams.get('tag'))
     : '';
+  const requestedGalleryFilter = isUuid(
+    asString(url.searchParams.get('gallery')),
+  )
+    ? asString(url.searchParams.get('gallery'))
+    : '';
+  const filterGalleryId =
+    scope.kind === 'gallery' ? scope.galleryId : requestedGalleryFilter;
 
   let photoQuery = locals.supabase
     .from('photos')
     .select(
-      'id, slug, title, capture_date, description, dimensions, license_text, og_title, og_description, og_image_path, status, deleted_at, updated_at, admin_sort_order',
+      'id, gallery_id, slug, title, capture_date, description, dimensions, license_text, og_title, og_description, og_image_path, status, deleted_at, updated_at, gallery_sort_order, galleries!inner(slug, name)',
     )
-    .order('admin_sort_order', { ascending: true, nullsFirst: false })
-    .order('updated_at', { ascending: false })
-    .limit(120);
+    .limit(160);
+
+  if (scope.kind === 'gallery') {
+    photoQuery = photoQuery
+      .eq('gallery_id', scope.galleryId)
+      .order('gallery_sort_order', { ascending: true, nullsFirst: false })
+      .order('updated_at', { ascending: false });
+  } else {
+    photoQuery = photoQuery
+      .order('capture_date', { ascending: false, nullsFirst: false })
+      .order('updated_at', { ascending: false });
+  }
 
   if (showArchived) {
     photoQuery = photoQuery.not('deleted_at', 'is', null);
   } else {
     photoQuery = photoQuery.is('deleted_at', null);
+  }
+
+  if (filterGalleryId) {
+    photoQuery = photoQuery.eq('gallery_id', filterGalleryId);
   }
 
   if (q) {
@@ -44,6 +84,17 @@ export const loadAdminPhotosPage = async ({
     );
   }
 
+  const baseCountQuery = () => {
+    let query = locals.supabase.from('photos').select('id', {
+      count: 'exact',
+      head: true,
+    });
+    if (scope.kind === 'gallery') {
+      query = query.eq('gallery_id', scope.galleryId);
+    }
+    return query;
+  };
+
   const [
     photosQuery,
     categoriesQuery,
@@ -52,6 +103,7 @@ export const loadAdminPhotosPage = async ({
     settingsQuery,
     activeCountQuery,
     archivedCountQuery,
+    galleriesQuery,
   ] = await Promise.all([
     photoQuery,
     locals.supabase
@@ -72,22 +124,28 @@ export const loadAdminPhotosPage = async ({
       .select('max_content_width_px')
       .eq('singleton_id', 1)
       .maybeSingle(),
+    baseCountQuery().is('deleted_at', null),
+    baseCountQuery().not('deleted_at', 'is', null),
     locals.supabase
-      .from('photos')
-      .select('id', { count: 'exact', head: true })
-      .is('deleted_at', null),
-    locals.supabase
-      .from('photos')
-      .select('id', { count: 'exact', head: true })
-      .not('deleted_at', 'is', null),
+      .from('galleries')
+      .select('id, slug, name')
+      .order('nav_order', { ascending: true })
+      .order('name', { ascending: true }),
   ]);
 
   if (photosQuery.error) {
     throwLoaderError(
       {
-        route: '/admin/photos',
+        route:
+          scope.kind === 'gallery'
+            ? `/admin/${scope.gallerySlug}/photos`
+            : '/admin/all/photos',
         operation: 'load photos list',
-        details: { showArchived, q: q || null },
+        details: {
+          showArchived,
+          q: q || null,
+          filterGalleryId: filterGalleryId || null,
+        },
       },
       photosQuery.error,
     );
@@ -128,11 +186,25 @@ export const loadAdminPhotosPage = async ({
       archivedCountQuery.error,
     );
   }
+  if (galleriesQuery.error) {
+    throwLoaderError(
+      { route: '/admin/photos', operation: 'load galleries' },
+      galleriesQuery.error,
+    );
+  }
 
-  const photos = photosQuery.data ?? [];
+  const photos = (photosQuery.data ?? []).map((photo) => {
+    const gallery = readGallery(photo.galleries as GalleryRelation);
+    return {
+      ...photo,
+      gallery_slug: gallery?.slug ?? 'all',
+      gallery_name: gallery?.name ?? 'Unknown',
+    };
+  });
   const categories = categoriesQuery.data ?? [];
   const tags = tagsQuery.data ?? [];
   const settings = settingsQuery.data;
+  const galleries = galleriesQuery.data ?? [];
 
   const photoIds = photos.map((photo: { id: string }) => photo.id);
 
@@ -240,6 +312,9 @@ export const loadAdminPhotosPage = async ({
   });
 
   return {
+    scopeKind: scope.kind,
+    reorderEnabled: scope.kind === 'gallery',
+    galleries,
     photos: filteredPhotos,
     categories,
     tags,
@@ -251,6 +326,7 @@ export const loadAdminPhotosPage = async ({
     q,
     filterCategoryId,
     filterTagId,
+    filterGalleryId,
     pendingConversionCount: pendingQuery.count ?? 0,
     activeCount: activeCountQuery.count ?? 0,
     archivedCount: archivedCountQuery.count ?? 0,

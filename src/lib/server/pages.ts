@@ -22,7 +22,7 @@ export const loadPageBySlug = async (locals: App.Locals, slug: string) => {
   if (pageQuery.error) {
     throwLoaderError(
       {
-        route: '/[staticPageSlug]',
+        route: '/[rootSlug]',
         operation: 'loadPageBySlug',
         details: { slug },
       },

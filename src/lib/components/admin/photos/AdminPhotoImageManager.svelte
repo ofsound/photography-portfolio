@@ -83,6 +83,7 @@
                     thumb_crop_zoom: lead.thumb_crop_zoom,
                   }}
                   photoId={photo.id}
+                  galleryId={photo.gallery_id}
                 />
               </div>
             {/if}
@@ -90,6 +91,7 @@
 
           <form method="POST" action="?/removeImage" use:enhance>
             <input type="hidden" name="image_id" value={lead.id} />
+            <input type="hidden" name="gallery_id" value={photo.gallery_id} />
             <AdminButton variant="danger-outline" size="sm" type="submit"
               >Delete</AdminButton
             >
@@ -142,6 +144,11 @@
                     <div class="ml-auto flex shrink-0 items-center gap-2">
                       <form method="POST" action="?/setLead" use:enhance>
                         <input type="hidden" name="photo_id" value={photo.id} />
+                        <input
+                          type="hidden"
+                          name="gallery_id"
+                          value={photo.gallery_id}
+                        />
                         <input type="hidden" name="image_id" value={image.id} />
                         <AdminButton size="sm" type="submit"
                           >Set Lead</AdminButton
@@ -150,6 +157,11 @@
 
                       <form method="POST" action="?/removeImage" use:enhance>
                         <input type="hidden" name="image_id" value={image.id} />
+                        <input
+                          type="hidden"
+                          name="gallery_id"
+                          value={photo.gallery_id}
+                        />
                         <AdminButton
                           variant="danger-outline"
                           size="sm"
@@ -208,6 +220,7 @@
   <div class="min-w-0 flex-1">
     <PhotoUploadZone
       photoId={isDraft ? 'draft' : photo.id}
+      galleryId={photo.gallery_id}
       existingImageCount={images.length}
       {draftTitle}
       {draftSlug}

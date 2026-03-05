@@ -14,6 +14,7 @@ export async function uploadImageWithForm(
   form: FormData,
 ): Promise<{ success: true; message: string } | ReturnType<typeof fail>> {
   const photoId = asString(form.get('photo_id'));
+  const galleryId = asString(form.get('gallery_id'));
   const kind = asString(form.get('kind'), 'additional') as
     | 'lead'
     | 'additional';
@@ -21,6 +22,17 @@ export async function uploadImageWithForm(
   const imageFile = form.get('image_file');
 
   if (!photoId) return fail(400, { message: 'Missing photo id.' });
+  if (galleryId) {
+    const guard = await locals.supabase
+      .from('photos')
+      .select('id')
+      .eq('id', photoId)
+      .eq('gallery_id', galleryId)
+      .maybeSingle();
+    if (guard.error) return fail(400, { message: guard.error.message });
+    if (!guard.data)
+      return fail(404, { message: 'Photo not found in this gallery.' });
+  }
   if (!(imageFile instanceof File) || !imageFile.size) {
     return fail(400, { message: 'Select an image file.' });
   }
@@ -82,11 +94,23 @@ export const photoImageActions: Actions = {
   reorderAdditionalImages: async ({ locals, request }) => {
     const form = await request.formData();
     const photoId = asString(form.get('photo_id'));
+    const galleryId = asString(form.get('gallery_id'));
     const orderedImageIds = parseUuidList(
       asString(form.get('ordered_image_ids')),
     );
 
     if (!photoId) return fail(400, { message: 'Missing photo id.' });
+    if (galleryId) {
+      const guard = await locals.supabase
+        .from('photos')
+        .select('id')
+        .eq('id', photoId)
+        .eq('gallery_id', galleryId)
+        .maybeSingle();
+      if (guard.error) return fail(400, { message: guard.error.message });
+      if (!guard.data)
+        return fail(404, { message: 'Photo not found in this gallery.' });
+    }
 
     const { error } = await locals.supabase.rpc('reorder_additional_images', {
       p_photo_id: photoId,
@@ -106,9 +130,21 @@ export const photoImageActions: Actions = {
     const form = await request.formData();
     const photoId = asString(form.get('photo_id'));
     const imageId = asString(form.get('image_id'));
+    const galleryId = asString(form.get('gallery_id'));
 
     if (!photoId || !imageId)
       return fail(400, { message: 'Missing image or photo id.' });
+    if (galleryId) {
+      const guard = await locals.supabase
+        .from('photos')
+        .select('id')
+        .eq('id', photoId)
+        .eq('gallery_id', galleryId)
+        .maybeSingle();
+      if (guard.error) return fail(400, { message: guard.error.message });
+      if (!guard.data)
+        return fail(404, { message: 'Photo not found in this gallery.' });
+    }
 
     const { error } = await locals.supabase.rpc('set_lead_image', {
       p_photo_id: photoId,
@@ -123,6 +159,7 @@ export const photoImageActions: Actions = {
   removeImage: async ({ locals, request }) => {
     const form = await request.formData();
     const imageId = asString(form.get('image_id'));
+    const galleryId = asString(form.get('gallery_id'));
 
     const { data: image, error: imageError } = await locals.supabase
       .from('photo_images')
@@ -131,6 +168,17 @@ export const photoImageActions: Actions = {
       .maybeSingle();
 
     if (imageError || !image) return fail(404, { message: 'Image not found.' });
+    if (galleryId) {
+      const guard = await locals.supabase
+        .from('photos')
+        .select('id')
+        .eq('id', image.photo_id)
+        .eq('gallery_id', galleryId)
+        .maybeSingle();
+      if (guard.error) return fail(400, { message: guard.error.message });
+      if (!guard.data)
+        return fail(404, { message: 'Photo not found in this gallery.' });
+    }
 
     const { error: deleteError } = await locals.supabase
       .from('photo_images')
@@ -178,12 +226,24 @@ export const photoImageActions: Actions = {
     const form = await request.formData();
     const photoId = asString(form.get('photo_id'));
     const imageId = asString(form.get('image_id'));
+    const galleryId = asString(form.get('gallery_id'));
     const cropX = asOptionalNumber(form.get('thumb_crop_x'));
     const cropY = asOptionalNumber(form.get('thumb_crop_y'));
     const cropZoom = asOptionalNumber(form.get('thumb_crop_zoom'));
 
     if (!photoId || !imageId)
       return fail(400, { message: 'Missing photo or image id.' });
+    if (galleryId) {
+      const guard = await locals.supabase
+        .from('photos')
+        .select('id')
+        .eq('id', photoId)
+        .eq('gallery_id', galleryId)
+        .maybeSingle();
+      if (guard.error) return fail(400, { message: guard.error.message });
+      if (!guard.data)
+        return fail(404, { message: 'Photo not found in this gallery.' });
+    }
 
     const { data: image, error: loadError } = await locals.supabase
       .from('photo_images')
@@ -218,9 +278,21 @@ export const photoImageActions: Actions = {
     const form = await request.formData();
     const photoId = asString(form.get('photo_id'));
     const imageId = asString(form.get('image_id'));
+    const galleryId = asString(form.get('gallery_id'));
 
     if (!photoId || !imageId)
       return fail(400, { message: 'Missing photo or image id.' });
+    if (galleryId) {
+      const guard = await locals.supabase
+        .from('photos')
+        .select('id')
+        .eq('id', photoId)
+        .eq('gallery_id', galleryId)
+        .maybeSingle();
+      if (guard.error) return fail(400, { message: guard.error.message });
+      if (!guard.data)
+        return fail(404, { message: 'Photo not found in this gallery.' });
+    }
 
     const { data: image, error: loadError } = await locals.supabase
       .from('photo_images')

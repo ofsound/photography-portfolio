@@ -1,12 +1,16 @@
 <script lang="ts">
   import AdminButton from '$lib/components/admin/AdminButton.svelte';
+  import AdminHeading from '$lib/components/admin/AdminHeading.svelte';
   import AdminSinglePhotoEditor from '$lib/components/admin/photos/AdminSinglePhotoEditor.svelte';
 
   const { data, form } = $props();
 </script>
 
 <div class="flex flex-col gap-3">
-  <AdminButton href="/admin/photos">Back to Photos</AdminButton>
+  <AdminHeading>Edit Photo /{data.gallery.slug}</AdminHeading>
+  <AdminButton href={`/admin/${data.gallery.slug}/photos`}
+    >Back to Photos</AdminButton
+  >
 </div>
 
 {#if form?.message}

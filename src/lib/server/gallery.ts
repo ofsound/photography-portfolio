@@ -1,8 +1,15 @@
+import { throwLoaderError } from '$lib/server/load-error';
+import type { Database } from '$lib/types/database';
+import { buildGalleryPhotoPath } from '$lib/utils/gallery-routes';
 import {
   GALLERY_DETAIL_SHARED_WIDTH,
   photoPublicUrl,
 } from '$lib/utils/storage-url';
-import { throwLoaderError } from '$lib/server/load-error';
+
+type GalleryRow = Database['public']['Tables']['galleries']['Row'];
+type SiteSettingsRow = Database['public']['Tables']['site_settings']['Row'];
+
+type GalleryRelation = { slug: string; is_active?: boolean } | null;
 
 type GalleryPhotoNeighbors = {
   prevSlug: string | null;
@@ -10,12 +17,188 @@ type GalleryPhotoNeighbors = {
 };
 
 type GalleryLoadOptions = {
+  scope: ResolvedGalleryScope;
   page: number;
   pageSize: number;
   q: string;
 };
 
+type ImageRow = {
+  id: string;
+  kind: 'lead' | 'additional';
+  position: number;
+  delivery_storage_path: string | null;
+  alt_text: string | null;
+  dimensions: string | null;
+  thumb_crop_x: number | null;
+  thumb_crop_y: number | null;
+  thumb_crop_zoom: number | null;
+};
+
+type PhotoListRow = {
+  id: string;
+  gallery_id: string;
+  slug: string;
+  title: string;
+  description: string | null;
+  capture_date: string | null;
+  photo_images: ImageRow[] | null;
+  galleries: GalleryRelation | GalleryRelation[] | null;
+};
+
+type CurrentPhotoRow = {
+  id: string;
+  slug: string;
+  gallery_id: string;
+  capture_date?: string | null;
+  created_at?: string | null;
+  galleries: GalleryRelation | GalleryRelation[] | null;
+};
+
+type HistoryPhotoRow = {
+  id: string;
+  slug: string;
+  gallery_id: string;
+  status: Database['public']['Enums']['publish_status'];
+  deleted_at: string | null;
+  capture_date?: string | null;
+  created_at?: string | null;
+  galleries: GalleryRelation | GalleryRelation[] | null;
+};
+
+type PhotoHistoryRow = {
+  created_at: string;
+  photos: HistoryPhotoRow | HistoryPhotoRow[] | null;
+};
+
+type SettingsFields = Pick<
+  SiteSettingsRow,
+  | 'theme_default'
+  | 'grid_desktop_default'
+  | 'grid_mobile_default'
+  | 'max_content_width_px'
+  | 'gallery_layout_mode'
+  | 'gallery_gap_px'
+  | 'uniform_thumb_ratio'
+  | 'transition_preset'
+  | 'allow_transition_toggle'
+  | 'show_search_bar'
+  | 'show_photograph_info'
+  | 'show_thumbnail_zoom_hover'
+>;
+
+type BaseScope = {
+  slug: string;
+  name: string;
+};
+
+type GallerySettings = SettingsFields;
+
+type ResolvedGalleryScope =
+  | (BaseScope & {
+      kind: 'gallery';
+      id: string;
+      isActive: boolean;
+      showInNav: boolean;
+      navOrder: number;
+    })
+  | (BaseScope & {
+      kind: 'all';
+    });
+
+type GalleryScopeResolution =
+  | { kind: 'scope'; scope: ResolvedGalleryScope }
+  | { kind: 'redirect'; toSlug: string }
+  | { kind: 'none' };
+
+type ResolvedPhotoIdentity = {
+  id: string;
+  slug: string;
+  galleryId: string;
+  gallerySlug: string;
+};
+
+type PhotoRouteResolution =
+  | { kind: 'photo'; photo: ResolvedPhotoIdentity }
+  | { kind: 'redirect'; location: string }
+  | { kind: 'none' };
+
 const maxPageSize = 120;
+
+const gallerySettingsSelect = [
+  'theme_default',
+  'grid_desktop_default',
+  'grid_mobile_default',
+  'max_content_width_px',
+  'gallery_layout_mode',
+  'gallery_gap_px',
+  'uniform_thumb_ratio',
+  'transition_preset',
+  'allow_transition_toggle',
+  'show_search_bar',
+  'show_photograph_info',
+  'show_thumbnail_zoom_hover',
+].join(', ');
+
+const photoListSelect =
+  'id, gallery_id, slug, title, description, capture_date, galleries(slug, is_active), photo_images(id, kind, position, delivery_storage_path, alt_text, dimensions, thumb_crop_x, thumb_crop_y, thumb_crop_zoom)';
+
+const readGalleryRelation = (
+  value: GalleryRelation | GalleryRelation[] | null | undefined,
+): GalleryRelation => {
+  if (!value) return null;
+  return Array.isArray(value) ? (value[0] ?? null) : value;
+};
+
+const parsePhotoIdentity = (
+  row: CurrentPhotoRow | HistoryPhotoRow | null,
+): ResolvedPhotoIdentity | null => {
+  if (!row) return null;
+  const gallery = readGalleryRelation(row.galleries);
+  if (!gallery?.slug) return null;
+  return {
+    id: row.id,
+    slug: row.slug,
+    galleryId: row.gallery_id,
+    gallerySlug: gallery.slug,
+  };
+};
+
+const mapPhotoRows = (rows: PhotoListRow[], fallbackGallerySlug: string) =>
+  rows.map((photo) => {
+    const sortedImages = [...(photo.photo_images ?? [])]
+      .filter((image) => Boolean(image.delivery_storage_path))
+      .map((image) => ({
+        ...image,
+        delivery_storage_path: image.delivery_storage_path as string,
+      }))
+      .sort((a, b) => a.position - b.position);
+    const lead = sortedImages.find((image) => image.kind === 'lead');
+    const additionalImages = sortedImages.filter(
+      (image) => image.kind === 'additional',
+    );
+    const gallerySlug =
+      readGalleryRelation(photo.galleries)?.slug ?? fallbackGallerySlug;
+
+    return {
+      id: photo.id,
+      gallery_id: photo.gallery_id,
+      gallery_slug: gallerySlug,
+      slug: photo.slug,
+      title: photo.title,
+      description: photo.description,
+      capture_date: photo.capture_date,
+      thumb: lead?.delivery_storage_path
+        ? photoPublicUrl(
+            lead.delivery_storage_path,
+            GALLERY_DETAIL_SHARED_WIDTH,
+          )
+        : null,
+      thumbAlt: lead?.alt_text ?? photo.title,
+      leadImage: lead ?? null,
+      additionalImages,
+    };
+  });
 
 export const asPositiveInt = (value: string | null, fallback: number) => {
   const parsed = Number.parseInt(value ?? '', 10);
@@ -24,6 +207,219 @@ export const asPositiveInt = (value: string | null, fallback: number) => {
 
 export const normalizePageSize = (value: number) =>
   Math.max(1, Math.min(maxPageSize, value));
+
+export const resolveGalleryScope = async (
+  locals: App.Locals,
+  slug: string,
+): Promise<GalleryScopeResolution> => {
+  if (slug === 'all') {
+    return {
+      kind: 'scope',
+      scope: {
+        kind: 'all',
+        slug: 'all',
+        name: 'All',
+      },
+    };
+  }
+
+  const galleryQuery = await locals.supabase
+    .from('galleries')
+    .select('id, slug, name, is_active, show_in_nav, nav_order')
+    .eq('slug', slug)
+    .maybeSingle();
+
+  if (galleryQuery.error) {
+    throwLoaderError(
+      {
+        route: '/[rootSlug]',
+        operation: 'resolveGalleryScope current slug lookup',
+        details: { slug },
+      },
+      galleryQuery.error,
+    );
+  }
+
+  if (galleryQuery.data) {
+    const gallery = galleryQuery.data as Pick<
+      GalleryRow,
+      'id' | 'slug' | 'name' | 'is_active' | 'show_in_nav' | 'nav_order'
+    >;
+    return {
+      kind: 'scope',
+      scope: {
+        kind: 'gallery',
+        id: gallery.id,
+        slug: gallery.slug,
+        name: gallery.name,
+        isActive: gallery.is_active,
+        showInNav: gallery.show_in_nav,
+        navOrder: gallery.nav_order,
+      },
+    };
+  }
+
+  const historyQuery = await locals.supabase
+    .from('gallery_slug_history')
+    .select('created_at, galleries!inner(slug)')
+    .eq('old_slug', slug)
+    .order('created_at', { ascending: false })
+    .limit(1);
+
+  if (historyQuery.error) {
+    throwLoaderError(
+      {
+        route: '/[rootSlug]',
+        operation: 'resolveGalleryScope history lookup',
+        details: { slug },
+      },
+      historyQuery.error,
+    );
+  }
+
+  const row = (historyQuery.data?.[0] ?? null) as {
+    galleries: GalleryRelation | GalleryRelation[] | null;
+  } | null;
+  const currentSlug = readGalleryRelation(row?.galleries)?.slug ?? null;
+  if (currentSlug) {
+    return { kind: 'redirect', toSlug: currentSlug };
+  }
+
+  return { kind: 'none' };
+};
+
+export const loadGallerySettings = async (
+  locals: App.Locals,
+  scope: ResolvedGalleryScope,
+): Promise<GallerySettings> => {
+  const settingsQuery =
+    scope.kind === 'gallery'
+      ? await locals.supabase
+          .from('gallery_settings')
+          .select(gallerySettingsSelect)
+          .eq('scope', 'gallery')
+          .eq('gallery_id', scope.id)
+          .maybeSingle()
+      : await locals.supabase
+          .from('gallery_settings')
+          .select(gallerySettingsSelect)
+          .eq('scope', 'all')
+          .maybeSingle();
+
+  if (settingsQuery.error) {
+    throwLoaderError(
+      {
+        route: '/[rootSlug]',
+        operation: 'loadGallerySettings scoped settings',
+        details: { scope: scope.slug },
+      },
+      settingsQuery.error,
+    );
+  }
+
+  if (settingsQuery.data) {
+    return settingsQuery.data as unknown as SettingsFields;
+  }
+
+  const fallbackQuery = await locals.supabase
+    .from('site_settings')
+    .select(gallerySettingsSelect)
+    .eq('singleton_id', 1)
+    .maybeSingle();
+
+  if (fallbackQuery.error) {
+    throwLoaderError(
+      {
+        route: '/[rootSlug]',
+        operation: 'loadGallerySettings site defaults fallback',
+        details: { scope: scope.slug },
+      },
+      fallbackQuery.error,
+    );
+  }
+
+  return (fallbackQuery.data ?? {
+    theme_default: 'system',
+    grid_desktop_default: 6,
+    grid_mobile_default: 3,
+    max_content_width_px: null,
+    gallery_layout_mode: 'uniform',
+    gallery_gap_px: 8,
+    uniform_thumb_ratio: 1,
+    transition_preset: 'cinematic',
+    allow_transition_toggle: true,
+    show_search_bar: true,
+    show_photograph_info: true,
+    show_thumbnail_zoom_hover: true,
+  }) as SettingsFields;
+};
+
+export const loadActiveNavGalleries = async (locals: App.Locals) => {
+  const galleriesQuery = await locals.supabase
+    .from('galleries')
+    .select('id, slug, name, nav_order')
+    .eq('is_active', true)
+    .eq('show_in_nav', true)
+    .order('nav_order', { ascending: true })
+    .order('name', { ascending: true });
+
+  if (galleriesQuery.error) {
+    throwLoaderError(
+      {
+        route: '/+layout',
+        operation: 'loadActiveNavGalleries',
+      },
+      galleriesQuery.error,
+    );
+  }
+
+  return (galleriesQuery.data ?? []) as Array<
+    Pick<GalleryRow, 'id' | 'slug' | 'name' | 'nav_order'>
+  >;
+};
+
+const buildPhotosQuery = (
+  locals: App.Locals,
+  scope: ResolvedGalleryScope,
+  q: string,
+  withCount: boolean,
+) => {
+  const selectOptions = withCount ? { count: 'exact' as const } : {};
+  const baseSelect =
+    scope.kind === 'all'
+      ? photoListSelect.replace(
+          'galleries(slug, is_active)',
+          'galleries!inner(slug, is_active)',
+        )
+      : photoListSelect;
+
+  let query = locals.supabase
+    .from('photos')
+    .select(baseSelect, selectOptions)
+    .eq('status', 'published')
+    .is('deleted_at', null);
+  if (q) {
+    query = query.textSearch('search_tsv', q, { type: 'websearch' });
+  }
+
+  if (scope.kind === 'gallery') {
+    query = query
+      .eq('gallery_id', scope.id)
+      .order('gallery_sort_order', { ascending: true, nullsFirst: false })
+      .order('capture_date', { ascending: false, nullsFirst: false })
+      .order('created_at', { ascending: false })
+      .order('id', { ascending: false });
+    return query;
+  }
+
+  query = query
+    .eq('galleries.is_active', true)
+    .order('capture_date', { ascending: false, nullsFirst: false })
+    .order('created_at', { ascending: false })
+    .order('id', { ascending: false });
+
+  return query;
+};
 
 export const loadGalleryPage = async (
   locals: App.Locals,
@@ -34,163 +430,95 @@ export const loadGalleryPage = async (
   const start = (page - 1) * pageSize;
   const end = start + pageSize;
 
-  let query = locals.supabase
-    .from('photos')
-    .select(
-      'id, slug, title, description, capture_date, photo_images(id, kind, position, delivery_storage_path, alt_text, dimensions, thumb_crop_x, thumb_crop_y, thumb_crop_zoom)',
-      { count: 'exact' },
-    )
-    .eq('status', 'published')
-    .is('deleted_at', null)
-    .order('capture_date', { ascending: false, nullsFirst: false })
-    .order('created_at', { ascending: false })
-    .order('id', { ascending: false })
-    .range(start, end);
-
-  if (options.q) {
-    query = query.textSearch('search_tsv', options.q, { type: 'websearch' });
-  }
+  const query = buildPhotosQuery(locals, options.scope, options.q, true).range(
+    start,
+    end,
+  );
 
   const { data, error } = await query;
   if (error) {
     throwLoaderError(
       {
-        route: '/(viewer)',
+        route: '/[rootSlug]',
         operation: 'loadGalleryPage',
-        details: { page, pageSize, query: options.q || null },
+        details: {
+          scope: options.scope.slug,
+          page,
+          pageSize,
+          query: options.q || null,
+        },
       },
       error,
     );
   }
 
-  const rows = data ?? [];
+  const rows = (data ?? []) as unknown as PhotoListRow[];
   const hasMore = rows.length > pageSize;
   const pageRows = rows.slice(0, pageSize);
 
-  const photos = pageRows.map((photo) => {
-    const sortedImages = [...(photo.photo_images ?? [])]
-      .filter((image) => Boolean(image.delivery_storage_path))
-      .map((image) => ({
-        ...image,
-        delivery_storage_path: image.delivery_storage_path as string,
-      }))
-      .sort((a, b) => a.position - b.position);
-    const lead = sortedImages.find((image) => image.kind === 'lead');
-    const additionalImages = sortedImages.filter(
-      (image) => image.kind === 'additional',
-    );
-
-    return {
-      id: photo.id,
-      slug: photo.slug,
-      title: photo.title,
-      description: photo.description,
-      capture_date: photo.capture_date,
-      thumb: lead?.delivery_storage_path
-        ? photoPublicUrl(
-            lead.delivery_storage_path,
-            GALLERY_DETAIL_SHARED_WIDTH,
-          )
-        : null,
-      thumbAlt: lead?.alt_text ?? photo.title,
-      leadImage: lead ?? null,
-      additionalImages,
-    };
-  });
-
-  return { photos, hasMore };
+  return {
+    photos: mapPhotoRows(pageRows, options.scope.slug),
+    hasMore,
+  };
 };
 
-/** Load all published photos in one query (no pagination). Used by coverage layout mode. */
-export const loadAllGalleryPhotos = async (locals: App.Locals, q: string) => {
-  let query = locals.supabase
-    .from('photos')
-    .select(
-      'id, slug, title, description, capture_date, photo_images(id, kind, position, delivery_storage_path, alt_text, dimensions, thumb_crop_x, thumb_crop_y, thumb_crop_zoom)',
-    )
-    .eq('status', 'published')
-    .is('deleted_at', null)
-    .order('capture_date', { ascending: false, nullsFirst: false })
-    .order('created_at', { ascending: false })
-    .order('id', { ascending: false })
-    .limit(1000);
-
-  if (q) {
-    query = query.textSearch('search_tsv', q, { type: 'websearch' });
-  }
+/** Load all published photos in one query (no pagination). Used by coverage/rows/columns layout modes. */
+export const loadAllGalleryPhotos = async (
+  locals: App.Locals,
+  scope: ResolvedGalleryScope,
+  q: string,
+) => {
+  const query = buildPhotosQuery(locals, scope, q, false).limit(2000);
 
   const { data, error } = await query;
   if (error) {
     throwLoaderError(
       {
-        route: '/(viewer)',
+        route: '/[rootSlug]',
         operation: 'loadAllGalleryPhotos',
-        details: { query: q || null },
+        details: { scope: scope.slug, query: q || null },
       },
       error,
     );
   }
 
-  const rows = data ?? [];
-
-  const photos = rows.map((photo) => {
-    const sortedImages = [...(photo.photo_images ?? [])]
-      .filter((image) => Boolean(image.delivery_storage_path))
-      .map((image) => ({
-        ...image,
-        delivery_storage_path: image.delivery_storage_path as string,
-      }))
-      .sort((a, b) => a.position - b.position);
-    const lead = sortedImages.find((image) => image.kind === 'lead');
-    const additionalImages = sortedImages.filter(
-      (image) => image.kind === 'additional',
-    );
-
-    return {
-      id: photo.id,
-      slug: photo.slug,
-      title: photo.title,
-      description: photo.description,
-      capture_date: photo.capture_date,
-      thumb: lead?.delivery_storage_path
-        ? photoPublicUrl(
-            lead.delivery_storage_path,
-            GALLERY_DETAIL_SHARED_WIDTH,
-          )
-        : null,
-      thumbAlt: lead?.alt_text ?? photo.title,
-      leadImage: lead ?? null,
-      additionalImages,
-    };
-  });
-
-  return { photos, hasMore: false };
+  return {
+    photos: mapPhotoRows((data ?? []) as unknown as PhotoListRow[], scope.slug),
+    hasMore: false,
+  };
 };
 
 export const loadGalleryPhotoNeighbors = async (
   locals: App.Locals,
+  scope: ResolvedGalleryScope,
   photoId: string,
 ): Promise<GalleryPhotoNeighbors> => {
-  const { data, error } = await locals.supabase.rpc('gallery_photo_neighbors', {
-    p_photo_id: photoId,
-  });
+  const rpcResult =
+    scope.kind === 'gallery'
+      ? await locals.supabase.rpc('gallery_photo_neighbors_scoped', {
+          p_gallery_id: scope.id,
+          p_photo_id: photoId,
+        })
+      : await locals.supabase.rpc('all_photo_neighbors', {
+          p_photo_id: photoId,
+        });
 
-  if (error) {
+  if (rpcResult.error) {
     throwLoaderError(
       {
-        route: '/(viewer)',
+        route: '/[rootSlug]',
         operation: 'loadGalleryPhotoNeighbors',
-        details: { photoId },
+        details: { scope: scope.slug, photoId },
       },
-      error,
+      rpcResult.error,
     );
   }
 
-  if (!Array.isArray(data) || data.length === 0) {
+  if (!Array.isArray(rpcResult.data) || rpcResult.data.length === 0) {
     return { prevSlug: null, nextSlug: null };
   }
 
-  const row = data[0] as
+  const row = rpcResult.data[0] as
     | { prev_slug: string | null; next_slug: string | null }
     | undefined;
 
@@ -198,4 +526,146 @@ export const loadGalleryPhotoNeighbors = async (
     prevSlug: row?.prev_slug ?? null,
     nextSlug: row?.next_slug ?? null,
   };
+};
+
+const findPublishedPhotoBySlug = async (
+  locals: App.Locals,
+  scope: ResolvedGalleryScope,
+  photoSlug: string,
+): Promise<ResolvedPhotoIdentity | null> => {
+  const query =
+    scope.kind === 'gallery'
+      ? await locals.supabase
+          .from('photos')
+          .select('id, slug, gallery_id, galleries!inner(slug)')
+          .eq('gallery_id', scope.id)
+          .eq('slug', photoSlug)
+          .eq('status', 'published')
+          .is('deleted_at', null)
+          .limit(1)
+          .maybeSingle()
+      : await locals.supabase
+          .from('photos')
+          .select(
+            'id, slug, gallery_id, capture_date, created_at, galleries!inner(slug, is_active)',
+          )
+          .eq('slug', photoSlug)
+          .eq('status', 'published')
+          .is('deleted_at', null)
+          .eq('galleries.is_active', true)
+          .order('capture_date', { ascending: false, nullsFirst: false })
+          .order('created_at', { ascending: false })
+          .order('id', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+  if (query.error) {
+    throwLoaderError(
+      {
+        route: '/[rootSlug]/photo/[photoSlug]',
+        operation: 'findPublishedPhotoBySlug',
+        details: { scope: scope.slug, photoSlug },
+      },
+      query.error,
+    );
+  }
+
+  return parsePhotoIdentity((query.data ?? null) as CurrentPhotoRow | null);
+};
+
+const resolveHistoryRows = (
+  rows: PhotoHistoryRow[],
+  options: { includeInactive: boolean },
+) => {
+  for (const row of rows) {
+    const rawPhoto = Array.isArray(row.photos) ? row.photos[0] : row.photos;
+    if (!rawPhoto) continue;
+    if (rawPhoto.status !== 'published' || rawPhoto.deleted_at !== null) {
+      continue;
+    }
+
+    const gallery = readGalleryRelation(rawPhoto.galleries);
+    if (!gallery?.slug) continue;
+    if (!options.includeInactive && gallery.is_active === false) continue;
+
+    return {
+      id: rawPhoto.id,
+      slug: rawPhoto.slug,
+      galleryId: rawPhoto.gallery_id,
+      gallerySlug: gallery.slug,
+    } as ResolvedPhotoIdentity;
+  }
+
+  return null;
+};
+
+const resolvePhotoSlugRedirect = async (
+  locals: App.Locals,
+  scope: ResolvedGalleryScope,
+  oldPhotoSlug: string,
+  imageId: string | null,
+): Promise<string | null> => {
+  const query =
+    scope.kind === 'gallery'
+      ? locals.supabase
+          .from('photo_slug_history')
+          .select(
+            'created_at, photos!inner(id, slug, gallery_id, status, deleted_at, galleries!inner(slug, is_active))',
+          )
+          .eq('old_gallery_id', scope.id)
+          .eq('old_slug', oldPhotoSlug)
+          .order('created_at', { ascending: false })
+          .limit(30)
+      : locals.supabase
+          .from('photo_slug_history')
+          .select(
+            'created_at, photos!inner(id, slug, gallery_id, status, deleted_at, capture_date, created_at, galleries!inner(slug, is_active))',
+          )
+          .eq('old_slug', oldPhotoSlug)
+          .order('created_at', { ascending: false })
+          .limit(60);
+
+  const { data, error } = await query;
+  if (error) {
+    throwLoaderError(
+      {
+        route: '/[rootSlug]/photo/[photoSlug]',
+        operation: 'resolvePhotoSlugRedirect',
+        details: { scope: scope.slug, oldPhotoSlug },
+      },
+      error,
+    );
+  }
+
+  const resolved = resolveHistoryRows((data ?? []) as PhotoHistoryRow[], {
+    includeInactive: scope.kind === 'gallery',
+  });
+  if (!resolved) return null;
+
+  const targetGallerySlug = scope.kind === 'all' ? 'all' : resolved.gallerySlug;
+  return buildGalleryPhotoPath(targetGallerySlug, resolved.slug, imageId);
+};
+
+export const resolvePhotoRoute = async (
+  locals: App.Locals,
+  scope: ResolvedGalleryScope,
+  photoSlug: string,
+  imageId: string | null,
+): Promise<PhotoRouteResolution> => {
+  const current = await findPublishedPhotoBySlug(locals, scope, photoSlug);
+  if (current) {
+    return { kind: 'photo', photo: current };
+  }
+
+  const redirectedTo = await resolvePhotoSlugRedirect(
+    locals,
+    scope,
+    photoSlug,
+    imageId,
+  );
+  if (redirectedTo) {
+    return { kind: 'redirect', location: redirectedTo };
+  }
+
+  return { kind: 'none' };
 };

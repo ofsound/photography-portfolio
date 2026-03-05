@@ -1,5 +1,7 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
+import { asString } from '$lib/server/admin-helpers';
+import { resolveGalleryForAdmin } from '$lib/server/admin/galleries';
 import { loadSinglePhotoEditorData } from '$lib/server/admin/photos/load-single';
 import {
   createMinimalDraftPhoto,
@@ -12,15 +14,35 @@ import {
   uploadImageWithForm,
 } from '$lib/server/admin/photos/photo-images';
 import { photoTaxonomyActions } from '$lib/server/admin/photos/photo-taxonomy';
-import { asString } from '$lib/server/admin-helpers';
 
 const ACTIVE_CREATE_PHOTO_COOKIE = 'admin_create_photo_id';
 
-export const load: PageServerLoad = async ({ locals, url, cookies }) => {
+const resolveGallery = async (locals: App.Locals, gallerySlug: string) => {
+  const resolved = await resolveGalleryForAdmin(locals, gallerySlug);
+  if (resolved.kind === 'redirect') {
+    throw redirect(301, `/admin/${resolved.toSlug}/photos/create`);
+  }
+  if (resolved.kind !== 'gallery') {
+    throw redirect(303, '/admin/galleries');
+  }
+  return resolved.gallery;
+};
+
+const cookiePathFor = (gallerySlug: string) => `/admin/${gallerySlug}/photos`;
+
+export const load: PageServerLoad = async ({
+  locals,
+  params,
+  url,
+  cookies,
+}) => {
+  const gallery = await resolveGallery(locals, params.gallerySlug);
   const requestedPhotoId = url.searchParams.get('photo');
 
   if (!requestedPhotoId) {
-    cookies.delete(ACTIVE_CREATE_PHOTO_COOKIE, { path: '/admin/photos' });
+    cookies.delete(ACTIVE_CREATE_PHOTO_COOKIE, {
+      path: cookiePathFor(gallery.slug),
+    });
     const [categoriesResult, tagsResult] = await Promise.all([
       locals.supabase
         .from('categories')
@@ -36,6 +58,8 @@ export const load: PageServerLoad = async ({ locals, url, cookies }) => {
 
     const draftPhoto = {
       id: null as string | null,
+      gallery_id: gallery.id,
+      gallery_slug: gallery.slug,
       title: 'New Photo',
       slug: '',
       capture_date: null as string | null,
@@ -51,6 +75,7 @@ export const load: PageServerLoad = async ({ locals, url, cookies }) => {
     };
 
     return {
+      gallery,
       photo: draftPhoto,
       categories: categoriesResult.data ?? [],
       tags: tagsResult.data ?? [],
@@ -65,13 +90,21 @@ export const load: PageServerLoad = async ({ locals, url, cookies }) => {
   }
 
   cookies.set(ACTIVE_CREATE_PHOTO_COOKIE, requestedPhotoId, {
-    path: '/admin/photos',
+    path: cookiePathFor(gallery.slug),
     httpOnly: true,
     sameSite: 'lax',
   });
 
   try {
-    return await loadSinglePhotoEditorData(locals, requestedPhotoId);
+    const payload = await loadSinglePhotoEditorData(
+      locals,
+      requestedPhotoId,
+      gallery.id,
+    );
+    return {
+      ...payload,
+      gallery,
+    };
   } catch (cause) {
     if (
       typeof cause === 'object' &&
@@ -79,8 +112,10 @@ export const load: PageServerLoad = async ({ locals, url, cookies }) => {
       'status' in cause &&
       cause.status === 404
     ) {
-      cookies.delete(ACTIVE_CREATE_PHOTO_COOKIE, { path: '/admin/photos' });
-      throw redirect(303, '/admin/photos/create');
+      cookies.delete(ACTIVE_CREATE_PHOTO_COOKIE, {
+        path: cookiePathFor(gallery.slug),
+      });
+      throw redirect(303, `/admin/${gallery.slug}/photos/create`);
     }
     throw cause;
   }
@@ -90,16 +125,19 @@ export const actions: Actions = {
   ...photoCoreActions,
   ...photoTaxonomyActions,
   ...photoImageActions,
-  uploadImage: async ({ locals, request, cookies }) => {
+  uploadImage: async ({ locals, params, request, cookies }) => {
+    const gallery = await resolveGallery(locals, params.gallerySlug);
     const form = await request.formData();
     if (asString(form.get('photo_id')) !== 'draft') {
       return uploadImageWithForm(locals, form);
     }
+
     let newId: string;
     try {
       const result = await createMinimalDraftPhoto(locals, {
         title: asString(form.get('draft_title')).trim() || undefined,
         slug: asString(form.get('draft_slug')).trim() || undefined,
+        galleryId: gallery.id,
       });
       newId = result.id;
     } catch (err) {
@@ -108,24 +146,30 @@ export const actions: Actions = {
           err instanceof Error ? err.message : 'Failed to create draft photo.',
       });
     }
+
     cookies.set(ACTIVE_CREATE_PHOTO_COOKIE, newId, {
-      path: '/admin/photos',
+      path: cookiePathFor(gallery.slug),
       httpOnly: true,
       sameSite: 'lax',
     });
     const imageFile = form.get('image_file');
     const newForm = new FormData();
     newForm.set('photo_id', newId);
+    newForm.set('gallery_id', gallery.id);
     if (imageFile instanceof File) newForm.set('image_file', imageFile);
     newForm.set('kind', asString(form.get('kind'), 'additional'));
     newForm.set('alt_text', asString(form.get('alt_text')));
     const result = await uploadImageWithForm(locals, newForm);
     if ('success' in result && result.success) {
-      throw redirect(303, `/admin/photos/create?photo=${newId}`);
+      throw redirect(
+        303,
+        `/admin/${gallery.slug}/photos/create?photo=${newId}`,
+      );
     }
     return result;
   },
-  create: async ({ locals, request, cookies }) => {
+  create: async ({ locals, params, request, cookies }) => {
+    const gallery = await resolveGallery(locals, params.gallerySlug);
     const form = await request.formData();
     const result = upsertPhotoPayload(form);
     if (!result.ok) return fail(400, { message: result.message });
@@ -133,6 +177,7 @@ export const actions: Actions = {
     const insertResult = await locals.supabase
       .from('photos')
       .insert({
+        gallery_id: gallery.id,
         ...result.payload,
         status: 'draft',
         deleted_at: null,
@@ -150,10 +195,10 @@ export const actions: Actions = {
 
     const newId = insertResult.data.id;
     cookies.set(ACTIVE_CREATE_PHOTO_COOKIE, newId, {
-      path: '/admin/photos',
+      path: cookiePathFor(gallery.slug),
       httpOnly: true,
       sameSite: 'lax',
     });
-    throw redirect(303, `/admin/photos/create?photo=${newId}`);
+    throw redirect(303, `/admin/${gallery.slug}/photos/create?photo=${newId}`);
   },
 };

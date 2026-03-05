@@ -4,6 +4,7 @@ import { asOptionalDate, asString, toSlug } from '$lib/server/admin-helpers';
 type MinimalDraftSeed = {
   title?: string;
   slug?: string;
+  galleryId?: string;
 };
 
 const draftStatusMigrationHint =
@@ -20,6 +21,11 @@ export async function createMinimalDraftPhoto(
   locals: App.Locals,
   seed: MinimalDraftSeed = {},
 ): Promise<{ id: string }> {
+  if (!seed.galleryId) {
+    throw new Error('Missing gallery scope for draft creation.');
+  }
+  const galleryId = seed.galleryId;
+
   const fallbackTitle = 'New Photo';
   const title = seed.title?.trim() || fallbackTitle;
   const slugBase = toSlug(seed.slug?.trim() || title, 'photo');
@@ -32,6 +38,7 @@ export async function createMinimalDraftPhoto(
     locals.supabase
       .from('photos')
       .insert({
+        gallery_id: galleryId,
         title,
         slug,
         capture_date: null,
@@ -105,11 +112,16 @@ export const upsertPhotoPayload = (
 export const photoCoreActions: Actions = {
   create: async ({ locals, request }) => {
     const form = await request.formData();
+    const galleryId = asString(form.get('gallery_id')).trim();
+    if (!galleryId) {
+      return fail(400, { message: 'Missing gallery scope.' });
+    }
     const result = upsertPhotoPayload(form);
 
     if (!result.ok) return fail(400, { message: result.message });
 
     const { error } = await locals.supabase.from('photos').insert({
+      gallery_id: galleryId,
       ...result.payload,
       status: 'draft',
       deleted_at: null,
@@ -125,15 +137,18 @@ export const photoCoreActions: Actions = {
   update: async ({ locals, request }) => {
     const form = await request.formData();
     const id = asString(form.get('id'));
+    const galleryId = asString(form.get('gallery_id'));
     if (!id) return fail(400, { message: 'Missing photo id.' });
 
     const result = upsertPhotoPayload(form);
     if (!result.ok) return fail(400, { message: result.message });
 
-    const { error } = await locals.supabase
+    let query = locals.supabase
       .from('photos')
       .update({ ...result.payload, updated_at: new Date().toISOString() })
       .eq('id', id);
+    if (galleryId) query = query.eq('gallery_id', galleryId);
+    const { error } = await query;
 
     if (error) return fail(400, { message: error.message });
     return { success: true, message: 'Photo updated.' };
@@ -142,10 +157,13 @@ export const photoCoreActions: Actions = {
   archive: async ({ locals, request }) => {
     const form = await request.formData();
     const id = asString(form.get('id'));
-    const { error } = await locals.supabase
+    const galleryId = asString(form.get('gallery_id'));
+    let query = locals.supabase
       .from('photos')
       .update({ status: 'archived', deleted_at: new Date().toISOString() })
       .eq('id', id);
+    if (galleryId) query = query.eq('gallery_id', galleryId);
+    const { error } = await query;
 
     if (error) return fail(400, { message: error.message });
     return { success: true, message: 'Photo archived.' };
@@ -154,13 +172,15 @@ export const photoCoreActions: Actions = {
   publish: async ({ locals, request }) => {
     const form = await request.formData();
     const id = asString(form.get('id'));
+    const galleryId = asString(form.get('gallery_id'));
     if (!id) return fail(400, { message: 'Missing photo id.' });
 
-    const { data: photo, error: photoError } = await locals.supabase
+    let photoQuery = locals.supabase
       .from('photos')
       .select('id, title, status, deleted_at')
-      .eq('id', id)
-      .maybeSingle();
+      .eq('id', id);
+    if (galleryId) photoQuery = photoQuery.eq('gallery_id', galleryId);
+    const { data: photo, error: photoError } = await photoQuery.maybeSingle();
     if (photoError) return fail(400, { message: photoError.message });
     if (!photo) return fail(404, { message: 'Photo not found.' });
     if (photo.status === 'archived' || photo.deleted_at) {
@@ -188,7 +208,7 @@ export const photoCoreActions: Actions = {
       });
     }
 
-    const { error } = await locals.supabase
+    let updateQuery = locals.supabase
       .from('photos')
       .update({
         status: 'published',
@@ -196,6 +216,8 @@ export const photoCoreActions: Actions = {
         updated_at: new Date().toISOString(),
       })
       .eq('id', id);
+    if (galleryId) updateQuery = updateQuery.eq('gallery_id', galleryId);
+    const { error } = await updateQuery;
 
     if (error) return fail(400, { message: error.message });
     return { success: true, message: 'Photo published.' };
@@ -204,10 +226,13 @@ export const photoCoreActions: Actions = {
   restore: async ({ locals, request }) => {
     const form = await request.formData();
     const id = asString(form.get('id'));
-    const { error } = await locals.supabase
+    const galleryId = asString(form.get('gallery_id'));
+    let query = locals.supabase
       .from('photos')
       .update({ status: 'draft', deleted_at: null })
       .eq('id', id);
+    if (galleryId) query = query.eq('gallery_id', galleryId);
+    const { error } = await query;
 
     if (error) return fail(400, { message: error.message });
     return { success: true, message: 'Photo restored to draft.' };

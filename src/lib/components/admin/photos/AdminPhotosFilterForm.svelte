@@ -14,6 +14,9 @@
     tags,
     filterCategoryId,
     filterTagId,
+    filterGalleryId = '',
+    galleries = [],
+    showGalleryFilter = false,
     showArchived,
     densityVisible = false,
     densityColCount = 6,
@@ -25,6 +28,9 @@
     tags: AdminTag[];
     filterCategoryId: string;
     filterTagId: string;
+    filterGalleryId?: string;
+    galleries?: Array<{ id: string; slug: string; name: string }>;
+    showGalleryFilter?: boolean;
     showArchived: boolean;
     densityVisible?: boolean;
     densityColCount?: number;
@@ -72,6 +78,21 @@
         </select>
       </FormField>
     </div>
+    {#if showGalleryFilter}
+      <div class="max-w-56 min-w-36 flex-1">
+        <FormField label="Gallery" id="filter-gallery">
+          <select id="filter-gallery" name="gallery" class={selectClass}>
+            <option value="">all</option>
+            {#each galleries as gallery (gallery.id)}
+              <option
+                value={gallery.id}
+                selected={filterGalleryId === gallery.id}>{gallery.name}</option
+              >
+            {/each}
+          </select>
+        </FormField>
+      </div>
+    {/if}
 
     <div class="mb-1">
       <AdminButton type="submit">Apply</AdminButton>

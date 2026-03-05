@@ -6,7 +6,11 @@
   const { data, children } = $props<{ data: LayoutData; children: Snippet }>();
 </script>
 
-<GalleryScene {data} />
+{#if data.viewerMode === 'gallery'}
+  <GalleryScene {data} />
 
-<!-- Keep child pages mounted for route matching; viewer UI is owned by this layout. -->
-<div class="hidden" aria-hidden="true">{@render children()}</div>
+  <!-- Keep child pages mounted for route matching; viewer UI is owned by this layout. -->
+  <div class="hidden" aria-hidden="true">{@render children()}</div>
+{:else}
+  {@render children()}
+{/if}

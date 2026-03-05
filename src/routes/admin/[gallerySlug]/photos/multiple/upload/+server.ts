@@ -2,6 +2,7 @@ import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 
 import { getCmsRole } from '$lib/server/admin-helpers';
+import { resolveGalleryForAdmin } from '$lib/server/admin/galleries';
 import { createMinimalDraftPhoto } from '$lib/server/admin/photos/photo-core';
 import { uploadImageWithForm } from '$lib/server/admin/photos/photo-images';
 
@@ -14,7 +15,7 @@ const deriveSeedFromFilename = (filename: string) => {
   return normalized || 'New Photo';
 };
 
-export const POST: RequestHandler = async ({ locals, request }) => {
+export const POST: RequestHandler = async ({ locals, params, request }) => {
   const role = await getCmsRole(locals);
   if (role !== 'admin' && role !== 'editor') {
     return json(
@@ -22,6 +23,15 @@ export const POST: RequestHandler = async ({ locals, request }) => {
       { status: 403 },
     );
   }
+
+  const resolved = await resolveGalleryForAdmin(locals, params.gallerySlug);
+  if (resolved.kind !== 'gallery') {
+    return json(
+      { success: false, message: 'Gallery not found.' },
+      { status: 404 },
+    );
+  }
+  const gallery = resolved.gallery;
 
   const form = await request.formData();
   const imageFile = form.get('image_file');
@@ -40,6 +50,7 @@ export const POST: RequestHandler = async ({ locals, request }) => {
     const created = await createMinimalDraftPhoto(locals, {
       title: seed,
       slug: seed,
+      galleryId: gallery.id,
     });
     photoId = created.id;
   } catch (cause) {
@@ -50,6 +61,7 @@ export const POST: RequestHandler = async ({ locals, request }) => {
 
   const uploadForm = new FormData();
   uploadForm.set('photo_id', photoId);
+  uploadForm.set('gallery_id', gallery.id);
   uploadForm.set('image_file', imageFile);
   uploadForm.set('kind', 'lead');
   uploadForm.set('alt_text', '');

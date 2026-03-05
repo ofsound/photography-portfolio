@@ -23,6 +23,8 @@
     prevGalleryHref,
     nextGalleryHref,
     withCurrentSearch,
+    galleryBasePath,
+    photoPath,
     onClose,
     onNavigateNeighbor,
     onSelectAdditionalImage,
@@ -42,6 +44,8 @@
     prevGalleryHref: string | null;
     nextGalleryHref: string | null;
     withCurrentSearch: (href: string) => string;
+    galleryBasePath: string;
+    photoPath: (photoSlug: string, imageId?: string | null) => string;
     onClose: (event?: MouseEvent | KeyboardEvent) => void;
     onNavigateNeighbor: (direction: 'prev' | 'next') => void;
     onSelectAdditionalImage: (imageId: string) => void;
@@ -176,7 +180,7 @@
     aria-hidden="true"
   >
     <a
-      href={resolve(withCurrentSearch('/gallery') as `/${string}`)}
+      href={resolve(withCurrentSearch(galleryBasePath) as `/${string}`)}
       onclick={onClose}
       class="chrome-panel pointer-events-auto fixed top-5 left-5 rounded px-3 py-2 text-xs tracking-wider uppercase"
       class:pointer-events-none={isTransitioning}
@@ -233,7 +237,7 @@
           <a
             href={resolve(
               withCurrentSearch(
-                `/photo/${activePhoto.slug}/${image.id}`,
+                photoPath(activePhoto.slug, image.id),
               ) as `/${string}`,
             )}
             onclick={(event: MouseEvent) =>

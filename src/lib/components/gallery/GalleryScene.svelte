@@ -17,6 +17,11 @@
     layoutModeStore,
   } from '$lib/stores/gallery-prefs.svelte';
   import type { GalleryPhoto } from '$lib/types/content';
+  import {
+    buildGalleryFeedPath,
+    buildGalleryPath,
+    buildGalleryPhotoPath,
+  } from '$lib/utils/gallery-routes';
   import { parseDimensions } from '$lib/utils/parse-dimensions';
   import {
     GALLERY_DETAIL_SHARED_WIDTH,
@@ -48,6 +53,9 @@
   };
 
   type ViewerData = {
+    galleryScope: {
+      slug: string;
+    } | null;
     photos: GalleryPhoto[];
     hasMore: boolean;
     page: number;
@@ -62,7 +70,7 @@
     maxDensity: number;
     baseQueryString: string;
     active: ActiveRoute | null;
-    siteSettings?: {
+    gallerySettings?: {
       show_photograph_info?: boolean | null;
       show_thumbnail_zoom_hover?: boolean | null;
     } | null;
@@ -107,6 +115,12 @@
   let hasHydratedRoute = Boolean(readInitialData().active);
   let skipNextRouteAnimation = false;
   let expectedRouteKeyFromGoto: string | null = null;
+  const routeScopeSlug = $derived(
+    readInitialData().galleryScope?.slug ?? 'all',
+  );
+  const galleryBasePath = $derived(buildGalleryPath(routeScopeSlug));
+  const photoPath = (photoSlug: string, imageId?: string | null) =>
+    buildGalleryPhotoPath(routeScopeSlug, photoSlug, imageId);
 
   const FADE_OUT_CHROME_MS = 280;
   const SCALE_MASK_MS = 520;
@@ -144,7 +158,7 @@
         skipNextRouteAnimation = true;
         expectedRouteKeyFromGoto = `${activeSlug}:`;
         void goto(
-          resolve(withCurrentSearch(`/photo/${activeSlug}`) as `/${string}`),
+          resolve(withCurrentSearch(photoPath(activeSlug)) as `/${string}`),
           {
             noScroll: true,
             keepFocus: true,
@@ -471,7 +485,7 @@
 
   const parseSlugFromPhotoHref = (href: string | null) => {
     if (!href) return null;
-    const match = href.match(/^\/photo\/([^/]+)/);
+    const match = href.match(/^\/[^/]+\/photo\/([^/]+)/);
     if (!match) return null;
     return decodeURIComponent(match[1]);
   };
@@ -489,8 +503,8 @@
     const prev = photos[(index - 1 + photos.length) % photos.length];
     const next = photos[(index + 1) % photos.length];
     return {
-      prevGalleryHref: prev?.slug ? `/photo/${prev.slug}` : null,
-      nextGalleryHref: next?.slug ? `/photo/${next.slug}` : null,
+      prevGalleryHref: prev?.slug ? photoPath(prev.slug) : null,
+      nextGalleryHref: next?.slug ? photoPath(next.slug) : null,
     };
   };
 
@@ -731,7 +745,7 @@
 
       skipNextRouteAnimation = true;
       expectedRouteKeyFromGoto = `${slug}:`;
-      await goto(resolve(withCurrentSearch(`/photo/${slug}`) as `/${string}`), {
+      await goto(resolve(withCurrentSearch(photoPath(slug)) as `/${string}`), {
         noScroll: true,
         keepFocus: true,
       });
@@ -750,10 +764,13 @@
 
       skipNextRouteAnimation = true;
       expectedRouteKeyFromGoto = '';
-      await goto(resolve(withCurrentSearch('/gallery', true) as `/${string}`), {
-        noScroll: true,
-        keepFocus: true,
-      });
+      await goto(
+        resolve(withCurrentSearch(galleryBasePath, true) as `/${string}`),
+        {
+          noScroll: true,
+          keepFocus: true,
+        },
+      );
     })();
   };
 
@@ -856,7 +873,7 @@
       expectedRouteKeyFromGoto = `${activeSlug}:${imageId}`;
       await goto(
         resolve(
-          withCurrentSearch(`/photo/${activeSlug}/${imageId}`) as `/${string}`,
+          withCurrentSearch(photoPath(activeSlug, imageId)) as `/${string}`,
         ),
         {
           noScroll: true,
@@ -897,7 +914,9 @@
     try {
       const params = buildFeedParams();
 
-      const response = await fetch(`/gallery/feed?${params.toString()}`);
+      const response = await fetch(
+        `${buildGalleryFeedPath(routeScopeSlug)}?${params.toString()}`,
+      );
       if (!response.ok) {
         throw new Error('request-failed');
       }
@@ -1176,9 +1195,11 @@
   {placeholderCount}
   {isLoadingMore}
   {galleryRevealed}
-  showThumbnailZoomHover={data.siteSettings?.show_thumbnail_zoom_hover ?? true}
+  showThumbnailZoomHover={data.gallerySettings?.show_thumbnail_zoom_hover ??
+    true}
   reducedMotion={reducedMotion()}
   withCurrentSearch={withCurrentSearchResolved}
+  {photoPath}
   {onOpenPhoto}
   {registerTile}
   {hasThumbCrop}
@@ -1209,12 +1230,14 @@
     promoted={Boolean(promoted)}
     {transitionPhase}
     {overlayChromeHidden}
-    showPhotographInfo={data.siteSettings?.show_photograph_info ?? true}
+    showPhotographInfo={data.gallerySettings?.show_photograph_info ?? true}
     {isTransitioning}
     {canCycleGallery}
     {prevGalleryHref}
     {nextGalleryHref}
     {withCurrentSearch}
+    {galleryBasePath}
+    {photoPath}
     onClose={closeToGallery}
     onNavigateNeighbor={onNeighborNavigate}
     {onSelectAdditionalImage}

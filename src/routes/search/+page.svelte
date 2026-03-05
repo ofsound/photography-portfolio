@@ -1,5 +1,6 @@
 <script lang="ts">
   import { resolve } from '$app/paths';
+  import { buildGalleryPhotoPath } from '$lib/utils/gallery-routes';
 
   const { data } = $props();
 </script>
@@ -21,7 +22,12 @@
   <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
     {#each data.results as result (result.id)}
       <a
-        href={resolve(`/photo/${result.slug}`)}
+        href={resolve(
+          buildGalleryPhotoPath(
+            result.gallery_slug,
+            result.slug,
+          ) as `/${string}`,
+        )}
         class="rounded border border-border p-4 transition hover:border-border-strong"
       >
         <h2 class="text-sm tracking-widest uppercase">

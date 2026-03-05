@@ -3,7 +3,7 @@ import type { Database } from '$lib/types/database';
 import { isUuid } from '$lib/server/admin/photos/shared';
 
 const PHOTO_SELECT =
-  'id, slug, title, capture_date, description, dimensions, license_text, og_title, og_description, og_image_path, status, deleted_at, updated_at';
+  'id, gallery_id, galleries(slug), slug, title, capture_date, description, dimensions, license_text, og_title, og_description, og_image_path, status, deleted_at, updated_at';
 const IMAGE_SELECT =
   'id, photo_id, kind, position, source_storage_path, delivery_storage_path, source_mime_type, source_bytes, alt_text, dimensions, thumb_crop_x, thumb_crop_y, thumb_crop_zoom, created_at';
 
@@ -17,24 +17,32 @@ type PhotoImageRow = Database['public']['Tables']['photo_images']['Row'];
 export const loadSinglePhotoEditorData = async (
   locals: App.Locals,
   identifier: string,
+  scopeGalleryId?: string,
 ) => {
-  let photo: PhotoRow | null =
-    (isUuid(identifier)
-      ? ((
-          await locals.supabase
-            .from('photos')
-            .select(PHOTO_SELECT)
-            .eq('id', identifier)
-            .maybeSingle()
-        ).data as PhotoRow | null)
-      : null) ?? null;
+  let photo: PhotoRow | null = null;
 
-  if (!photo) {
-    const bySlug = await locals.supabase
+  if (isUuid(identifier)) {
+    let byIdQuery = locals.supabase
       .from('photos')
       .select(PHOTO_SELECT)
-      .eq('slug', identifier)
-      .maybeSingle();
+      .eq('id', identifier);
+    if (scopeGalleryId) {
+      byIdQuery = byIdQuery.eq('gallery_id', scopeGalleryId);
+    }
+    const byId = await byIdQuery.maybeSingle();
+    if (byId.error) throw error(500, byId.error.message);
+    photo = byId.data as PhotoRow | null;
+  }
+
+  if (!photo) {
+    let bySlugQuery = locals.supabase
+      .from('photos')
+      .select(PHOTO_SELECT)
+      .eq('slug', identifier);
+    if (scopeGalleryId) {
+      bySlugQuery = bySlugQuery.eq('gallery_id', scopeGalleryId);
+    }
+    const bySlug = await bySlugQuery.maybeSingle();
     if (bySlug.error) throw error(500, bySlug.error.message);
     photo = bySlug.data as PhotoRow | null;
   }
@@ -105,8 +113,18 @@ export const loadSinglePhotoEditorData = async (
           ? 'pending'
           : 'ready';
 
+  const photoWithGallery = photo as PhotoRow & {
+    galleries?: { slug?: string } | Array<{ slug?: string }> | null;
+  };
+  const galleryRelation = Array.isArray(photoWithGallery.galleries)
+    ? (photoWithGallery.galleries[0] ?? null)
+    : (photoWithGallery.galleries ?? null);
+
   return {
-    photo,
+    photo: {
+      ...photo,
+      gallery_slug: galleryRelation?.slug ?? '',
+    },
     categories,
     tags,
     selectedCategoryIds: categoryLinks.map(

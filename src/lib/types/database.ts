@@ -116,6 +116,154 @@ export type Database = {
         };
         Relationships: [];
       };
+      galleries: {
+        Row: {
+          created_at: string;
+          created_by: string | null;
+          description: string | null;
+          id: string;
+          is_active: boolean;
+          name: string;
+          nav_order: number;
+          seo_description: string | null;
+          seo_title: string | null;
+          show_in_nav: boolean;
+          slug: string;
+          updated_at: string;
+          updated_by: string | null;
+        };
+        Insert: {
+          created_at?: string;
+          created_by?: string | null;
+          description?: string | null;
+          id?: string;
+          is_active?: boolean;
+          name: string;
+          nav_order?: number;
+          seo_description?: string | null;
+          seo_title?: string | null;
+          show_in_nav?: boolean;
+          slug: string;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Update: {
+          created_at?: string;
+          created_by?: string | null;
+          description?: string | null;
+          id?: string;
+          is_active?: boolean;
+          name?: string;
+          nav_order?: number;
+          seo_description?: string | null;
+          seo_title?: string | null;
+          show_in_nav?: boolean;
+          slug?: string;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Relationships: [];
+      };
+      gallery_settings: {
+        Row: {
+          allow_transition_toggle: boolean;
+          gallery_gap_px: number;
+          gallery_id: string | null;
+          gallery_layout_mode: Database['public']['Enums']['layout_mode'];
+          grid_desktop_default: number;
+          grid_mobile_default: number;
+          id: string;
+          max_content_width_px: number | null;
+          scope: Database['public']['Enums']['gallery_settings_scope'];
+          show_photograph_info: boolean;
+          show_search_bar: boolean;
+          show_thumbnail_zoom_hover: boolean;
+          theme_default: Database['public']['Enums']['theme_mode'];
+          transition_preset: Database['public']['Enums']['transition_preset'];
+          uniform_thumb_ratio: number;
+          updated_at: string;
+          updated_by: string | null;
+          created_at: string;
+        };
+        Insert: {
+          allow_transition_toggle?: boolean;
+          gallery_gap_px?: number;
+          gallery_id?: string | null;
+          gallery_layout_mode?: Database['public']['Enums']['layout_mode'];
+          grid_desktop_default?: number;
+          grid_mobile_default?: number;
+          id?: string;
+          max_content_width_px?: number | null;
+          scope: Database['public']['Enums']['gallery_settings_scope'];
+          show_photograph_info?: boolean;
+          show_search_bar?: boolean;
+          show_thumbnail_zoom_hover?: boolean;
+          theme_default?: Database['public']['Enums']['theme_mode'];
+          transition_preset?: Database['public']['Enums']['transition_preset'];
+          uniform_thumb_ratio?: number;
+          updated_at?: string;
+          updated_by?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          allow_transition_toggle?: boolean;
+          gallery_gap_px?: number;
+          gallery_id?: string | null;
+          gallery_layout_mode?: Database['public']['Enums']['layout_mode'];
+          grid_desktop_default?: number;
+          grid_mobile_default?: number;
+          id?: string;
+          max_content_width_px?: number | null;
+          scope?: Database['public']['Enums']['gallery_settings_scope'];
+          show_photograph_info?: boolean;
+          show_search_bar?: boolean;
+          show_thumbnail_zoom_hover?: boolean;
+          theme_default?: Database['public']['Enums']['theme_mode'];
+          transition_preset?: Database['public']['Enums']['transition_preset'];
+          uniform_thumb_ratio?: number;
+          updated_at?: string;
+          updated_by?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'gallery_settings_gallery_id_fkey';
+            columns: ['gallery_id'];
+            isOneToOne: false;
+            referencedRelation: 'galleries';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      gallery_slug_history: {
+        Row: {
+          created_at: string;
+          gallery_id: string;
+          id: number;
+          old_slug: string;
+        };
+        Insert: {
+          created_at?: string;
+          gallery_id: string;
+          id?: never;
+          old_slug: string;
+        };
+        Update: {
+          created_at?: string;
+          gallery_id?: string;
+          id?: never;
+          old_slug?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'gallery_slug_history_gallery_id_fkey';
+            columns: ['gallery_id'];
+            isOneToOne: false;
+            referencedRelation: 'galleries';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       homepage_slides: {
         Row: {
           caption_override: string | null;
@@ -374,13 +522,14 @@ export type Database = {
       };
       photos: {
         Row: {
-          admin_sort_order: number | null;
           capture_date: string | null;
           created_at: string;
           created_by: string | null;
           deleted_at: string | null;
           description: string | null;
           dimensions: string | null;
+          gallery_id: string;
+          gallery_sort_order: number | null;
           id: string;
           license_text: string | null;
           og_description: string | null;
@@ -395,13 +544,14 @@ export type Database = {
           updated_by: string | null;
         };
         Insert: {
-          admin_sort_order?: number | null;
           capture_date?: string | null;
           created_at?: string;
           created_by?: string | null;
           deleted_at?: string | null;
           description?: string | null;
           dimensions?: string | null;
+          gallery_id: string;
+          gallery_sort_order?: number | null;
           id?: string;
           license_text?: string | null;
           og_description?: string | null;
@@ -416,13 +566,14 @@ export type Database = {
           updated_by?: string | null;
         };
         Update: {
-          admin_sort_order?: number | null;
           capture_date?: string | null;
           created_at?: string;
           created_by?: string | null;
           deleted_at?: string | null;
           description?: string | null;
           dimensions?: string | null;
+          gallery_id?: string;
+          gallery_sort_order?: number | null;
           id?: string;
           license_text?: string | null;
           og_description?: string | null;
@@ -436,7 +587,54 @@ export type Database = {
           updated_at?: string;
           updated_by?: string | null;
         };
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: 'photos_gallery_id_fkey';
+            columns: ['gallery_id'];
+            isOneToOne: false;
+            referencedRelation: 'galleries';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      photo_slug_history: {
+        Row: {
+          created_at: string;
+          id: number;
+          old_gallery_id: string;
+          old_slug: string;
+          photo_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          id?: never;
+          old_gallery_id: string;
+          old_slug: string;
+          photo_id: string;
+        };
+        Update: {
+          created_at?: string;
+          id?: never;
+          old_gallery_id?: string;
+          old_slug?: string;
+          photo_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'photo_slug_history_old_gallery_id_fkey';
+            columns: ['old_gallery_id'];
+            isOneToOne: false;
+            referencedRelation: 'galleries';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'photo_slug_history_photo_id_fkey';
+            columns: ['photo_id'];
+            isOneToOne: false;
+            referencedRelation: 'photos';
+            referencedColumns: ['id'];
+          },
+        ];
       };
       profiles: {
         Row: {
@@ -566,13 +764,20 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
-      cms_can_edit: { Args: never; Returns: boolean };
-      cms_is_admin: { Args: never; Returns: boolean };
-      gallery_photo_neighbors: {
+      all_photo_neighbors: {
         Args: { p_photo_id: string };
         Returns: Array<{
-          next_slug: string;
-          prev_slug: string;
+          next_slug: string | null;
+          prev_slug: string | null;
+        }>;
+      };
+      cms_can_edit: { Args: never; Returns: boolean };
+      cms_is_admin: { Args: never; Returns: boolean };
+      gallery_photo_neighbors_scoped: {
+        Args: { p_gallery_id: string; p_photo_id: string };
+        Returns: Array<{
+          next_slug: string | null;
+          prev_slug: string | null;
         }>;
       };
       insert_photo_image: {
@@ -599,8 +804,8 @@ export type Database = {
         Args: { p_ordered_image_ids: string[]; p_photo_id: string };
         Returns: undefined;
       };
-      reorder_photos: {
-        Args: { p_ordered_photo_ids: string[] };
+      reorder_gallery_photos: {
+        Args: { p_gallery_id: string; p_ordered_photo_ids: string[] };
         Returns: undefined;
       };
       save_homepage_slides: { Args: { p_slides: Json }; Returns: undefined };
@@ -623,6 +828,7 @@ export type Database = {
     Enums: {
       app_role: 'admin' | 'editor';
       asset_kind: 'lead' | 'additional';
+      gallery_settings_scope: 'gallery' | 'all';
       layout_mode: 'uniform' | 'masonry' | 'coverage' | 'rows' | 'columns';
       page_kind: 'home' | 'about' | 'contact' | 'custom';
       publish_status: 'published' | 'archived' | 'draft';
@@ -760,6 +966,7 @@ export const Constants = {
     Enums: {
       app_role: ['admin', 'editor'],
       asset_kind: ['lead', 'additional'],
+      gallery_settings_scope: ['gallery', 'all'],
       layout_mode: ['uniform', 'masonry', 'coverage', 'rows', 'columns'],
       page_kind: ['home', 'about', 'contact', 'custom'],
       publish_status: ['published', 'archived', 'draft'],

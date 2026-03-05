@@ -5,22 +5,41 @@
 
   const { data, children } = $props();
 
-  const links = [
-    { href: '/admin/photos', label: 'Photos' },
-    { href: '/admin/categories', label: 'Categories' },
-    { href: '/admin/tags', label: 'Tags' },
-    { href: '/admin/homepage', label: 'Homepage' },
-    { href: '/admin/pages', label: 'Pages' },
-    { href: '/admin/settings', label: 'Settings' },
-    { href: '/admin/audit', label: 'Audit' },
-  ];
+  const links = $derived.by(() => {
+    const list = [
+      { href: '/admin/all/photos', label: 'Photos' },
+      { href: '/admin/categories', label: 'Categories' },
+      { href: '/admin/tags', label: 'Tags' },
+      { href: '/admin/homepage', label: 'Homepage' },
+      { href: '/admin/pages', label: 'Pages' },
+      { href: '/admin/settings/defaults', label: 'Defaults' },
+      { href: '/admin/all/settings', label: '/all Settings' },
+      { href: '/admin/audit', label: 'Audit' },
+    ];
+
+    if (data.role === 'admin') {
+      list.unshift({ href: '/admin/galleries', label: 'Galleries' });
+    }
+
+    return list;
+  });
+
+  const scopedPhotosMatch = (pathname: string) =>
+    pathname.match(/^\/admin\/([^/]+)\/photos(?:\/.*)?$/);
+  const currentScopedGallerySlug = $derived(
+    scopedPhotosMatch(page.url.pathname)?.[1] ?? null,
+  );
 
   const isActiveLink = (href: string) => {
-    if (href === '/admin/photos') {
+    if (href === '/admin/all/photos') {
       return (
-        page.url.pathname === '/admin/photos' ||
-        page.url.pathname.startsWith('/admin/photos/')
+        page.url.pathname === '/admin/all/photos' ||
+        page.url.pathname.startsWith('/admin/all/photos/') ||
+        /^\/admin\/[^/]+\/photos(?:\/.*)?$/.test(page.url.pathname)
       );
+    }
+    if (href === '/admin/settings/defaults') {
+      return page.url.pathname === '/admin/settings/defaults';
     }
     return page.url.pathname === href;
   };
@@ -50,17 +69,17 @@
             aria-label={link.label}
           ></a>
           <span class="pointer-events-none z-10 px-4 py-3">{link.label}</span>
-          {#if link.href === '/admin/photos'}
+          {#if link.href === '/admin/all/photos' && currentScopedGallerySlug && currentScopedGallerySlug !== 'all'}
             <div class="relative z-20 flex gap-2 pr-4">
               <AdminButton
-                href="/admin/photos/create"
+                href={`/admin/${currentScopedGallerySlug}/photos/create`}
                 variant="submit"
                 size="xs"
               >
                 New
               </AdminButton>
               <AdminButton
-                href="/admin/photos/multiple"
+                href={`/admin/${currentScopedGallerySlug}/photos/multiple`}
                 variant="submit"
                 size="xs"
               >

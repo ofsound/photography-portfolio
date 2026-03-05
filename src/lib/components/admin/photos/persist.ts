@@ -14,9 +14,11 @@ export const persistAdditionalOrder = async (
   pathname: string,
   photoId: string,
   orderedIds: string[],
+  galleryId?: string,
 ) => {
   const formData = new FormData();
   formData.append('photo_id', photoId);
+  if (galleryId) formData.append('gallery_id', galleryId);
   formData.append('ordered_image_ids', orderedIds.join('\n'));
   return postActionForm(pathname, 'reorderAdditionalImages', formData);
 };
@@ -26,9 +28,11 @@ export const persistTaxonomy = async (
   photoId: string,
   categoryIds: string[],
   tagIds: string[],
+  galleryId?: string,
 ) => {
   const formData = new FormData();
   formData.append('photo_id', photoId);
+  if (galleryId) formData.append('gallery_id', galleryId);
   for (const id of categoryIds) formData.append('category_ids', id);
   for (const id of tagIds) formData.append('tag_ids', id);
   return postActionForm(pathname, 'saveRelations', formData);
@@ -37,8 +41,10 @@ export const persistTaxonomy = async (
 export const persistPhotoOrder = async (
   pathname: string,
   orderedIds: string[],
+  galleryId?: string,
 ) => {
   const formData = new FormData();
+  if (galleryId) formData.append('gallery_id', galleryId);
   formData.append('ordered_photo_ids', orderedIds.join('\n'));
   return postActionForm(pathname, 'reorderPhotos', formData);
 };

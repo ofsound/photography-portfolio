@@ -6,6 +6,7 @@ import {
   type PublishStatus,
 } from '$lib/server/admin/page-form';
 import { sanitizeCmsCss, sanitizeCmsHtml } from '$lib/server/cms-sanitize';
+import { isGallerySlugTaken } from '$lib/server/root-slug';
 import type { Database } from '$lib/types/database';
 import type { PageServerLoad } from './$types';
 
@@ -75,6 +76,11 @@ export const actions: Actions = {
 
     const result = pagePayloadFromForm(form);
     if (!result.ok) return fail(400, { message: result.message });
+    if (await isGallerySlugTaken(locals, result.payload.slug)) {
+      return fail(400, {
+        message: 'Slug conflicts with an existing gallery.',
+      });
+    }
 
     const { error: updateError } = await locals.supabase
       .from('pages')
@@ -172,6 +178,11 @@ export const actions: Actions = {
 
     const slugProblem = validateCmsPageSlug(payload.slug);
     if (slugProblem) return fail(400, { message: slugProblem });
+    if (await isGallerySlugTaken(locals, payload.slug)) {
+      return fail(400, {
+        message: 'Slug conflicts with an existing gallery.',
+      });
+    }
     if (payload.html_content.toLowerCase().includes('<iframe'))
       return fail(400, {
         message: 'Cannot roll back to iframe content in v1.',

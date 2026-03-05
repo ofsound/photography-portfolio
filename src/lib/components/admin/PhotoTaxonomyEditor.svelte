@@ -8,6 +8,7 @@
     taxonomyDraftCategories,
     taxonomyDraftTags,
     selectedPhotoIds,
+    galleryScopeId = '',
     categoryById,
     tagById,
     addTaxonomyDraft,
@@ -18,6 +19,7 @@
     taxonomyDraftCategories: string[];
     taxonomyDraftTags: string[];
     selectedPhotoIds: string[];
+    galleryScopeId?: string;
     categoryById: (id: string) => AdminCategory | null;
     tagById: (id: string) => AdminTag | null;
     addTaxonomyDraft: (type: 'category' | 'tag', id: string) => void;
@@ -64,6 +66,9 @@
       name="selected_photo_ids"
       value={selectedPhotoIds.join('\n')}
     />
+    {#if galleryScopeId}
+      <input type="hidden" name="gallery_id" value={galleryScopeId} />
+    {/if}
     {#each taxonomyDraftCategories as categoryId (categoryId)}
       <input type="hidden" name="category_ids" value={categoryId} />
     {/each}

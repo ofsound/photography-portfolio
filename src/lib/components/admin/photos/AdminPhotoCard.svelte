@@ -151,7 +151,7 @@
     const target = e.target as HTMLElement;
     if (
       target.closest('input[type="checkbox"]') ||
-      target.closest('a[href^="/photo/"]') ||
+      target.closest('a[href*="/photo/"]') ||
       target.closest('button')
     )
       return;
@@ -248,6 +248,11 @@
                   };
                 }}
               >
+                <input
+                  type="hidden"
+                  name="gallery_id"
+                  value={photo.gallery_id}
+                />
                 {#if !isDraft}
                   <input type="hidden" name="id" value={photo.id} />
                 {/if}

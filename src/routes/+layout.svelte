@@ -13,6 +13,10 @@
     layoutModeStore,
     setGalleryPrefs,
   } from '$lib/stores/gallery-prefs.svelte';
+  import {
+    buildGalleryPath,
+    isGalleryDetailPath,
+  } from '$lib/utils/gallery-routes';
   import ZoomControl from '$lib/components/ZoomControl.svelte';
   import type { LayoutData } from './$types';
 
@@ -21,8 +25,7 @@
     children: import('svelte').Snippet;
   }>();
 
-  const isDetailRoute = (pathname: string) =>
-    /^\/photo\/[^/]+(?:\/[^/]+)?$/.test(pathname);
+  const isDetailRoute = (pathname: string) => isGalleryDetailPath(pathname);
 
   let phase = $state<GalleryTransitionPhase>(
     isDetailRoute(page.url.pathname) ? 'open' : 'idle',
@@ -48,7 +51,51 @@
       nav_order: number;
     }>,
   );
-  const siteSettings = $derived(data?.siteSettings ?? null);
+  const navGalleries = $derived(
+    (data?.navGalleries ?? []) as Array<{
+      id: string;
+      slug: string;
+      name: string;
+      nav_order: number;
+    }>,
+  );
+  const allGallerySlugs = $derived(
+    new Set(((data?.allGallerySlugs ?? []) as string[]).filter(Boolean)),
+  );
+  const isViewerRoute = (pathname: string) => {
+    const segments = pathname.split('/').filter(Boolean);
+    if (segments.length === 0) return false;
+
+    const rootSlug = segments[0];
+    const isGalleryRoot = rootSlug === 'all' || allGallerySlugs.has(rootSlug);
+    if (!isGalleryRoot) return false;
+
+    return (
+      segments.length === 1 || (segments.length >= 3 && segments[1] === 'photo')
+    );
+  };
+  const galleryScope = $derived(
+    ((data as Record<string, unknown> | null)?.galleryScope ?? null) as {
+      slug: string;
+    } | null,
+  );
+  const globalSiteSettings = $derived(data?.siteSettings ?? null);
+  const gallerySettings = $derived(
+    ((data as Record<string, unknown> | null)?.gallerySettings ?? null) as {
+      theme_default?: 'light' | 'dark' | 'system' | null;
+      transition_preset?: 'cinematic' | 'snappy' | 'experimental' | null;
+      allow_transition_toggle?: boolean | null;
+      show_search_bar?: boolean | null;
+    } | null,
+  );
+  const siteSettings = $derived(
+    isViewerRoute(page.url.pathname) && gallerySettings
+      ? {
+          ...globalSiteSettings,
+          ...gallerySettings,
+        }
+      : globalSiteSettings,
+  );
   const hasSession = $derived(Boolean(data?.session));
   const pendingConversionCount = $derived(
     (data?.pendingConversionCount as number) ?? 0,
@@ -62,11 +109,24 @@
   let siteHeaderEl: HTMLElement | null = null;
   let galleryQueryInput = $state('');
 
-  const isGalleryRoute = (pathname: string) =>
-    pathname === '/gallery' || pathname.startsWith('/gallery/');
-  const isViewerRoute = (pathname: string) =>
-    isGalleryRoute(pathname) || isDetailRoute(pathname);
   const isViewer = $derived(isViewerRoute(page.url.pathname));
+  const activeGalleryPath = $derived.by(() => {
+    const routeScopeSlug = galleryScope?.slug;
+    if (routeScopeSlug) return buildGalleryPath(routeScopeSlug);
+
+    const pathname = page.url.pathname;
+    const segments = pathname.split('/').filter(Boolean);
+    const rootSlug = segments[0];
+    if (rootSlug && (rootSlug === 'all' || allGallerySlugs.has(rootSlug))) {
+      return buildGalleryPath(rootSlug);
+    }
+
+    if (navGalleries.length > 0) {
+      return buildGalleryPath(navGalleries[0].slug);
+    }
+
+    return '/all';
+  });
   const isAdminPage = $derived(page.url.pathname.startsWith('/admin/'));
 
   $effect(() => {
@@ -78,11 +138,10 @@
   const onGallerySearchSubmit = (event: SubmitEvent) => {
     event.preventDefault();
     const q = galleryQueryInput.trim();
+    const target = activeGalleryPath as `/${string}`;
     goto(
       /* eslint-disable-next-line svelte/no-navigation-without-resolve -- path uses resolve() */
-      q
-        ? `${resolve('/gallery')}?q=${encodeURIComponent(q)}`
-        : resolve('/gallery'),
+      q ? `${resolve(target)}?q=${encodeURIComponent(q)}` : resolve(target),
       {
         replaceState: true,
         noScroll: true,
@@ -324,12 +383,17 @@
         class="flex items-center gap-6 py-3 text-sm tracking-widest uppercase"
       >
         <a href={resolve('/')}>Home</a>
-        <a href={resolve('/gallery')}>Gallery</a>
+        {#each navGalleries as navGallery (navGallery.id)}
+          <a href={resolve(buildGalleryPath(navGallery.slug) as `/${string}`)}
+            >{navGallery.name}</a
+          >
+        {/each}
+        <a href={resolve('/all')}>All</a>
         {#each navPages as navPage (navPage.id)}
           <a href={resolve(`/${navPage.slug}`)}>{navPage.title}</a>
         {/each}
         {#if hasSession}
-          <a href={resolve('/admin/photos')}>Admin</a>
+          <a href={resolve('/admin/galleries')}>Admin</a>
         {/if}
       </nav>
 

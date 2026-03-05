@@ -16,6 +16,9 @@
     removeTaxonomyDraft,
     selectAllVisiblePhotos,
     clearSelectedPhotos,
+    galleryScopeId = '',
+    galleries = [],
+    allowMove = false,
     showBulkTaxonomy = false,
     onToggleShowBulkTaxonomy,
     hideTaxonomyEditor = false,
@@ -32,10 +35,15 @@
     removeTaxonomyDraft: (type: 'category' | 'tag', id: string) => void;
     selectAllVisiblePhotos: () => void;
     clearSelectedPhotos: () => void;
+    galleryScopeId?: string;
+    galleries?: Array<{ id: string; slug: string; name: string }>;
+    allowMove?: boolean;
     showBulkTaxonomy?: boolean;
     onToggleShowBulkTaxonomy?: () => void;
     hideTaxonomyEditor?: boolean;
   }>();
+
+  let destinationGalleryId = $state('');
 </script>
 
 <section class="mt-4 grid gap-3">
@@ -61,6 +69,9 @@
           name="selected_photo_ids"
           value={selectedPhotoIds.join('\n')}
         />
+        {#if galleryScopeId}
+          <input type="hidden" name="gallery_id" value={galleryScopeId} />
+        {/if}
         <AdminButton
           size="xs"
           type="submit"
@@ -76,6 +87,9 @@
           name="selected_photo_ids"
           value={selectedPhotoIds.join('\n')}
         />
+        {#if galleryScopeId}
+          <input type="hidden" name="gallery_id" value={galleryScopeId} />
+        {/if}
         <AdminButton
           size="xs"
           type="submit"
@@ -91,6 +105,9 @@
           name="selected_photo_ids"
           value={selectedPhotoIds.join('\n')}
         />
+        {#if galleryScopeId}
+          <input type="hidden" name="gallery_id" value={galleryScopeId} />
+        {/if}
         <AdminButton
           size="xs"
           type="submit"
@@ -120,6 +137,9 @@
           value={selectedPhotoIds.join('\n')}
         />
         <input type="hidden" name="showArchived" value="1" />
+        {#if galleryScopeId}
+          <input type="hidden" name="gallery_id" value={galleryScopeId} />
+        {/if}
         <AdminButton
           size="xs"
           type="submit"
@@ -127,6 +147,33 @@
           disabled={selectedPhotoIds.length === 0}
         >
           Delete Selected
+        </AdminButton>
+      </form>
+    {/if}
+
+    {#if allowMove && galleries.length > 0}
+      <form method="POST" action="?/bulkMovePhotos" class="ml-2 flex gap-2">
+        <input
+          type="hidden"
+          name="selected_photo_ids"
+          value={selectedPhotoIds.join('\n')}
+        />
+        <select
+          name="destination_gallery_id"
+          bind:value={destinationGalleryId}
+          class="rounded border border-border-strong bg-surface px-2 py-1 text-xs"
+        >
+          <option value="">Move to...</option>
+          {#each galleries as gallery (gallery.id)}
+            <option value={gallery.id}>{gallery.name}</option>
+          {/each}
+        </select>
+        <AdminButton
+          size="xs"
+          type="submit"
+          disabled={selectedPhotoIds.length === 0 || !destinationGalleryId}
+        >
+          Move Selected
         </AdminButton>
       </form>
     {/if}
@@ -153,6 +200,7 @@
       {taxonomyDraftCategories}
       {taxonomyDraftTags}
       {selectedPhotoIds}
+      {galleryScopeId}
       {categoryById}
       {tagById}
       {addTaxonomyDraft}

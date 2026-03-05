@@ -32,6 +32,8 @@ export type AdminTag = {
 
 export type AdminPhoto = {
   id: string;
+  gallery_id: string;
+  gallery_slug: string;
   slug: string;
   title: string;
   capture_date: string | null;
@@ -78,6 +80,8 @@ export type ContentRevision = {
 
 export type GalleryPhoto = {
   id: string;
+  gallery_id: string;
+  gallery_slug: string;
   slug: string;
   title: string;
   description: string | null;

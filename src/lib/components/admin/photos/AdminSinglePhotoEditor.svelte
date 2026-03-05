@@ -61,7 +61,12 @@
     orderedAdditional = next;
     if (
       photo.id &&
-      (await persistAdditionalOrder(window.location.pathname, photo.id, next))
+      (await persistAdditionalOrder(
+        window.location.pathname,
+        photo.id,
+        next,
+        photo.gallery_id,
+      ))
     ) {
       invalidateAll();
     }
@@ -80,6 +85,7 @@
         photoId,
         categoryIds,
         tagIds,
+        photo.gallery_id,
       )
     ) {
       invalidateAll();

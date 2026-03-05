@@ -17,6 +17,7 @@
     dimensions = null,
     initialCrop = null,
     photoId,
+    galleryId = '',
   } = $props<{
     imageId: string;
     deliveryStoragePath: string;
@@ -24,6 +25,7 @@
     dimensions?: string | null;
     initialCrop?: ThumbCrop | null;
     photoId: string;
+    galleryId?: string;
   }>();
 
   const parsedDims = $derived(parseDimensions(dimensions));
@@ -258,6 +260,9 @@
       }}
     >
       <input type="hidden" name="photo_id" value={photoId} />
+      {#if galleryId}
+        <input type="hidden" name="gallery_id" value={galleryId} />
+      {/if}
       <input type="hidden" name="image_id" value={imageId} />
       <AdminButton
         size="sm"
@@ -283,6 +288,9 @@
     }}
   >
     <input type="hidden" name="photo_id" value={photoId} />
+    {#if galleryId}
+      <input type="hidden" name="gallery_id" value={galleryId} />
+    {/if}
     <input type="hidden" name="image_id" value={imageId} />
     <input type="hidden" name="thumb_crop_x" value={cropX} />
     <input type="hidden" name="thumb_crop_y" value={cropY} />

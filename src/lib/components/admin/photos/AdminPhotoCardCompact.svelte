@@ -4,6 +4,7 @@
 
   import AdminButton from '$lib/components/admin/AdminButton.svelte';
 
+  import { buildGalleryPhotoPath } from '$lib/utils/gallery-routes';
   import { photoPublicUrl } from '$lib/utils/storage-url';
   import type { AdminPhoto, AdminPhotoImage } from '$lib/types/content';
 
@@ -102,11 +103,17 @@
       </h2>
       {#if isPublic}
         <a
-          href={resolve(`/photo/${photo.slug}`)}
+          href={resolve(
+            buildGalleryPhotoPath(
+              photo.gallery_slug,
+              photo.slug,
+            ) as `/${string}`,
+          )}
           class="block truncate text-xs text-white/80 hover:underline"
           target="_blank"
           rel="noopener noreferrer"
-          onclick={(e) => e.stopPropagation()}>/{photo.slug}</a
+          onclick={(e) => e.stopPropagation()}
+          >/{photo.gallery_slug}/photo/{photo.slug}</a
         >
       {:else}
         <span class="block truncate text-xs text-white/75">
@@ -168,10 +175,15 @@
       </div>
       {#if isPublic}
         <a
-          href={resolve(`/photo/${photo.slug}`)}
+          href={resolve(
+            buildGalleryPhotoPath(
+              photo.gallery_slug,
+              photo.slug,
+            ) as `/${string}`,
+          )}
           class="inline-block text-xs text-text-muted hover:underline"
           target="_blank"
-          rel="noopener noreferrer">/{photo.slug}</a
+          rel="noopener noreferrer">/{photo.gallery_slug}/photo/{photo.slug}</a
         >
       {:else}
         <span class="inline-block text-xs text-text-muted">

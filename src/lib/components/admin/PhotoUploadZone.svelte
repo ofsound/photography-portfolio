@@ -5,11 +5,13 @@
 
   const {
     photoId,
+    galleryId = '',
     existingImageCount = 0,
     draftTitle = '',
     draftSlug = '',
   } = $props<{
     photoId: string;
+    galleryId?: string;
     existingImageCount?: number;
     draftTitle?: string;
     draftSlug?: string;
@@ -43,6 +45,9 @@
   }}
 >
   <input type="hidden" name="photo_id" value={photoId} />
+  {#if galleryId}
+    <input type="hidden" name="gallery_id" value={galleryId} />
+  {/if}
   <input type="hidden" name="draft_title" value={draftTitle} />
   <input type="hidden" name="draft_slug" value={draftSlug} />
   <p class="text-xs tracking-widest uppercase">Upload Image</p>

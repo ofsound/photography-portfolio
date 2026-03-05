@@ -16,6 +16,7 @@
     galleryRevealed,
     reducedMotion,
     withCurrentSearch,
+    photoPath,
     onOpenPhoto,
     registerTile,
     hasThumbCrop,
@@ -46,6 +47,7 @@
     galleryRevealed: boolean;
     reducedMotion: boolean;
     withCurrentSearch: (href: string) => string;
+    photoPath: (photoSlug: string) => string;
     onOpenPhoto: (event: MouseEvent, slug: string) => void;
     registerTile: (
       node: HTMLElement,
@@ -156,6 +158,7 @@
         {galleryRevealed}
         {reducedMotion}
         {withCurrentSearch}
+        {photoPath}
         {onOpenPhoto}
         {registerTile}
         {hasThumbCrop}
@@ -191,6 +194,7 @@
         {galleryRevealed}
         {reducedMotion}
         {withCurrentSearch}
+        {photoPath}
         {onOpenPhoto}
         {registerTile}
         {hasThumbCrop}

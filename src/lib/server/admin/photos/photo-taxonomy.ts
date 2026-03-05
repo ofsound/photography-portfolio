@@ -6,6 +6,7 @@ export const photoTaxonomyActions: Actions = {
   bulkAssignTaxonomy: async ({ locals, request }) => {
     const form = await request.formData();
     const photoIds = parseUuidList(asString(form.get('selected_photo_ids')));
+    const galleryId = asString(form.get('gallery_id'));
     const categoryIds = form
       .getAll('category_ids')
       .map((entry) => String(entry))
@@ -17,6 +18,20 @@ export const photoTaxonomyActions: Actions = {
 
     if (!photoIds.length)
       return fail(400, { message: 'Select at least one photo.' });
+
+    if (galleryId) {
+      const guard = await locals.supabase
+        .from('photos')
+        .select('id')
+        .eq('gallery_id', galleryId)
+        .in('id', photoIds);
+      if (guard.error) return fail(400, { message: guard.error.message });
+      if ((guard.data ?? []).length !== photoIds.length) {
+        return fail(400, {
+          message: 'Some selected photos are outside this gallery.',
+        });
+      }
+    }
     if (!categoryIds.length && !tagIds.length) {
       return fail(400, { message: 'Select categories and/or tags to add.' });
     }
@@ -87,6 +102,7 @@ export const photoTaxonomyActions: Actions = {
   saveRelations: async ({ locals, request }) => {
     const form = await request.formData();
     const photoId = asString(form.get('photo_id'));
+    const galleryId = asString(form.get('gallery_id'));
     const categoryIds = form
       .getAll('category_ids')
       .map((item) => String(item))
@@ -97,6 +113,18 @@ export const photoTaxonomyActions: Actions = {
       .filter((id) => isUuid(id));
 
     if (!photoId) return fail(400, { message: 'Missing photo id.' });
+
+    if (galleryId) {
+      const guard = await locals.supabase
+        .from('photos')
+        .select('id')
+        .eq('id', photoId)
+        .eq('gallery_id', galleryId)
+        .maybeSingle();
+      if (guard.error) return fail(400, { message: guard.error.message });
+      if (!guard.data)
+        return fail(404, { message: 'Photo not found in this gallery.' });
+    }
 
     const { error } = await locals.supabase.rpc('save_photo_relations', {
       p_photo_id: photoId,

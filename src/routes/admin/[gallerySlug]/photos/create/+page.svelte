@@ -16,8 +16,10 @@
 </script>
 
 <div class="flex flex-wrap items-center justify-between gap-3">
-  <AdminHeading>New Photo</AdminHeading>
-  <AdminButton href="/admin/photos">Back to Photos</AdminButton>
+  <AdminHeading>New Photo /{data.gallery.slug}</AdminHeading>
+  <AdminButton href={`/admin/${data.gallery.slug}/photos`}
+    >Back to Photos</AdminButton
+  >
 </div>
 <p class="mt-2 text-sm text-text-muted">
   Type a title and upload immediately on this page. First upload creates a

@@ -10,9 +10,12 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 
   const query = await locals.supabase
     .from('photos')
-    .select('id, slug, title, description')
+    .select(
+      'id, slug, title, description, gallery_id, galleries!inner(slug, is_active)',
+    )
     .eq('status', 'published')
     .is('deleted_at', null)
+    .eq('galleries.is_active', true)
     .textSearch('search_tsv', q, { type: 'websearch' })
     .limit(80);
 
@@ -25,6 +28,14 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 
   return {
     q,
-    results: query.data ?? [],
+    results: (query.data ?? []).map((row) => ({
+      id: row.id,
+      slug: row.slug,
+      title: row.title,
+      description: row.description,
+      gallery_slug: Array.isArray(row.galleries)
+        ? (row.galleries[0]?.slug ?? 'all')
+        : (row.galleries?.slug ?? 'all'),
+    })),
   };
 };

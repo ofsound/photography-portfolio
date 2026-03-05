@@ -1,6 +1,7 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
   import { resolve } from '$app/paths';
+  import { page } from '$app/state';
 
   import AdminButton from '$lib/components/admin/AdminButton.svelte';
   import AdminHeading from '$lib/components/admin/AdminHeading.svelte';
@@ -23,9 +24,14 @@
     photoId?: string;
   } | null;
 
+  const { data } = $props();
+
   const ACCEPTED_TYPES =
     'image/jpeg,image/png,image/webp,image/heic,image/heif';
   const MAX_CONCURRENCY = 3;
+  const basePhotosPath = $derived(
+    page.url.pathname.replace(/\/multiple\/?$/, ''),
+  );
 
   let uploadQueue = $state<UploadItem[]>([]);
   let uploading = $state(false);
@@ -118,7 +124,7 @@
   function uploadOne(item: UploadItem): Promise<void> {
     return new Promise((resolve) => {
       const xhr = new XMLHttpRequest();
-      xhr.open('POST', '/admin/photos/multiple/upload');
+      xhr.open('POST', `${page.url.pathname.replace(/\/$/, '')}/upload`);
       xhr.timeout = 120_000;
 
       xhr.upload.addEventListener('loadstart', () => {
@@ -194,13 +200,13 @@
     const workers = Array.from({ length: workerCount }, () => runWorker());
     await Promise.all(workers);
     uploading = false;
-    await goto(resolve('/admin/photos'));
+    await goto(resolve(basePhotosPath as `/${string}`));
   }
 </script>
 
 <div class="flex flex-wrap items-center justify-between gap-3">
-  <AdminHeading>Bulk Upload</AdminHeading>
-  <AdminButton href="/admin/photos">Back to Photos</AdminButton>
+  <AdminHeading>Bulk Upload /{data.gallery.slug}</AdminHeading>
+  <AdminButton href={basePhotosPath}>Back to Photos</AdminButton>
 </div>
 
 <p class="mt-2 text-sm text-text-muted">

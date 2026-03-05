@@ -23,6 +23,7 @@
     galleryRevealed,
     reducedMotion,
     withCurrentSearch,
+    photoPath,
     onOpenPhoto,
     registerTile,
     hasThumbCrop,
@@ -46,6 +47,7 @@
     galleryRevealed: boolean;
     reducedMotion: boolean;
     withCurrentSearch: (href: string) => string;
+    photoPath: (photoSlug: string) => string;
     onOpenPhoto: (event: MouseEvent, slug: string) => void;
     registerTile: (
       node: HTMLElement,
@@ -91,7 +93,7 @@
         >
           <a
             href={resolve(
-              withCurrentSearch(`/photo/${photo.slug}`) as `/${string}`,
+              withCurrentSearch(photoPath(photo.slug)) as `/${string}`,
             )}
             use:registerTile={photo.slug}
             class="group relative block overflow-hidden"
@@ -147,7 +149,7 @@
         >
           <a
             href={resolve(
-              withCurrentSearch(`/photo/${photo.slug}`) as `/${string}`,
+              withCurrentSearch(photoPath(photo.slug)) as `/${string}`,
             )}
             use:registerTile={photo.slug}
             class="group relative block h-full w-full overflow-hidden"
@@ -201,7 +203,7 @@
               >
                 <a
                   href={resolve(
-                    withCurrentSearch(`/photo/${photo.slug}`) as `/${string}`,
+                    withCurrentSearch(photoPath(photo.slug)) as `/${string}`,
                   )}
                   use:registerTile={photo.slug}
                   class="group relative block h-full w-full overflow-hidden"
@@ -259,7 +261,7 @@
               >
                 <a
                   href={resolve(
-                    withCurrentSearch(`/photo/${photo.slug}`) as `/${string}`,
+                    withCurrentSearch(photoPath(photo.slug)) as `/${string}`,
                   )}
                   use:registerTile={photo.slug}
                   class="group relative block h-full w-full overflow-hidden"
@@ -314,7 +316,7 @@
           >
             <a
               href={resolve(
-                withCurrentSearch(`/photo/${photo.slug}`) as `/${string}`,
+                withCurrentSearch(photoPath(photo.slug)) as `/${string}`,
               )}
               use:registerTile={photo.slug}
               class="group relative block overflow-hidden"

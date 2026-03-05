@@ -1,8 +1,15 @@
+import { loadActiveNavGalleries } from '$lib/server/gallery';
 import { throwLoaderError } from '$lib/server/load-error';
 import type { LayoutServerLoad } from './$types';
 
 export const load: LayoutServerLoad = async ({ locals }) => {
-  const [{ session }, settingsResult, navPagesResult] = await Promise.all([
+  const [
+    { session },
+    settingsResult,
+    navPagesResult,
+    navGalleries,
+    gallerySlugsResult,
+  ] = await Promise.all([
     locals.safeGetSession(),
     locals.supabase
       .from('site_settings')
@@ -20,6 +27,8 @@ export const load: LayoutServerLoad = async ({ locals }) => {
       .neq('kind', 'home')
       .order('nav_order', { ascending: true })
       .order('title', { ascending: true }),
+    loadActiveNavGalleries(locals),
+    locals.supabase.from('galleries').select('slug'),
   ]);
 
   if (settingsResult.error) {
@@ -33,6 +42,13 @@ export const load: LayoutServerLoad = async ({ locals }) => {
     throwLoaderError(
       { route: '/+layout', operation: 'load nav pages' },
       navPagesResult.error,
+    );
+  }
+
+  if (gallerySlugsResult.error) {
+    throwLoaderError(
+      { route: '/+layout', operation: 'load gallery slugs' },
+      gallerySlugsResult.error,
     );
   }
 
@@ -55,6 +71,8 @@ export const load: LayoutServerLoad = async ({ locals }) => {
     session,
     siteSettings: settingsResult.data ?? null,
     navPages: navPagesResult.data ?? [],
+    navGalleries,
+    allGallerySlugs: (gallerySlugsResult.data ?? []).map((row) => row.slug),
     pendingConversionCount: pendingQuery?.count ?? 0,
   };
 };

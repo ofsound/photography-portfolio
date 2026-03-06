@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { enhance } from '$app/forms';
   import AdminButton from '$lib/components/admin/AdminButton.svelte';
   import PhotoTaxonomyEditor from '$lib/components/admin/PhotoTaxonomyEditor.svelte';
   import type { AdminCategory, AdminTag } from '$lib/types/content';
@@ -81,7 +82,7 @@
         </AdminButton>
       </form>
 
-      <form method="POST" action="?/bulkArchivePhotos">
+      <form method="POST" action="?/bulkArchivePhotos" use:enhance>
         <input
           type="hidden"
           name="selected_photo_ids"
@@ -94,12 +95,21 @@
           size="xs"
           type="submit"
           disabled={selectedPhotoIds.length === 0}
+          onclick={(e: MouseEvent) => {
+            if (
+              !window.confirm(
+                `Are you sure you want to archive the ${selectedPhotoIds.length} selected photo(s)?`,
+              )
+            ) {
+              e.preventDefault();
+            }
+          }}
         >
           Archive Selected
         </AdminButton>
       </form>
     {:else}
-      <form method="POST" action="?/bulkRestorePhotos">
+      <form method="POST" action="?/bulkRestorePhotos" use:enhance>
         <input
           type="hidden"
           name="selected_photo_ids"
@@ -117,20 +127,7 @@
         </AdminButton>
       </form>
 
-      <form
-        method="POST"
-        action="?/bulkDeletePhotos"
-        onsubmit={(e) => {
-          if (
-            selectedPhotoIds.length > 0 &&
-            !confirm(
-              `Permanently delete ${selectedPhotoIds.length} photo(s) and all their files? This cannot be undone.`,
-            )
-          ) {
-            e.preventDefault();
-          }
-        }}
-      >
+      <form method="POST" action="?/bulkDeletePhotos" use:enhance>
         <input
           type="hidden"
           name="selected_photo_ids"
@@ -145,6 +142,15 @@
           type="submit"
           variant="danger-outline"
           disabled={selectedPhotoIds.length === 0}
+          onclick={(e: MouseEvent) => {
+            if (
+              !window.confirm(
+                `Are you sure you want to permanently delete the ${selectedPhotoIds.length} selected photo(s) and all their files? This cannot be undone.`,
+              )
+            ) {
+              e.preventDefault();
+            }
+          }}
         >
           Delete Selected
         </AdminButton>

@@ -44,14 +44,25 @@
     class="border-r border-border"
     style="view-transition-name: admin-sidebar"
   >
-    <p class="mb-5 p-4 text-xl tracking-wider uppercase">
-      {data.role}
-    </p>
-    <nav class="flex flex-col border-y border-border text-lg font-medium">
+    <div
+      class="relative overflow-hidden border-b border-border bg-surface-muted"
+    >
+      <!-- Diagonal stripes -->
+      <div
+        aria-hidden="true"
+        class="pointer-events-none absolute inset-0 bg-[repeating-linear-gradient(-45deg,transparent,transparent_6px,rgba(0,0,0,0.06)_6px,rgba(0,0,0,0.06)_8px)] dark:bg-[repeating-linear-gradient(-45deg,transparent,transparent_6px,rgba(255,255,255,0.08)_6px,rgba(255,255,255,0.08)_8px)]"
+      ></div>
+      <p
+        class="relative p-4 text-xl font-semibold tracking-[0.35em] uppercase [text-shadow:0_1px_0_rgba(255,255,255,0.2),0_2px_4px_rgba(0,0,0,0.15),0_4px_12px_rgba(0,0,0,0.25)]"
+      >
+        CMS
+      </p>
+    </div>
+    <nav class="text-md flex flex-col border-y border-border font-medium">
       {#each links as link, i (link.href)}
         <div
           class="relative flex items-center justify-between border-t border-border first:border-t-0"
-          class:bg-surface-muted={!isActiveLink(link.href) && i % 2 === 1}
+          class:bg-surface-subtle={!isActiveLink(link.href) && i % 2 === 1}
           class:bg-surface-strong={isActiveLink(link.href)}
         >
           <a

@@ -18,6 +18,7 @@
     href,
     as,
     class: className = '',
+    onclick,
     children,
     ...restProps
   } = $props<{
@@ -30,6 +31,7 @@
     href?: string;
     as?: 'button' | 'a' | 'label';
     class?: string;
+    onclick?: (e: MouseEvent) => void;
     children?: import('svelte').Snippet;
     [key: string]: unknown;
   }>();
@@ -55,7 +57,7 @@
 </script>
 
 {#if isLabel}
-  <label {...commonAttrs} aria-disabled={disabled} {...restProps}
+  <label {...commonAttrs} aria-disabled={disabled} {onclick} {...restProps}
     >{@render children?.()}</label
   >
 {:else if isLink}
@@ -69,10 +71,11 @@
         : resolve(href)}
     {...commonAttrs}
     aria-disabled={disabled}
+    {onclick}
     {...restProps}>{@render children?.()}</a
   >
 {:else}
-  <button {type} {disabled} {...commonAttrs} {...restProps}
+  <button {type} {disabled} {...commonAttrs} {onclick} {...restProps}
     >{@render children?.()}</button
   >
 {/if}

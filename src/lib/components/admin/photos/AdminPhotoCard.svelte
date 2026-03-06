@@ -444,7 +444,16 @@
                 form="photo-update-form-{photoFormId}"
                 variant="danger"
                 type="submit"
-                formaction="?/archive">Archive</AdminButton
+                formaction="?/archive"
+                onclick={(e: MouseEvent) => {
+                  if (
+                    !window.confirm(
+                      'Are you sure you want to archive this photo?',
+                    )
+                  ) {
+                    e.preventDefault();
+                  }
+                }}>Archive</AdminButton
               >
             {/if}
             {#if photoStatus === 'archived'}

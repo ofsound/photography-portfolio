@@ -29,6 +29,10 @@
     theme(colors.zinc.200),
     theme(colors.zinc.700)
   );
+  --color-surface-subtle: light-dark(
+    color-mix(in srgb, theme(colors.zinc.100) 45%, theme(colors.zinc.50)),
+    color-mix(in srgb, theme(colors.zinc.800) 35%, theme(colors.zinc.950))
+  );
   --color-text: light-dark(theme(colors.zinc.900), theme(colors.zinc.100));
   --color-text-muted: light-dark(
     theme(colors.zinc.600),

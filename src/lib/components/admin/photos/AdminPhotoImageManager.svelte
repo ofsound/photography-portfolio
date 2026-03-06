@@ -75,6 +75,7 @@
                 <ThumbnailCropEditor
                   imageId={lead.id}
                   deliveryStoragePath={lead.delivery_storage_path}
+                  sourceStoragePath={lead.source_storage_path}
                   altText={lead.alt_text ?? photo.title}
                   dimensions={lead.dimensions}
                   initialCrop={{
@@ -89,13 +90,36 @@
             {/if}
           </div>
 
-          <form method="POST" action="?/removeImage" use:enhance>
-            <input type="hidden" name="image_id" value={lead.id} />
-            <input type="hidden" name="gallery_id" value={photo.gallery_id} />
-            <AdminButton variant="danger-outline" size="sm" type="submit"
-              >Delete</AdminButton
+          <div class="flex flex-col items-end gap-2">
+            {#if lead.source_storage_path}
+              <AdminButton
+                size="sm"
+                variant="subtle"
+                href="/admin/download-original/{lead.id}"
+              >
+                Download Original
+              </AdminButton>
+            {/if}
+            <form
+              method="POST"
+              action="?/removeImage"
+              use:enhance={({ cancel }) => {
+                if (
+                  !window.confirm(
+                    'Are you sure you want to delete this image? This cannot be undone.',
+                  )
+                ) {
+                  cancel();
+                }
+              }}
             >
-          </form>
+              <input type="hidden" name="image_id" value={lead.id} />
+              <input type="hidden" name="gallery_id" value={photo.gallery_id} />
+              <AdminButton variant="danger-outline" size="sm" type="submit"
+                >Delete</AdminButton
+              >
+            </form>
+          </div>
         </div>
       {:else}
         <p class="text-sm text-text-muted">No lead image set.</p>
@@ -141,7 +165,18 @@
                       </div>
                     {/if}
 
-                    <div class="ml-auto flex shrink-0 items-center gap-2">
+                    <div
+                      class="ml-auto flex shrink-0 flex-wrap items-center gap-2"
+                    >
+                      {#if image.source_storage_path}
+                        <AdminButton
+                          size="sm"
+                          variant="subtle"
+                          href="/admin/download-original/{image.id}"
+                        >
+                          Download Original
+                        </AdminButton>
+                      {/if}
                       <form method="POST" action="?/setLead" use:enhance>
                         <input type="hidden" name="photo_id" value={photo.id} />
                         <input
@@ -155,7 +190,19 @@
                         >
                       </form>
 
-                      <form method="POST" action="?/removeImage" use:enhance>
+                      <form
+                        method="POST"
+                        action="?/removeImage"
+                        use:enhance={({ cancel }) => {
+                          if (
+                            !window.confirm(
+                              'Are you sure you want to delete this additional image? This cannot be undone.',
+                            )
+                          ) {
+                            cancel();
+                          }
+                        }}
+                      >
                         <input type="hidden" name="image_id" value={image.id} />
                         <input
                           type="hidden"

@@ -6,6 +6,32 @@
   import FormTextarea from '$lib/components/FormTextarea.svelte';
 
   const { data, form } = $props();
+
+  const slugify = (input: string) =>
+    input
+      .trim()
+      .toLowerCase()
+      .replace(/['"]/g, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+
+  let createName = $state('');
+  let createSlug = $state('');
+  let hasManualSlugEdit = $state(false);
+
+  const onCreateNameInput = () => {
+    if (!hasManualSlugEdit) {
+      createSlug = slugify(createName);
+    }
+  };
+
+  const onCreateSlugInput = (event: Event) => {
+    const value = (event.currentTarget as HTMLInputElement).value.trim();
+    hasManualSlugEdit = value.length > 0;
+    if (!hasManualSlugEdit) {
+      createSlug = slugify(createName);
+    }
+  };
 </script>
 
 <AdminCreateListLayout
@@ -19,10 +45,21 @@
 {#snippet createForm()}
   <form method="POST" action="?/create" class="grid h-fit gap-3">
     <FormField label="Name" id="gallery-create-name">
-      <FormInput id="gallery-create-name" name="name" required />
+      <FormInput
+        id="gallery-create-name"
+        name="name"
+        bind:value={createName}
+        required
+        oninput={onCreateNameInput}
+      />
     </FormField>
     <FormField label="Slug" id="gallery-create-slug">
-      <FormInput id="gallery-create-slug" name="slug" />
+      <FormInput
+        id="gallery-create-slug"
+        name="slug"
+        bind:value={createSlug}
+        oninput={onCreateSlugInput}
+      />
     </FormField>
     <FormField label="Description" id="gallery-create-description">
       <FormTextarea

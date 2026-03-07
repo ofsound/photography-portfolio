@@ -10,7 +10,7 @@ type MinimalDraftSeed = {
 const draftStatusMigrationHint =
   'Database schema is missing draft photo status. Apply migration 20260302_photo_draft_status.sql and retry.';
 
-export const normalizeDraftStatusErrorMessage = (message: string) =>
+const normalizeDraftStatusErrorMessage = (message: string) =>
   message.includes('invalid input value for enum publish_status') &&
   message.includes('"draft"')
     ? draftStatusMigrationHint
@@ -83,7 +83,7 @@ type PhotoPayload = {
   og_image_path: string | null;
 };
 
-export const upsertPhotoPayload = (
+const upsertPhotoPayload = (
   form: FormData,
 ): { ok: true; payload: PhotoPayload } | { ok: false; message: string } => {
   const title = asString(form.get('title')).trim();

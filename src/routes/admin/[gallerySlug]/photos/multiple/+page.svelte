@@ -188,11 +188,28 @@
   async function startUploads() {
     if (!canStart) return;
 
+    const isSingleUpload = uploadQueue.length === 1;
     uploading = true;
     const workerCount = Math.min(MAX_CONCURRENCY, queuedCount);
     const workers = Array.from({ length: workerCount }, () => runWorker());
     await Promise.all(workers);
     uploading = false;
+
+    if (isSingleUpload) {
+      const singleItem = uploadQueue[0];
+      if (singleItem?.status === 'success' && singleItem.photoId) {
+        await goto(
+          resolve(
+            `${basePhotosPath}/edit/${singleItem.photoId}` as `/${string}`,
+          ),
+        );
+        return;
+      }
+      if (singleItem?.status === 'error') {
+        return;
+      }
+    }
+
     await goto(resolve(basePhotosPath as `/${string}`));
   }
 </script>

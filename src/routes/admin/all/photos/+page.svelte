@@ -311,18 +311,11 @@
   {#if filteredGallerySlug}
     <div class="flex gap-2">
       <AdminButton
-        href={`/admin/${filteredGallerySlug}/photos/create`}
-        variant="submit"
-        size="xs"
-      >
-        New
-      </AdminButton>
-      <AdminButton
         href={`/admin/${filteredGallerySlug}/photos/multiple`}
         variant="submit"
         size="xs"
       >
-        Bulk
+        Add Photos
       </AdminButton>
     </div>
   {/if}

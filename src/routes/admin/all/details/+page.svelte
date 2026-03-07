@@ -24,11 +24,19 @@
     },
   );
 
+  const allScopeNav = $derived(
+    (data.allScopeNav as { show_in_nav?: boolean } | null) ?? null,
+  );
+  const isAdmin = $derived(data.role === 'admin');
+
   const selectClass =
     'w-full rounded border border-border-strong bg-surface px-3 py-2 text-sm';
 </script>
 
-<AdminHeading>Settings {data.scopeLabel}</AdminHeading>
+<div class="flex flex-wrap items-center justify-between gap-3">
+  <AdminHeading>Details {data.scopeLabel}</AdminHeading>
+  <AdminButton href="/admin/galleries">Back to Galleries</AdminButton>
+</div>
 
 {#if form?.message}
   <AdminStatusMessage
@@ -40,6 +48,20 @@
 {/if}
 
 <form method="POST" action="?/save" class="mt-6 grid max-w-4xl gap-4">
+  <AdminHeading level={2}>Gallery Details</AdminHeading>
+
+  <label class="flex items-center gap-2 text-sm">
+    <input
+      type="checkbox"
+      name="show_in_nav"
+      checked={allScopeNav?.show_in_nav ?? true}
+      disabled={!isAdmin}
+    />
+    Show In Nav{isAdmin ? '' : ' (Admin)'}
+  </label>
+
+  <AdminHeading level={2}>Gallery Settings</AdminHeading>
+
   <div class="grid gap-3 sm:grid-cols-2">
     <FormField label="Site Theme" id="settings-theme_default">
       <select
@@ -194,5 +216,5 @@
     /> Show Thumbnail Zoom Hover
   </label>
 
-  <AdminButton type="submit" variant="submit">Save Settings</AdminButton>
+  <AdminButton type="submit" variant="submit">Save Details</AdminButton>
 </form>

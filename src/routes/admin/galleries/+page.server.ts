@@ -1,24 +1,12 @@
 import { error, fail, type Actions } from '@sveltejs/kit';
-import {
-  asBoolean,
-  asOptionalNumber,
-  asString,
-  getCmsRole,
-} from '$lib/server/admin-helpers';
+import { asString, getCmsRole, parseUuidList } from '$lib/server/admin-helpers';
 import {
   createGalleryWithAutoSlug,
-  deleteGalleryIfEmpty,
   ensureAllSettingsSeeded,
   listGalleriesForAdmin,
-  updateGalleryWithAutoSlug,
   validateGallerySlugInput,
 } from '$lib/server/admin/galleries';
 import type { PageServerLoad } from './$types';
-
-const asNullableString = (value: FormDataEntryValue | null) => {
-  const text = asString(value).trim();
-  return text.length ? text : null;
-};
 
 const requireAdmin = async (locals: App.Locals) => {
   const role = await getCmsRole(locals);
@@ -47,6 +35,39 @@ const loadAllScopeNav = async (locals: App.Locals) => {
     show_in_nav: typeof row.show_in_nav === 'boolean' ? row.show_in_nav : true,
     nav_order: Number.isFinite(parsedNavOrder) ? parsedNavOrder : 0,
   };
+};
+
+const loadNextNavOrder = async (locals: App.Locals) => {
+  const [galleryMaxResult, allScopeNav] = await Promise.all([
+    locals.supabase
+      .from('galleries')
+      .select('nav_order')
+      .order('nav_order', { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    loadAllScopeNav(locals),
+  ]);
+
+  if (galleryMaxResult.error) {
+    throw new Error(galleryMaxResult.error.message);
+  }
+
+  const maxGalleryOrder = Number(galleryMaxResult.data?.nav_order ?? 0);
+  const baseline = Number.isFinite(maxGalleryOrder) ? maxGalleryOrder : 0;
+
+  return Math.max(baseline, allScopeNav.nav_order) + 1;
+};
+
+const parseOrderedCardIds = (value: FormDataEntryValue | null) => {
+  const raw = asString(value);
+  const rows = raw
+    .split(/\r?\n/g)
+    .map((entry) => entry.trim())
+    .filter(Boolean);
+
+  return rows.map((entry) =>
+    entry === 'all' ? entry : parseUuidList(entry)[0],
+  );
 };
 
 export const load: PageServerLoad = async ({ locals }) => {
@@ -83,15 +104,11 @@ export const actions: Actions = {
     }
 
     try {
+      const navOrder = await loadNextNavOrder(locals);
       const created = await createGalleryWithAutoSlug(locals, {
         name,
         slugInput,
-        description: asNullableString(form.get('description')),
-        seoTitle: asNullableString(form.get('seo_title')),
-        seoDescription: asNullableString(form.get('seo_description')),
-        isActive: asBoolean(form.get('is_active')),
-        showInNav: asBoolean(form.get('show_in_nav')),
-        navOrder: asOptionalNumber(form.get('nav_order')) ?? 0,
+        navOrder,
       });
 
       const requested = slugInput || name;
@@ -110,75 +127,7 @@ export const actions: Actions = {
     }
   },
 
-  update: async ({ locals, request }) => {
-    if (!(await requireAdmin(locals))) {
-      return fail(403, { message: 'Only admins can manage galleries.' });
-    }
-
-    const form = await request.formData();
-    const galleryId = asString(form.get('gallery_id'));
-    const name = asString(form.get('name')).trim();
-    const slugInput = asString(form.get('slug')).trim();
-    if (!galleryId) {
-      return fail(400, { message: 'Missing gallery ID.' });
-    }
-    if (!name) {
-      return fail(400, { message: 'Name is required.' });
-    }
-
-    const slugProblem = validateGallerySlugInput(slugInput || name);
-    if (slugProblem) {
-      return fail(400, { message: slugProblem });
-    }
-
-    const currentQuery = await locals.supabase
-      .from('galleries')
-      .select(
-        'id, slug, name, description, seo_title, seo_description, is_active, show_in_nav, nav_order',
-      )
-      .eq('id', galleryId)
-      .maybeSingle();
-
-    if (currentQuery.error) {
-      return fail(400, { message: currentQuery.error.message });
-    }
-    if (!currentQuery.data) {
-      return fail(404, { message: 'Gallery not found.' });
-    }
-
-    try {
-      const updated = await updateGalleryWithAutoSlug(
-        locals,
-        currentQuery.data,
-        {
-          name,
-          slugInput,
-          description: asNullableString(form.get('description')),
-          seoTitle: asNullableString(form.get('seo_title')),
-          seoDescription: asNullableString(form.get('seo_description')),
-          isActive: asBoolean(form.get('is_active')),
-          showInNav: asBoolean(form.get('show_in_nav')),
-          navOrder: asOptionalNumber(form.get('nav_order')) ?? 0,
-        },
-      );
-
-      const requested = slugInput || name;
-      return {
-        success: true,
-        message:
-          updated.slug === requested
-            ? 'Gallery updated.'
-            : `Gallery updated. Slug adjusted to "${updated.slug}".`,
-      };
-    } catch (cause) {
-      return fail(400, {
-        message:
-          cause instanceof Error ? cause.message : 'Failed to update gallery.',
-      });
-    }
-  },
-
-  updateAll: async ({ locals, request }) => {
+  reorder: async ({ locals, request }) => {
     if (!(await requireAdmin(locals))) {
       return fail(403, { message: 'Only admins can manage galleries.' });
     }
@@ -186,48 +135,77 @@ export const actions: Actions = {
     await ensureAllSettingsSeeded(locals);
 
     const form = await request.formData();
-    const navOrder = asOptionalNumber(form.get('nav_order')) ?? 0;
-    const showInNav = asBoolean(form.get('show_in_nav'));
+    const orderedIds = parseOrderedCardIds(form.get('ordered_gallery_ids'));
+    if (orderedIds.length < 1) {
+      return fail(400, { message: 'Missing reorder payload.' });
+    }
 
-    const update = await locals.supabase
+    if (orderedIds.some((item) => item == null)) {
+      return fail(400, { message: 'Invalid reorder payload.' });
+    }
+
+    const galleriesQuery = await locals.supabase.from('galleries').select('id');
+    if (galleriesQuery.error) {
+      return fail(400, { message: galleriesQuery.error.message });
+    }
+
+    const allQuery = await locals.supabase
       .from('gallery_settings')
-      .update({
-        nav_order: navOrder,
-        show_in_nav: showInNav,
-      })
-      .eq('scope', 'all');
+      .select('id')
+      .eq('scope', 'all')
+      .maybeSingle();
+    if (allQuery.error || !allQuery.data) {
+      return fail(400, {
+        message: allQuery.error?.message ?? 'Missing /all settings row.',
+      });
+    }
 
-    if (update.error) {
-      if ((update.error as { code?: string }).code === '42703') {
-        return fail(400, {
-          message:
-            'Database migration required: add /all nav fields to gallery_settings first.',
-        });
+    const expectedIds = new Set(['all']);
+    for (const gallery of galleriesQuery.data ?? []) {
+      expectedIds.add(gallery.id);
+    }
+
+    if (orderedIds.length !== expectedIds.size) {
+      return fail(400, { message: 'Invalid reorder payload.' });
+    }
+
+    const seen = new Set<string>();
+    for (const id of orderedIds as string[]) {
+      if (seen.has(id) || !expectedIds.has(id)) {
+        return fail(400, { message: 'Invalid reorder payload.' });
       }
-      return fail(400, { message: update.error.message });
-    }
-
-    return { success: true, message: '/all nav settings updated.' };
-  },
-
-  delete: async ({ locals, request }) => {
-    if (!(await requireAdmin(locals))) {
-      return fail(403, { message: 'Only admins can manage galleries.' });
-    }
-
-    const form = await request.formData();
-    const galleryId = asString(form.get('gallery_id'));
-    if (!galleryId) {
-      return fail(400, { message: 'Missing gallery ID.' });
+      seen.add(id);
     }
 
     try {
-      await deleteGalleryIfEmpty(locals, galleryId);
-      return { success: true, message: 'Gallery deleted.' };
+      for (const [index, id] of (orderedIds as string[]).entries()) {
+        if (id === 'all') {
+          const updateAllResult = await locals.supabase
+            .from('gallery_settings')
+            .update({ nav_order: index })
+            .eq('scope', 'all');
+          if (updateAllResult.error) {
+            throw new Error(updateAllResult.error.message);
+          }
+          continue;
+        }
+
+        const updateGalleryResult = await locals.supabase
+          .from('galleries')
+          .update({ nav_order: index })
+          .eq('id', id);
+        if (updateGalleryResult.error) {
+          throw new Error(updateGalleryResult.error.message);
+        }
+      }
+
+      return { success: true, message: 'Gallery order saved.' };
     } catch (cause) {
       return fail(400, {
         message:
-          cause instanceof Error ? cause.message : 'Failed to delete gallery.',
+          cause instanceof Error
+            ? cause.message
+            : 'Failed to reorder galleries.',
       });
     }
   },

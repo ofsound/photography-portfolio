@@ -1,13 +1,75 @@
 <script lang="ts">
-  import AdminCard from '$lib/components/admin/AdminCard.svelte';
+  import { invalidateAll } from '$app/navigation';
+  import { DragDropProvider } from '@dnd-kit/svelte';
+  import { createSortable, isSortable } from '@dnd-kit/svelte/sortable';
   import AdminButton from '$lib/components/admin/AdminButton.svelte';
+  import AdminCard from '$lib/components/admin/AdminCard.svelte';
   import AdminCreateListLayout from '$lib/components/admin/AdminCreateListLayout.svelte';
   import AdminHeading from '$lib/components/admin/AdminHeading.svelte';
   import FormField from '$lib/components/FormField.svelte';
   import FormInput from '$lib/components/FormInput.svelte';
-  import FormTextarea from '$lib/components/FormTextarea.svelte';
 
   const { data, form } = $props();
+
+  type GalleryCard = {
+    id: string;
+    slug: string;
+    name: string;
+    nav_order: number;
+    kind: 'all' | 'gallery';
+  };
+
+  const galleries = $derived(
+    (data.galleries as Array<{
+      id: string;
+      slug: string;
+      name: string;
+      nav_order: number;
+    }>) ?? [],
+  );
+
+  const allScopeNav = $derived(
+    (data.allScopeNav as { nav_order?: number } | null) ?? null,
+  );
+
+  const galleryCards = $derived.by(() => {
+    const cards: GalleryCard[] = [
+      {
+        id: 'all',
+        slug: 'all',
+        name: 'ALL',
+        nav_order: allScopeNav?.nav_order ?? 0,
+        kind: 'all',
+      },
+      ...galleries.map((gallery) => ({
+        id: gallery.id,
+        slug: gallery.slug,
+        name: gallery.name,
+        nav_order: gallery.nav_order,
+        kind: 'gallery' as const,
+      })),
+    ];
+
+    return cards.sort((a, b) => {
+      if (a.nav_order !== b.nav_order) return a.nav_order - b.nav_order;
+      return a.name.localeCompare(b.name);
+    });
+  });
+
+  const galleryCardById = $derived(new Map(galleryCards.map((c) => [c.id, c])));
+
+  let pendingOrder = $state<string[] | null>(null);
+  let isSavingOrder = $state(false);
+
+  const orderedCardIds = $derived(
+    pendingOrder ?? galleryCards.map((card) => card.id),
+  );
+
+  const orderedCards = $derived(
+    orderedCardIds
+      .map((cardId) => galleryCardById.get(cardId))
+      .filter((card): card is GalleryCard => Boolean(card)),
+  );
 
   const slugify = (input: string) =>
     input
@@ -34,6 +96,49 @@
       createSlug = slugify(createName);
     }
   };
+
+  const persistOrder = async (next: string[]) => {
+    const payload = new FormData();
+    payload.append('ordered_gallery_ids', next.join('\n'));
+
+    const response = await fetch(`${window.location.pathname}?/reorder`, {
+      method: 'POST',
+      body: payload,
+    });
+
+    return response.ok;
+  };
+
+  async function onGalleryDragEnd(event: unknown) {
+    if (isSavingOrder) return;
+
+    const e = event as { canceled?: boolean; operation?: { source: unknown } };
+    if (e.canceled || !e.operation?.source) return;
+
+    const source = e.operation.source as Parameters<typeof isSortable>[0];
+    if (!isSortable(source)) return;
+
+    const { initialIndex, index } = source as {
+      initialIndex: number;
+      index: number;
+    };
+
+    if (initialIndex === index) return;
+
+    const next = [...orderedCardIds];
+    const [removed] = next.splice(initialIndex, 1);
+    next.splice(index, 0, removed);
+    pendingOrder = next;
+
+    isSavingOrder = true;
+    try {
+      await persistOrder(next);
+      await invalidateAll();
+    } finally {
+      isSavingOrder = false;
+      pendingOrder = null;
+    }
+  }
 </script>
 
 <AdminCreateListLayout
@@ -63,7 +168,7 @@
         oninput={onCreateNameInput}
       />
     </FormField>
-    <FormField label="Slug" id="gallery-create-slug">
+    <FormField label="Slug" id="gallery-create-slug" helper="Optional">
       <FormInput
         id="gallery-create-slug"
         name="slug"
@@ -71,39 +176,6 @@
         oninput={onCreateSlugInput}
       />
     </FormField>
-    <FormField label="Description" id="gallery-create-description">
-      <FormTextarea
-        id="gallery-create-description"
-        name="description"
-        rows={3}
-      />
-    </FormField>
-    <FormField label="SEO Title" id="gallery-create-seo-title">
-      <FormInput id="gallery-create-seo-title" name="seo_title" />
-    </FormField>
-    <FormField label="SEO Description" id="gallery-create-seo-description">
-      <FormTextarea
-        id="gallery-create-seo-description"
-        name="seo_description"
-        rows={2}
-      />
-    </FormField>
-    <FormField label="Nav Order" id="gallery-create-nav-order">
-      <FormInput
-        id="gallery-create-nav-order"
-        name="nav_order"
-        type="number"
-        value="0"
-      />
-    </FormField>
-    <label class="flex items-center gap-2 text-sm">
-      <input type="checkbox" name="is_active" checked />
-      Active
-    </label>
-    <label class="flex items-center gap-2 text-sm">
-      <input type="checkbox" name="show_in_nav" checked />
-      Show In Nav
-    </label>
     <div class="text-left">
       <AdminButton type="submit" variant="submit">Create Gallery</AdminButton>
     </div>
@@ -111,148 +183,52 @@
 {/snippet}
 
 {#snippet galleryList()}
-  <AdminCard as="article" class="p-4">
-    <div class="mb-3 flex items-center justify-between gap-3">
-      <div>
-        <AdminHeading level={2}>ALL</AdminHeading>
-        <p class="text-xs text-text-muted">/all</p>
-      </div>
-      <div class="flex items-center gap-2">
-        <AdminButton href="/admin/all/photos" size="sm">Photos</AdminButton>
-        <AdminButton href="/admin/all/settings" size="sm">Settings</AdminButton>
-      </div>
-    </div>
-
-    <form method="POST" action="?/updateAll" class="grid gap-3">
-      <div class="grid gap-3 sm:grid-cols-2">
-        <FormField label="Nav Order" id="all-gallery-nav-order">
-          <FormInput
-            id="all-gallery-nav-order"
-            name="nav_order"
-            type="number"
-            value={String(data.allScopeNav?.nav_order ?? 0)}
-          />
-        </FormField>
-        <label class="mt-6 flex items-center gap-2 text-sm">
-          <input
-            type="checkbox"
-            name="show_in_nav"
-            checked={data.allScopeNav?.show_in_nav ?? true}
-          />
-          Show In Nav
-        </label>
-      </div>
-      <div class="flex flex-wrap gap-2">
-        <AdminButton type="submit" variant="submit">Save</AdminButton>
-      </div>
-    </form>
-  </AdminCard>
-
-  {#each data.galleries as gallery (gallery.id)}
-    <AdminCard as="article" class="p-4">
-      <div class="mb-3 flex items-center justify-between gap-3">
-        <div>
-          <AdminHeading level={2}>{gallery.name}</AdminHeading>
-          <p class="text-xs text-text-muted">
-            /{gallery.slug} • {gallery.photo_count} photo(s)
-          </p>
-        </div>
-        <div class="flex items-center gap-2">
-          <AdminButton href={`/admin/${gallery.slug}/photos`} size="sm"
-            >Photos</AdminButton
+  <DragDropProvider onDragEnd={onGalleryDragEnd}>
+    <ul class="grid gap-3">
+      {#each orderedCards as card, index (card.id)}
+        {@const sortable = createSortable({ id: card.id, index })}
+        <li {@attach sortable.attach} class:opacity-50={sortable.isDragging}>
+          <AdminCard
+            as="article"
+            class="grid cursor-move gap-3 p-4 sm:grid-cols-[auto_1fr_auto] sm:items-center"
           >
-          <AdminButton href={`/admin/${gallery.slug}/settings`} size="sm"
-            >Settings</AdminButton
-          >
-        </div>
-      </div>
-
-      <form method="POST" action="?/update" class="grid gap-3">
-        <input type="hidden" name="gallery_id" value={gallery.id} />
-        <div class="grid gap-3 sm:grid-cols-2">
-          <FormField label="Name" id={`gallery-name-${gallery.id}`}>
-            <FormInput
-              id={`gallery-name-${gallery.id}`}
-              name="name"
-              value={gallery.name}
-              required
-            />
-          </FormField>
-          <FormField label="Slug" id={`gallery-slug-${gallery.id}`}>
-            <FormInput
-              id={`gallery-slug-${gallery.id}`}
-              name="slug"
-              value={gallery.slug}
-              required
-            />
-          </FormField>
-        </div>
-        <div class="grid gap-3 sm:grid-cols-2">
-          <FormField label="Description" id={`gallery-desc-${gallery.id}`}>
-            <FormTextarea
-              id={`gallery-desc-${gallery.id}`}
-              name="description"
-              rows={3}
-              value={gallery.description ?? ''}
-            />
-          </FormField>
-          <div class="grid gap-3">
-            <FormField label="SEO Title" id={`gallery-seo-title-${gallery.id}`}>
-              <FormInput
-                id={`gallery-seo-title-${gallery.id}`}
-                name="seo_title"
-                value={gallery.seo_title ?? ''}
-              />
-            </FormField>
-            <FormField
-              label="SEO Description"
-              id={`gallery-seo-description-${gallery.id}`}
+            <div
+              aria-hidden="true"
+              class="hidden self-start text-text-muted sm:flex sm:items-center"
             >
-              <FormTextarea
-                id={`gallery-seo-description-${gallery.id}`}
-                name="seo_description"
-                rows={2}
-                value={gallery.seo_description ?? ''}
-              />
-            </FormField>
-          </div>
-        </div>
-        <div class="grid gap-3 sm:grid-cols-3">
-          <FormField label="Nav Order" id={`gallery-nav-order-${gallery.id}`}>
-            <FormInput
-              id={`gallery-nav-order-${gallery.id}`}
-              name="nav_order"
-              type="number"
-              value={String(gallery.nav_order)}
-            />
-          </FormField>
-          <label class="mt-6 flex items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              name="is_active"
-              checked={gallery.is_active}
-            />
-            Active
-          </label>
-          <label class="mt-6 flex items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              name="show_in_nav"
-              checked={gallery.show_in_nav}
-            />
-            Show In Nav
-          </label>
-        </div>
-        <div class="flex flex-wrap items-center gap-2">
-          <AdminButton type="submit" variant="submit">Save</AdminButton>
-          <AdminButton
-            type="submit"
-            variant="danger"
-            formaction="?/delete"
-            formmethod="POST">Delete</AdminButton
-          >
-        </div>
-      </form>
-    </AdminCard>
-  {/each}
+              <div
+                class="grid grid-cols-2 gap-1 rounded border border-border px-2 py-1"
+              >
+                {#each [0, 1, 2, 3, 4, 5] as dot (dot)}
+                  <span class="h-1 w-1 rounded-full bg-text-muted/80"></span>
+                {/each}
+              </div>
+            </div>
+
+            <div>
+              <AdminHeading level={2}>{card.name}</AdminHeading>
+              <p class="text-xs text-text-muted">
+                /{card.slug} • drag to reorder
+              </p>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <AdminButton
+                href={card.kind === 'all'
+                  ? '/admin/all/photos'
+                  : `/admin/${card.slug}/photos`}
+                size="sm">EDIT PHOTOS</AdminButton
+              >
+              <AdminButton
+                href={card.kind === 'all'
+                  ? '/admin/all/details'
+                  : `/admin/${card.slug}/details`}
+                size="sm">EDIT DETAILS</AdminButton
+              >
+            </div>
+          </AdminCard>
+        </li>
+      {/each}
+    </ul>
+  </DragDropProvider>
 {/snippet}

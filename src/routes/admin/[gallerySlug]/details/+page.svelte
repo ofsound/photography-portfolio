@@ -4,6 +4,7 @@
   import AdminStatusMessage from '$lib/components/admin/AdminStatusMessage.svelte';
   import FormField from '$lib/components/FormField.svelte';
   import FormInput from '$lib/components/FormInput.svelte';
+  import FormTextarea from '$lib/components/FormTextarea.svelte';
 
   const { data, form } = $props();
 
@@ -24,11 +25,15 @@
     },
   );
 
+  const isAdmin = $derived(data.role === 'admin');
   const selectClass =
     'w-full rounded border border-border-strong bg-surface px-3 py-2 text-sm';
 </script>
 
-<AdminHeading>Settings {data.scopeLabel}</AdminHeading>
+<div class="flex flex-wrap items-center justify-between gap-3">
+  <AdminHeading>Details {data.scopeLabel}</AdminHeading>
+  <AdminButton href="/admin/galleries">Back to Galleries</AdminButton>
+</div>
 
 {#if form?.message}
   <AdminStatusMessage
@@ -40,6 +45,84 @@
 {/if}
 
 <form method="POST" action="?/save" class="mt-6 grid max-w-4xl gap-4">
+  <AdminHeading level={2}>Gallery Details</AdminHeading>
+
+  <div class="grid gap-3 sm:grid-cols-2">
+    <FormField label="Name" id="details-name">
+      <FormInput
+        id="details-name"
+        name="name"
+        value={data.gallery.name}
+        required
+        readonly={!isAdmin}
+      />
+    </FormField>
+    <FormField label="Slug" id="details-slug">
+      <FormInput
+        id="details-slug"
+        name="slug"
+        value={data.gallery.slug}
+        required
+        readonly={!isAdmin}
+      />
+    </FormField>
+  </div>
+
+  <div class="grid gap-3 sm:grid-cols-2">
+    <FormField label="Description" id="details-description">
+      <FormTextarea
+        id="details-description"
+        name="description"
+        rows={3}
+        value={data.gallery.description ?? ''}
+        readonly={!isAdmin}
+      />
+    </FormField>
+
+    <div class="grid gap-3">
+      <FormField label="SEO Title" id="details-seo-title">
+        <FormInput
+          id="details-seo-title"
+          name="seo_title"
+          value={data.gallery.seo_title ?? ''}
+          readonly={!isAdmin}
+        />
+      </FormField>
+      <FormField label="SEO Description" id="details-seo-description">
+        <FormTextarea
+          id="details-seo-description"
+          name="seo_description"
+          rows={2}
+          value={data.gallery.seo_description ?? ''}
+          readonly={!isAdmin}
+        />
+      </FormField>
+    </div>
+  </div>
+
+  <div class="grid gap-3 sm:grid-cols-2">
+    <label class="flex items-center gap-2 text-sm">
+      <input
+        type="checkbox"
+        name="is_active"
+        checked={data.gallery.is_active}
+        disabled={!isAdmin}
+      />
+      Active
+    </label>
+    <label class="flex items-center gap-2 text-sm">
+      <input
+        type="checkbox"
+        name="show_in_nav"
+        checked={data.gallery.show_in_nav}
+        disabled={!isAdmin}
+      />
+      Show In Nav
+    </label>
+  </div>
+
+  <AdminHeading level={2}>Gallery Settings</AdminHeading>
+
   <div class="grid gap-3 sm:grid-cols-2">
     <FormField label="Site Theme" id="settings-theme_default">
       <select
@@ -194,5 +277,15 @@
     /> Show Thumbnail Zoom Hover
   </label>
 
-  <AdminButton type="submit" variant="submit">Save Settings</AdminButton>
+  <div class="flex flex-wrap items-center gap-2">
+    <AdminButton type="submit" variant="submit">Save Details</AdminButton>
+    {#if isAdmin}
+      <AdminButton
+        type="submit"
+        variant="danger"
+        formaction="?/delete"
+        formmethod="POST">Delete Gallery</AdminButton
+      >
+    {/if}
+  </div>
 </form>

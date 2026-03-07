@@ -295,24 +295,20 @@
       Archived ({data.archivedCount})
     </AdminButton>
   </div>
-  {#if data.scopeKind === 'gallery'}
-    <div class="flex gap-2">
-      <AdminButton
-        href={`/admin/${data.gallery.slug}/photos/create`}
-        variant="submit"
-        size="xs"
-      >
-        Add Photo
-      </AdminButton>
+  <div class="flex gap-2">
+    <AdminButton href="/admin/galleries" size="xs"
+      >Back to Galleries</AdminButton
+    >
+    {#if data.scopeKind === 'gallery'}
       <AdminButton
         href={`/admin/${data.gallery.slug}/photos/multiple`}
         variant="submit"
         size="xs"
       >
-        Add Multple
+        Add Photos
       </AdminButton>
-    </div>
-  {/if}
+    {/if}
+  </div>
 </div>
 
 {#if form?.message}

@@ -13,7 +13,7 @@
     let base: string;
     switch (level) {
       case 1:
-        base = 'text-2xl font-medium tracking-wider';
+        base = 'text-2xl font-semibold tracking-wider';
         break;
       case 2:
         base = 'text-lg tracking-wider font-medium';

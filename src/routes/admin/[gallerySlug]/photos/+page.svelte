@@ -275,8 +275,8 @@
   <div class="flex items-center gap-3">
     <AdminHeading>
       {data.scopeKind === 'gallery'
-        ? `Photos /${data.gallery.slug}`
-        : 'Photos /all'}
+        ? `Photos ${data.gallery.name}`
+        : 'Photos All'}
     </AdminHeading>
     <AdminButton
       size="sm"

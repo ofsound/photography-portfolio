@@ -31,10 +31,10 @@
   });
 </script>
 
-<div class="flex flex-col gap-3">
-  <AdminHeading>Edit Photo /{data.gallery.slug}</AdminHeading>
+<div class="flex items-center justify-between gap-3">
+  <AdminHeading>Edit Photo</AdminHeading>
   <AdminButton href={`/admin/${data.gallery.slug}/photos`}
-    >Back to Photos</AdminButton
+    >Back to {data.gallery.name}</AdminButton
   >
 </div>
 

@@ -4,7 +4,6 @@
   import AdminCreateListLayout from '$lib/components/admin/AdminCreateListLayout.svelte';
   import FormField from '$lib/components/FormField.svelte';
   import FormInput from '$lib/components/FormInput.svelte';
-  import FormTextarea from '$lib/components/FormTextarea.svelte';
 
   const { data, form } = $props();
 </script>
@@ -19,30 +18,16 @@
 
 {#snippet createForm()}
   <form method="POST" action="?/create" class="grid h-fit gap-3">
-    <FormField label="Name" id="cat-create-name">
-      <FormInput id="cat-create-name" name="name" placeholder="Name" required />
-    </FormField>
-    <FormField label="Slug" id="cat-create-slug" helper="Optional">
-      <FormInput
-        id="cat-create-slug"
-        name="slug"
-        placeholder="Slug (optional)"
-      />
-    </FormField>
+    <div class="grid gap-3 sm:grid-cols-2">
+      <FormField label="Name" id="cat-create-name">
+        <FormInput id="cat-create-name" name="name" required />
+      </FormField>
+      <FormField label="Slug" id="cat-create-slug" helper="Optional">
+        <FormInput id="cat-create-slug" name="slug" />
+      </FormField>
+    </div>
     <FormField label="Description" id="cat-create-description">
-      <FormTextarea
-        id="cat-create-description"
-        name="description"
-        placeholder="Description"
-      />
-    </FormField>
-    <FormField label="Sort order" id="cat-create-sort_order">
-      <FormInput
-        id="cat-create-sort_order"
-        name="sort_order"
-        type="number"
-        value="0"
-      />
+      <FormInput id="cat-create-description" name="description" />
     </FormField>
     <label class="flex items-center gap-2 text-sm">
       <input name="is_active" type="checkbox" checked /> Active
@@ -69,7 +54,6 @@
             id="cat-edit-name-{category.id}"
             name="name"
             value={category.name}
-            placeholder="Name"
             required
           />
         </FormField>
@@ -78,29 +62,18 @@
             id="cat-edit-slug-{category.id}"
             name="slug"
             value={category.slug}
-            placeholder="Slug"
             required
           />
         </FormField>
       </div>
       <FormField label="Description" id="cat-edit-description-{category.id}">
-        <FormTextarea
+        <FormInput
           id="cat-edit-description-{category.id}"
           name="description"
           value={category.description ?? ''}
-          placeholder="Description"
         />
       </FormField>
       <div class="flex flex-wrap items-center gap-3">
-        <FormField label="Sort order" id="cat-edit-sort_order-{category.id}">
-          <FormInput
-            id="cat-edit-sort_order-{category.id}"
-            name="sort_order"
-            type="number"
-            value={String(category.sort_order)}
-            class="w-32"
-          />
-        </FormField>
         <label class="flex items-center gap-2 text-sm">
           <input
             name="is_active"

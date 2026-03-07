@@ -4,7 +4,6 @@
   import AdminCreateListLayout from '$lib/components/admin/AdminCreateListLayout.svelte';
   import FormField from '$lib/components/FormField.svelte';
   import FormInput from '$lib/components/FormInput.svelte';
-  import FormTextarea from '$lib/components/FormTextarea.svelte';
 
   const { data, form } = $props();
 </script>
@@ -19,22 +18,16 @@
 
 {#snippet createForm()}
   <form method="POST" action="?/create" class="grid h-fit gap-3">
-    <FormField label="Name" id="tag-create-name">
-      <FormInput id="tag-create-name" name="name" placeholder="Name" required />
-    </FormField>
-    <FormField label="Slug" id="tag-create-slug" helper="Optional">
-      <FormInput
-        id="tag-create-slug"
-        name="slug"
-        placeholder="Slug (optional)"
-      />
-    </FormField>
+    <div class="grid gap-3 sm:grid-cols-2">
+      <FormField label="Name" id="tag-create-name">
+        <FormInput id="tag-create-name" name="name" required />
+      </FormField>
+      <FormField label="Slug" id="tag-create-slug" helper="Optional">
+        <FormInput id="tag-create-slug" name="slug" />
+      </FormField>
+    </div>
     <FormField label="Description" id="tag-create-description">
-      <FormTextarea
-        id="tag-create-description"
-        name="description"
-        placeholder="Description"
-      />
+      <FormInput id="tag-create-description" name="description" />
     </FormField>
     <label class="flex items-center gap-2 text-sm">
       <input name="is_active" type="checkbox" checked /> Active
@@ -61,7 +54,6 @@
             id="tag-edit-name-{tag.id}"
             name="name"
             value={tag.name}
-            placeholder="Name"
             required
           />
         </FormField>
@@ -70,17 +62,15 @@
             id="tag-edit-slug-{tag.id}"
             name="slug"
             value={tag.slug}
-            placeholder="Slug"
             required
           />
         </FormField>
       </div>
       <FormField label="Description" id="tag-edit-description-{tag.id}">
-        <FormTextarea
+        <FormInput
           id="tag-edit-description-{tag.id}"
           name="description"
           value={tag.description ?? ''}
-          placeholder="Description"
         />
       </FormField>
       <div class="flex flex-wrap items-center gap-3">

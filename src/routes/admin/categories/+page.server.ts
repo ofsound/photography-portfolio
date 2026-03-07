@@ -1,7 +1,6 @@
 import { fail, type Actions } from '@sveltejs/kit';
 import {
   asBoolean,
-  asOptionalNumber,
   asString,
   assertTitle,
   toSlug,
@@ -12,8 +11,7 @@ import type { PageServerLoad } from './$types';
 export const load: PageServerLoad = async ({ locals }) => {
   const categoriesQuery = await locals.supabase
     .from('categories')
-    .select('id, slug, name, description, sort_order, is_active, updated_at')
-    .order('sort_order', { ascending: true })
+    .select('id, slug, name, description, is_active, updated_at')
     .order('name', { ascending: true });
 
   if (categoriesQuery.error) {
@@ -32,7 +30,6 @@ export const actions: Actions = {
     const name = asString(form.get('name')).trim();
     const slugInput = asString(form.get('slug')).trim();
     const description = asString(form.get('description')).trim() || null;
-    const sortOrder = asOptionalNumber(form.get('sort_order')) ?? 0;
     const isActive = asBoolean(form.get('is_active'));
 
     const titleError = assertTitle(name);
@@ -44,7 +41,6 @@ export const actions: Actions = {
       name,
       slug,
       description,
-      sort_order: sortOrder,
       is_active: isActive,
     });
 
@@ -61,7 +57,6 @@ export const actions: Actions = {
     const name = asString(form.get('name')).trim();
     const slugInput = asString(form.get('slug')).trim();
     const description = asString(form.get('description')).trim() || null;
-    const sortOrder = asOptionalNumber(form.get('sort_order')) ?? 0;
     const isActive = asBoolean(form.get('is_active'));
 
     if (!id) {
@@ -79,7 +74,6 @@ export const actions: Actions = {
         name,
         slug,
         description,
-        sort_order: sortOrder,
         is_active: isActive,
       })
       .eq('id', id);

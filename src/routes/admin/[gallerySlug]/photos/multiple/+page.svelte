@@ -215,12 +215,12 @@
 </script>
 
 <div class="flex flex-wrap items-center justify-between gap-3">
-  <AdminHeading>Bulk Upload /{data.gallery.slug}</AdminHeading>
-  <AdminButton href={basePhotosPath}>Back to Photos</AdminButton>
+  <AdminHeading>Upload Images: {data.gallery.name}</AdminHeading>
+  <AdminButton href={basePhotosPath}>Back to {data.gallery.name}</AdminButton>
 </div>
 
 <p class="mt-2 text-sm text-text-muted">
-  Upload multiple images at once. Each image creates one private draft photo
+  Upload one or more images once. Each image creates one private draft photo
   with a lead image.
 </p>
 
@@ -271,47 +271,39 @@
 </AdminCard>
 
 <section class="mt-6 grid gap-2">
-  {#if uploadQueue.length === 0}
-    <p
-      class="rounded border border-border bg-surface p-3 text-sm text-text-muted"
-    >
-      Select images to build the upload queue.
-    </p>
-  {:else}
-    {#each uploadQueue as item (item.id)}
-      <AdminCard as="article" class="grid gap-2 p-3">
-        <div class="flex flex-wrap items-center justify-between gap-2">
-          <p class="min-w-0 flex-1 truncate text-sm">{item.displayName}</p>
-          <AdminStatusMessage
-            type={item.status === 'success'
-              ? 'success'
-              : item.status === 'error'
-                ? 'error'
-                : 'neutral'}
-            class="px-2 py-1 text-xs"
-          >
-            {statusLabel(item.status)}
-          </AdminStatusMessage>
+  {#each uploadQueue as item (item.id)}
+    <AdminCard as="article" class="grid gap-2 p-3">
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <p class="min-w-0 flex-1 truncate text-sm">{item.displayName}</p>
+        <AdminStatusMessage
+          type={item.status === 'success'
+            ? 'success'
+            : item.status === 'error'
+              ? 'error'
+              : 'neutral'}
+          class="px-2 py-1 text-xs"
+        >
+          {statusLabel(item.status)}
+        </AdminStatusMessage>
+      </div>
+      <div class="flex items-center gap-2">
+        <div class="h-2 flex-1 overflow-hidden rounded bg-surface-muted">
+          <div
+            class={`h-full transition-all ${barClasses(item.status)}`}
+            style={`width: ${item.progressPct}%;`}
+          ></div>
         </div>
-        <div class="flex items-center gap-2">
-          <div class="h-2 flex-1 overflow-hidden rounded bg-surface-muted">
-            <div
-              class={`h-full transition-all ${barClasses(item.status)}`}
-              style={`width: ${item.progressPct}%;`}
-            ></div>
-          </div>
-          <span class="w-12 text-right text-xs text-text-muted tabular-nums"
-            >{item.progressPct}%</span
-          >
-        </div>
-        {#if item.message}
-          <p
-            class={`text-xs ${item.status === 'error' ? 'text-danger' : 'text-text-muted'}`}
-          >
-            {item.message}
-          </p>
-        {/if}
-      </AdminCard>
-    {/each}
-  {/if}
+        <span class="w-12 text-right text-xs text-text-muted tabular-nums"
+          >{item.progressPct}%</span
+        >
+      </div>
+      {#if item.message}
+        <p
+          class={`text-xs ${item.status === 'error' ? 'text-danger' : 'text-text-muted'}`}
+        >
+          {item.message}
+        </p>
+      {/if}
+    </AdminCard>
+  {/each}
 </section>

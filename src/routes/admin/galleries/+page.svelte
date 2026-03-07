@@ -167,7 +167,7 @@
         oninput={onCreateNameInput}
       />
     </FormField>
-    <FormField label="Slug" id="gallery-create-slug" helper="Optional">
+    <FormField label="Slug" id="gallery-create-slug">
       <FormInput
         id="gallery-create-slug"
         name="slug"

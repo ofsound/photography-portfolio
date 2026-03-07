@@ -30,6 +30,14 @@
 
   const ACCEPTED_TYPES =
     'image/jpeg,image/png,image/webp,image/heic,image/heif';
+  const ACCEPTED_EXTENSIONS = [
+    '.jpg',
+    '.jpeg',
+    '.png',
+    '.webp',
+    '.heic',
+    '.heif',
+  ];
   const MAX_CONCURRENCY = 3;
   const basePhotosPath = $derived(
     page.url.pathname.replace(/\/upload\/?$/, ''),
@@ -37,6 +45,56 @@
 
   let uploadQueue = $state<UploadItem[]>([]);
   let uploading = $state(false);
+  let dragOver = $state(false);
+  let fileInputEl = $state<HTMLInputElement | null>(null);
+
+  function filterAcceptedFiles(files: FileList | File[]): File[] {
+    const list = Array.from(files);
+    return list.filter((file) => {
+      if (ACCEPTED_TYPES.split(',').includes(file.type)) return true;
+      const name = file.name.toLowerCase();
+      return ACCEPTED_EXTENSIONS.some((ext) => name.endsWith(ext));
+    });
+  }
+
+  function onFiles(files: FileList | File[] | null) {
+    if (!files || files.length === 0) {
+      setFiles(null);
+      return;
+    }
+    const accepted = filterAcceptedFiles(files);
+    if (accepted.length === 0) return;
+    const list = new DataTransfer();
+    accepted.forEach((f) => list.items.add(f));
+    setFiles(list.files);
+  }
+
+  function onDrop(e: DragEvent) {
+    e.preventDefault();
+    dragOver = false;
+    if (uploading) return;
+    const dt = e.dataTransfer;
+    if (dt?.files?.length) onFiles(dt.files);
+  }
+
+  function onDragOver(e: DragEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (uploading) return;
+    dragOver = true;
+  }
+
+  function onDragLeave(e: DragEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    const el = e.currentTarget as HTMLElement | null;
+    if (el && !el.contains(e.relatedTarget as Node)) dragOver = false;
+  }
+
+  function browse() {
+    if (uploading || !fileInputEl) return;
+    fileInputEl.click();
+  }
 
   const totalCount = $derived(uploadQueue.length);
   const uploadingCount = $derived(
@@ -229,14 +287,35 @@
   <div class="grid gap-2">
     <p class="text-xs tracking-widest uppercase">Choose Images</p>
     <input
+      bind:this={fileInputEl}
       type="file"
       accept={ACCEPTED_TYPES}
       multiple
-      disabled={uploading}
-      onchange={(event) =>
-        setFiles((event.currentTarget as HTMLInputElement).files)}
-      class="w-full rounded border border-border-strong bg-surface px-3 py-2 text-sm"
+      class="sr-only"
+      aria-label="Choose image files"
+      onchange={(e) => {
+        const input = e.currentTarget as HTMLInputElement;
+        onFiles(input.files);
+        input.value = '';
+      }}
     />
+    <button
+      type="button"
+      disabled={uploading}
+      onclick={browse}
+      ondragover={onDragOver}
+      ondragleave={onDragLeave}
+      ondrop={onDrop}
+      class="flex min-h-[120px] flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-60 {dragOver
+        ? 'border-brand bg-brand-contrast/30'
+        : 'border-border-strong bg-surface-muted/50 hover:border-border hover:bg-surface-muted'}"
+    >
+      <span class="text-4xl text-text-subtle" aria-hidden="true">↑</span>
+      <span class="text-center text-sm font-medium text-text">
+        {dragOver ? 'Drop images here' : 'Drop images here or click to browse'}
+      </span>
+      <span class="text-xs text-text-muted"> JPEG, PNG, WebP, HEIC </span>
+    </button>
     <p class="text-xs text-text-muted">
       {#if totalCount === 0}
         No files selected.
@@ -255,13 +334,10 @@
     >
       {uploading ? 'Uploading…' : 'Start Upload'}
     </AdminButton>
-    <span class="text-xs text-text-muted">
-      Max {MAX_CONCURRENCY} parallel uploads
-    </span>
   </div>
 
   <div
-    class="grid gap-2 rounded border border-border bg-surface-muted p-3 text-xs sm:grid-cols-5"
+    class="flex gap-4 rounded border border-border bg-surface-muted p-3 text-xs"
   >
     <p>Total: <span class="font-medium">{totalCount}</span></p>
     <p>Queued: <span class="font-medium">{queuedCount}</span></p>

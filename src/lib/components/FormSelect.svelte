@@ -1,44 +1,33 @@
 <script lang="ts">
+  import type { Snippet } from 'svelte';
+
   import { formControlBaseClass } from '$lib/constants/form';
 
   type Props = {
     id?: string;
     name?: string;
     value?: string;
-    rows?: number;
-    placeholder?: string;
     required?: boolean;
     class?: string;
     disabled?: boolean;
-    readonly?: boolean;
     form?: string;
+    children: Snippet;
   };
 
   let {
     id,
     name,
     value = $bindable(''),
-    rows = 4,
-    placeholder,
     required = false,
     class: className = '',
     disabled = false,
-    readonly = false,
     form,
+    children,
   }: Props = $props();
 
   const fullClass = $derived(`${formControlBaseClass} ${className}`.trim());
 </script>
 
-<textarea
-  {id}
-  {name}
-  bind:value
-  {rows}
-  {placeholder}
-  {required}
-  class={fullClass}
-  {disabled}
-  {readonly}
-  {form}
-></textarea>
+<select {id} {name} bind:value {required} class={fullClass} {disabled} {form}>
+  {@render children()}
+</select>

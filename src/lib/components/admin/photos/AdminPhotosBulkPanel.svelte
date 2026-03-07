@@ -2,6 +2,7 @@
   import { enhance } from '$app/forms';
   import AdminButton from '$lib/components/admin/AdminButton.svelte';
   import PhotoTaxonomyEditor from '$lib/components/admin/PhotoTaxonomyEditor.svelte';
+  import FormSelect from '$lib/components/FormSelect.svelte';
   import type { AdminCategory, AdminTag } from '$lib/types/content';
 
   const {
@@ -167,16 +168,16 @@
           name="selected_photo_ids"
           value={selectedPhotoIds.join('\n')}
         />
-        <select
+        <FormSelect
           name="destination_gallery_id"
           bind:value={destinationGalleryId}
-          class="rounded border border-border-strong bg-surface px-2 py-1 text-xs"
+          class="min-w-0 px-2 py-1 text-xs"
         >
           <option value="">Move to...</option>
           {#each galleries as gallery (gallery.id)}
             <option value={gallery.id}>{gallery.name}</option>
           {/each}
-        </select>
+        </FormSelect>
         <AdminButton
           size="xs"
           type="submit"

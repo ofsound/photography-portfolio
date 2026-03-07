@@ -99,9 +99,9 @@
     <div
       class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent px-2 pt-6 pb-2"
     >
-      <AdminHeading level={2}>
+      <p class="text-base font-medium text-white">
         {photo.title}
-      </AdminHeading>
+      </p>
       {#if isPublic}
         <a
           href={resolve(

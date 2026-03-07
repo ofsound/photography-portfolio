@@ -6,6 +6,7 @@
   import AdminStatusMessage from '$lib/components/admin/AdminStatusMessage.svelte';
   import FormField from '$lib/components/FormField.svelte';
   import FormInput from '$lib/components/FormInput.svelte';
+  import FormSelect from '$lib/components/FormSelect.svelte';
   import FormTextarea from '$lib/components/FormTextarea.svelte';
   import type { ContentRevision } from '$lib/types/content';
 
@@ -60,15 +61,10 @@
 
   <div class="grid gap-3 sm:grid-cols-2">
     <FormField label="Status" id="page-edit-status">
-      <select
-        name="status"
-        id="page-edit-status"
-        bind:value={formStatus}
-        class="w-full rounded border border-border-strong bg-surface px-3 py-2 text-sm"
-      >
+      <FormSelect name="status" id="page-edit-status" bind:value={formStatus}>
         <option value="published">published</option>
         <option value="archived">archived</option>
-      </select>
+      </FormSelect>
     </FormField>
     <FormField label="SEO title" id="page-edit-seo_title">
       <FormInput

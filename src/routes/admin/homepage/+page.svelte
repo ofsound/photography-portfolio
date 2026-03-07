@@ -5,6 +5,7 @@
   import AdminButton from '$lib/components/admin/AdminButton.svelte';
   import AdminHeading from '$lib/components/admin/AdminHeading.svelte';
   import AdminCreateListLayout from '$lib/components/admin/AdminCreateListLayout.svelte';
+  import FormInput from '$lib/components/FormInput.svelte';
   import { photoPublicUrl } from '$lib/utils/storage-url';
   import type { HomepageImage, HomepageSlide } from '$lib/types/content';
 
@@ -146,7 +147,6 @@
   title="Homepage"
   formMessage={form?.message}
   formSuccess={form?.success}
-  listHeading="Available Images"
   overflow
   create={selectedSlidesPanel}
   list={availableImagesList}
@@ -243,14 +243,11 @@
           class="grid w-fit gap-1 text-xs tracking-widest whitespace-nowrap uppercase"
         >
           Slide Duration (ms)
-          <input
-            class="max-w-[80px] rounded border border-border-strong bg-transparent px-3 py-2 text-sm tracking-normal normal-case"
+          <FormInput
+            class="max-w-[80px] bg-transparent tracking-normal normal-case"
             type="text"
-            inputmode="numeric"
-            pattern="\d*"
-            title="Digits only"
             name="slide_duration_ms"
-            value={slideDurationMs}
+            value={String(slideDurationMs)}
             oninput={sanitizeNumericInput}
           />
         </label>
@@ -258,14 +255,11 @@
           class="grid w-fit gap-1 text-xs tracking-widest whitespace-nowrap uppercase"
         >
           Transition Duration (ms)
-          <input
-            class="max-w-[80px] rounded border border-border-strong bg-transparent px-3 py-2 text-sm tracking-normal normal-case"
+          <FormInput
+            class="max-w-[80px] bg-transparent tracking-normal normal-case"
             type="text"
-            inputmode="numeric"
-            pattern="\d*"
-            title="Digits only"
             name="transition_duration_ms"
-            value={transitionDurationMs}
+            value={String(transitionDurationMs)}
             oninput={sanitizeNumericInput}
           />
         </label>

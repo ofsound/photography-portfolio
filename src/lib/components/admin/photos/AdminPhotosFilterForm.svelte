@@ -2,11 +2,9 @@
   import AdminButton from '$lib/components/admin/AdminButton.svelte';
   import FormField from '$lib/components/FormField.svelte';
   import FormInput from '$lib/components/FormInput.svelte';
+  import FormSelect from '$lib/components/FormSelect.svelte';
   import ZoomControl from '$lib/components/ZoomControl.svelte';
   import type { AdminCategory, AdminTag } from '$lib/types/content';
-
-  const selectClass =
-    'w-full min-w-0 rounded border border-border-strong bg-surface px-3 py-2 text-sm';
 
   const {
     q,
@@ -54,42 +52,41 @@
     </div>
     <div class="max-w-56 min-w-36 flex-1">
       <FormField label="Category" id="filter-category">
-        <select id="filter-category" name="category" class={selectClass}>
+        <FormSelect
+          id="filter-category"
+          name="category"
+          value={filterCategoryId}
+        >
           <option value="">all</option>
           {#each categories as category (category.id)}
-            <option
-              value={category.id}
-              selected={filterCategoryId === category.id}
-              >{category.name}</option
-            >
+            <option value={category.id}>{category.name}</option>
           {/each}
-        </select>
+        </FormSelect>
       </FormField>
     </div>
     <div class="max-w-56 min-w-36 flex-1">
       <FormField label="Tag" id="filter-tag">
-        <select id="filter-tag" name="tag" class={selectClass}>
+        <FormSelect id="filter-tag" name="tag" value={filterTagId}>
           <option value="">all</option>
           {#each tags as tag (tag.id)}
-            <option value={tag.id} selected={filterTagId === tag.id}
-              >{tag.name}</option
-            >
+            <option value={tag.id}>{tag.name}</option>
           {/each}
-        </select>
+        </FormSelect>
       </FormField>
     </div>
     {#if showGalleryFilter}
       <div class="max-w-56 min-w-36 flex-1">
         <FormField label="Gallery" id="filter-gallery">
-          <select id="filter-gallery" name="gallery" class={selectClass}>
+          <FormSelect
+            id="filter-gallery"
+            name="gallery"
+            value={filterGalleryId}
+          >
             <option value="">all</option>
             {#each galleries as gallery (gallery.id)}
-              <option
-                value={gallery.id}
-                selected={filterGalleryId === gallery.id}>{gallery.name}</option
-              >
+              <option value={gallery.id}>{gallery.name}</option>
             {/each}
-          </select>
+          </FormSelect>
         </FormField>
       </div>
     {/if}

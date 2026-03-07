@@ -4,6 +4,7 @@
   import CodeEditor from '$lib/components/admin/CodeEditor.svelte';
   import FormField from '$lib/components/FormField.svelte';
   import FormInput from '$lib/components/FormInput.svelte';
+  import FormSelect from '$lib/components/FormSelect.svelte';
   import FormTextarea from '$lib/components/FormTextarea.svelte';
 
   const { data, form } = $props();
@@ -20,11 +21,9 @@
 
 <AdminCreateListLayout
   title="Pages"
-  subtitle="Create pages here, then edit each page on its own route editor."
   formMessage={form?.message}
   formSuccess={form?.success}
   dataMessage={data.message}
-  listHeading="Existing Pages"
   create={createForm}
   list={pageList}
 />
@@ -44,14 +43,10 @@
     </FormField>
 
     <FormField label="Status" id="page-create-status">
-      <select
-        name="status"
-        id="page-create-status"
-        class="w-full rounded border border-border-strong bg-surface px-3 py-2 text-sm"
-      >
+      <FormSelect name="status" id="page-create-status" value="published">
         <option value="published">published</option>
         <option value="archived">archived</option>
-      </select>
+      </FormSelect>
     </FormField>
 
     <FormField label="HTML" id="page-create-html_content">

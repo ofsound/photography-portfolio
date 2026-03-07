@@ -4,6 +4,7 @@
   import AdminCard from '$lib/components/admin/AdminCard.svelte';
   import AdminButton from '$lib/components/admin/AdminButton.svelte';
   import AdminHeading from '$lib/components/admin/AdminHeading.svelte';
+  import FormSelect from '$lib/components/FormSelect.svelte';
 
   const {
     photoId,
@@ -72,17 +73,10 @@
         </span>
       </div>
       <div class="grid gap-2 sm:grid-cols-2 sm:items-center">
-        <select
-          name="kind"
-          class="border- border-strong rounded border px-3 py-2 text-sm"
-        >
-          <option value="lead" selected={defaultKind === 'lead'}
-            >Lead image</option
-          >
-          <option value="additional" selected={defaultKind === 'additional'}
-            >Additional image</option
-          >
-        </select>
+        <FormSelect name="kind" value={defaultKind}>
+          <option value="lead">Lead image</option>
+          <option value="additional">Additional image</option>
+        </FormSelect>
         <input
           name="alt_text"
           placeholder="Alt text"

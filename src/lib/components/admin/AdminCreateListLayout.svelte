@@ -8,7 +8,6 @@
     formMessage?: string | null;
     formSuccess?: boolean;
     dataMessage?: string | null;
-    listHeading?: string;
     overflow?: boolean;
     create: import('svelte').Snippet;
     list: import('svelte').Snippet;
@@ -21,7 +20,6 @@
     formMessage,
     formSuccess = false,
     dataMessage,
-    listHeading,
     overflow = false,
     create,
     list,
@@ -60,11 +58,6 @@
         {@render create()}
       </div>
       <div class="flex min-h-0 min-w-0 flex-col overflow-hidden">
-        {#if listHeading}
-          <AdminHeading level={2}>
-            {listHeading}
-          </AdminHeading>
-        {/if}
         {@render list()}
       </div>
     </div>
@@ -75,9 +68,6 @@
       {@render create()}
     </div>
     <div class="flex min-w-0 flex-1 flex-col gap-3">
-      {#if listHeading}
-        <AdminHeading level={2}>{listHeading}</AdminHeading>
-      {/if}
       {@render list()}
     </div>
   </section>

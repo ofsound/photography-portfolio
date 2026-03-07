@@ -4,6 +4,7 @@
   import AdminStatusMessage from '$lib/components/admin/AdminStatusMessage.svelte';
   import FormField from '$lib/components/FormField.svelte';
   import FormInput from '$lib/components/FormInput.svelte';
+  import FormSelect from '$lib/components/FormSelect.svelte';
 
   const { data, form } = $props();
 
@@ -23,9 +24,6 @@
       show_thumbnail_zoom_hover: true,
     },
   );
-
-  const selectClass =
-    'w-full rounded border border-border-strong bg-surface px-3 py-2 text-sm';
 </script>
 
 <AdminHeading>Default Gallery Settings</AdminHeading>
@@ -42,48 +40,28 @@
 <form method="POST" action="?/save" class="mt-6 grid max-w-4xl gap-4">
   <div class="grid gap-3 sm:grid-cols-2">
     <FormField label="Site Theme" id="settings-theme_default">
-      <select
+      <FormSelect
         name="theme_default"
         id="settings-theme_default"
-        class={selectClass}
+        value={settings.theme_default}
       >
-        <option selected={settings.theme_default === 'system'} value="system">
-          System
-        </option>
-        <option selected={settings.theme_default === 'light'} value="light">
-          Light
-        </option>
-        <option selected={settings.theme_default === 'dark'} value="dark"
-          >Dark</option
-        >
-      </select>
+        <option value="system">System</option>
+        <option value="light">Light</option>
+        <option value="dark">Dark</option>
+      </FormSelect>
     </FormField>
     <FormField label="Layout Mode" id="settings-gallery_layout_mode">
-      <select
+      <FormSelect
         name="gallery_layout_mode"
         id="settings-gallery_layout_mode"
-        class={selectClass}
+        value={settings.gallery_layout_mode}
       >
-        <option
-          selected={settings.gallery_layout_mode === 'uniform'}
-          value="uniform">uniform</option
-        >
-        <option
-          selected={settings.gallery_layout_mode === 'masonry'}
-          value="masonry">masonry</option
-        >
-        <option
-          selected={settings.gallery_layout_mode === 'coverage'}
-          value="coverage">coverage</option
-        >
-        <option selected={settings.gallery_layout_mode === 'rows'} value="rows"
-          >rows</option
-        >
-        <option
-          selected={settings.gallery_layout_mode === 'columns'}
-          value="columns">columns</option
-        >
-      </select>
+        <option value="uniform">uniform</option>
+        <option value="masonry">masonry</option>
+        <option value="coverage">coverage</option>
+        <option value="rows">rows</option>
+        <option value="columns">columns</option>
+      </FormSelect>
     </FormField>
     <FormField label="Gallery gap (px)" id="settings-gallery_gap_px">
       <FormInput
@@ -140,25 +118,16 @@
       label={'Transition Preset' + (data.role !== 'admin' ? ' (Admin)' : '')}
       id="settings-transition_preset"
     >
-      <select
+      <FormSelect
         name="transition_preset"
         id="settings-transition_preset"
-        class={selectClass}
+        value={settings.transition_preset}
         disabled={data.role !== 'admin'}
       >
-        <option
-          selected={settings.transition_preset === 'cinematic'}
-          value="cinematic">cinematic</option
-        >
-        <option
-          selected={settings.transition_preset === 'snappy'}
-          value="snappy">snappy</option
-        >
-        <option
-          selected={settings.transition_preset === 'experimental'}
-          value="experimental">experimental</option
-        >
-      </select>
+        <option value="cinematic">cinematic</option>
+        <option value="snappy">snappy</option>
+        <option value="experimental">experimental</option>
+      </FormSelect>
     </FormField>
   </div>
 

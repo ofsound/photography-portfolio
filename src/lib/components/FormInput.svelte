@@ -1,6 +1,5 @@
 <script lang="ts">
-  const baseClass =
-    'w-full rounded border border-border bg-surface px-3 py-2 text-sm text-text placeholder:text-text-muted';
+  import { formControlBaseClass } from '$lib/constants/form';
 
   type Props = {
     id?: string;
@@ -36,7 +35,7 @@
     form,
   }: Props = $props();
 
-  const fullClass = $derived(`${baseClass} ${className}`.trim());
+  const fullClass = $derived(`${formControlBaseClass} ${className}`.trim());
 </script>
 
 <input

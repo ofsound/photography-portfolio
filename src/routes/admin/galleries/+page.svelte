@@ -145,7 +145,6 @@
   title="Galleries"
   formMessage={form?.message}
   formSuccess={form?.success}
-  listHeading="Existing Galleries"
   create={createForm}
   list={galleryList}
   actions={headerActions}
@@ -194,13 +193,14 @@
           >
             <div
               aria-hidden="true"
-              class="hidden self-start text-text-muted sm:flex sm:items-center"
+              class="mr-2 hidden self-center text-text-muted sm:flex sm:items-center"
             >
               <div
-                class="grid grid-cols-2 gap-1 rounded border border-border px-2 py-1"
+                class="grid grid-cols-3 gap-1 rounded border border-border px-1.5 py-1"
               >
                 {#each [0, 1, 2, 3, 4, 5] as dot (dot)}
-                  <span class="h-1 w-1 rounded-full bg-text-muted/80"></span>
+                  <span class="h-0.5 w-0.5 rounded-full bg-text-muted/80"
+                  ></span>
                 {/each}
               </div>
             </div>
@@ -208,7 +208,7 @@
             <div>
               <AdminHeading level={2}>{card.name}</AdminHeading>
               <p class="text-xs text-text-muted">
-                /{card.slug} • drag to reorder
+                /{card.slug}
               </p>
             </div>
 

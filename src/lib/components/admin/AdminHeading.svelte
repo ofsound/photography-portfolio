@@ -1,7 +1,34 @@
 <script lang="ts">
-  const { children } = $props<{ children: import('svelte').Snippet }>();
+  const {
+    level = 1,
+    class: className = '',
+    children,
+  } = $props<{
+    level?: 1 | 2 | 3;
+    class?: string;
+    children: import('svelte').Snippet;
+  }>();
+
+  const headingClass = $derived.by(() => {
+    const base =
+      level === 1
+        ? 'text-2xl font-medium tracking-wider'
+        : 'text-sm tracking-widest uppercase';
+
+    return className ? `${base} ${className}` : base;
+  });
 </script>
 
-<h1 class="text-2xl font-medium tracking-wider">
-  {@render children()}
-</h1>
+{#if level === 1}
+  <h1 class={headingClass}>
+    {@render children()}
+  </h1>
+{:else if level === 2}
+  <h2 class={headingClass}>
+    {@render children()}
+  </h2>
+{:else}
+  <h3 class={headingClass}>
+    {@render children()}
+  </h3>
+{/if}

@@ -6,6 +6,7 @@
   import { fade, slide } from 'svelte/transition';
 
   import AdminButton from '$lib/components/admin/AdminButton.svelte';
+  import AdminHeading from '$lib/components/admin/AdminHeading.svelte';
   import AdminPhotoCardCompact from '$lib/components/admin/photos/AdminPhotoCardCompact.svelte';
   import AdminPhotoImageManager from '$lib/components/admin/photos/AdminPhotoImageManager.svelte';
   import AdminPhotoMetadataForm from '$lib/components/admin/photos/AdminPhotoMetadataForm.svelte';
@@ -233,7 +234,7 @@
             easing: quintOut,
           }}
         >
-          <h2 class="text-xl tracking-wider uppercase">Details</h2>
+          <AdminHeading level={2}>Details</AdminHeading>
           <div class="mt-3 flex min-w-0 gap-12">
             <div class="flex min-w-0 flex-[7] flex-col gap-3">
               <form

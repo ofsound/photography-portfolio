@@ -3,6 +3,7 @@
   import { resolve } from '$app/paths';
 
   import AdminButton from '$lib/components/admin/AdminButton.svelte';
+  import AdminHeading from '$lib/components/admin/AdminHeading.svelte';
 
   import { buildGalleryPhotoPath } from '$lib/utils/gallery-routes';
   import { photoPublicUrl } from '$lib/utils/storage-url';
@@ -98,9 +99,9 @@
     <div
       class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent px-2 pt-6 pb-2"
     >
-      <h2 class="truncate text-xs font-medium tracking-wider text-white">
+      <AdminHeading level={2}>
         {photo.title}
-      </h2>
+      </AdminHeading>
       {#if isPublic}
         <a
           href={resolve(
@@ -169,9 +170,9 @@
 
     <div class="min-w-0">
       <div class="flex items-center gap-2">
-        <h2 class="truncate text-sm tracking-widest">
+        <AdminHeading level={2}>
           {photo.title}
-        </h2>
+        </AdminHeading>
       </div>
       {#if isPublic}
         <a

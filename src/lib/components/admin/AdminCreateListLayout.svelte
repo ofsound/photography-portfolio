@@ -61,9 +61,9 @@
       </div>
       <div class="flex min-h-0 min-w-0 flex-col overflow-hidden">
         {#if listHeading}
-          <h2 class="mb-2 shrink-0 text-sm tracking-widest uppercase">
+          <AdminHeading level={2}>
             {listHeading}
-          </h2>
+          </AdminHeading>
         {/if}
         {@render list()}
       </div>
@@ -76,7 +76,7 @@
     </div>
     <div class="flex min-w-0 flex-1 flex-col gap-3">
       {#if listHeading}
-        <h2 class="text-sm tracking-widest uppercase">{listHeading}</h2>
+        <AdminHeading level={2}>{listHeading}</AdminHeading>
       {/if}
       {@render list()}
     </div>

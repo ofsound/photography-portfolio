@@ -1,6 +1,7 @@
 <script lang="ts">
   import AdminButton from '$lib/components/admin/AdminButton.svelte';
   import AdminCreateListLayout from '$lib/components/admin/AdminCreateListLayout.svelte';
+  import AdminHeading from '$lib/components/admin/AdminHeading.svelte';
   import FormField from '$lib/components/FormField.svelte';
   import FormInput from '$lib/components/FormInput.svelte';
   import FormTextarea from '$lib/components/FormTextarea.svelte';
@@ -110,7 +111,7 @@
   <article class="rounded border border-border p-4">
     <div class="mb-3 flex items-center justify-between gap-3">
       <div>
-        <h2 class="text-sm tracking-widest uppercase">ALL</h2>
+        <AdminHeading level={2}>ALL</AdminHeading>
         <p class="text-xs text-text-muted">/all</p>
       </div>
       <div class="flex items-center gap-2">
@@ -148,7 +149,7 @@
     <article class="rounded border border-border p-4">
       <div class="mb-3 flex items-center justify-between gap-3">
         <div>
-          <h2 class="text-sm tracking-widest uppercase">{gallery.name}</h2>
+          <AdminHeading level={2}>{gallery.name}</AdminHeading>
           <p class="text-xs text-text-muted">
             /{gallery.slug} • {gallery.photo_count} photo(s)
           </p>

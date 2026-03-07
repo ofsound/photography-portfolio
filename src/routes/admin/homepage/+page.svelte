@@ -2,6 +2,7 @@
   import { DragDropProvider } from '@dnd-kit/svelte';
   import { createSortable, isSortable } from '@dnd-kit/svelte/sortable';
   import AdminButton from '$lib/components/admin/AdminButton.svelte';
+  import AdminHeading from '$lib/components/admin/AdminHeading.svelte';
   import AdminCreateListLayout from '$lib/components/admin/AdminCreateListLayout.svelte';
   import { photoPublicUrl } from '$lib/utils/storage-url';
   import type { HomepageImage, HomepageSlide } from '$lib/types/content';
@@ -116,7 +117,7 @@
   <div class="flex flex-col gap-3">
     <div class="flex flex-wrap items-center justify-between gap-2">
       <div class="flex flex-col gap-1">
-        <h2 class="text-sm tracking-widest uppercase">Selected Slides</h2>
+        <AdminHeading level={2}>Selected Slides</AdminHeading>
         <p class="text-[10px] tracking-wider text-text-muted uppercase">
           Drag slides to reorder
         </p>

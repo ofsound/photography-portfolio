@@ -103,8 +103,9 @@
       <input type="checkbox" name="show_in_nav" checked />
       Show In Nav
     </label>
-    <AdminButton type="submit" variant="submit">Create Gallery</AdminButton
-    >
+    <div class="text-left">
+      <AdminButton type="submit" variant="submit">Create Gallery</AdminButton>
+    </div>
   </form>
 {/snippet}
 

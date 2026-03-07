@@ -26,8 +26,8 @@
     theme(colors.zinc.800)
   );
   --color-surface-strong: light-dark(
-    theme(colors.zinc.200),
-    theme(colors.zinc.700)
+    color-mix(in srgb, theme(colors.zinc.100) 75%, theme(colors.zinc.50)),
+    color-mix(in srgb, theme(colors.zinc.700) 55%, theme(colors.zinc.950))
   );
   --color-surface-subtle: light-dark(
     color-mix(in srgb, theme(colors.zinc.100) 45%, theme(colors.zinc.50)),

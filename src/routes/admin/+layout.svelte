@@ -49,7 +49,7 @@
         class="pointer-events-none absolute inset-0 bg-[repeating-linear-gradient(-45deg,transparent,transparent_6px,rgba(0,0,0,0.06)_6px,rgba(0,0,0,0.06)_8px)] dark:bg-[repeating-linear-gradient(-45deg,transparent,transparent_6px,rgba(255,255,255,0.08)_6px,rgba(255,255,255,0.08)_8px)]"
       ></div>
       <p
-        class="relative p-4 text-xl font-semibold tracking-[0.35em] uppercase [text-shadow:0_1px_0_rgba(255,255,255,0.2),0_2px_4px_rgba(0,0,0,0.15),0_4px_12px_rgba(0,0,0,0.25)]"
+        class="relative p-4 text-2xl font-bold tracking-[0.35em] uppercase [text-shadow:0_1px_0_rgba(255,255,255,0.2),0_2px_4px_rgba(0,0,0,0.15),0_4px_12px_rgba(0,0,0,0.25)]"
       >
         CMS
       </p>
@@ -60,6 +60,9 @@
           class="relative flex items-center justify-between border-t border-border first:border-t-0"
           class:bg-surface-subtle={!isActiveLink(link.href) && i % 2 === 1}
           class:bg-surface-strong={isActiveLink(link.href)}
+          class:shadow-[inset_3px_0_0_var(--color-brand),inset_0_2px_8px_rgba(0,0,0,0.14)]={isActiveLink(
+            link.href,
+          )}
         >
           <a
             href={resolve(link.href as `/${string}`)}

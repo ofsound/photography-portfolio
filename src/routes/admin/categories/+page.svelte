@@ -46,9 +46,9 @@
     <label class="flex items-center gap-2 text-sm">
       <input name="is_active" type="checkbox" checked /> Active
     </label>
-    <AdminButton type="submit" variant="submit"
-      >Create Category</AdminButton
-    >
+    <div class="text-left">
+      <AdminButton type="submit" variant="submit">Create Category</AdminButton>
+    </div>
   </form>
 {/snippet}
 

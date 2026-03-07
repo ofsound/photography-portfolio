@@ -271,7 +271,9 @@
         <p class="text-text-danger text-sm">{timingValidationError}</p>
       {/if}
 
-      <AdminButton type="submit" variant="submit">Save Slides</AdminButton>
+      <div class="text-left">
+        <AdminButton type="submit" variant="submit">Save Slides</AdminButton>
+      </div>
     </form>
   </div>
 {/snippet}

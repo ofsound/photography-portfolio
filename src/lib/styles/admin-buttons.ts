@@ -22,7 +22,8 @@ export const variantClasses: Record<Variant, string> = {
     'rounded border border-admin-btn-border bg-admin-btn-bg hover:bg-border',
   submit:
     'rounded border border-success/40 bg-success text-white hover:opacity-90',
-  danger: 'rounded border border-danger/60 bg-danger text-white hover:opacity-90',
+  danger:
+    'rounded border border-danger/60 bg-danger text-white hover:opacity-90',
   ghost:
     'rounded text-text-muted transition-colors hover:bg-border hover:text-text',
   toggle: 'rounded border border-border-strong',

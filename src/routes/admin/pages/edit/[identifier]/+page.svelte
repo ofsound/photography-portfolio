@@ -1,5 +1,6 @@
 <script lang="ts">
   import CodeEditor from '$lib/components/admin/CodeEditor.svelte';
+  import AdminCard from '$lib/components/admin/AdminCard.svelte';
   import AdminButton from '$lib/components/admin/AdminButton.svelte';
   import AdminHeading from '$lib/components/admin/AdminHeading.svelte';
   import AdminStatusMessage from '$lib/components/admin/AdminStatusMessage.svelte';
@@ -141,7 +142,7 @@
   </div>
 
   {#if revisions.length}
-    <div class="rounded border border-border p-3">
+    <AdminCard class="p-3">
       <p class="mb-2 text-xs tracking-widest uppercase">Recent Revisions</p>
       <div class="grid gap-2">
         {#each revisions.slice(0, 10) as rev (rev.id)}
@@ -167,6 +168,6 @@
           </div>
         {/each}
       </div>
-    </div>
+    </AdminCard>
   {/if}
 </form>

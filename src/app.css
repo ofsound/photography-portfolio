@@ -57,6 +57,10 @@
     theme(colors.zinc.200),
     theme(colors.zinc.500)
   );
+  --color-admin-diagonal: light-dark(
+    color-mix(in srgb, var(--color-text-subtle) 5%, transparent),
+    color-mix(in srgb, var(--color-text-subtle) 5%, transparent)
+  );
   --color-brand: light-dark(theme(colors.indigo.600), theme(colors.indigo.300));
   --color-brand-contrast: light-dark(
     theme(colors.indigo.50),

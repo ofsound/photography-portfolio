@@ -3,7 +3,9 @@
   import { DragDropProvider, DragOverlay } from '@dnd-kit/svelte';
   import { createSortable, isSortable } from '@dnd-kit/svelte/sortable';
 
+  import AdminCard from '$lib/components/admin/AdminCard.svelte';
   import AdminButton from '$lib/components/admin/AdminButton.svelte';
+  import AdminHeading from '$lib/components/admin/AdminHeading.svelte';
   import PhotoUploadZone from '$lib/components/admin/PhotoUploadZone.svelte';
   import ThumbnailCropEditor from '$lib/components/admin/ThumbnailCropEditor.svelte';
 
@@ -59,15 +61,15 @@
     {#if isDraft}
       <p class="text-sm text-text-muted">No lead image set.</p>
       <div class="grid gap-2">
-        <p class="text-xs tracking-widest uppercase">
-          Additional Images (drag to reorder)
-        </p>
+        <AdminHeading level={3}
+          >Additional Images (drag to reorder)</AdminHeading
+        >
         <p class="text-sm text-text-muted">No additional images.</p>
       </div>
     {:else}
       {#if lead}
-        <div
-          class="grid gap-2 border border-border bg-surface p-4 sm:grid-cols-[1fr_auto] sm:items-start"
+        <AdminCard
+          class="grid gap-2 p-4 sm:grid-cols-[1fr_auto] sm:items-start"
         >
           <div class="flex min-w-0 flex-col gap-2 text-xs">
             {#if lead.delivery_storage_path}
@@ -126,15 +128,15 @@
               >
             </form>
           </div>
-        </div>
+        </AdminCard>
       {:else}
         <p class="text-sm text-text-muted">No lead image set.</p>
       {/if}
 
       <div class="grid gap-2">
-        <p class="text-xs tracking-widest uppercase">
-          Additional Images (drag to reorder)
-        </p>
+        <AdminHeading level={3}
+          >Additional Images (drag to reorder)</AdminHeading
+        >
 
         {#if additionalOrder.length === 0}
           <p class="text-sm text-text-muted">No additional images.</p>
@@ -150,76 +152,94 @@
                   })}
                   <li
                     {@attach sortable.attach}
-                    class="flex cursor-move flex-col gap-2 rounded border border-border bg-surface p-2 sm:flex-row sm:items-center"
                     class:opacity-50={sortable.isDragging}
                   >
-                    {#if image.delivery_storage_path}
-                      <div
-                        class="flex h-24 w-32 shrink-0 items-center justify-center overflow-hidden rounded"
-                      >
-                        <img
-                          src={photoPublicUrl(image.delivery_storage_path, 320)}
-                          alt={image.alt_text ?? photo.title}
-                          class="max-h-full max-w-full object-contain"
-                        />
-                      </div>
-                    {:else}
-                      <div
-                        class="grid h-24 w-32 shrink-0 animate-pulse place-items-center rounded border border-border-strong text-xs uppercase"
-                      >
-                        pending
-                      </div>
-                    {/if}
-
-                    <div
-                      class="ml-auto flex shrink-0 flex-wrap items-center gap-2"
+                    <AdminCard
+                      class="flex cursor-move flex-col gap-2 p-2 sm:flex-row sm:items-center"
                     >
-                      {#if image.source_storage_path}
-                        <AdminButton
-                          size="sm"
-                          variant="subtle"
-                          href="/admin/download-original/{image.id}"
+                      {#if image.delivery_storage_path}
+                        <div
+                          class="flex h-24 w-32 shrink-0 items-center justify-center overflow-hidden rounded"
                         >
-                          Download Original
-                        </AdminButton>
+                          <img
+                            src={photoPublicUrl(
+                              image.delivery_storage_path,
+                              320,
+                            )}
+                            alt={image.alt_text ?? photo.title}
+                            class="max-h-full max-w-full object-contain"
+                          />
+                        </div>
+                      {:else}
+                        <div
+                          class="grid h-24 w-32 shrink-0 animate-pulse place-items-center rounded border border-border-strong text-xs uppercase"
+                        >
+                          pending
+                        </div>
                       {/if}
-                      <form method="POST" action="?/setLead" use:enhance>
-                        <input type="hidden" name="photo_id" value={photo.id} />
-                        <input
-                          type="hidden"
-                          name="gallery_id"
-                          value={photo.gallery_id}
-                        />
-                        <input type="hidden" name="image_id" value={image.id} />
-                        <AdminButton size="sm" type="submit" variant="submit"
-                          >Set Lead</AdminButton
-                        >
-                      </form>
 
-                      <form
-                        method="POST"
-                        action="?/removeImage"
-                        use:enhance={({ cancel }) => {
-                          if (
-                            !window.confirm(
-                              'Are you sure you want to delete this additional image? This cannot be undone.',
-                            )
-                          ) {
-                            cancel();
-                          }
-                        }}
+                      <div
+                        class="ml-auto flex shrink-0 flex-wrap items-center gap-2"
                       >
-                        <input type="hidden" name="image_id" value={image.id} />
-                        <input
-                          type="hidden"
-                          name="gallery_id"
-                          value={photo.gallery_id}
-                        />
-                        <AdminButton variant="danger" size="sm" type="submit"
-                          >Delete</AdminButton
+                        {#if image.source_storage_path}
+                          <AdminButton
+                            size="sm"
+                            variant="subtle"
+                            href="/admin/download-original/{image.id}"
+                          >
+                            Download Original
+                          </AdminButton>
+                        {/if}
+                        <form method="POST" action="?/setLead" use:enhance>
+                          <input
+                            type="hidden"
+                            name="photo_id"
+                            value={photo.id}
+                          />
+                          <input
+                            type="hidden"
+                            name="gallery_id"
+                            value={photo.gallery_id}
+                          />
+                          <input
+                            type="hidden"
+                            name="image_id"
+                            value={image.id}
+                          />
+                          <AdminButton size="sm" type="submit" variant="submit"
+                            >Set Lead</AdminButton
+                          >
+                        </form>
+
+                        <form
+                          method="POST"
+                          action="?/removeImage"
+                          use:enhance={({ cancel }) => {
+                            if (
+                              !window.confirm(
+                                'Are you sure you want to delete this additional image? This cannot be undone.',
+                              )
+                            ) {
+                              cancel();
+                            }
+                          }}
                         >
-                      </form>
-                    </div>
+                          <input
+                            type="hidden"
+                            name="image_id"
+                            value={image.id}
+                          />
+                          <input
+                            type="hidden"
+                            name="gallery_id"
+                            value={photo.gallery_id}
+                          />
+                          <AdminButton variant="danger" size="sm" type="submit"
+                            >Delete</AdminButton
+                          >
+                        </form>
+                      </div>
+                    </AdminCard>
                   </li>
                 {/if}
               {/each}

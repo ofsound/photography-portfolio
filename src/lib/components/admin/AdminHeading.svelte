@@ -10,11 +10,17 @@
   }>();
 
   const headingClass = $derived.by(() => {
-    const base =
-      level === 1
-        ? 'text-2xl font-medium tracking-wider'
-        : 'text-lg tracking-wider font-medium';
-
+    let base: string;
+    switch (level) {
+      case 1:
+        base = 'text-2xl font-medium tracking-wider';
+        break;
+      case 2:
+        base = 'text-lg tracking-wider font-medium';
+        break;
+      default:
+        base = 'text-sm tracking-widest uppercase';
+    }
     return className ? `${base} ${className}` : base;
   });
 </script>

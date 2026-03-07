@@ -1,4 +1,5 @@
 <script lang="ts">
+  import AdminCard from '$lib/components/admin/AdminCard.svelte';
   import AdminButton from '$lib/components/admin/AdminButton.svelte';
   import AdminCreateListLayout from '$lib/components/admin/AdminCreateListLayout.svelte';
   import AdminHeading from '$lib/components/admin/AdminHeading.svelte';
@@ -110,7 +111,7 @@
 {/snippet}
 
 {#snippet galleryList()}
-  <article class="rounded border border-border p-4">
+  <AdminCard as="article" class="p-4">
     <div class="mb-3 flex items-center justify-between gap-3">
       <div>
         <AdminHeading level={2}>ALL</AdminHeading>
@@ -145,10 +146,10 @@
         <AdminButton type="submit" variant="submit">Save</AdminButton>
       </div>
     </form>
-  </article>
+  </AdminCard>
 
   {#each data.galleries as gallery (gallery.id)}
-    <article class="rounded border border-border p-4">
+    <AdminCard as="article" class="p-4">
       <div class="mb-3 flex items-center justify-between gap-3">
         <div>
           <AdminHeading level={2}>{gallery.name}</AdminHeading>
@@ -252,6 +253,6 @@
           >
         </div>
       </form>
-    </article>
+    </AdminCard>
   {/each}
 {/snippet}

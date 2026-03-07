@@ -3,6 +3,7 @@
   import { resolve } from '$app/paths';
   import { page } from '$app/state';
 
+  import AdminCard from '$lib/components/admin/AdminCard.svelte';
   import AdminButton from '$lib/components/admin/AdminButton.svelte';
   import AdminHeading from '$lib/components/admin/AdminHeading.svelte';
   import AdminStatusMessage from '$lib/components/admin/AdminStatusMessage.svelte';
@@ -206,7 +207,7 @@
   with a lead image.
 </p>
 
-<section class="mt-6 grid gap-4 rounded border border-border p-4">
+<AdminCard as="section" class="mt-6 grid gap-4 p-4">
   <div class="grid gap-2">
     <p class="text-xs tracking-widest uppercase">Choose Images</p>
     <input
@@ -250,7 +251,7 @@
     <p>Success: <span class="font-medium text-success">{successCount}</span></p>
     <p>Failed: <span class="font-medium text-danger">{errorCount}</span></p>
   </div>
-</section>
+</AdminCard>
 
 <section class="mt-6 grid gap-2">
   {#if uploadQueue.length === 0}
@@ -261,7 +262,7 @@
     </p>
   {:else}
     {#each uploadQueue as item (item.id)}
-      <article class="grid gap-2 rounded border border-border p-3">
+      <AdminCard as="article" class="grid gap-2 p-3">
         <div class="flex flex-wrap items-center justify-between gap-2">
           <p class="min-w-0 flex-1 truncate text-sm">{item.displayName}</p>
           <AdminStatusMessage
@@ -293,7 +294,7 @@
             {item.message}
           </p>
         {/if}
-      </article>
+      </AdminCard>
     {/each}
   {/if}
 </section>

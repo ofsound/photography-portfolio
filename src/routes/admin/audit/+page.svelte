@@ -1,4 +1,5 @@
 <script lang="ts">
+  import AdminCard from '$lib/components/admin/AdminCard.svelte';
   import AdminHeading from '$lib/components/admin/AdminHeading.svelte';
 
   const { data } = $props();
@@ -9,7 +10,7 @@
   Most recent {data.logs.length} entries.
 </p>
 
-<div class="mt-6 overflow-x-auto rounded border border-border">
+<AdminCard class="mt-6 overflow-x-auto !bg-transparent">
   <table class="min-w-full border-collapse text-left text-xs">
     <thead
       class="border-b border-border bg-canvas/[0.03] tracking-widest uppercase"
@@ -37,4 +38,4 @@
       {/each}
     </tbody>
   </table>
-</div>
+</AdminCard>

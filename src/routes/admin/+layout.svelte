@@ -46,7 +46,7 @@
       <!-- Diagonal stripes -->
       <div
         aria-hidden="true"
-        class="pointer-events-none absolute inset-0 bg-[repeating-linear-gradient(-45deg,transparent,transparent_6px,rgba(0,0,0,0.06)_6px,rgba(0,0,0,0.06)_8px)] dark:bg-[repeating-linear-gradient(-45deg,transparent,transparent_6px,rgba(255,255,255,0.08)_6px,rgba(255,255,255,0.08)_8px)]"
+        class="pointer-events-none absolute inset-0 bg-[repeating-linear-gradient(-45deg,transparent,transparent_6px,var(--color-admin-diagonal)_6px,var(--color-admin-diagonal)_8px)]"
       ></div>
       <p
         class="relative p-4 text-2xl font-bold tracking-[0.35em] uppercase [text-shadow:0_1px_0_rgba(255,255,255,0.2),0_2px_4px_rgba(0,0,0,0.15),0_4px_12px_rgba(0,0,0,0.25)]"

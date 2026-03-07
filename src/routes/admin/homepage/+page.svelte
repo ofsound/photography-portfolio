@@ -1,6 +1,7 @@
 <script lang="ts">
   import { DragDropProvider } from '@dnd-kit/svelte';
   import { createSortable, isSortable } from '@dnd-kit/svelte/sortable';
+  import AdminCard from '$lib/components/admin/AdminCard.svelte';
   import AdminButton from '$lib/components/admin/AdminButton.svelte';
   import AdminHeading from '$lib/components/admin/AdminHeading.svelte';
   import AdminCreateListLayout from '$lib/components/admin/AdminCreateListLayout.svelte';
@@ -189,33 +190,36 @@
             {@const sortable = createSortable({ id: slide.id, index })}
             <li
               {@attach sortable.attach}
-              class="grid cursor-move gap-2 rounded border border-border p-2 sm:grid-cols-[auto_1fr_auto] sm:items-center"
               class:opacity-50={sortable.isDragging}
             >
-              {#if slide.delivery_storage_path}
-                <img
-                  src={photoPublicUrl(slide.delivery_storage_path, 180)}
-                  alt={slide.photo_title}
-                  class="h-12 w-16 rounded object-cover"
-                />
-              {:else}
-                <div
-                  class="grid h-12 w-16 animate-pulse place-items-center rounded border border-border-strong text-xs uppercase"
-                >
-                  pending
-                </div>
-              {/if}
-
-              <div class="text-xs">
-                <div>{slide.photo_title}</div>
-              </div>
-
-              <AdminButton
-                size="sm"
-                variant="danger"
-                type="button"
-                onclick={() => removeSlide(slide.id)}>Remove</AdminButton
+              <AdminCard
+                class="grid cursor-move gap-2 p-2 sm:grid-cols-[auto_1fr_auto] sm:items-center"
               >
+                {#if slide.delivery_storage_path}
+                  <img
+                    src={photoPublicUrl(slide.delivery_storage_path, 180)}
+                    alt={slide.photo_title}
+                    class="h-12 w-16 rounded object-cover"
+                  />
+                {:else}
+                  <div
+                    class="grid h-12 w-16 animate-pulse place-items-center rounded border border-border-strong text-xs uppercase"
+                  >
+                    pending
+                  </div>
+                {/if}
+
+                <div class="text-xs">
+                  <div>{slide.photo_title}</div>
+                </div>
+
+                <AdminButton
+                  size="sm"
+                  variant="danger"
+                  type="button"
+                  onclick={() => removeSlide(slide.id)}>Remove</AdminButton
+                >
+              </AdminCard>
             </li>
           {/each}
         </ul>
@@ -282,12 +286,13 @@
   <ul class="flex min-h-0 flex-1 flex-wrap content-start gap-2 overflow-auto">
     {#each availableImages as image (image.id)}
       <li class="w-40">
-        <div
-          class="group flex cursor-pointer flex-col gap-2 rounded border border-border p-2"
+        <AdminCard
+          class="group flex cursor-pointer flex-col gap-2 p-2"
           role="button"
           tabindex="0"
           onclick={() => addSlide(image.id)}
-          onkeydown={(e) => e.key === 'Enter' && addSlide(image.id)}
+          onkeydown={(e: KeyboardEvent) =>
+            e.key === 'Enter' && addSlide(image.id)}
         >
           {#if image.delivery_storage_path}
             <img
@@ -314,7 +319,7 @@
           >
             Add
           </AdminButton>
-        </div>
+        </AdminCard>
       </li>
     {/each}
   </ul>

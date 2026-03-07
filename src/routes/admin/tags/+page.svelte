@@ -1,4 +1,5 @@
 <script lang="ts">
+  import AdminCard from '$lib/components/admin/AdminCard.svelte';
   import AdminButton from '$lib/components/admin/AdminButton.svelte';
   import AdminCreateListLayout from '$lib/components/admin/AdminCreateListLayout.svelte';
   import FormField from '$lib/components/FormField.svelte';
@@ -46,10 +47,12 @@
 
 {#snippet tagList()}
   {#each data.tags as tag (tag.id)}
-    <form
+    <AdminCard
+      as="form"
+      variant="gradient"
       method="POST"
       action="?/update"
-      class="grid gap-3 rounded border border-border p-4"
+      class="grid gap-3 p-4"
     >
       <input type="hidden" name="id" value={tag.id} />
       <div class="grid gap-3 sm:grid-cols-2">
@@ -97,6 +100,6 @@
           Delete
         </AdminButton>
       </div>
-    </form>
+    </AdminCard>
   {/each}
 {/snippet}

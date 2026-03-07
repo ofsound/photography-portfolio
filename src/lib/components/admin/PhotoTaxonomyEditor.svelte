@@ -1,4 +1,5 @@
 <script lang="ts">
+  import AdminCard from '$lib/components/admin/AdminCard.svelte';
   import AdminButton from '$lib/components/admin/AdminButton.svelte';
   import type { AdminCategory, AdminTag } from '$lib/types/content';
 
@@ -27,7 +28,7 @@
   }>();
 </script>
 
-<div class="flex flex-col gap-4 rounded border border-border p-3">
+<AdminCard class="flex flex-col gap-4 p-3">
   <div class="grid items-start gap-3 lg:grid-cols-2">
     <div class="grid gap-2">
       <div class="flex flex-wrap gap-2">
@@ -76,7 +77,7 @@
       <input type="hidden" name="tag_ids" value={tagId} />
     {/each}
 
-    <div class="grid gap-2 rounded border border-border-strong p-2">
+    <AdminCard class="grid gap-2 !border-border-strong !bg-transparent p-2">
       <div class="flex flex-wrap gap-2">
         {#each taxonomyDraftCategories as categoryId (categoryId)}
           {#if categoryById(categoryId)}
@@ -107,7 +108,7 @@
           <span class="text-xs text-text-muted/50 italic">Empty</span>
         {/if}
       </div>
-    </div>
+    </AdminCard>
 
     <AdminButton
       size="xs"
@@ -120,4 +121,4 @@
       Apply To Selected
     </AdminButton>
   </form>
-</div>
+</AdminCard>

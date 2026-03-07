@@ -28,6 +28,14 @@
         /^\/admin\/[^/]+\/photos(?:\/.*)?$/.test(page.url.pathname)
       );
     }
+    if (href === '/admin/galleries') {
+      return (
+        page.url.pathname === '/admin/galleries' ||
+        /^\/admin\/(?!all\/?$)([^/]+)\/(?:photos(?:\/.*)?|details(?:\/.*)?)$/.test(
+          page.url.pathname,
+        )
+      );
+    }
     return page.url.pathname === href;
   };
 </script>

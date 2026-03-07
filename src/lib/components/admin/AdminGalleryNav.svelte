@@ -1,4 +1,5 @@
 <script lang="ts">
+  /* eslint-disable svelte/no-navigation-without-resolve -- photosHref/uploadHref are derived from resolve() */
   import { resolve } from '$app/paths';
 
   import AdminButton from '$lib/components/admin/AdminButton.svelte';
@@ -33,7 +34,7 @@
   <div class="flex items-center gap-3">
     <a
       href={resolve('/admin/galleries')}
-      class="text-text-muted transition-colors hover:text-brand"
+      class="-m-2 p-2 text-text-muted transition-colors hover:text-brand"
       aria-label="Back to Galleries"
     >
       <svg
@@ -52,50 +53,47 @@
     {#if currentView === 'photos'}
       <AdminButton
         href={photosHref}
-        variant="pill-success"
+        variant="default"
+        size="xs"
         selected={!showArchived}
       >
-        Active <span class="opacity-70">{activeCount}</span>
+        Active ({activeCount})
       </AdminButton>
       <AdminButton
         href={`${photosHref}?showArchived=1`}
-        variant="pill-danger"
+        variant="default"
+        size="xs"
         selected={showArchived}
       >
-        Archived <span class="opacity-70">{archivedCount}</span>
+        Archived ({archivedCount})
       </AdminButton>
     {/if}
   </div>
 
   <!-- View tabs (center) -->
   <div class="flex items-center gap-4">
-    <!-- VARIATION A: Pill slider with animated background -->
-    <div class="relative flex rounded-full bg-surface-muted p-1">
+    <div class="relative flex rounded-md bg-surface-muted">
       <a
         href={resolve(photosRoute, { gallerySlug })}
-        class="relative z-10 grid place-items-center rounded-full px-4 py-1.5 text-xs font-semibold tracking-wide uppercase transition-all duration-300 ease-(--ease-cinematic)"
+        class="relative z-10 grid place-items-center rounded-md px-4 py-1.5 text-xs font-semibold tracking-wider uppercase transition-all duration-300 ease-(--ease-cinematic)"
         class:text-brand-contrast={currentView === 'photos'}
         class:text-text-subtle={currentView !== 'photos'}
         class:hover:text-text={currentView !== 'photos'}
       >
         {#if currentView === 'photos'}
-          <span
-            class="absolute inset-0 rounded-full bg-brand shadow-md shadow-brand/25"
-          ></span>
+          <span class="absolute inset-0 rounded-md bg-brand"></span>
         {/if}
         <span class="relative">Photos</span>
       </a>
       <a
         href={resolve(detailsRoute, { gallerySlug })}
-        class="relative z-10 grid place-items-center rounded-full px-4 py-1.5 text-xs font-semibold tracking-wide uppercase transition-all duration-300 ease-(--ease-cinematic)"
+        class="relative z-10 grid place-items-center rounded-md px-4 py-1.5 text-xs font-semibold tracking-wider uppercase transition-all duration-300 ease-(--ease-cinematic)"
         class:text-brand-contrast={currentView === 'details'}
         class:text-text-subtle={currentView !== 'details'}
         class:hover:text-text={currentView !== 'details'}
       >
         {#if currentView === 'details'}
-          <span
-            class="absolute inset-0 rounded-full bg-brand shadow-md shadow-brand/25"
-          ></span>
+          <span class="absolute inset-0 rounded-md bg-brand"></span>
         {/if}
         <span class="relative">Details</span>
       </a>
@@ -105,14 +103,14 @@
 
 <!-- Add Photos (left) -->
 {#if currentView === 'photos'}
-  <div class="mb-6 flex flex-wrap items-center gap-3 pt-1">
+  <div class="flex flex-wrap items-center gap-3 pt-1">
     <!-- Variation A: Soft gradient with camera icon -->
     <a
-      href={resolve(uploadRoute, { gallerySlug })}
-      class="group inline-flex items-center gap-2 rounded-lg bg-linear-to-r from-brand to-indigo-500 px-4 py-2 text-sm font-semibold tracking-wider text-white shadow-md shadow-brand/25 transition-all hover:scale-[1.03] hover:shadow-lg hover:shadow-brand/30 active:scale-[0.98]"
+      href={uploadHref}
+      class="group inline-flex items-center gap-2 rounded-lg bg-linear-to-r from-brand to-indigo-500 px-4 py-2 text-sm font-semibold tracking-wider text-white transition-all hover:scale-[1.01] active:scale-[0.98]"
     >
       <svg
-        class="size-4 transition-transform group-hover:scale-110"
+        class="size-4 transition-transform group-hover:scale-101"
         viewBox="0 0 24 24"
         fill="none"
         stroke="currentColor"

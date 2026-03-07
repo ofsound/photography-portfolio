@@ -1,7 +1,8 @@
 <script lang="ts">
+  /* eslint-disable svelte/no-navigation-without-resolve -- derived route href */
+  import { resolve } from '$app/paths';
   import { invalidateAll } from '$app/navigation';
 
-  import AdminButton from '$lib/components/admin/AdminButton.svelte';
   import AdminHeading from '$lib/components/admin/AdminHeading.svelte';
   import AdminStatusMessage from '$lib/components/admin/AdminStatusMessage.svelte';
   import AdminSinglePhotoEditor from '$lib/components/admin/photos/AdminSinglePhotoEditor.svelte';
@@ -29,13 +30,32 @@
     }, 3000);
     return () => clearInterval(intervalId);
   });
+
+  const gallerySlug = $derived(data.gallery.slug);
+  const backToGalleryPhotosHref = $derived(
+    resolve('/admin/[gallerySlug]/photos', { gallerySlug }),
+  );
 </script>
 
-<div class="flex items-center justify-between gap-3">
-  <AdminHeading>Edit Photo</AdminHeading>
-  <AdminButton href={`/admin/${data.gallery.slug}/photos`}
-    >Back to {data.gallery.name}</AdminButton
+<div class="flex items-center gap-3">
+  <a
+    href={backToGalleryPhotosHref}
+    class="-m-2 p-2 text-text-muted transition-colors hover:text-brand"
+    aria-label="Back to Gallery Photos"
   >
+    <svg
+      class="size-4"
+      viewBox="0 0 16 16"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
+      <path d="M10 3 5 8l5 5" />
+    </svg>
+  </a>
+  <AdminHeading>Edit Photo</AdminHeading>
 </div>
 
 {#if form?.message}

@@ -28,10 +28,10 @@
 </script>
 
 <div class="flex items-center gap-3">
-  <AdminHeading>{title}</AdminHeading>
   {#if actions}
     {@render actions()}
   {/if}
+  <AdminHeading>{title}</AdminHeading>
 </div>
 
 {#if subtitle}

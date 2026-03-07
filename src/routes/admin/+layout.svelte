@@ -74,7 +74,7 @@
   </aside>
 
   <section
-    class="flex min-h-0 flex-col overflow-y-auto p-6"
+    class="flex min-h-0 max-w-[1200px] flex-col overflow-y-auto p-6"
     style="view-transition-name: admin-content"
   >
     {@render children()}

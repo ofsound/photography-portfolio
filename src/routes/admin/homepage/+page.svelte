@@ -303,7 +303,7 @@
           {/if}
 
           <div class="min-w-0 truncate text-xs">
-            {image.photo_title} ({image.kind})
+            {image.photo_title}
           </div>
 
           <AdminButton

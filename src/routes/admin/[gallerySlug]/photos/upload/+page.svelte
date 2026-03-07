@@ -32,7 +32,7 @@
     'image/jpeg,image/png,image/webp,image/heic,image/heif';
   const MAX_CONCURRENCY = 3;
   const basePhotosPath = $derived(
-    page.url.pathname.replace(/\/multiple\/?$/, ''),
+    page.url.pathname.replace(/\/upload\/?$/, ''),
   );
 
   let uploadQueue = $state<UploadItem[]>([]);
@@ -115,9 +115,10 @@
   }
 
   function uploadOne(item: UploadItem): Promise<void> {
-    return new Promise((resolve) => {
+    return new Promise((done) => {
       const xhr = new XMLHttpRequest();
-      xhr.open('POST', `${page.url.pathname.replace(/\/$/, '')}/upload`);
+      const postUrl = `${page.url.pathname.replace(/\/$/, '')}`;
+      xhr.open('POST', postUrl);
       xhr.timeout = 120_000;
 
       xhr.upload.addEventListener('loadstart', () => {
@@ -141,31 +142,31 @@
           item.progressPct = 100;
           item.photoId = payload.photoId ?? null;
           item.message = payload.message ?? 'Image uploaded.';
-          resolve();
+          done();
           return;
         }
 
         item.status = 'error';
         item.message = payload?.message ?? `Upload failed (${xhr.status}).`;
-        resolve();
+        done();
       });
 
       xhr.addEventListener('error', () => {
         item.status = 'error';
         item.message = 'Network error while uploading.';
-        resolve();
+        done();
       });
 
       xhr.addEventListener('abort', () => {
         item.status = 'error';
         item.message = 'Upload canceled.';
-        resolve();
+        done();
       });
 
       xhr.addEventListener('timeout', () => {
         item.status = 'error';
         item.message = 'Upload timed out.';
-        resolve();
+        done();
       });
 
       const formData = new FormData();

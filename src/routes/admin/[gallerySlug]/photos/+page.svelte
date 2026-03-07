@@ -301,7 +301,7 @@
     >
     {#if data.scopeKind === 'gallery'}
       <AdminButton
-        href={`/admin/${data.gallery.slug}/photos/multiple`}
+        href={`/admin/${data.gallery.slug}/photos/upload`}
         variant="submit"
         size="xs"
       >

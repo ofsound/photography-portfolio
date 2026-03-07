@@ -311,7 +311,7 @@
   {#if filteredGallerySlug}
     <div class="flex gap-2">
       <AdminButton
-        href={`/admin/${filteredGallerySlug}/photos/multiple`}
+        href={`/admin/${filteredGallerySlug}/photos/upload`}
         variant="submit"
         size="xs"
       >

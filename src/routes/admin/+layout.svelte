@@ -40,16 +40,14 @@
     class="border-r border-border"
     style="view-transition-name: admin-sidebar"
   >
-    <div
-      class="relative overflow-hidden border-b border-border bg-surface-muted"
-    >
+    <div class="relative bg-surface-muted">
       <!-- Diagonal stripes -->
       <div
         aria-hidden="true"
         class="pointer-events-none absolute inset-0 bg-[repeating-linear-gradient(-45deg,transparent,transparent_6px,var(--color-admin-diagonal)_6px,var(--color-admin-diagonal)_8px)]"
       ></div>
       <p
-        class="relative p-4 text-2xl font-bold tracking-[0.35em] uppercase [text-shadow:0_1px_0_rgba(255,255,255,0.2),0_2px_4px_rgba(0,0,0,0.15),0_4px_12px_rgba(0,0,0,0.25)]"
+        class="relative px-4 py-5 text-3xl font-bold tracking-[0.35em] uppercase [text-shadow:0_1px_0_rgba(255,255,255,0.2),0_2px_2px_rgba(0,0,0,0.1),0_4px_8px_rgba(0,0,0,0.15)]"
       >
         CMS
       </p>
@@ -57,12 +55,12 @@
     <nav class="text-md flex flex-col border-y border-border font-medium">
       {#each links as link, i (link.href)}
         <div
-          class="relative flex items-center justify-between border-t border-border first:border-t-0"
+          class="relative flex items-center justify-between border-t border-border transition-shadow duration-300 first:border-t-0"
           class:bg-surface-subtle={!isActiveLink(link.href) && i % 2 === 1}
           class:bg-surface-strong={isActiveLink(link.href)}
-          class:shadow-[inset_3px_0_0_var(--color-brand),inset_0_2px_8px_rgba(0,0,0,0.14)]={isActiveLink(
-            link.href,
-          )}
+          style="box-shadow: {isActiveLink(link.href)
+            ? 'inset 3px 0 0 var(--color-brand), inset 0 2px 8px rgba(0,0,0,0.14)'
+            : 'inset 3px 0 0 transparent, inset 0 2px 8px transparent'}"
         >
           <a
             href={resolve(link.href as `/${string}`)}

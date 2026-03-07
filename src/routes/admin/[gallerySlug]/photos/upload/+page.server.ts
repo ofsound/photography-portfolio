@@ -5,7 +5,7 @@ import type { PageServerLoad } from './$types';
 export const load: PageServerLoad = async ({ locals, params }) => {
   const resolved = await resolveGalleryForAdmin(locals, params.gallerySlug);
   if (resolved.kind === 'redirect') {
-    throw redirect(301, `/admin/${resolved.toSlug}/photos/multiple`);
+    throw redirect(301, `/admin/${resolved.toSlug}/photos/upload`);
   }
   if (resolved.kind !== 'gallery') {
     throw error(404, 'Gallery not found.');

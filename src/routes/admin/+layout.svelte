@@ -6,6 +6,7 @@
 
   const links = $derived.by(() => {
     const list = [
+      { href: '/admin/library', label: 'Library' },
       { href: '/admin/categories', label: 'Categories' },
       { href: '/admin/tags', label: 'Tags' },
       { href: '/admin/homepage', label: 'Homepage' },
@@ -21,17 +22,16 @@
   });
 
   const isActiveLink = (href: string) => {
-    if (href === '/admin/all/photos') {
+    if (href === '/admin/library') {
       return (
-        page.url.pathname === '/admin/all/photos' ||
-        page.url.pathname.startsWith('/admin/all/photos/') ||
-        /^\/admin\/[^/]+\/photos(?:\/.*)?$/.test(page.url.pathname)
+        page.url.pathname === '/admin/library' ||
+        page.url.pathname.startsWith('/admin/library/')
       );
     }
     if (href === '/admin/galleries') {
       return (
         page.url.pathname === '/admin/galleries' ||
-        /^\/admin\/(?!all\/?$)([^/]+)\/(?:photos(?:\/.*)?|details(?:\/.*)?)$/.test(
+        /^\/admin\/(?!library\/?$|library\/)([^/]+)\/(?:photos(?:\/.*)?|details(?:\/.*)?)$/.test(
           page.url.pathname,
         )
       );
@@ -55,7 +55,7 @@
         class="pointer-events-none absolute inset-0 bg-[repeating-linear-gradient(-45deg,transparent,transparent_6px,var(--color-admin-diagonal)_6px,var(--color-admin-diagonal)_8px)]"
       ></div>
       <p
-        class="relative px-4 py-5 text-3xl font-bold tracking-[0.35em] uppercase [text-shadow:0_1px_0_rgba(255,255,255,0.2),0_2px_2px_rgba(0,0,0,0.1),0_4px_8px_rgba(0,0,0,0.15)]"
+        class="relative px-4 py-5 text-3xl font-bold tracking-[0.3em] uppercase [text-shadow:0_1px_0_rgba(255,255,255,0.2),0_2px_2px_rgba(0,0,0,0.1),0_4px_8px_rgba(0,0,0,0.15)]"
       >
         CMS
       </p>

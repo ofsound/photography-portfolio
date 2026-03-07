@@ -11,6 +11,7 @@
     overflow?: boolean;
     create: import('svelte').Snippet;
     list: import('svelte').Snippet;
+    leading?: import('svelte').Snippet;
     actions?: import('svelte').Snippet;
   }
 
@@ -23,15 +24,19 @@
     overflow = false,
     create,
     list,
+    leading,
     actions,
   }: Props = $props();
 </script>
 
 <div class="flex items-center gap-3">
+  {#if leading}
+    {@render leading()}
+  {/if}
+  <AdminHeading>{title}</AdminHeading>
   {#if actions}
     {@render actions()}
   {/if}
-  <AdminHeading>{title}</AdminHeading>
 </div>
 
 {#if subtitle}

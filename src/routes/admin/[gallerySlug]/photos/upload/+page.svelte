@@ -278,10 +278,10 @@
   title={`${data.gallery.name}: Upload`}
   create={uploadPanel}
   list={uploadQueuePanel}
-  actions={headerActions}
+  leading={backLink}
 />
 
-{#snippet headerActions()}
+{#snippet backLink()}
   <a
     href={resolve(basePhotosPath as `/${string}`)}
     class="-m-2 p-2 text-text-muted transition-colors hover:text-brand"

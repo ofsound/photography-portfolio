@@ -16,45 +16,16 @@
     slug: string;
     name: string;
     nav_order: number;
-    kind: 'all' | 'gallery';
   };
 
-  const galleries = $derived(
-    (data.galleries as Array<{
-      id: string;
-      slug: string;
-      name: string;
-      nav_order: number;
-    }>) ?? [],
-  );
+  const galleries = $derived((data.galleries as GalleryCard[]) ?? []);
 
-  const allScopeNav = $derived(
-    (data.allScopeNav as { nav_order?: number } | null) ?? null,
-  );
-
-  const galleryCards = $derived.by(() => {
-    const cards: GalleryCard[] = [
-      {
-        id: 'all',
-        slug: 'all',
-        name: 'ALL',
-        nav_order: allScopeNav?.nav_order ?? 0,
-        kind: 'all',
-      },
-      ...galleries.map((gallery) => ({
-        id: gallery.id,
-        slug: gallery.slug,
-        name: gallery.name,
-        nav_order: gallery.nav_order,
-        kind: 'gallery' as const,
-      })),
-    ];
-
-    return cards.sort((a, b) => {
+  const galleryCards = $derived.by(() =>
+    [...galleries].sort((a, b) => {
       if (a.nav_order !== b.nav_order) return a.nav_order - b.nav_order;
       return a.name.localeCompare(b.name);
-    });
-  });
+    }),
+  );
 
   const galleryCardById = $derived(new Map(galleryCards.map((c) => [c.id, c])));
 
@@ -189,7 +160,7 @@
         <li {@attach sortable.attach} class:opacity-50={sortable.isDragging}>
           <AdminCard
             as="article"
-            variant={card.kind === 'all' ? 'striped' : 'default'}
+            variant="default"
             class="grid cursor-move gap-3 p-4 sm:grid-cols-[auto_1fr_auto] sm:items-center"
           >
             <div
@@ -214,17 +185,11 @@
             </div>
 
             <div class="flex items-center gap-2">
-              <AdminButton
-                href={card.kind === 'all'
-                  ? '/admin/all/photos'
-                  : `/admin/${card.slug}/photos`}
-                size="sm">EDIT PHOTOS</AdminButton
+              <AdminButton href={`/admin/${card.slug}/photos`} size="sm"
+                >EDIT PHOTOS</AdminButton
               >
-              <AdminButton
-                href={card.kind === 'all'
-                  ? '/admin/all/details'
-                  : `/admin/${card.slug}/details`}
-                size="sm">EDIT DETAILS</AdminButton
+              <AdminButton href={`/admin/${card.slug}/details`} size="sm"
+                >EDIT DETAILS</AdminButton
               >
             </div>
           </AdminCard>

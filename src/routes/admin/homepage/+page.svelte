@@ -214,8 +214,8 @@
                 </div>
 
                 <AdminButton
-                  size="sm"
-                  variant="danger"
+                  size="xs"
+                  variant="default"
                   type="button"
                   onclick={() => removeSlide(slide.id)}>Remove</AdminButton
                 >

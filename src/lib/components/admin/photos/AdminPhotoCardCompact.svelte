@@ -44,11 +44,20 @@
   const lead = $derived(
     images.find((image: AdminPhotoImage) => image.kind === 'lead') ?? null,
   );
+  const isPrivateDraft = $derived(photoStatus === 'draft');
+  const statusLabel = $derived(
+    photoStatus === 'archived' ? 'Archived' : 'Private draft',
+  );
 </script>
 
 {#if gridMode}
   <div
-    class="group relative flex aspect-square flex-col overflow-hidden rounded border border-border bg-surface"
+    class={[
+      'group relative flex aspect-square flex-col overflow-hidden rounded border bg-surface transition-colors',
+      isPrivateDraft
+        ? 'border-2 border-warning ring-1 ring-warning/25'
+        : 'border-border',
+    ]}
     class:opacity-50={isDraggingPhoto}
     role="button"
     tabindex="0"
@@ -75,12 +84,37 @@
         onclick={(e) => e.stopPropagation()}
       />
     </div>
+    {#if isPrivateDraft}
+      <div
+        class="pointer-events-none absolute top-2 right-2 z-20 inline-flex items-center gap-1 rounded-sm border border-warning/50 bg-warning-soft px-2 py-1 text-[10px] font-semibold tracking-widest text-warning uppercase shadow-sm"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="12"
+          height="12"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <rect x="3" y="11" width="18" height="10" rx="2" />
+          <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+        </svg>
+        <span>Private Draft</span>
+      </div>
+    {/if}
     <div class="relative flex-1 overflow-hidden">
       {#if lead?.delivery_storage_path}
         <img
           src={photoPublicUrl(lead.delivery_storage_path, 400)}
           alt={lead.alt_text ?? photo.title}
-          class="h-full w-full object-cover"
+          class={[
+            'h-full w-full object-cover transition duration-200',
+            isPrivateDraft && 'brightness-90 saturate-50',
+          ]}
         />
       {:else if lead}
         <div
@@ -94,6 +128,11 @@
         >
           no lead
         </div>
+      {/if}
+      {#if isPrivateDraft}
+        <div
+          class="pointer-events-none absolute inset-0 bg-warning-soft/10"
+        ></div>
       {/if}
     </div>
     <div
@@ -117,8 +156,15 @@
           >/{photo.gallery_slug}/photo/{photo.slug}</a
         >
       {:else}
-        <span class="block truncate text-xs text-white/75">
-          {photoStatus === 'archived' ? 'Archived' : 'Private draft'}
+        <span
+          class={[
+            'block truncate text-xs',
+            isPrivateDraft
+              ? 'font-medium tracking-wide text-warning-soft'
+              : 'text-white/75',
+          ]}
+        >
+          {statusLabel}
         </span>
       {/if}
     </div>

@@ -1,15 +1,18 @@
 <script lang="ts">
   import { invalidateAll } from '$app/navigation';
   import { onMount } from 'svelte';
+
   import { DragDropProvider, DragOverlay } from '@dnd-kit/svelte';
   import { createSortable, isSortable } from '@dnd-kit/svelte/sortable';
+
   import AdminButton from '$lib/components/admin/AdminButton.svelte';
+  import AdminGalleryNav from '$lib/components/admin/AdminGalleryNav.svelte';
   import AdminHeading from '$lib/components/admin/AdminHeading.svelte';
   import AdminStatusMessage from '$lib/components/admin/AdminStatusMessage.svelte';
+  import PhotoTaxonomyEditor from '$lib/components/admin/PhotoTaxonomyEditor.svelte';
   import AdminPhotoCard from '$lib/components/admin/photos/AdminPhotoCard.svelte';
   import AdminPhotosBulkPanel from '$lib/components/admin/photos/AdminPhotosBulkPanel.svelte';
   import AdminPhotosFilterForm from '$lib/components/admin/photos/AdminPhotosFilterForm.svelte';
-  import PhotoTaxonomyEditor from '$lib/components/admin/PhotoTaxonomyEditor.svelte';
   import {
     addTaxonomyDraftId,
     removeTaxonomyDraftId,
@@ -33,66 +36,142 @@
     AdminTag,
   } from '$lib/types/content';
 
-  const { data, form } = $props();
+  type GalleryOption = {
+    id: string;
+    slug: string;
+    name: string;
+  };
 
-  const photos = $derived(data.photos as AdminPhoto[]);
-  const categories = $derived(data.categories as AdminCategory[]);
-  const tags = $derived(data.tags as AdminTag[]);
-  const canReorder = $derived(Boolean(data.reorderEnabled));
-  const galleryContext = $derived(
-    ((data as { gallery?: { id: string; slug: string } }).gallery ?? null) as {
-      id: string;
-      slug: string;
-    } | null,
-  );
-  const filteredGallerySlug = $derived(
+  type GalleryContext = {
+    id: string;
+    slug: string;
+    name: string;
+  };
+
+  type PhotosPageData = {
+    photos: AdminPhoto[];
+    categories: AdminCategory[];
+    tags: AdminTag[];
+    reorderEnabled: boolean;
+    scopeKind: 'gallery' | 'all';
+    gallery?: GalleryContext;
+    filterGalleryId: string;
+    galleries: GalleryOption[];
+    photoCategoryIds: Record<string, string[]>;
+    photoTagIds: Record<string, string[]>;
+    photoImageMap: Record<string, AdminPhotoImage[]>;
+    showArchived: boolean;
+    q: string;
+    filterCategoryId: string;
+    filterTagId: string;
+    activeCount: number;
+    archivedCount: number;
+    maxDensity?: number;
+  };
+
+  type PhotosPageForm =
+    | {
+        message?: string;
+        success?: boolean;
+      }
+    | null
+    | undefined;
+
+  const {
+    data,
+    form,
+    allScopeLabel = 'Library',
+    allRouteBasePath = '/admin/library',
+  } = $props<{
+    data: PhotosPageData;
+    form?: PhotosPageForm;
+    allScopeLabel?: string;
+    allRouteBasePath?: string;
+  }>();
+
+  const photos = $derived<AdminPhoto[]>(data.photos);
+  const categories = $derived<AdminCategory[]>(data.categories);
+  const tags = $derived<AdminTag[]>(data.tags);
+  const canReorder = $derived<boolean>(Boolean(data.reorderEnabled));
+  const galleryContext = $derived<GalleryContext | null>(data.gallery ?? null);
+  const filteredGallerySlug = $derived<string | null>(
     data.filterGalleryId
-      ? ((data.galleries as Array<{ id: string; slug: string }>).find(
-          (g) => g.id === data.filterGalleryId,
+      ? (data.galleries.find(
+          (gallery: GalleryOption) => gallery.id === data.filterGalleryId,
         )?.slug ?? null)
       : null,
   );
-  const galleryScopeId = $derived(
+  const galleryScopeId = $derived<string>(
     data.scopeKind === 'gallery' ? (galleryContext?.id ?? '') : '',
   );
-  const routeBasePath = $derived(
+  const routeBasePath = $derived<string>(
     data.scopeKind === 'gallery'
       ? `/admin/${galleryContext?.slug ?? ''}/photos`
-      : '/admin/all/photos',
+      : allRouteBasePath,
   );
 
-  const serverCategoryIds = (photoId: string) =>
+  const serverCategoryIds = (photoId: string): string[] =>
     data.photoCategoryIds[photoId] ?? [];
-  const serverTagIds = (photoId: string) => data.photoTagIds[photoId] ?? [];
-  const imagesForPhoto = (photoId: string) =>
-    (data.photoImageMap[photoId] ?? []) as AdminPhotoImage[];
+  const serverTagIds = (photoId: string): string[] =>
+    data.photoTagIds[photoId] ?? [];
+  const imagesForPhoto = (photoId: string): AdminPhotoImage[] =>
+    data.photoImageMap[photoId] ?? [];
 
   const baseAdditionalOrder = (photoId: string) =>
     imagesForPhoto(photoId)
-      .filter((image) => image.kind === 'additional')
-      .sort((a, b) => a.position - b.position)
-      .map((image) => image.id);
+      .filter((image: AdminPhotoImage) => image.kind === 'additional')
+      .sort((a: AdminPhotoImage, b: AdminPhotoImage) => a.position - b.position)
+      .map((image: AdminPhotoImage) => image.id);
 
   const categoryById = (id: string) =>
     categories.find((category) => category.id === id) ?? null;
   const tagById = (id: string) => tags.find((tag) => tag.id === id) ?? null;
 
-  let orderedAdditionalByPhoto = $state<Record<string, string[]>>({});
-  let selectedCategoryIdsByPhoto = $state<Record<string, string[]>>({});
-  let selectedTagIdsByPhoto = $state<Record<string, string[]>>({});
+  const baseAdditionalByPhoto = $derived.by<Record<string, string[]>>(() => {
+    const nextOrder: Record<string, string[]> = {};
+
+    for (const photo of photos) {
+      nextOrder[photo.id] = baseAdditionalOrder(photo.id);
+    }
+
+    return nextOrder;
+  });
+  const baseSelectedCategoryIdsByPhoto = $derived.by<Record<string, string[]>>(
+    () => {
+      const nextCategoryIds: Record<string, string[]> = {};
+
+      for (const photo of photos) {
+        nextCategoryIds[photo.id] = serverCategoryIds(photo.id);
+      }
+
+      return nextCategoryIds;
+    },
+  );
+  const baseSelectedTagIdsByPhoto = $derived.by<Record<string, string[]>>(
+    () => {
+      const nextTagIds: Record<string, string[]> = {};
+
+      for (const photo of photos) {
+        nextTagIds[photo.id] = serverTagIds(photo.id);
+      }
+
+      return nextTagIds;
+    },
+  );
+
+  let orderedAdditionalOverrides = $state<Record<string, string[]>>({});
+  let selectedCategoryOverrides = $state<Record<string, string[]>>({});
+  let selectedTagOverrides = $state<Record<string, string[]>>({});
   let selectedPhotoIds = $state<string[]>([]);
   let taxonomyDraftCategories = $state<string[]>([]);
   let taxonomyDraftTags = $state<string[]>([]);
 
-  let orderedPhotoIds = $state<string[]>([]);
+  let orderedPhotoIdsOverride = $state<string[] | null>(null);
   let showBulkTaxonomy = $state(false);
-  let gridEl = $state<HTMLUListElement | null>(null);
   let overlayCellSize = $state<number | null>(null);
   let isPollingInFlight = $state(false);
 
-  const maxDensity = $derived(
-    (data as { maxDensity?: number }).maxDensity ?? 20,
-  );
+  const maxDensity = $derived(data.maxDensity ?? 20);
 
   let density = $state(6);
   const gap = 8;
@@ -102,21 +181,20 @@
     Math.max(1, Math.min(maxDensity, Number(density) || 6)),
   );
 
-  $effect(() => {
-    const el = gridEl;
-    const cols = colCount;
-    if (!el) return;
+  const measureGrid = (node: HTMLUListElement) => {
     const measure = () => {
-      const w = el.clientWidth;
-      if (w > 0 && cols > 0) {
-        overlayCellSize = (w - gap * (cols - 1)) / cols;
+      const width = node.clientWidth;
+      if (width > 0 && colCount > 0) {
+        overlayCellSize = (width - gap * (colCount - 1)) / colCount;
       }
     };
+
     measure();
-    const ro = new ResizeObserver(measure);
-    ro.observe(el);
-    return () => ro.disconnect();
-  });
+    const resizeObserver = new ResizeObserver(measure);
+    resizeObserver.observe(node);
+
+    return () => resizeObserver.disconnect();
+  };
 
   const sectionMaxWidthStyle = 'max-width: 100%;';
 
@@ -124,37 +202,37 @@
     mounted = true;
     const prefs = getAdminPhotosPrefs(maxDensity);
     if (prefs) density = prefs.density;
+
+    const intervalId = setInterval(() => {
+      if (!hasVisiblePendingConversions || isPollingInFlight) return;
+      void pollPendingConversions();
+    }, 3000);
+
+    return () => clearInterval(intervalId);
   });
 
-  const photoById = $derived(new Map(photos.map((p) => [p.id, p])));
-
-  $effect(() => {
-    const nextOrder: Record<string, string[]> = {};
-    const nextCategoryIds: Record<string, string[]> = {};
-    const nextTagIds: Record<string, string[]> = {};
-
-    for (const photo of photos) {
-      nextOrder[photo.id] = baseAdditionalOrder(photo.id);
-      nextCategoryIds[photo.id] = serverCategoryIds(photo.id);
-      nextTagIds[photo.id] = serverTagIds(photo.id);
-    }
-
-    orderedAdditionalByPhoto = nextOrder;
-    selectedCategoryIdsByPhoto = nextCategoryIds;
-    selectedTagIdsByPhoto = nextTagIds;
-    orderedPhotoIds = photos.map((p) => p.id);
-  });
-
+  const photoById = $derived<Map<string, AdminPhoto>>(
+    new Map(photos.map((photo) => [photo.id, photo])),
+  );
+  const orderedPhotoIds = $derived<string[]>(
+    orderedPhotoIdsOverride ?? photos.map((photo) => photo.id),
+  );
   const additionalOrder = (photoId: string) =>
-    orderedAdditionalByPhoto[photoId] ?? baseAdditionalOrder(photoId);
+    orderedAdditionalOverrides[photoId] ?? baseAdditionalByPhoto[photoId] ?? [];
   const selectedCategoryIds = (photoId: string) =>
-    selectedCategoryIdsByPhoto[photoId] ?? serverCategoryIds(photoId);
+    selectedCategoryOverrides[photoId] ??
+    baseSelectedCategoryIdsByPhoto[photoId] ??
+    [];
   const selectedTagIds = (photoId: string) =>
-    selectedTagIdsByPhoto[photoId] ?? serverTagIds(photoId);
+    selectedTagOverrides[photoId] ?? baseSelectedTagIdsByPhoto[photoId] ?? [];
 
   const onAdditionalReorder = async (photoId: string, next: string[]) => {
-    orderedAdditionalByPhoto = { ...orderedAdditionalByPhoto, [photoId]: next };
+    orderedAdditionalOverrides = {
+      ...orderedAdditionalOverrides,
+      [photoId]: next,
+    };
     const galleryId = photoById.get(photoId)?.gallery_id;
+
     if (
       await persistAdditionalOrder(
         window.location.pathname,
@@ -185,7 +263,9 @@
 
   const hasVisiblePendingConversions = $derived(
     photos.some((photo) =>
-      imagesForPhoto(photo.id).some((image) => !image.delivery_storage_path),
+      imagesForPhoto(photo.id).some(
+        (image: AdminPhotoImage) => !image.delivery_storage_path,
+      ),
     ),
   );
 
@@ -194,11 +274,12 @@
     categoryIds: string[],
     tagIds: string[],
   ) => {
-    selectedCategoryIdsByPhoto = {
-      ...selectedCategoryIdsByPhoto,
+    selectedCategoryOverrides = {
+      ...selectedCategoryOverrides,
       [photoId]: categoryIds,
     };
-    selectedTagIdsByPhoto = { ...selectedTagIdsByPhoto, [photoId]: tagIds };
+    selectedTagOverrides = { ...selectedTagOverrides, [photoId]: tagIds };
+
     if (
       await persistTaxonomy(
         window.location.pathname,
@@ -240,19 +321,29 @@
 
   async function onPhotoDragEnd(event: unknown) {
     if (!canReorder) return;
-    const e = event as { canceled?: boolean; operation?: { source: unknown } };
-    if (e.canceled || !e.operation?.source) return;
-    const source = e.operation.source as Parameters<typeof isSortable>[0];
+
+    const draggableEvent = event as {
+      canceled?: boolean;
+      operation?: { source: unknown };
+    };
+    if (draggableEvent.canceled || !draggableEvent.operation?.source) return;
+
+    const source = draggableEvent.operation.source as Parameters<
+      typeof isSortable
+    >[0];
     if (!isSortable(source)) return;
+
     const { initialIndex, index } = source as {
       initialIndex: number;
       index: number;
     };
     if (initialIndex === index) return;
+
     const next = [...orderedPhotoIds];
     const [removed] = next.splice(initialIndex, 1);
     next.splice(index, 0, removed);
-    orderedPhotoIds = next;
+    orderedPhotoIdsOverride = next;
+
     if (
       await persistPhotoOrder(window.location.pathname, next, galleryScopeId)
     ) {
@@ -267,6 +358,7 @@
 
   const pollPendingConversions = async () => {
     if (isPollingInFlight || !hasVisiblePendingConversions) return;
+
     isPollingInFlight = true;
     try {
       await invalidateAll();
@@ -274,61 +366,58 @@
       isPollingInFlight = false;
     }
   };
-
-  $effect(() => {
-    if (!hasVisiblePendingConversions) return;
-    const intervalId = setInterval(() => {
-      void pollPendingConversions();
-    }, 3000);
-    return () => clearInterval(intervalId);
-  });
 </script>
 
-<div class="flex items-baseline justify-between gap-4">
-  <div class="flex items-center gap-3">
-    <AdminHeading>
-      {data.scopeKind === 'gallery'
-        ? `Photos /${galleryContext?.slug ?? ''}`
-        : 'Photos /all'}
-    </AdminHeading>
-    <AdminButton
-      size="sm"
-      variant="toggle"
-      selected={!data.showArchived}
-      href={routeBasePath}
-    >
-      Active ({data.activeCount})
-    </AdminButton>
-    <AdminButton
-      size="sm"
-      variant="toggle"
-      selected={data.showArchived}
-      href={`${routeBasePath}?showArchived=1`}
-    >
-      Archived ({data.archivedCount})
-    </AdminButton>
-  </div>
-  {#if filteredGallerySlug}
-    <div class="flex gap-2">
+{#if data.scopeKind === 'gallery' && galleryContext}
+  <AdminGalleryNav
+    galleryName={galleryContext.name}
+    gallerySlug={galleryContext.slug}
+    activeCount={data.activeCount}
+    archivedCount={data.archivedCount}
+    showArchived={data.showArchived}
+    currentView="photos"
+  />
+{:else}
+  <div class="flex items-baseline justify-between gap-4">
+    <div class="flex items-center gap-3">
+      <AdminHeading>{allScopeLabel}</AdminHeading>
       <AdminButton
-        href={`/admin/${filteredGallerySlug}/photos/upload`}
-        variant="submit"
-        size="xs"
+        size="sm"
+        variant="toggle"
+        selected={!data.showArchived}
+        href={routeBasePath}
       >
-        Add Photos
+        Active ({data.activeCount})
+      </AdminButton>
+      <AdminButton
+        size="sm"
+        variant="toggle"
+        selected={data.showArchived}
+        href={`${routeBasePath}?showArchived=1`}
+      >
+        Archived ({data.archivedCount})
       </AdminButton>
     </div>
-  {/if}
-</div>
+    {#if filteredGallerySlug}
+      <div class="flex gap-2">
+        <AdminButton
+          href={`/admin/${filteredGallerySlug}/photos/upload`}
+          variant="submit"
+          size="xs"
+        >
+          Add Photos
+        </AdminButton>
+      </div>
+    {/if}
+  </div>
+{/if}
 
 {#if form?.message}
-  <AdminStatusMessage
-    type={form && 'success' in form && form.success ? 'success' : 'error'}
-    class="mt-3"
-  >
+  <AdminStatusMessage type={form.success ? 'success' : 'error'} class="mt-3">
     {form.message}
   </AdminStatusMessage>
 {/if}
+
 {#if hasVisiblePendingConversions}
   <p class="mt-2 text-xs text-text-muted">
     Auto-refreshing while image processing completes...
@@ -380,7 +469,7 @@
     <div class="min-w-0 flex-1">
       <DragDropProvider onDragEnd={onPhotoDragEnd}>
         <ul
-          bind:this={gridEl}
+          {@attach measureGrid}
           class="grid"
           style="grid-template-columns: repeat({colCount}, minmax(0, 1fr)); gap: {gap}px;"
         >
@@ -439,8 +528,9 @@
               {@const photo = photoById.get(String(source.id))}
               {#if photo}
                 {@const lead =
-                  imagesForPhoto(photo.id).find((img) => img.kind === 'lead') ??
-                  null}
+                  imagesForPhoto(photo.id).find(
+                    (image: AdminPhotoImage) => image.kind === 'lead',
+                  ) ?? null}
                 <div
                   class="relative flex aspect-square flex-col overflow-hidden rounded border-2 border-brand bg-surface shadow-xl"
                   style="width: {overlayCellSize ?? 160}px;"

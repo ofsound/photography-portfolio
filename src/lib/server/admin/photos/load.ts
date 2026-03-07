@@ -139,7 +139,7 @@ export const loadAdminPhotosPage = async ({
         route:
           scope.kind === 'gallery'
             ? `/admin/${scope.gallerySlug}/photos`
-            : '/admin/all/photos',
+            : '/admin/library',
         operation: 'load photos list',
         details: {
           showArchived,
@@ -152,43 +152,43 @@ export const loadAdminPhotosPage = async ({
   }
   if (categoriesQuery.error) {
     throwLoaderError(
-      { route: '/admin/photos', operation: 'load categories' },
+      { route: '/admin/library', operation: 'load categories' },
       categoriesQuery.error,
     );
   }
   if (tagsQuery.error) {
     throwLoaderError(
-      { route: '/admin/photos', operation: 'load tags' },
+      { route: '/admin/library', operation: 'load tags' },
       tagsQuery.error,
     );
   }
   if (pendingQuery.error) {
     throwLoaderError(
-      { route: '/admin/photos', operation: 'load pending conversion count' },
+      { route: '/admin/library', operation: 'load pending conversion count' },
       pendingQuery.error,
     );
   }
   if (settingsQuery.error) {
     throwLoaderError(
-      { route: '/admin/photos', operation: 'load site settings' },
+      { route: '/admin/library', operation: 'load site settings' },
       settingsQuery.error,
     );
   }
   if (activeCountQuery.error) {
     throwLoaderError(
-      { route: '/admin/photos', operation: 'load active photo count' },
+      { route: '/admin/library', operation: 'load active photo count' },
       activeCountQuery.error,
     );
   }
   if (archivedCountQuery.error) {
     throwLoaderError(
-      { route: '/admin/photos', operation: 'load archived photo count' },
+      { route: '/admin/library', operation: 'load archived photo count' },
       archivedCountQuery.error,
     );
   }
   if (galleriesQuery.error) {
     throwLoaderError(
-      { route: '/admin/photos', operation: 'load galleries' },
+      { route: '/admin/library', operation: 'load galleries' },
       galleriesQuery.error,
     );
   }
@@ -233,19 +233,19 @@ export const loadAdminPhotosPage = async ({
 
     if (categoryLinks.error) {
       throwLoaderError(
-        { route: '/admin/photos', operation: 'load photo_categories links' },
+        { route: '/admin/library', operation: 'load photo_categories links' },
         categoryLinks.error,
       );
     }
     if (tagLinks.error) {
       throwLoaderError(
-        { route: '/admin/photos', operation: 'load photo_tags links' },
+        { route: '/admin/library', operation: 'load photo_tags links' },
         tagLinks.error,
       );
     }
     if (images.error) {
       throwLoaderError(
-        { route: '/admin/photos', operation: 'load photo images' },
+        { route: '/admin/library', operation: 'load photo images' },
         images.error,
       );
     }

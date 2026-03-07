@@ -4,4 +4,9 @@
   const { data, form }: import('./$types').PageProps = $props();
 </script>
 
-<AdminPhotosPage {data} {form} />
+<AdminPhotosPage
+  {data}
+  {form}
+  allScopeLabel="Library"
+  allRouteBasePath="/admin/library"
+/>

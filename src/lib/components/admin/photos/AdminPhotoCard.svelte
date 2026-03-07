@@ -13,6 +13,7 @@
   import FormField from '$lib/components/FormField.svelte';
   import FormInput from '$lib/components/FormInput.svelte';
   import FormTextarea from '$lib/components/FormTextarea.svelte';
+  import { formControlContainerClass } from '$lib/constants/form';
 
   import type {
     AdminCategory,
@@ -258,6 +259,21 @@
                   <input type="hidden" name="id" value={photo.id} />
                 {/if}
 
+                {#snippet dimensionsField()}
+                  <FormField
+                    label="Dimensions"
+                    id="edit-dimensions-{photoFormId}"
+                  >
+                    <FormInput
+                      id="edit-dimensions-{photoFormId}"
+                      name="dimensions"
+                      bind:value={form.dimensions}
+                      type="text"
+                      placeholder="Dimensions"
+                    />
+                  </FormField>
+                {/snippet}
+
                 <AdminPhotoMetadataForm
                   {photoFormId}
                   bind:title={form.title}
@@ -266,28 +282,15 @@
                   bind:captureDate={form.captureDate}
                   {onTitleInput}
                   {onSlugInput}
+                  trailingField={dimensionsField}
                 />
-
-                <FormField
-                  label="Dimensions"
-                  id="edit-dimensions-{photoFormId}"
-                  class="mt-auto"
-                >
-                  <FormInput
-                    id="edit-dimensions-{photoFormId}"
-                    name="dimensions"
-                    bind:value={form.dimensions}
-                    type="text"
-                    placeholder="Dimensions"
-                  />
-                </FormField>
               </form>
 
               {#if !isDraft}
                 <div class="grid gap-3 sm:grid-cols-2">
                   <FormField label="Categories">
                     <div
-                      class="grid max-h-36 gap-1 overflow-auto rounded border border-border-strong bg-surface px-3 py-2 text-sm"
+                      class="grid max-h-36 gap-1 overflow-auto {formControlContainerClass}"
                     >
                       {#each categories as category (category.id)}
                         <label class="flex cursor-pointer items-center gap-2">
@@ -315,7 +318,7 @@
 
                   <FormField label="Tags">
                     <div
-                      class="grid max-h-36 gap-1 overflow-auto rounded border border-border-strong bg-surface px-3 py-2 text-sm"
+                      class="grid max-h-36 gap-1 overflow-auto {formControlContainerClass}"
                     >
                       {#each tags as tag (tag.id)}
                         <label class="flex cursor-pointer items-center gap-2">

@@ -33,7 +33,7 @@
 </script>
 
 <div
-  class="grid h-[calc(100vh-var(--site-header-height))] grid-cols-[240px_1fr]"
+  class="grid h-[calc(100vh-var(--site-header-height))] grid-cols-[220px_1fr]"
   style="--font-sans: var(--font-sans-admin); font-family: var(--font-sans)"
 >
   <aside

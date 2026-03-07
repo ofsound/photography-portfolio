@@ -13,7 +13,6 @@
   const {
     imageId,
     deliveryStoragePath,
-    sourceStoragePath = null,
     altText,
     dimensions = null,
     initialCrop = null,
@@ -275,16 +274,6 @@
         Reset to default
       </AdminButton>
     </form>
-
-    {#if sourceStoragePath}
-      <AdminButton
-        size="sm"
-        variant="subtle"
-        href="/admin/download-original/{imageId}"
-      >
-        Download Original
-      </AdminButton>
-    {/if}
   </div>
 
   <form

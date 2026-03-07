@@ -1,4 +1,6 @@
 <script lang="ts">
+  import type { Snippet } from 'svelte';
+
   import FormField from '$lib/components/FormField.svelte';
   import FormInput from '$lib/components/FormInput.svelte';
   import FormTextarea from '$lib/components/FormTextarea.svelte';
@@ -11,6 +13,7 @@
     captureDate = $bindable(),
     onTitleInput,
     onSlugInput,
+    trailingField,
   } = $props<{
     photoFormId: string;
     title: string;
@@ -19,6 +22,7 @@
     captureDate: string;
     onTitleInput?: (event: Event) => void;
     onSlugInput: (event: Event) => void;
+    trailingField?: Snippet;
   }>();
 </script>
 
@@ -44,16 +48,17 @@
   </FormField>
 </div>
 
+<FormField label="Description" id="edit-description-{photoFormId}">
+  <FormTextarea
+    id="edit-description-{photoFormId}"
+    name="description"
+    bind:value={description}
+    rows={2}
+    placeholder="Description"
+  />
+</FormField>
+
 <div class="grid gap-3 sm:grid-cols-2">
-  <FormField label="Description" id="edit-description-{photoFormId}">
-    <FormTextarea
-      id="edit-description-{photoFormId}"
-      name="description"
-      bind:value={description}
-      rows={5}
-      placeholder="Description"
-    />
-  </FormField>
   <FormField label="Date" id="edit-capture_date-{photoFormId}">
     <FormInput
       id="edit-capture_date-{photoFormId}"
@@ -63,4 +68,7 @@
       placeholder="Date"
     />
   </FormField>
+  {#if trailingField}
+    {@render trailingField()}
+  {/if}
 </div>

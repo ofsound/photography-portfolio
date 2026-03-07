@@ -4,6 +4,7 @@
   import { DragDropProvider, DragOverlay } from '@dnd-kit/svelte';
   import { createSortable, isSortable } from '@dnd-kit/svelte/sortable';
   import AdminButton from '$lib/components/admin/AdminButton.svelte';
+  import AdminGalleryNav from '$lib/components/admin/AdminGalleryNav.svelte';
   import AdminHeading from '$lib/components/admin/AdminHeading.svelte';
   import AdminStatusMessage from '$lib/components/admin/AdminStatusMessage.svelte';
   import AdminPhotoCard from '$lib/components/admin/photos/AdminPhotoCard.svelte';
@@ -271,45 +272,41 @@
   });
 </script>
 
-<div class="flex items-baseline justify-between gap-4">
-  <div class="flex items-center gap-3">
-    <AdminHeading>
-      {data.scopeKind === 'gallery'
-        ? `Photos ${data.gallery.name}`
-        : 'Photos All'}
-    </AdminHeading>
-    <AdminButton
-      size="sm"
-      variant="toggle"
-      selected={!data.showArchived}
-      href={routeBasePath}
-    >
-      Active ({data.activeCount})
-    </AdminButton>
-    <AdminButton
-      size="sm"
-      variant="toggle"
-      selected={data.showArchived}
-      href={`${routeBasePath}?showArchived=1`}
-    >
-      Archived ({data.archivedCount})
-    </AdminButton>
-  </div>
-  <div class="flex gap-2">
+{#if data.scopeKind === 'gallery'}
+  <AdminGalleryNav
+    galleryName={data.gallery.name}
+    gallerySlug={data.gallery.slug}
+    activeCount={data.activeCount}
+    archivedCount={data.archivedCount}
+    showArchived={data.showArchived}
+    currentView="photos"
+  />
+{:else}
+  <div class="flex items-baseline justify-between gap-4">
+    <div class="flex items-center gap-3">
+      <AdminHeading>Photos All</AdminHeading>
+      <AdminButton
+        size="sm"
+        variant="toggle"
+        selected={!data.showArchived}
+        href={routeBasePath}
+      >
+        Active ({data.activeCount})
+      </AdminButton>
+      <AdminButton
+        size="sm"
+        variant="toggle"
+        selected={data.showArchived}
+        href={`${routeBasePath}?showArchived=1`}
+      >
+        Archived ({data.archivedCount})
+      </AdminButton>
+    </div>
     <AdminButton href="/admin/galleries" size="xs"
       >Back to Galleries</AdminButton
     >
-    {#if data.scopeKind === 'gallery'}
-      <AdminButton
-        href={`/admin/${data.gallery.slug}/photos/upload`}
-        variant="submit"
-        size="xs"
-      >
-        Add Photos
-      </AdminButton>
-    {/if}
   </div>
-</div>
+{/if}
 
 {#if form?.message}
   <AdminStatusMessage

@@ -7,7 +7,9 @@ export type Variant =
   | 'danger'
   | 'ghost'
   | 'toggle'
-  | 'subtle';
+  | 'subtle'
+  | 'pill-success'
+  | 'pill-danger';
 
 export const sizeClasses: Record<Size, string> = {
   xs: 'px-2.5 py-0.5 text-xs uppercase tracking-widest',
@@ -28,4 +30,26 @@ export const variantClasses: Record<Variant, string> = {
     'rounded text-text-muted transition-colors hover:bg-border hover:text-text',
   toggle: 'rounded border border-border-strong',
   subtle: 'rounded border border-border hover:bg-surface-muted',
+  'pill-success':
+    'rounded-full px-2.5 py-0.5 text-xs uppercase tracking-widest tabular-nums transition-all',
+  'pill-danger':
+    'rounded-full px-2.5 py-0.5 text-xs uppercase tracking-widest tabular-nums transition-all',
+};
+
+export const pillVariantSelectedClasses: Record<
+  'pill-success' | 'pill-danger',
+  string
+> = {
+  'pill-success': 'bg-success text-white ring-1 ring-success/40',
+  'pill-danger': 'bg-danger text-white ring-1 ring-danger/40',
+};
+
+export const pillVariantUnselectedClasses: Record<
+  'pill-success' | 'pill-danger',
+  string
+> = {
+  'pill-success':
+    'bg-success text-white opacity-40 ring-1 ring-success/20 hover:opacity-60 hover:ring-success/40',
+  'pill-danger':
+    'bg-danger text-white opacity-40 ring-1 ring-danger/20 hover:opacity-60 hover:ring-danger/40',
 };

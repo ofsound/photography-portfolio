@@ -1,5 +1,6 @@
 <script lang="ts">
   import AdminButton from '$lib/components/admin/AdminButton.svelte';
+  import AdminGalleryNav from '$lib/components/admin/AdminGalleryNav.svelte';
   import AdminHeading from '$lib/components/admin/AdminHeading.svelte';
   import AdminStatusMessage from '$lib/components/admin/AdminStatusMessage.svelte';
   import FormField from '$lib/components/FormField.svelte';
@@ -29,10 +30,11 @@
   const isAdmin = $derived(data.role === 'admin');
 </script>
 
-<div class="flex flex-wrap items-center justify-between gap-3">
-  <AdminHeading>Details {data.scopeLabel}</AdminHeading>
-  <AdminButton href="/admin/galleries">Back to Galleries</AdminButton>
-</div>
+<AdminGalleryNav
+  galleryName={data.gallery.name}
+  gallerySlug={data.gallery.slug}
+  currentView="details"
+/>
 
 {#if form?.message}
   <AdminStatusMessage

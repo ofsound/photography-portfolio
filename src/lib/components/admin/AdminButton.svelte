@@ -3,6 +3,8 @@
   import {
     sizeClasses,
     variantClasses,
+    pillVariantSelectedClasses,
+    pillVariantUnselectedClasses,
     type Size,
     type Variant,
   } from '$lib/styles/admin-buttons';
@@ -37,12 +39,28 @@
   const isLabel = $derived(as === 'label');
   const isLink = $derived(Boolean(href) || as === 'a');
 
+  const isPillVariant = $derived(
+    variant === 'pill-success' || variant === 'pill-danger',
+  );
+  const pillColorClasses = $derived(
+    isPillVariant
+      ? selected
+        ? pillVariantSelectedClasses[variant as 'pill-success' | 'pill-danger']
+        : pillVariantUnselectedClasses[
+            variant as 'pill-success' | 'pill-danger'
+          ]
+      : '',
+  );
+
   const classes = $derived(
     [
-      ['link', 'ghost'].includes(variant) ? '' : sizeClasses[size as Size],
+      ['link', 'ghost'].includes(variant) || isPillVariant
+        ? ''
+        : sizeClasses[size as Size],
       variantClasses[variant as Variant],
       variant === 'toggle' && selected ? 'bg-border' : '',
       variant === 'toggle' && !selected ? 'opacity-40' : '',
+      pillColorClasses,
       disabled ? 'pointer-events-none opacity-40' : 'cursor-pointer',
       className,
     ]

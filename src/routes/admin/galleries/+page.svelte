@@ -103,7 +103,7 @@
       <input type="checkbox" name="show_in_nav" checked />
       Show In Nav
     </label>
-    <AdminButton type="submit" variant="submit" wFit>Create Gallery</AdminButton
+    <AdminButton type="submit" variant="submit">Create Gallery</AdminButton
     >
   </form>
 {/snippet}
@@ -141,7 +141,7 @@
         </label>
       </div>
       <div class="flex flex-wrap gap-2">
-        <AdminButton type="submit" variant="submit" wFit>Save</AdminButton>
+        <AdminButton type="submit" variant="submit">Save</AdminButton>
       </div>
     </form>
   </article>
@@ -241,14 +241,15 @@
             Show In Nav
           </label>
         </div>
-        <div class="flex flex-wrap gap-2">
-          <AdminButton type="submit" variant="submit" wFit>Save</AdminButton>
+        <div class="flex flex-wrap items-center gap-2">
+          <AdminButton type="submit" variant="submit">Save</AdminButton>
+          <AdminButton
+            type="submit"
+            variant="danger"
+            formaction="?/delete"
+            formmethod="POST">Delete</AdminButton
+          >
         </div>
-      </form>
-
-      <form method="POST" action="?/delete" class="mt-3">
-        <input type="hidden" name="gallery_id" value={gallery.id} />
-        <AdminButton type="submit" variant="danger" wFit>Delete</AdminButton>
       </form>
     </article>
   {/each}

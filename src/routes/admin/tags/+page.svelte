@@ -38,7 +38,7 @@
     <label class="flex items-center gap-2 text-sm">
       <input name="is_active" type="checkbox" checked /> Active
     </label>
-    <AdminButton wFit type="submit" variant="submit">Create Tag</AdminButton>
+    <AdminButton type="submit" variant="submit">Create Tag</AdminButton>
   </form>
 {/snippet}
 

@@ -194,5 +194,5 @@
     /> Show Thumbnail Zoom Hover
   </label>
 
-  <AdminButton wFit type="submit" variant="submit">Save Settings</AdminButton>
+  <AdminButton type="submit" variant="submit">Save Settings</AdminButton>
 </form>

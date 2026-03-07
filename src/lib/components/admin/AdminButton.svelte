@@ -11,7 +11,6 @@
   const {
     size = 'md',
     variant = 'default',
-    wFit = false,
     disabled = false,
     type = 'button',
     selected = false,
@@ -24,7 +23,6 @@
   } = $props<{
     size?: Size;
     variant?: Variant;
-    wFit?: boolean;
     disabled?: boolean;
     type?: 'button' | 'submit';
     selected?: boolean;
@@ -46,7 +44,6 @@
       variant === 'toggle' && selected ? 'bg-border' : '',
       variant === 'toggle' && !selected ? 'opacity-40' : '',
       disabled ? 'pointer-events-none opacity-40' : 'cursor-pointer',
-      wFit || isLink ? 'w-fit' : '',
       className,
     ]
       .filter(Boolean)

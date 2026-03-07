@@ -212,6 +212,7 @@
 
               <AdminButton
                 size="sm"
+                variant="danger"
                 type="button"
                 onclick={() => removeSlide(slide.id)}>Remove</AdminButton
               >
@@ -270,7 +271,7 @@
         <p class="text-text-danger text-sm">{timingValidationError}</p>
       {/if}
 
-      <AdminButton type="submit" variant="submit" wFit>Save Slides</AdminButton>
+      <AdminButton type="submit" variant="submit">Save Slides</AdminButton>
     </form>
   </div>
 {/snippet}

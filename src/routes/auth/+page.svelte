@@ -46,7 +46,7 @@
         />
       </FormField>
 
-      <AdminButton type="submit" wFit>Sign In</AdminButton>
+      <AdminButton type="submit">Sign In</AdminButton>
     </form>
   {/if}
 </section>

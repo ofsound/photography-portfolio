@@ -75,7 +75,7 @@
     theme(colors.amber.100),
     theme(colors.amber.900)
   );
-  --color-danger: light-dark(theme(colors.red.600), theme(colors.red.300));
+  --color-danger: light-dark(theme(colors.red.600), theme(colors.red.500));
   --color-danger-soft: light-dark(theme(colors.red.100), theme(colors.red.900));
   --color-info: light-dark(theme(colors.sky.600), theme(colors.sky.300));
   --color-info-soft: light-dark(theme(colors.sky.100), theme(colors.sky.900));

@@ -37,10 +37,18 @@
 <AdminCreateListLayout
   title="Galleries"
   formMessage={form?.message}
+  formSuccess={form?.success}
   listHeading="Existing Galleries"
   create={createForm}
   list={galleryList}
+  actions={headerActions}
 />
+
+{#snippet headerActions()}
+  <AdminButton href="/admin/settings/defaults" size="sm"
+    >Default Settings</AdminButton
+  >
+{/snippet}
 
 {#snippet createForm()}
   <form method="POST" action="?/create" class="grid h-fit gap-3">

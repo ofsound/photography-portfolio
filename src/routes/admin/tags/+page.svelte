@@ -11,6 +11,7 @@
 <AdminCreateListLayout
   title="Tags"
   formMessage={form?.message}
+  formSuccess={form?.success}
   create={createForm}
   list={tagList}
 />

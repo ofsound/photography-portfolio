@@ -105,6 +105,7 @@
 <AdminCreateListLayout
   title="Homepage"
   formMessage={form?.message}
+  formSuccess={form?.success}
   listHeading="Available Images"
   overflow
   create={selectedSlidesPanel}
@@ -160,7 +161,7 @@
                 />
               {:else}
                 <div
-                  class="grid h-12 w-16 place-items-center rounded border border-border-strong text-xs uppercase"
+                  class="grid h-12 w-16 animate-pulse place-items-center rounded border border-border-strong text-xs uppercase"
                 >
                   pending
                 </div>
@@ -243,7 +244,7 @@
             />
           {:else}
             <div
-              class="grid aspect-square w-full place-items-center rounded border border-border-strong text-xs uppercase"
+              class="grid aspect-square w-full animate-pulse place-items-center rounded border border-border-strong text-xs uppercase"
             >
               pending
             </div>

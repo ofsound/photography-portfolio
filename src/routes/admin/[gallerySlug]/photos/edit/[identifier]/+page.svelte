@@ -1,6 +1,7 @@
 <script lang="ts">
   import AdminButton from '$lib/components/admin/AdminButton.svelte';
   import AdminHeading from '$lib/components/admin/AdminHeading.svelte';
+  import AdminStatusMessage from '$lib/components/admin/AdminStatusMessage.svelte';
   import AdminSinglePhotoEditor from '$lib/components/admin/photos/AdminSinglePhotoEditor.svelte';
 
   const { data, form } = $props();
@@ -14,14 +15,17 @@
 </div>
 
 {#if form?.message}
-  <p class="mt-3 rounded border border-border px-3 py-2 text-sm">
+  <AdminStatusMessage
+    type={form && 'success' in form && form.success ? 'success' : 'error'}
+    class="mt-3"
+  >
     {form.message}
-  </p>
+  </AdminStatusMessage>
 {/if}
 {#if data.message}
-  <p class="mt-3 rounded border border-border px-3 py-2 text-sm">
+  <AdminStatusMessage type="neutral" class="mt-3">
     {data.message}
-  </p>
+  </AdminStatusMessage>
 {/if}
 
 <AdminSinglePhotoEditor {data} />

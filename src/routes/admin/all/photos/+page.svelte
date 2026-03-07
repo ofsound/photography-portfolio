@@ -5,6 +5,7 @@
   import { createSortable, isSortable } from '@dnd-kit/svelte/sortable';
   import AdminButton from '$lib/components/admin/AdminButton.svelte';
   import AdminHeading from '$lib/components/admin/AdminHeading.svelte';
+  import AdminStatusMessage from '$lib/components/admin/AdminStatusMessage.svelte';
   import AdminPhotoCard from '$lib/components/admin/photos/AdminPhotoCard.svelte';
   import AdminPhotosBulkPanel from '$lib/components/admin/photos/AdminPhotosBulkPanel.svelte';
   import AdminPhotosFilterForm from '$lib/components/admin/photos/AdminPhotosFilterForm.svelte';
@@ -328,9 +329,12 @@
 </div>
 
 {#if form?.message}
-  <p class="mt-3 w-max rounded border border-border px-3 py-2 text-sm">
+  <AdminStatusMessage
+    type={form && 'success' in form && form.success ? 'success' : 'error'}
+    class="mt-3"
+  >
     {form.message}
-  </p>
+  </AdminStatusMessage>
 {/if}
 {#if hasVisiblePendingConversions}
   <p class="mt-2 text-xs text-text-muted">
@@ -459,6 +463,7 @@
                     {:else}
                       <div
                         class="grid h-full w-full place-items-center rounded bg-surface-muted text-xs text-text-muted uppercase"
+                        class:animate-pulse={Boolean(lead)}
                       >
                         {lead ? 'pending' : 'no lead'}
                       </div>

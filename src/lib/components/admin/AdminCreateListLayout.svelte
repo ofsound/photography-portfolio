@@ -1,44 +1,54 @@
 <script lang="ts">
   import AdminHeading from '$lib/components/admin/AdminHeading.svelte';
+  import AdminStatusMessage from '$lib/components/admin/AdminStatusMessage.svelte';
 
   interface Props {
     title: string;
     subtitle?: string;
     formMessage?: string | null;
+    formSuccess?: boolean;
     dataMessage?: string | null;
     listHeading?: string;
     overflow?: boolean;
     create: import('svelte').Snippet;
     list: import('svelte').Snippet;
+    actions?: import('svelte').Snippet;
   }
 
   const {
     title,
     subtitle,
     formMessage,
+    formSuccess = false,
     dataMessage,
     listHeading,
     overflow = false,
     create,
     list,
+    actions,
   }: Props = $props();
 </script>
 
-<AdminHeading>{title}</AdminHeading>
+<div class="flex items-center gap-3">
+  <AdminHeading>{title}</AdminHeading>
+  {#if actions}
+    {@render actions()}
+  {/if}
+</div>
 
 {#if subtitle}
   <p class="mt-2 text-sm text-text-muted">{subtitle}</p>
 {/if}
 
 {#if formMessage}
-  <p class="mt-3 rounded border border-border px-3 py-2 text-sm">
+  <AdminStatusMessage type={formSuccess ? 'success' : 'error'} class="mt-3">
     {formMessage}
-  </p>
+  </AdminStatusMessage>
 {/if}
 {#if dataMessage}
-  <p class="mt-3 rounded border border-border px-3 py-2 text-sm">
+  <AdminStatusMessage type="neutral" class="mt-3">
     {dataMessage}
-  </p>
+  </AdminStatusMessage>
 {/if}
 
 {#if overflow}

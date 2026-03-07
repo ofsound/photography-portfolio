@@ -2,6 +2,7 @@
   import CodeEditor from '$lib/components/admin/CodeEditor.svelte';
   import AdminButton from '$lib/components/admin/AdminButton.svelte';
   import AdminHeading from '$lib/components/admin/AdminHeading.svelte';
+  import AdminStatusMessage from '$lib/components/admin/AdminStatusMessage.svelte';
   import FormField from '$lib/components/FormField.svelte';
   import FormInput from '$lib/components/FormInput.svelte';
   import FormTextarea from '$lib/components/FormTextarea.svelte';
@@ -31,9 +32,12 @@
 <p class="mt-2 text-sm text-text-muted">Editing `/{page.slug}`</p>
 
 {#if form?.message}
-  <p class="mt-3 rounded border border-border px-3 py-2 text-sm">
+  <AdminStatusMessage
+    type={form && 'success' in form && form.success ? 'success' : 'error'}
+    class="mt-3"
+  >
     {form.message}
-  </p>
+  </AdminStatusMessage>
 {/if}
 
 <form method="POST" action="?/update" class="mt-6 grid gap-3">

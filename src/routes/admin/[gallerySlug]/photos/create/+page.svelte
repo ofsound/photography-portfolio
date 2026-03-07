@@ -1,6 +1,7 @@
 <script lang="ts">
   import AdminButton from '$lib/components/admin/AdminButton.svelte';
   import AdminHeading from '$lib/components/admin/AdminHeading.svelte';
+  import AdminStatusMessage from '$lib/components/admin/AdminStatusMessage.svelte';
   import AdminSinglePhotoEditor from '$lib/components/admin/photos/AdminSinglePhotoEditor.svelte';
   import type { PageProps } from './$types';
 
@@ -27,11 +28,9 @@
 </p>
 
 {#if formMessage}
-  <p
-    class={`mt-3 rounded border px-3 py-2 text-sm ${formSuccess ? 'border-success/40 bg-success-soft text-success' : 'border-danger/40 bg-danger-soft text-danger'}`}
-  >
+  <AdminStatusMessage type={formSuccess ? 'success' : 'error'} class="mt-3">
     {formMessage}
-  </p>
+  </AdminStatusMessage>
 {/if}
 
 <AdminSinglePhotoEditor {data} />

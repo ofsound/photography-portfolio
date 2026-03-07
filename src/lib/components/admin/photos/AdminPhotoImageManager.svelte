@@ -87,6 +87,12 @@
                   galleryId={photo.gallery_id}
                 />
               </div>
+            {:else}
+              <div
+                class="mt-2 grid h-24 w-32 animate-pulse place-items-center rounded border border-border-strong text-xs uppercase"
+              >
+                pending
+              </div>
             {/if}
           </div>
 
@@ -159,7 +165,7 @@
                       </div>
                     {:else}
                       <div
-                        class="grid h-24 w-32 shrink-0 place-items-center rounded border border-border-strong text-xs uppercase"
+                        class="grid h-24 w-32 shrink-0 animate-pulse place-items-center rounded border border-border-strong text-xs uppercase"
                       >
                         pending
                       </div>
@@ -244,7 +250,7 @@
                       </div>
                     {:else}
                       <div
-                        class="grid h-24 w-full place-items-center rounded border border-border-strong text-xs uppercase"
+                        class="grid h-24 w-full animate-pulse place-items-center rounded border border-border-strong text-xs uppercase"
                       >
                         pending
                       </div>

@@ -11,6 +11,7 @@
 <AdminCreateListLayout
   title="Categories"
   formMessage={form?.message}
+  formSuccess={form?.success}
   create={createForm}
   list={categoryList}
 />

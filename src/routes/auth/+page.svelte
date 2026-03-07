@@ -1,5 +1,6 @@
 <script lang="ts">
   import AdminButton from '$lib/components/admin/AdminButton.svelte';
+  import AdminStatusMessage from '$lib/components/admin/AdminStatusMessage.svelte';
   import FormField from '$lib/components/FormField.svelte';
   import FormInput from '$lib/components/FormInput.svelte';
 
@@ -10,7 +11,11 @@
   <h1 class="text-2xl tracking-widest uppercase">CMS Auth</h1>
 
   {#if form?.message}
-    <p class="rounded border border-border px-3 py-2 text-sm">{form.message}</p>
+    <AdminStatusMessage
+      type={form && 'success' in form && form.success ? 'success' : 'error'}
+    >
+      {form.message}
+    </AdminStatusMessage>
   {/if}
 
   {#if data.session}

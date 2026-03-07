@@ -83,7 +83,7 @@
         />
       {:else if lead}
         <div
-          class="grid h-full w-full place-items-center rounded border border-border-strong bg-surface-muted text-xs text-text-muted uppercase"
+          class="grid h-full w-full animate-pulse place-items-center rounded border border-border-strong bg-surface-muted text-xs text-text-muted uppercase"
         >
           pending
         </div>
@@ -155,7 +155,7 @@
       />
     {:else if lead}
       <div
-        class="grid h-14 w-20 place-items-center rounded border border-border-strong text-xs uppercase"
+        class="grid h-14 w-20 animate-pulse place-items-center rounded border border-border-strong text-xs uppercase"
       >
         pending
       </div>

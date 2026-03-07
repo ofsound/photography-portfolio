@@ -10,7 +10,6 @@
       { href: '/admin/tags', label: 'Tags' },
       { href: '/admin/homepage', label: 'Homepage' },
       { href: '/admin/pages', label: 'Pages' },
-      { href: '/admin/settings/defaults', label: 'Defaults' },
       { href: '/admin/audit', label: 'Audit' },
     ];
 
@@ -28,9 +27,6 @@
         page.url.pathname.startsWith('/admin/all/photos/') ||
         /^\/admin\/[^/]+\/photos(?:\/.*)?$/.test(page.url.pathname)
       );
-    }
-    if (href === '/admin/settings/defaults') {
-      return page.url.pathname === '/admin/settings/defaults';
     }
     return page.url.pathname === href;
   };

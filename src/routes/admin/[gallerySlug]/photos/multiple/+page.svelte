@@ -5,6 +5,7 @@
 
   import AdminButton from '$lib/components/admin/AdminButton.svelte';
   import AdminHeading from '$lib/components/admin/AdminHeading.svelte';
+  import AdminStatusMessage from '$lib/components/admin/AdminStatusMessage.svelte';
 
   type UploadStatus = 'queued' | 'uploading' | 'success' | 'error';
 
@@ -66,15 +67,6 @@
     if (status === 'uploading') return 'Uploading';
     if (status === 'success') return 'Complete';
     return 'Failed';
-  };
-
-  const statusClasses = (status: UploadStatus) => {
-    if (status === 'success')
-      return 'border-success/40 bg-success-soft text-success';
-    if (status === 'error')
-      return 'border-danger/40 bg-danger-soft text-danger';
-    if (status === 'uploading') return 'border-info/40 bg-info-soft text-info';
-    return 'border-border-strong bg-surface-muted text-text-muted';
   };
 
   const barClasses = (status: UploadStatus) => {
@@ -272,11 +264,16 @@
       <article class="grid gap-2 rounded border border-border p-3">
         <div class="flex flex-wrap items-center justify-between gap-2">
           <p class="min-w-0 flex-1 truncate text-sm">{item.displayName}</p>
-          <span
-            class={`rounded border px-2 py-1 text-xs ${statusClasses(item.status)}`}
+          <AdminStatusMessage
+            type={item.status === 'success'
+              ? 'success'
+              : item.status === 'error'
+                ? 'error'
+                : 'neutral'}
+            class="px-2 py-1 text-xs"
           >
             {statusLabel(item.status)}
-          </span>
+          </AdminStatusMessage>
         </div>
         <div class="flex items-center gap-2">
           <div class="h-2 flex-1 overflow-hidden rounded bg-surface-muted">

@@ -1,6 +1,7 @@
 <script lang="ts">
   import AdminButton from '$lib/components/admin/AdminButton.svelte';
   import AdminHeading from '$lib/components/admin/AdminHeading.svelte';
+  import AdminStatusMessage from '$lib/components/admin/AdminStatusMessage.svelte';
   import FormField from '$lib/components/FormField.svelte';
   import FormInput from '$lib/components/FormInput.svelte';
 
@@ -27,12 +28,15 @@
     'w-full rounded border border-border-strong bg-surface px-3 py-2 text-sm';
 </script>
 
-<AdminHeading>Default Settings</AdminHeading>
+<AdminHeading>Default Gallery Settings</AdminHeading>
 
 {#if form?.message}
-  <p class="mt-3 rounded border border-border px-3 py-2 text-sm">
+  <AdminStatusMessage
+    type={form && 'success' in form && form.success ? 'success' : 'error'}
+    class="mt-3"
+  >
     {form.message}
-  </p>
+  </AdminStatusMessage>
 {/if}
 
 <form method="POST" action="?/save" class="mt-6 grid max-w-4xl gap-4">

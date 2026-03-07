@@ -22,6 +22,7 @@
   title="Pages"
   subtitle="Create pages here, then edit each page on its own route editor."
   formMessage={form?.message}
+  formSuccess={form?.success}
   dataMessage={data.message}
   listHeading="Existing Pages"
   create={createForm}

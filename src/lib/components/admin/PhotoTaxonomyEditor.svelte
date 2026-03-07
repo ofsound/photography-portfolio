@@ -34,7 +34,7 @@
         {#each categories as category (category.id)}
           <AdminButton
             size="sm"
-            variant="info"
+            variant="submit"
             type="button"
             onclick={() => addTaxonomyDraft('category', category.id)}
           >
@@ -49,7 +49,7 @@
         {#each tags as tag (tag.id)}
           <AdminButton
             size="sm"
-            variant="submit-soft"
+            variant="submit"
             type="button"
             onclick={() => addTaxonomyDraft('tag', tag.id)}
           >
@@ -81,7 +81,7 @@
         {#each taxonomyDraftCategories as categoryId (categoryId)}
           {#if categoryById(categoryId)}
             <AdminButton
-              variant="info"
+              variant="submit"
               size="xs"
               type="button"
               onclick={() => removeTaxonomyDraft('category', categoryId)}
@@ -93,7 +93,7 @@
         {#each taxonomyDraftTags as tagId (tagId)}
           {#if tagById(tagId)}
             <AdminButton
-              variant="submit-soft"
+              variant="submit"
               size="xs"
               type="button"
               onclick={() => removeTaxonomyDraft('tag', tagId)}
@@ -112,6 +112,7 @@
     <AdminButton
       size="xs"
       type="submit"
+      variant="submit"
       disabled={selectedPhotoIds.length === 0 ||
         (taxonomyDraftCategories.length === 0 &&
           taxonomyDraftTags.length === 0)}

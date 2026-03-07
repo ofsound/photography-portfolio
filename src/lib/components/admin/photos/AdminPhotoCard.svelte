@@ -461,6 +461,7 @@
               <AdminButton
                 form="photo-update-form-{photoFormId}"
                 type="submit"
+                variant="submit"
                 formaction="?/restore">Restore</AdminButton
               >
             {/if}

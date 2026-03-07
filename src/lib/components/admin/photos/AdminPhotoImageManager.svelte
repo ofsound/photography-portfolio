@@ -121,7 +121,7 @@
             >
               <input type="hidden" name="image_id" value={lead.id} />
               <input type="hidden" name="gallery_id" value={photo.gallery_id} />
-              <AdminButton variant="danger-outline" size="sm" type="submit"
+              <AdminButton variant="danger" size="sm" type="submit"
                 >Delete</AdminButton
               >
             </form>
@@ -191,7 +191,7 @@
                           value={photo.gallery_id}
                         />
                         <input type="hidden" name="image_id" value={image.id} />
-                        <AdminButton size="sm" type="submit"
+                        <AdminButton size="sm" type="submit" variant="submit"
                           >Set Lead</AdminButton
                         >
                       </form>
@@ -215,10 +215,8 @@
                           name="gallery_id"
                           value={photo.gallery_id}
                         />
-                        <AdminButton
-                          variant="danger-outline"
-                          size="sm"
-                          type="submit">Delete</AdminButton
+                        <AdminButton variant="danger" size="sm" type="submit"
+                          >Delete</AdminButton
                         >
                       </form>
                     </div>

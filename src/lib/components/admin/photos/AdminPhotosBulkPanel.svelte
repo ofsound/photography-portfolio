@@ -76,6 +76,7 @@
         <AdminButton
           size="xs"
           type="submit"
+          variant="submit"
           disabled={selectedPhotoIds.length === 0}
         >
           Publish Selected
@@ -94,6 +95,7 @@
         <AdminButton
           size="xs"
           type="submit"
+          variant="danger"
           disabled={selectedPhotoIds.length === 0}
           onclick={(e: MouseEvent) => {
             if (
@@ -121,6 +123,7 @@
         <AdminButton
           size="xs"
           type="submit"
+          variant="submit"
           disabled={selectedPhotoIds.length === 0}
         >
           Restore Selected
@@ -140,7 +143,7 @@
         <AdminButton
           size="xs"
           type="submit"
-          variant="danger-outline"
+          variant="danger"
           disabled={selectedPhotoIds.length === 0}
           onclick={(e: MouseEvent) => {
             if (
@@ -177,6 +180,7 @@
         <AdminButton
           size="xs"
           type="submit"
+          variant="submit"
           disabled={selectedPhotoIds.length === 0 || !destinationGalleryId}
         >
           Move Selected

@@ -105,7 +105,7 @@
           class="w-24 rounded border border-border-strong px-2 py-1"
         /></label
       >
-      <AdminButton wFit type="submit">Create Page</AdminButton>
+      <AdminButton wFit type="submit" variant="submit">Create Page</AdminButton>
     </div>
   </form>
 {/snippet}

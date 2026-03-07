@@ -13,7 +13,7 @@
     const base =
       level === 1
         ? 'text-2xl font-medium tracking-wider'
-        : 'text-sm tracking-widest uppercase';
+        : 'text-lg tracking-wider font-medium';
 
     return className ? `${base} ${className}` : base;
   });

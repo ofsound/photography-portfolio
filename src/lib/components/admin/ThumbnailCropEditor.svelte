@@ -269,6 +269,7 @@
       <AdminButton
         size="sm"
         type="submit"
+        variant="submit"
         disabled={isSaving || (!hasCustomCrop && !hasChanges)}
       >
         Reset to default

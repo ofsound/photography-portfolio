@@ -125,12 +125,18 @@
         class="w-24 rounded border border-border-strong px-2 py-1"
       /></label
     >
-    <AdminButton type="submit">Save and Return</AdminButton>
-    <AdminButton type="submit" formaction="?/archive" formmethod="POST"
-      >Archive and Return</AdminButton
+    <AdminButton type="submit" variant="submit">Save and Return</AdminButton>
+    <AdminButton
+      type="submit"
+      variant="danger"
+      formaction="?/archive"
+      formmethod="POST">Archive and Return</AdminButton
     >
-    <AdminButton type="submit" formaction="?/restore" formmethod="POST"
-      >Restore and Return</AdminButton
+    <AdminButton
+      type="submit"
+      variant="submit"
+      formaction="?/restore"
+      formmethod="POST">Restore and Return</AdminButton
     >
   </div>
 
@@ -148,6 +154,7 @@
               ).toLocaleString()}</span
             >
             <AdminButton
+              variant="submit"
               type="submit"
               name="revision_id"
               value={rev.id}

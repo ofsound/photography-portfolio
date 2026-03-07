@@ -5,10 +5,6 @@ export type Variant =
   | 'default'
   | 'submit'
   | 'danger'
-  | 'danger-outline'
-  | 'info'
-  | 'submit-soft'
-  | 'link'
   | 'ghost'
   | 'toggle'
   | 'subtle';
@@ -27,11 +23,6 @@ export const variantClasses: Record<Variant, string> = {
   submit:
     'rounded border border-success/40 bg-success text-white hover:opacity-90',
   danger: 'rounded border border-danger/60 bg-danger text-white',
-  'danger-outline':
-    'rounded border border-danger/60 bg-danger-soft text-danger',
-  info: 'rounded border border-info/40 bg-info-soft',
-  'submit-soft': 'rounded border border-success/40 bg-success-soft',
-  link: 'text-xs text-text-muted underline',
   ghost:
     'rounded text-text-muted transition-colors hover:bg-border hover:text-text',
   toggle: 'rounded border border-border-strong',

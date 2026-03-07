@@ -221,7 +221,7 @@
         </label>
       </div>
 
-      <AdminButton type="submit" wFit>Save Slides</AdminButton>
+      <AdminButton type="submit" variant="submit" wFit>Save Slides</AdminButton>
     </form>
   </div>
 {/snippet}

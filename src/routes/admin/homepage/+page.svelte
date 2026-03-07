@@ -15,6 +15,7 @@
   let selectedIds = $state<string[]>([]);
   let slideDurationMs = $state<number>(4000);
   let transitionDurationMs = $state<number>(2000);
+  let timingValidationError = $state<string | null>(null);
   let undoStack = $state<string[][]>([]);
   let redoStack = $state<string[][]>([]);
   const historyLimit = 100;
@@ -72,6 +73,43 @@
   const availableImages = $derived(
     images.filter((image) => !selectedIds.includes(image.id)),
   );
+  const sanitizeNumericInput = (event: Event) => {
+    const target = event.currentTarget as HTMLInputElement | null;
+    if (!target) return;
+
+    const cleaned = target.value.replace(/[^0-9]/g, '');
+    if (target.value !== cleaned) {
+      target.value = cleaned;
+    }
+    timingValidationError = null;
+  };
+
+  const isMissingOrZero = (value: string) => {
+    const trimmed = value.trim();
+    if (!trimmed.length) return true;
+    const numeric = Number(trimmed);
+    return !Number.isFinite(numeric) || numeric === 0;
+  };
+
+  const onSaveSubmit = (event: SubmitEvent) => {
+    const form = event.currentTarget as HTMLFormElement | null;
+    if (!form) return;
+
+    const data = new FormData(form);
+    const slideDuration = String(data.get('slide_duration_ms') ?? '').trim();
+    const transitionDuration = String(
+      data.get('transition_duration_ms') ?? '',
+    ).trim();
+
+    if (isMissingOrZero(slideDuration) || isMissingOrZero(transitionDuration)) {
+      event.preventDefault();
+      timingValidationError =
+        'Slide duration and transition duration must be filled and greater than 0.';
+      return;
+    }
+
+    timingValidationError = null;
+  };
 
   const addSlide = (id: string) => {
     if (selectedIds.includes(id)) return;
@@ -183,7 +221,12 @@
       </DragDropProvider>
     {/if}
 
-    <form method="POST" action="?/save" class="mt-4 flex flex-col gap-6">
+    <form
+      method="POST"
+      action="?/save"
+      class="mt-4 flex flex-col gap-6"
+      onsubmit={onSaveSubmit}
+    >
       <input
         type="hidden"
         name="ordered_image_ids"
@@ -197,12 +240,13 @@
           Slide Duration (ms)
           <input
             class="max-w-[80px] rounded border border-border-strong bg-transparent px-3 py-2 text-sm tracking-normal normal-case"
-            type="number"
-            min="1000"
-            max="30000"
-            step="100"
+            type="text"
+            inputmode="numeric"
+            pattern="\d*"
+            title="Digits only"
             name="slide_duration_ms"
-            bind:value={slideDurationMs}
+            value={slideDurationMs}
+            oninput={sanitizeNumericInput}
           />
         </label>
         <label
@@ -211,15 +255,20 @@
           Transition Duration (ms)
           <input
             class="max-w-[80px] rounded border border-border-strong bg-transparent px-3 py-2 text-sm tracking-normal normal-case"
-            type="number"
-            min="200"
-            max="10000"
-            step="100"
+            type="text"
+            inputmode="numeric"
+            pattern="\d*"
+            title="Digits only"
             name="transition_duration_ms"
-            bind:value={transitionDurationMs}
+            value={transitionDurationMs}
+            oninput={sanitizeNumericInput}
           />
         </label>
       </div>
+
+      {#if timingValidationError}
+        <p class="text-text-danger text-sm">{timingValidationError}</p>
+      {/if}
 
       <AdminButton type="submit" variant="submit" wFit>Save Slides</AdminButton>
     </form>

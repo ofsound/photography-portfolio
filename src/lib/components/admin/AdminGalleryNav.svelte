@@ -20,9 +20,12 @@
     currentView: 'photos' | 'details';
   }>();
 
-  const photosHref = $derived(`/admin/${gallerySlug}/photos`);
-  const detailsHref = $derived(`/admin/${gallerySlug}/details`);
-  const uploadHref = $derived(`/admin/${gallerySlug}/photos/upload`);
+  const photosRoute = '/admin/[gallerySlug]/photos' as const;
+  const detailsRoute = '/admin/[gallerySlug]/details' as const;
+  const uploadRoute = '/admin/[gallerySlug]/photos/upload' as const;
+
+  const photosHref = $derived(resolve(photosRoute, { gallerySlug }));
+  const uploadHref = $derived(resolve(uploadRoute, { gallerySlug }));
 </script>
 
 <nav class="mb-6 flex justify-between">
@@ -69,7 +72,7 @@
     <!-- ORIGINAL -->
     <div class="flex overflow-hidden rounded-md border border-border">
       <a
-        href={resolve(photosHref)}
+        href={resolve(photosRoute, { gallerySlug })}
         class="relative px-3.5 py-1.5 text-xs font-medium tracking-widest uppercase transition-colors"
         class:bg-brand={currentView === 'photos'}
         class:text-brand-contrast={currentView === 'photos'}
@@ -79,7 +82,7 @@
         Photos
       </a>
       <a
-        href={resolve(detailsHref)}
+        href={resolve(detailsRoute, { gallerySlug })}
         class="relative border-l border-border px-3.5 py-1.5 text-xs font-medium tracking-widest uppercase transition-colors"
         class:bg-brand={currentView === 'details'}
         class:text-brand-contrast={currentView === 'details'}
@@ -93,26 +96,30 @@
     <!-- VARIATION A: Pill slider with animated background -->
     <div class="relative flex rounded-full bg-surface-muted p-1">
       <a
-        href={resolve(photosHref)}
+        href={resolve(photosRoute, { gallerySlug })}
         class="relative z-10 grid place-items-center rounded-full px-4 py-1.5 text-xs font-semibold tracking-wide uppercase transition-all duration-300 ease-(--ease-cinematic)"
         class:text-brand-contrast={currentView === 'photos'}
         class:text-text-subtle={currentView !== 'photos'}
         class:hover:text-text={currentView !== 'photos'}
       >
         {#if currentView === 'photos'}
-          <span class="absolute inset-0 rounded-full bg-brand shadow-md shadow-brand/25"></span>
+          <span
+            class="absolute inset-0 rounded-full bg-brand shadow-md shadow-brand/25"
+          ></span>
         {/if}
         <span class="relative">Photos</span>
       </a>
       <a
-        href={resolve(detailsHref)}
+        href={resolve(detailsRoute, { gallerySlug })}
         class="relative z-10 grid place-items-center rounded-full px-4 py-1.5 text-xs font-semibold tracking-wide uppercase transition-all duration-300 ease-(--ease-cinematic)"
         class:text-brand-contrast={currentView === 'details'}
         class:text-text-subtle={currentView !== 'details'}
         class:hover:text-text={currentView !== 'details'}
       >
         {#if currentView === 'details'}
-          <span class="absolute inset-0 rounded-full bg-brand shadow-md shadow-brand/25"></span>
+          <span
+            class="absolute inset-0 rounded-full bg-brand shadow-md shadow-brand/25"
+          ></span>
         {/if}
         <span class="relative">Details</span>
       </a>
@@ -121,7 +128,7 @@
     <!-- VARIATION B: Underline indicator with fade -->
     <div class="flex gap-1">
       <a
-        href={resolve(photosHref)}
+        href={resolve(photosRoute, { gallerySlug })}
         class="group relative grid place-items-center px-4 py-2 text-xs font-semibold tracking-widest uppercase transition-colors duration-200"
         class:text-brand={currentView === 'photos'}
         class:text-text-subtle={currentView !== 'photos'}
@@ -129,11 +136,14 @@
       >
         Photos
         <span
-          class="absolute bottom-0 left-1/2 h-0.5 -translate-x-1/2 rounded-full transition-all duration-300 ease-(--ease-cinematic) {currentView === 'photos' ? 'w-3/4 bg-brand' : 'w-0 group-hover:w-1/2 group-hover:bg-border-strong'}"
+          class="absolute bottom-0 left-1/2 h-0.5 -translate-x-1/2 rounded-full transition-all duration-300 ease-(--ease-cinematic) {currentView ===
+          'photos'
+            ? 'w-3/4 bg-brand'
+            : 'w-0 group-hover:w-1/2 group-hover:bg-border-strong'}"
         ></span>
       </a>
       <a
-        href={resolve(detailsHref)}
+        href={resolve(detailsRoute, { gallerySlug })}
         class="group relative grid place-items-center px-4 py-2 text-xs font-semibold tracking-widest uppercase transition-colors duration-200"
         class:text-brand={currentView === 'details'}
         class:text-text-subtle={currentView !== 'details'}
@@ -141,22 +151,33 @@
       >
         Details
         <span
-          class="absolute bottom-0 left-1/2 h-0.5 -translate-x-1/2 rounded-full transition-all duration-300 ease-(--ease-cinematic) {currentView === 'details' ? 'w-3/4 bg-brand' : 'w-0 group-hover:w-1/2 group-hover:bg-border-strong'}"
+          class="absolute bottom-0 left-1/2 h-0.5 -translate-x-1/2 rounded-full transition-all duration-300 ease-(--ease-cinematic) {currentView ===
+          'details'
+            ? 'w-3/4 bg-brand'
+            : 'w-0 group-hover:w-1/2 group-hover:bg-border-strong'}"
         ></span>
       </a>
     </div>
 
     <!-- VARIATION C: Frosted glass capsule with glow -->
-    <div class="flex rounded-xl border border-border/50 bg-surface/60 p-0.5 shadow-sm backdrop-blur-sm">
+    <div
+      class="flex rounded-xl border border-border/50 bg-surface/60 p-0.5 shadow-sm backdrop-blur-sm"
+    >
       <a
-        href={resolve(photosHref)}
-        class="grid place-items-center rounded-[10px] px-4 py-1.5 text-xs font-semibold tracking-wide uppercase transition-all duration-300 ease-(--ease-cinematic) {currentView === 'photos' ? 'bg-brand text-brand-contrast shadow-lg shadow-brand/20' : 'text-text-subtle hover:text-text hover:bg-surface-muted/50'}"
+        href={resolve(photosRoute, { gallerySlug })}
+        class="grid place-items-center rounded-[10px] px-4 py-1.5 text-xs font-semibold tracking-wide uppercase transition-all duration-300 ease-(--ease-cinematic) {currentView ===
+        'photos'
+          ? 'bg-brand text-brand-contrast shadow-lg shadow-brand/20'
+          : 'text-text-subtle hover:bg-surface-muted/50 hover:text-text'}"
       >
         Photos
       </a>
       <a
-        href={resolve(detailsHref)}
-        class="grid place-items-center rounded-[10px] px-4 py-1.5 text-xs font-semibold tracking-wide uppercase transition-all duration-300 ease-(--ease-cinematic) {currentView === 'details' ? 'bg-brand text-brand-contrast shadow-lg shadow-brand/20' : 'text-text-subtle hover:text-text hover:bg-surface-muted/50'}"
+        href={resolve(detailsRoute, { gallerySlug })}
+        class="grid place-items-center rounded-[10px] px-4 py-1.5 text-xs font-semibold tracking-wide uppercase transition-all duration-300 ease-(--ease-cinematic) {currentView ===
+        'details'
+          ? 'bg-brand text-brand-contrast shadow-lg shadow-brand/20'
+          : 'text-text-subtle hover:bg-surface-muted/50 hover:text-text'}"
       >
         Details
       </a>
@@ -165,22 +186,32 @@
     <!-- VARIATION D: Minimal dot indicator -->
     <div class="flex">
       <a
-        href={resolve(photosHref)}
-        class="group relative grid place-items-center rounded-lg px-4 py-2 text-xs tracking-widest uppercase transition-all duration-200 {currentView === 'photos' ? 'font-bold text-text' : 'font-medium text-text-subtle/50 hover:text-text-subtle'}"
+        href={resolve(photosRoute, { gallerySlug })}
+        class="group relative grid place-items-center rounded-lg px-4 py-2 text-xs tracking-widest uppercase transition-all duration-200 {currentView ===
+        'photos'
+          ? 'font-bold text-text'
+          : 'font-medium text-text-subtle/50 hover:text-text-subtle'}"
       >
         Photos
         {#if currentView === 'photos'}
-          <span class="absolute bottom-0.5 left-1/2 size-1 -translate-x-1/2 rounded-full bg-brand"></span>
+          <span
+            class="absolute bottom-0.5 left-1/2 size-1 -translate-x-1/2 rounded-full bg-brand"
+          ></span>
         {/if}
       </a>
       <span class="mx-0.5 self-center text-border">|</span>
       <a
-        href={resolve(detailsHref)}
-        class="group relative grid place-items-center rounded-lg px-4 py-2 text-xs tracking-widest uppercase transition-all duration-200 {currentView === 'details' ? 'font-bold text-text' : 'font-medium text-text-subtle/50 hover:text-text-subtle'}"
+        href={resolve(detailsRoute, { gallerySlug })}
+        class="group relative grid place-items-center rounded-lg px-4 py-2 text-xs tracking-widest uppercase transition-all duration-200 {currentView ===
+        'details'
+          ? 'font-bold text-text'
+          : 'font-medium text-text-subtle/50 hover:text-text-subtle'}"
       >
         Details
         {#if currentView === 'details'}
-          <span class="absolute bottom-0.5 left-1/2 size-1 -translate-x-1/2 rounded-full bg-brand"></span>
+          <span
+            class="absolute bottom-0.5 left-1/2 size-1 -translate-x-1/2 rounded-full bg-brand"
+          ></span>
         {/if}
       </a>
     </div>
@@ -196,7 +227,7 @@
 
     <!-- Variation A: Soft gradient with camera icon -->
     <a
-      href={uploadHref}
+      href={resolve(uploadRoute, { gallerySlug })}
       class="group inline-flex items-center gap-2 rounded-lg bg-linear-to-r from-brand to-indigo-500 px-4 py-2 text-sm font-semibold text-white shadow-md shadow-brand/25 transition-all hover:scale-[1.03] hover:shadow-lg hover:shadow-brand/30 active:scale-[0.98]"
     >
       <svg
@@ -218,7 +249,7 @@
 
     <!-- Variation B: Outlined pill with arrow icon -->
     <a
-      href={uploadHref}
+      href={resolve(uploadRoute, { gallerySlug })}
       class="group inline-flex items-center gap-2 rounded-full border-2 border-brand/50 px-4 py-1.5 text-sm font-medium text-brand transition-all hover:border-brand hover:bg-brand/10 hover:shadow-sm"
     >
       <svg
@@ -239,7 +270,7 @@
 
     <!-- Variation C: Glass card with sparkle icon -->
     <a
-      href={uploadHref}
+      href={resolve(uploadRoute, { gallerySlug })}
       class="group relative inline-flex items-center gap-2 overflow-hidden rounded-lg border border-white/20 bg-white/10 px-4 py-2 text-sm font-medium text-text backdrop-blur-sm transition-all hover:border-brand/40 hover:bg-brand/5 hover:shadow-md dark:border-white/10 dark:bg-white/5"
     >
       <span
@@ -263,7 +294,7 @@
 
     <!-- Variation D: Solid rounded with image-plus icon + badge feel -->
     <a
-      href={uploadHref}
+      href={resolve(uploadRoute, { gallerySlug })}
       class="group inline-flex items-center gap-2 rounded-md bg-success/90 px-4 py-2 text-sm font-bold tracking-wide text-white ring-1 ring-success/30 ring-offset-1 ring-offset-bg transition-all hover:bg-success hover:ring-success/60 hover:ring-offset-2 active:scale-[0.97]"
     >
       <svg

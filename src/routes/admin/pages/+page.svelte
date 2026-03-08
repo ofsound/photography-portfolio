@@ -2,6 +2,7 @@
   import AdminButton from '$lib/components/admin/AdminButton.svelte';
   import AdminCreateListLayout from '$lib/components/admin/AdminCreateListLayout.svelte';
   import CodeEditor from '$lib/components/admin/CodeEditor.svelte';
+  import SveditEditor from '$lib/components/admin/SveditEditor.svelte';
   import FormField from '$lib/components/FormField.svelte';
   import FormInput from '$lib/components/FormInput.svelte';
   import FormSelect from '$lib/components/FormSelect.svelte';
@@ -13,10 +14,14 @@
       id: string;
       slug: string;
       title: string;
+      editor_mode: 'code' | 'svedit';
       status: 'published' | 'archived';
       updated_at: string;
     }>,
   );
+
+  let createEditorMode = $state<'code' | 'svedit'>('code');
+  let createSveditDoc = $state('');
 </script>
 
 <AdminCreateListLayout
@@ -48,23 +53,46 @@
         <option value="archived">archived</option>
       </FormSelect>
     </FormField>
+    <FormField label="Editor mode" id="page-create-editor_mode">
+      <FormSelect
+        name="editor_mode"
+        id="page-create-editor_mode"
+        bind:value={createEditorMode}
+      >
+        <option value="code">HTML + Scoped CSS</option>
+        <option value="svedit">Svedit</option>
+      </FormSelect>
+    </FormField>
 
-    <FormField label="HTML" id="page-create-html_content">
-      <CodeEditor
-        lang="html"
-        name="html_content"
-        placeholder="HTML"
-        height="24rem"
-      />
-    </FormField>
-    <FormField label="Scoped CSS" id="page-create-css_module">
-      <CodeEditor
-        lang="css"
-        name="css_module"
-        placeholder="Scoped CSS"
-        height="12rem"
-      />
-    </FormField>
+    {#if createEditorMode === 'code'}
+      <FormField label="HTML" id="page-create-html_content">
+        <CodeEditor
+          lang="html"
+          name="html_content"
+          placeholder="HTML"
+          height="24rem"
+        />
+      </FormField>
+      <FormField label="Scoped CSS" id="page-create-css_module">
+        <CodeEditor
+          lang="css"
+          name="css_module"
+          placeholder="Scoped CSS"
+          height="12rem"
+        />
+      </FormField>
+      <input type="hidden" name="svedit_doc" value="" />
+    {:else}
+      <FormField label="Svedit Document" id="page-create-svedit_doc">
+        <SveditEditor
+          name="svedit_doc"
+          bind:value={createSveditDoc}
+          height="40rem"
+        />
+      </FormField>
+      <input type="hidden" name="html_content" value="" />
+      <input type="hidden" name="css_module" value="" />
+    {/if}
     <FormField label="SEO title" id="page-create-seo_title">
       <FormInput
         id="page-create-seo_title"
@@ -119,7 +147,7 @@
           <div class="flex flex-wrap items-center justify-between gap-2">
             <span>{page.title}</span>
             <span class="text-xs tracking-widest text-text-subtle uppercase"
-              >{page.status}</span
+              >{page.status} - {page.editor_mode}</span
             >
           </div>
           <p class="mt-1 text-xs text-text-subtle normal-case">

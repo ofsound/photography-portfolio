@@ -2,10 +2,16 @@ import type { Database } from '$lib/types/database';
 import { asBoolean, asString, toSlug } from '$lib/server/admin-helpers';
 import { sanitizeCmsCss, sanitizeCmsHtml } from '$lib/server/cms-sanitize';
 import { RESERVED_SLUGS } from '$lib/server/reserved-slugs';
+import {
+  createDefaultSveditPageDocument,
+  parseSveditPageDocument,
+  SVEDIT_PAGE_SCHEMA_VERSION,
+} from '$lib/svedit/page-document';
 
 const ALLOWED_SYSTEM_SLUGS = new Set(['about']);
 
 type PageKind = Database['public']['Enums']['page_kind'];
+type PageEditorMode = Database['public']['Enums']['page_editor_mode'];
 export type PublishStatus = Database['public']['Enums']['publish_status'];
 
 type PagePayload = {
@@ -14,6 +20,9 @@ type PagePayload = {
   kind: PageKind;
   html_content: string;
   css_module: string;
+  editor_mode: PageEditorMode;
+  svedit_doc: Database['public']['Tables']['pages']['Insert']['svedit_doc'];
+  svedit_schema_version: number;
   status: PublishStatus;
   show_in_nav: boolean;
   nav_order: number;
@@ -47,12 +56,16 @@ export const pagePayloadFromForm = (
   const ogImagePath = asString(form.get('og_image_path')).trim() || null;
   const rawHtml = asString(form.get('html_content'));
   const rawCss = asString(form.get('css_module'));
+  const rawSveditDoc = asString(form.get('svedit_doc'));
+  const editorModeRaw = asString(form.get('editor_mode'), 'code');
+  const editorMode: PageEditorMode =
+    editorModeRaw === 'svedit' ? 'svedit' : 'code';
 
   if (!title) {
     return { ok: false, message: 'Title is required.' };
   }
 
-  if (rawHtml.toLowerCase().includes('<iframe')) {
+  if (editorMode === 'code' && rawHtml.toLowerCase().includes('<iframe')) {
     return { ok: false, message: 'iframe embeds are blocked in v1.' };
   }
 
@@ -61,14 +74,31 @@ export const pagePayloadFromForm = (
     return { ok: false, message: slugProblem };
   }
 
+  const sveditDocResult =
+    editorMode === 'svedit'
+      ? parseSveditPageDocument(
+          rawSveditDoc || createDefaultSveditPageDocument(),
+        )
+      : null;
+
+  if (sveditDocResult && !sveditDocResult.ok) {
+    return { ok: false, message: sveditDocResult.message };
+  }
+
   return {
     ok: true,
     payload: {
       title,
       slug: generatedSlug,
       kind,
-      html_content: sanitizeCmsHtml(rawHtml),
-      css_module: sanitizeCmsCss(rawCss, generatedSlug || kind),
+      html_content: editorMode === 'code' ? sanitizeCmsHtml(rawHtml) : '',
+      css_module:
+        editorMode === 'code'
+          ? sanitizeCmsCss(rawCss, generatedSlug || kind)
+          : '',
+      editor_mode: editorMode,
+      svedit_doc: sveditDocResult?.ok ? sveditDocResult.document : null,
+      svedit_schema_version: SVEDIT_PAGE_SCHEMA_VERSION,
       status,
       show_in_nav: showInNav,
       nav_order: navOrder,

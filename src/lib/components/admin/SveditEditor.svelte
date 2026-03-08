@@ -1,0 +1,180 @@
+<script lang="ts">
+  import { setContext } from 'svelte';
+  import { KeyMapper, Svedit } from 'svedit';
+
+  import {
+    createDefaultSveditPageDocument,
+    parseSveditPageDocument,
+    serializeSveditPageDocument,
+    validateSveditPageDocument,
+  } from '$lib/svedit/page-document';
+  import { createPageSveditSession } from '$lib/svedit/page-session';
+
+  type EditorCommand = {
+    disabled: boolean;
+    active?: boolean;
+    execute: () => void;
+  };
+
+  let {
+    value = $bindable(''),
+    name,
+    readonly = false,
+    height = '32rem',
+  } = $props<{
+    value?: string;
+    name?: string;
+    readonly?: boolean;
+    height?: string;
+  }>();
+
+  const initial = parseSveditPageDocument(value);
+  let loadError = $state<string | null>(null);
+
+  const session = $state(
+    createPageSveditSession(
+      initial.ok ? initial.document : createDefaultSveditPageDocument(),
+    ),
+  );
+
+  if (!initial.ok && value.trim()) {
+    loadError = initial.message;
+  }
+
+  if (!value) {
+    value = serializeSveditPageDocument(
+      initial.ok ? initial.document : createDefaultSveditPageDocument(),
+    );
+  }
+
+  const keyMapper = new KeyMapper();
+  setContext('key_mapper', keyMapper);
+
+  const editable = $derived(!readonly);
+
+  const commands = $derived(session.commands as Record<string, EditorCommand>);
+
+  $effect(() => {
+    void session.doc;
+    const result = validateSveditPageDocument(session.to_json());
+    if (!result.ok) {
+      loadError = result.message;
+      return;
+    }
+
+    loadError = null;
+    const serialized = serializeSveditPageDocument(result.document);
+    if (serialized !== value) {
+      value = serialized;
+    }
+  });
+
+  const run = (commandName: string) => {
+    const command = commands[commandName];
+    if (!command || command.disabled) return;
+    command.execute();
+  };
+</script>
+
+<svelte:window onkeydown={(event) => keyMapper.handle_keydown(event)} />
+
+<div class="grid gap-3">
+  <div
+    class="flex flex-wrap gap-2 rounded border border-border-strong bg-surface p-2"
+  >
+    <button
+      type="button"
+      class="rounded border border-border-strong px-2 py-1 text-xs"
+      disabled={commands.undo?.disabled}
+      onclick={() => run('undo')}>Undo</button
+    >
+    <button
+      type="button"
+      class="rounded border border-border-strong px-2 py-1 text-xs"
+      disabled={commands.redo?.disabled}
+      onclick={() => run('redo')}>Redo</button
+    >
+
+    <button
+      type="button"
+      class="rounded border border-border-strong px-2 py-1 text-xs"
+      disabled={commands.toggle_strong?.disabled}
+      onclick={() => run('toggle_strong')}>Bold</button
+    >
+    <button
+      type="button"
+      class="rounded border border-border-strong px-2 py-1 text-xs"
+      disabled={commands.toggle_emphasis?.disabled}
+      onclick={() => run('toggle_emphasis')}>Italic</button
+    >
+    <button
+      type="button"
+      class="rounded border border-border-strong px-2 py-1 text-xs"
+      disabled={commands.set_link?.disabled}
+      onclick={() => run('set_link')}>Link</button
+    >
+
+    <button
+      type="button"
+      class="rounded border border-border-strong px-2 py-1 text-xs"
+      disabled={commands.insert_heading?.disabled}
+      onclick={() => run('insert_heading')}>Heading</button
+    >
+    <button
+      type="button"
+      class="rounded border border-border-strong px-2 py-1 text-xs"
+      disabled={commands.insert_paragraph?.disabled}
+      onclick={() => run('insert_paragraph')}>Paragraph</button
+    >
+    <button
+      type="button"
+      class="rounded border border-border-strong px-2 py-1 text-xs"
+      disabled={commands.insert_list?.disabled}
+      onclick={() => run('insert_list')}>List</button
+    >
+    <button
+      type="button"
+      class="rounded border border-border-strong px-2 py-1 text-xs"
+      disabled={commands.insert_quote?.disabled}
+      onclick={() => run('insert_quote')}>Quote</button
+    >
+    <button
+      type="button"
+      class="rounded border border-border-strong px-2 py-1 text-xs"
+      disabled={commands.insert_image?.disabled}
+      onclick={() => run('insert_image')}>Image</button
+    >
+    <button
+      type="button"
+      class="rounded border border-border-strong px-2 py-1 text-xs"
+      disabled={commands.insert_divider?.disabled}
+      onclick={() => run('insert_divider')}>Divider</button
+    >
+    <button
+      type="button"
+      class="rounded border border-border-strong px-2 py-1 text-xs"
+      disabled={commands.insert_callout?.disabled}
+      onclick={() => run('insert_callout')}>Callout</button
+    >
+  </div>
+
+  <div
+    class="overflow-auto rounded border border-border-strong bg-surface p-4"
+    style:height
+  >
+    <Svedit
+      {session}
+      {editable}
+      path={[session.document_id]}
+      class="text-text-main grid gap-6"
+    />
+  </div>
+
+  {#if loadError}
+    <p class="text-xs text-red-600">{loadError}</p>
+  {/if}
+
+  {#if name}
+    <textarea {name} bind:value class="hidden"></textarea>
+  {/if}
+</div>

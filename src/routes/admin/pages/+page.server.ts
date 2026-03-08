@@ -5,21 +5,21 @@ import { isGallerySlugTaken } from '$lib/server/root-slug';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals, url }) => {
-  const pagesQuery = await locals.supabase
+  const pagesWithSvedit = await locals.supabase
     .from('pages')
-    .select('id, slug, title, kind, status, updated_at')
+    .select('id, slug, title, kind, editor_mode, status, updated_at')
     .neq('kind', 'home')
     .order('updated_at', { ascending: false });
 
-  if (pagesQuery.error) {
+  if (pagesWithSvedit.error) {
     throwLoaderError(
       { route: '/admin/pages', operation: 'load pages list' },
-      pagesQuery.error,
+      pagesWithSvedit.error,
     );
   }
 
   return {
-    pages: pagesQuery.data ?? [],
+    pages: pagesWithSvedit.data ?? [],
     message: url.searchParams.get('message'),
   };
 };
@@ -36,11 +36,12 @@ export const actions: Actions = {
       });
     }
 
-    const { error } = await locals.supabase
+    const insertResult = await locals.supabase
       .from('pages')
       .insert(result.payload);
-    if (error) {
-      return fail(400, { message: error.message });
+
+    if (insertResult.error) {
+      return fail(400, { message: insertResult.error.message });
     }
 
     return { success: true, message: 'Page created.' };

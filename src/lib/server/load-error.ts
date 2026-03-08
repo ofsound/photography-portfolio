@@ -15,6 +15,19 @@ const normalizeCause = (cause: unknown) => {
     };
   }
 
+  if (cause && typeof cause === 'object') {
+    const candidate = cause as Record<string, unknown>;
+    return {
+      message:
+        typeof candidate.message === 'string' ? candidate.message : undefined,
+      details:
+        typeof candidate.details === 'string' ? candidate.details : undefined,
+      hint: typeof candidate.hint === 'string' ? candidate.hint : undefined,
+      code: typeof candidate.code === 'string' ? candidate.code : undefined,
+      raw: candidate,
+    };
+  }
+
   return { value: String(cause) };
 };
 

@@ -1,5 +1,6 @@
 <script lang="ts">
   import CodeEditor from '$lib/components/admin/CodeEditor.svelte';
+  import SveditEditor from '$lib/components/admin/SveditEditor.svelte';
   import AdminCard from '$lib/components/admin/AdminCard.svelte';
   import AdminButton from '$lib/components/admin/AdminButton.svelte';
   import AdminHeading from '$lib/components/admin/AdminHeading.svelte';
@@ -21,8 +22,14 @@
     initialPage().status === 'archived' ? 'archived' : 'published',
   );
   let formSeoTitle = $state(initialPage().seo_title ?? '');
+  let formEditorMode = $state<'code' | 'svedit'>(
+    initialPage().editor_mode === 'svedit' ? 'svedit' : 'code',
+  );
   let formHtmlContent = $state(initialPage().html_content ?? '');
   let formCssModule = $state(initialPage().css_module ?? '');
+  let formSveditDoc = $state(
+    initialPage().svedit_doc ? JSON.stringify(initialPage().svedit_doc) : '',
+  );
   let formSeoDescription = $state(initialPage().seo_description ?? '');
   let formOgImagePath = $state(initialPage().og_image_path ?? '');
 </script>
@@ -66,6 +73,19 @@
         <option value="archived">archived</option>
       </FormSelect>
     </FormField>
+    <FormField label="Editor mode" id="page-edit-editor_mode">
+      <FormSelect
+        name="editor_mode"
+        id="page-edit-editor_mode"
+        bind:value={formEditorMode}
+      >
+        <option value="code">HTML + Scoped CSS</option>
+        <option value="svedit">Svedit</option>
+      </FormSelect>
+    </FormField>
+  </div>
+
+  <div class="grid gap-3 sm:grid-cols-2">
     <FormField label="SEO title" id="page-edit-seo_title">
       <FormInput
         id="page-edit-seo_title"
@@ -76,22 +96,35 @@
     </FormField>
   </div>
 
-  <FormField label="HTML" id="page-edit-html_content">
-    <CodeEditor
-      name="html_content"
-      bind:value={formHtmlContent}
-      lang="html"
-      height="32rem"
-    />
-  </FormField>
-  <FormField label="Scoped CSS" id="page-edit-css_module">
-    <CodeEditor
-      name="css_module"
-      bind:value={formCssModule}
-      lang="css"
-      height="16rem"
-    />
-  </FormField>
+  {#if formEditorMode === 'code'}
+    <FormField label="HTML" id="page-edit-html_content">
+      <CodeEditor
+        name="html_content"
+        bind:value={formHtmlContent}
+        lang="html"
+        height="32rem"
+      />
+    </FormField>
+    <FormField label="Scoped CSS" id="page-edit-css_module">
+      <CodeEditor
+        name="css_module"
+        bind:value={formCssModule}
+        lang="css"
+        height="16rem"
+      />
+    </FormField>
+    <input type="hidden" name="svedit_doc" value="" />
+  {:else}
+    <FormField label="Svedit Document" id="page-edit-svedit_doc">
+      <SveditEditor
+        name="svedit_doc"
+        bind:value={formSveditDoc}
+        height="40rem"
+      />
+    </FormField>
+    <input type="hidden" name="html_content" value="" />
+    <input type="hidden" name="css_module" value="" />
+  {/if}
   <FormField label="SEO description" id="page-edit-seo_description">
     <FormTextarea
       id="page-edit-seo_description"

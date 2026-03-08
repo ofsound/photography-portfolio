@@ -67,6 +67,12 @@ const buildBaseQueryString = (q: string) => {
   return baseParams.toString();
 };
 
+const allScope: GalleryScope = {
+  kind: 'all',
+  slug: 'all',
+  name: 'All',
+};
+
 const loadGalleryModeData = async ({
   locals,
   url,
@@ -214,6 +220,60 @@ const loadGalleryModeData = async ({
 
 export const load: LayoutServerLoad = async ({ locals, params, url }) => {
   const rootSlug = params.rootSlug;
+
+  if (rootSlug === 'all') {
+    const routePhoto = readActivePhotoRoute(url.pathname);
+
+    if (!routePhoto) {
+      throw redirect(301, `/search${url.search}`);
+    }
+
+    const resolvedRoute = await resolvePhotoRoute(
+      locals,
+      allScope,
+      routePhoto.photoSlug,
+      routePhoto.imageId,
+    );
+
+    if (resolvedRoute.kind === 'photo') {
+      throw redirect(
+        301,
+        `${buildGalleryPhotoPath(
+          resolvedRoute.photo.gallerySlug,
+          resolvedRoute.photo.slug,
+          routePhoto.imageId,
+        )}${url.search}`,
+      );
+    }
+
+    if (resolvedRoute.kind === 'redirect') {
+      const redirectedUrl = new URL(resolvedRoute.location, url);
+      const redirectedPhoto = readActivePhotoRoute(redirectedUrl.pathname);
+
+      if (redirectedPhoto) {
+        const canonicalPhoto = await resolvePhotoRoute(
+          locals,
+          allScope,
+          redirectedPhoto.photoSlug,
+          redirectedPhoto.imageId,
+        );
+
+        if (canonicalPhoto.kind === 'photo') {
+          throw redirect(
+            301,
+            `${buildGalleryPhotoPath(
+              canonicalPhoto.photo.gallerySlug,
+              canonicalPhoto.photo.slug,
+              redirectedPhoto.imageId,
+            )}${url.search}`,
+          );
+        }
+      }
+    }
+
+    throw redirect(301, `/search${url.search}`);
+  }
+
   const scopeResolution = await resolveGalleryScope(locals, rootSlug);
 
   if (scopeResolution.kind === 'redirect') {

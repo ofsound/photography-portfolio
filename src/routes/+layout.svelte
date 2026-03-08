@@ -1,6 +1,6 @@
 <script lang="ts">
   import '../app.css';
-  import { goto, invalidateAll, onNavigate } from '$app/navigation';
+  import { invalidateAll, onNavigate } from '$app/navigation';
   import { resolve } from '$app/paths';
   import { page } from '$app/state';
   import {
@@ -78,11 +78,6 @@
       segments.length === 1 || (segments.length >= 3 && segments[1] === 'photo')
     );
   };
-  const galleryScope = $derived(
-    ((data as Record<string, unknown> | null)?.galleryScope ?? null) as {
-      slug: string;
-    } | null,
-  );
   const globalSiteSettings = $derived(data?.siteSettings ?? null);
   const gallerySettings = $derived(
     ((data as Record<string, unknown> | null)?.gallerySettings ?? null) as {
@@ -110,46 +105,8 @@
   );
   let hasHydratedClientPrefs = $state(false);
   let siteHeaderEl: HTMLElement | null = null;
-  let galleryQueryInput = $state('');
 
   const isViewer = $derived(isViewerRoute(page.url.pathname));
-  const activeGalleryPath = $derived.by(() => {
-    const routeScopeSlug = galleryScope?.slug;
-    if (routeScopeSlug) return buildGalleryPath(routeScopeSlug);
-
-    const pathname = page.url.pathname;
-    const segments = pathname.split('/').filter(Boolean);
-    const rootSlug = segments[0];
-    if (rootSlug && (rootSlug === 'all' || allGallerySlugs.has(rootSlug))) {
-      return buildGalleryPath(rootSlug);
-    }
-
-    if (navGalleries.length > 0) {
-      return buildGalleryPath(navGalleries[0].slug);
-    }
-
-    return '/all';
-  });
-  $effect(() => {
-    if (!isViewerRoute(page.url.pathname)) return;
-    const q = page.url.searchParams.get('q') ?? '';
-    galleryQueryInput = q;
-  });
-
-  const onGallerySearchSubmit = (event: SubmitEvent) => {
-    event.preventDefault();
-    const q = galleryQueryInput.trim();
-    const target = activeGalleryPath as `/${string}`;
-    goto(
-      /* eslint-disable-next-line svelte/no-navigation-without-resolve -- path uses resolve() */
-      q ? `${resolve(target)}?q=${encodeURIComponent(q)}` : resolve(target),
-      {
-        replaceState: true,
-        noScroll: true,
-        keepFocus: true,
-      },
-    );
-  };
 
   $effect(() => {
     if (typeof window === 'undefined' || !isViewer) return;
@@ -386,6 +343,7 @@
         class="flex items-center gap-6 py-3 text-sm tracking-widest uppercase"
       >
         <a href={resolve('/')}>Home</a>
+        <a href={resolve('/search')}>Search</a>
         {#each navGalleries as navGallery (navGallery.id)}
           <a href={resolve(buildGalleryPath(navGallery.slug) as `/${string}`)}
             >{navGallery.name}</a
@@ -430,38 +388,6 @@
             value={toUiZoomValue(galleryDensityStore.value)}
             onUpdate={updateHeaderDensity}
           />
-          {#if siteSettings?.show_search_bar}
-            <form
-              class="flex h-6 w-full max-w-[200px] items-center gap-2"
-              onsubmit={onGallerySearchSubmit}
-            >
-              <input
-                name="q"
-                bind:value={galleryQueryInput}
-                placeholder="Search"
-                aria-label="Search title, description, tags, category"
-                class="h-full w-full rounded border border-border bg-transparent px-2 py-0.5 text-xs"
-              />
-              <button
-                class="flex h-6 w-6 shrink-0 items-center justify-center rounded border border-border-strong transition-colors hover:bg-surface-muted"
-                type="submit"
-                aria-label="Search"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  class="h-3 w-3"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                >
-                  <circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" />
-                </svg>
-              </button>
-            </form>
-          {/if}
         </div>
       {:else}
         <div class="flex items-center justify-end gap-2">

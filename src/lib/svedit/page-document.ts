@@ -1061,7 +1061,7 @@ export const createDefaultSveditPageDocument = (): SveditPageDocument => {
           'Edit directly on the live layout. Add sections, media, and calls to action without touching code.',
         ),
         button_label: createDefaultAnnotatedText('Explore work'),
-        button_href: createDefaultAnnotatedText('/all'),
+        button_href: createDefaultAnnotatedText('/search'),
         background_image: createDefaultAnnotatedText(''),
       },
       [sectionId]: {

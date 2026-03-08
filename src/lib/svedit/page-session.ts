@@ -351,16 +351,33 @@ class InsertNodeTypeCommand extends Command {
   }
 
   is_enabled() {
-    return (
-      this.context.editable && this.context.session.can_insert(this.nodeType)
-    );
+    if (!this.context.editable) return false;
+
+    // If there's a selection, check if insertion is possible there
+    if (this.context.session.selection) {
+      return this.context.session.can_insert(this.nodeType);
+    }
+
+    // If no selection, we'll default to the document body if the node type is valid for it
+    const schema = this.context.session.schema.page;
+    return schema.properties.body.node_types.includes(this.nodeType);
   }
 
   execute() {
     const session = this.context.session;
     const tr = session.tr;
 
-    if (session.selection?.type !== 'node') {
+    if (!session.selection) {
+      // Default to end of document body
+      const bodyPath = [session.document_id, 'body'];
+      const body = session.get(bodyPath);
+      tr.set_selection({
+        type: 'node',
+        path: bodyPath,
+        anchor_offset: body.length,
+        focus_offset: body.length,
+      });
+    } else if (session.selection.type !== 'node') {
       const nextCursor = session.get_next_node_insert_cursor(session.selection);
       if (!nextCursor) return;
       tr.set_selection(nextCursor);

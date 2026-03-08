@@ -55,7 +55,13 @@
   const editable = $derived(!readonly);
   const isInline = $derived(variant === 'inline');
 
-  const commands = $derived(session.commands as Record<string, EditorCommand>);
+  let editor = $state<Svedit | null>(null);
+
+  const commands = $derived.by(() => {
+    // Nudge derivation when selection changes
+    void session.selection;
+    return session.commands as Record<string, EditorCommand>;
+  });
 
   const toolbarClass = $derived.by(() =>
     isInline
@@ -94,6 +100,7 @@
     const command = commands[commandName];
     if (!command || command.disabled) return;
     command.execute();
+    editor?.focus_canvas();
   };
 </script>
 
@@ -197,6 +204,7 @@
 
   <div class={canvasShellClass} style:height={isInline ? undefined : height}>
     <Svedit
+      bind:this={editor}
       {session}
       {editable}
       path={[session.document_id]}
@@ -212,3 +220,10 @@
     <textarea {name} bind:value class="hidden"></textarea>
   {/if}
 </div>
+
+<style>
+  div {
+    --editing-stroke-color: var(--color-brand);
+    --editing-fill-color: var(--color-brand-contrast);
+  }
+</style>

@@ -1,45 +1,96 @@
 <script lang="ts">
+  import { invalidateAll } from '$app/navigation';
+  import { DragDropProvider } from '@dnd-kit/svelte';
+  import { createSortable, isSortable } from '@dnd-kit/svelte/sortable';
   import AdminButton from '$lib/components/admin/AdminButton.svelte';
+  import AdminCard from '$lib/components/admin/AdminCard.svelte';
   import AdminCreateListLayout from '$lib/components/admin/AdminCreateListLayout.svelte';
-  import CodeEditor from '$lib/components/admin/CodeEditor.svelte';
-  import SveditEditor from '$lib/components/admin/SveditEditor.svelte';
+  import AdminHeading from '$lib/components/admin/AdminHeading.svelte';
   import FormField from '$lib/components/FormField.svelte';
   import FormInput from '$lib/components/FormInput.svelte';
   import FormSelect from '$lib/components/FormSelect.svelte';
-  import FormTextarea from '$lib/components/FormTextarea.svelte';
 
   const { data, form } = $props();
-  const pages = $derived(
-    data.pages as Array<{
-      id: string;
-      slug: string;
-      title: string;
-      editor_mode: 'code' | 'svedit';
-      status: 'published' | 'archived';
-      updated_at: string;
-    }>,
+
+  type PageCard = {
+    id: string;
+    slug: string;
+    title: string;
+    kind: string;
+    editor_mode: 'code' | 'svedit';
+    status: 'published' | 'archived';
+    show_in_nav: boolean;
+    nav_order: number;
+  };
+
+  const pages = $derived((data.pages as PageCard[]) ?? []);
+
+  const pageCards = $derived.by(() =>
+    [...pages].sort((a, b) => {
+      if (a.nav_order !== b.nav_order) return a.nav_order - b.nav_order;
+      return a.title.localeCompare(b.title);
+    }),
+  );
+
+  const pageCardById = $derived(new Map(pageCards.map((c) => [c.id, c])));
+
+  let pendingOrder = $state<string[] | null>(null);
+  let isSavingOrder = $state(false);
+
+  const orderedCardIds = $derived(
+    pendingOrder ?? pageCards.map((card) => card.id),
+  );
+
+  const orderedPages = $derived(
+    orderedCardIds
+      .map((cardId) => pageCardById.get(cardId))
+      .filter((card): card is PageCard => Boolean(card)),
   );
 
   let createEditorMode = $state<'code' | 'svedit'>('code');
-  let createSveditDoc = $state('');
-  let showCreateRawSveditJson = $state(false);
-  let createRawSveditJsonError = $state<string | null>(null);
 
-  const formatCreateRawSveditJson = () => {
-    const value = createSveditDoc.trim();
-    if (!value) {
-      createRawSveditJsonError = null;
-      return;
-    }
+  const persistOrder = async (next: string[]) => {
+    const payload = new FormData();
+    payload.append('ordered_page_ids', next.join('\n'));
 
-    try {
-      createSveditDoc = JSON.stringify(JSON.parse(value), null, 2);
-      createRawSveditJsonError = null;
-    } catch {
-      createRawSveditJsonError =
-        'Invalid JSON. Fix syntax before formatting/saving.';
-    }
+    const response = await fetch(`${window.location.pathname}?/reorder`, {
+      method: 'POST',
+      body: payload,
+    });
+
+    return response.ok;
   };
+
+  async function onPageDragEnd(event: unknown) {
+    if (isSavingOrder) return;
+
+    const e = event as { canceled?: boolean; operation?: { source: unknown } };
+    if (e.canceled || !e.operation?.source) return;
+
+    const source = e.operation.source as Parameters<typeof isSortable>[0];
+    if (!isSortable(source)) return;
+
+    const { initialIndex, index } = source as {
+      initialIndex: number;
+      index: number;
+    };
+
+    if (initialIndex === index) return;
+
+    const next = [...orderedCardIds];
+    const [removed] = next.splice(initialIndex, 1);
+    next.splice(index, 0, removed);
+    pendingOrder = next;
+
+    isSavingOrder = true;
+    try {
+      await persistOrder(next);
+      await invalidateAll();
+    } finally {
+      isSavingOrder = false;
+      pendingOrder = null;
+    }
+  }
 </script>
 
 <AdminCreateListLayout
@@ -81,135 +132,66 @@
         <option value="svedit">Svedit</option>
       </FormSelect>
     </FormField>
-
-    {#if createEditorMode === 'code'}
-      <FormField label="HTML" id="page-create-html_content">
-        <CodeEditor
-          lang="html"
-          name="html_content"
-          placeholder="HTML"
-          height="24rem"
-        />
-      </FormField>
-      <FormField label="Scoped CSS" id="page-create-css_module">
-        <CodeEditor
-          lang="css"
-          name="css_module"
-          placeholder="Scoped CSS"
-          height="12rem"
-        />
-      </FormField>
-      <input type="hidden" name="svedit_doc" value="" />
-    {:else}
-      <FormField label="Svedit Document" id="page-create-svedit_doc">
-        <SveditEditor
-          name="svedit_doc"
-          bind:value={createSveditDoc}
-          height="40rem"
-        />
-      </FormField>
-      <div class="border-border-subtle grid gap-2 rounded border p-3">
-        <div class="flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            class="rounded border border-border-strong px-2 py-1 text-xs tracking-widest uppercase"
-            onclick={() => {
-              showCreateRawSveditJson = !showCreateRawSveditJson;
-              createRawSveditJsonError = null;
-            }}
-          >
-            {showCreateRawSveditJson ? 'Hide Raw JSON' : 'Edit Raw JSON'}
-          </button>
-          {#if showCreateRawSveditJson}
-            <button
-              type="button"
-              class="rounded border border-border-strong px-2 py-1 text-xs tracking-widest uppercase"
-              onclick={formatCreateRawSveditJson}
-            >
-              Format JSON
-            </button>
-          {/if}
-        </div>
-
-        {#if showCreateRawSveditJson}
-          <FormTextarea
-            id="page-create-svedit_doc_raw"
-            rows={18}
-            bind:value={createSveditDoc}
-            placeholder="Paste a full Svedit JSON document here"
-            class="font-mono text-xs"
-          />
-        {/if}
-
-        {#if createRawSveditJsonError}
-          <p class="text-xs text-red-600">{createRawSveditJsonError}</p>
-        {/if}
-      </div>
-      <input type="hidden" name="html_content" value="" />
-      <input type="hidden" name="css_module" value="" />
-    {/if}
-    <FormField label="SEO title" id="page-create-seo_title">
-      <FormInput
-        id="page-create-seo_title"
-        name="seo_title"
-        placeholder="SEO title"
-      />
-    </FormField>
-    <FormField label="SEO description" id="page-create-seo_description">
-      <FormTextarea
-        id="page-create-seo_description"
-        name="seo_description"
-        rows={2}
-        placeholder="SEO description"
-      />
-    </FormField>
-    <FormField label="OG image path" id="page-create-og_image_path">
-      <FormInput
-        id="page-create-og_image_path"
-        name="og_image_path"
-        placeholder="OG image path"
-      />
-    </FormField>
-
-    <div class="flex flex-wrap items-center gap-3">
-      <label class="flex items-center gap-2 text-sm"
-        ><input name="show_in_nav" type="checkbox" /> Show in nav</label
-      >
-      <label class="flex items-center gap-2 text-sm"
-        >Nav order <input
-          type="number"
-          name="nav_order"
-          value="0"
-          class="w-24 rounded border border-border-strong px-2 py-1"
-        /></label
-      >
-      <AdminButton type="submit" variant="submit">Create Page</AdminButton>
-    </div>
+    <AdminButton type="submit" variant="leftColumnFormSubmit">
+      Create Page
+    </AdminButton>
   </form>
 {/snippet}
 
 {#snippet pageList()}
-  {#if pages.length === 0}
+  {#if orderedPages.length === 0}
     <p class="mt-2 text-sm text-text-muted">No pages yet.</p>
   {:else}
-    <div class="mt-3 flex flex-col gap-4">
-      {#each pages as page (page.id)}
-        <AdminButton
-          href={`/admin/pages/edit/${page.slug}`}
-          variant="subtle"
-          class="block w-full text-left"
-        >
-          <div class="flex flex-wrap items-center justify-between gap-2">
-            <span>{page.title}</span>
-            <span class="text-xs tracking-widest text-text-subtle uppercase"
-              >{page.status} - {page.editor_mode}</span
+    <DragDropProvider onDragEnd={onPageDragEnd}>
+      <ul class="grid gap-3">
+        {#each orderedPages as page, index (page.id)}
+          {@const sortable = createSortable({ id: page.id, index })}
+          <li {@attach sortable.attach} class:opacity-50={sortable.isDragging}>
+            <AdminCard
+              as="article"
+              variant={page.status === 'archived' ? 'striped' : 'gradient'}
+              class="grid cursor-move gap-3 p-4 sm:grid-cols-[auto_1fr_auto] sm:items-center"
             >
-          </div>
-          <p class="mt-1 text-xs text-text-subtle normal-case">
-            Updated {new Date(page.updated_at).toLocaleDateString()}
-          </p>
-        </AdminButton>
-      {/each}
-    </div>
+              <div
+                aria-hidden="true"
+                class="mr-2 hidden self-center text-text-muted sm:flex sm:items-center"
+              >
+                <div
+                  class="grid grid-cols-3 gap-1 rounded border border-border px-1.5 py-1"
+                >
+                  {#each [0, 1, 2, 3, 4, 5] as dot (dot)}
+                    <span class="h-0.5 w-0.5 rounded-full bg-text-muted/80"
+                    ></span>
+                  {/each}
+                </div>
+              </div>
+
+              <div>
+                <div class="flex flex-wrap items-baseline gap-2">
+                  <AdminHeading level={2}>{page.title}</AdminHeading>
+                  {#if page.status === 'archived'}
+                    <span
+                      class="text-xs tracking-widest text-text-subtle uppercase"
+                    >
+                      {page.status}
+                    </span>
+                  {/if}
+                </div>
+                <p class="text-xs text-text-muted">/{page.slug}</p>
+                <p class="mt-1 text-xs text-text-subtle normal-case">
+                  {page.show_in_nav ? 'Show in nav' : 'Hidden from nav'}
+                </p>
+              </div>
+
+              <div class="flex items-center gap-2">
+                <AdminButton href={`/admin/pages/edit/${page.slug}`} size="sm">
+                  Edit Page
+                </AdminButton>
+              </div>
+            </AdminCard>
+          </li>
+        {/each}
+      </ul>
+    </DragDropProvider>
   {/if}
 {/snippet}

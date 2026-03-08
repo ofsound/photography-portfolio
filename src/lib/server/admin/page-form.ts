@@ -105,7 +105,7 @@ export const pagePayloadFromForm = (
       seo_title: seoTitle,
       seo_description: seoDescription,
       og_image_path: ogImagePath,
-      deleted_at: status === 'archived' ? new Date().toISOString() : null,
+      deleted_at: null,
     },
   };
 };

@@ -23,7 +23,7 @@
   </AdminStatusMessage>
 {/if}
 
-<form method="POST" action="?/save" class="mt-6 grid max-w-4xl gap-4">
+<form method="POST" action="?/save" class="mt-6 grid gap-4">
   <GallerySettingsFormFields
     {settings}
     disableTransitionPreset={!isAdmin}

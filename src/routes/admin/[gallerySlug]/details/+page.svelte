@@ -31,7 +31,7 @@
   </AdminStatusMessage>
 {/if}
 
-<form method="POST" action="?/save" class="mt-6 grid max-w-4xl gap-4">
+<form method="POST" action="?/save" class="mt-6 grid gap-4">
   <AdminHeading level={2}>Gallery Details</AdminHeading>
 
   <div class="grid gap-3 sm:grid-cols-2">

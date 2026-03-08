@@ -34,6 +34,7 @@ export const load: PageServerLoad = async ({ locals, params }) => {
       .select(PAGE_SELECT)
       .eq('id', identifier)
       .neq('kind', 'home')
+      .is('deleted_at', null)
       .maybeSingle();
     if (byId.error) throw error(500, byId.error.message);
     page = byId.data as PageRow | null;
@@ -45,6 +46,7 @@ export const load: PageServerLoad = async ({ locals, params }) => {
       .select(PAGE_SELECT)
       .eq('slug', identifier)
       .neq('kind', 'home')
+      .is('deleted_at', null)
       .maybeSingle();
     if (bySlug.error) throw error(500, bySlug.error.message);
     page = bySlug.data as PageRow | null;
@@ -105,7 +107,7 @@ export const actions: Actions = {
 
     const { error: archiveError } = await locals.supabase
       .from('pages')
-      .update({ status: 'archived', deleted_at: new Date().toISOString() })
+      .update({ status: 'archived', deleted_at: null })
       .eq('id', id)
       .neq('kind', 'home');
 
@@ -128,6 +130,25 @@ export const actions: Actions = {
     if (restoreError) return fail(400, { message: restoreError.message });
 
     redirectToList('Page restored.');
+  },
+
+  delete: async ({ locals, request }) => {
+    const form = await request.formData();
+    const id = asString(form.get('id'));
+    if (!id) return fail(400, { message: 'Missing page id.' });
+
+    const { error: deleteError } = await locals.supabase
+      .from('pages')
+      .update({
+        status: 'archived',
+        deleted_at: 'now',
+      })
+      .eq('id', id)
+      .neq('kind', 'home');
+
+    if (deleteError) return fail(400, { message: deleteError.message });
+
+    redirectToList('Page deleted.');
   },
 
   rollback: async ({ locals, request }) => {
@@ -201,7 +222,7 @@ export const actions: Actions = {
         : 'published') as PublishStatus,
       show_in_nav: Boolean(snapshot.show_in_nav),
       nav_order: Number(snapshot.nav_order ?? 0),
-      deleted_at: snapshot.deleted_at ? String(snapshot.deleted_at) : null,
+      deleted_at: null,
     };
 
     const slugProblem = validateCmsPageSlug(payload.slug);

@@ -22,25 +22,27 @@
   const p = (name: string) => `${idPrefix}${name}`;
 </script>
 
-<div class="grid gap-3 sm:grid-cols-2">
-  <FormField label="Site Theme" id={p('theme_default')}>
+<div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
+  <FormField label="Site Theme" id={p('theme_default')} class="w-fit">
     <FormSelect
       name="theme_default"
       id={p('theme_default')}
       value={settings.theme_default}
       disabled={readonly}
+      class="w-auto"
     >
       <option value="system">System</option>
       <option value="light">Light</option>
       <option value="dark">Dark</option>
     </FormSelect>
   </FormField>
-  <FormField label="Layout Mode" id={p('gallery_layout_mode')}>
+  <FormField label="Layout Mode" id={p('gallery_layout_mode')} class="w-fit">
     <FormSelect
       name="gallery_layout_mode"
       id={p('gallery_layout_mode')}
       value={settings.gallery_layout_mode}
       disabled={readonly}
+      class="w-auto"
     >
       <option value="uniform">uniform</option>
       <option value="masonry">masonry</option>
@@ -49,7 +51,7 @@
       <option value="columns">columns</option>
     </FormSelect>
   </FormField>
-  <FormField label="Gallery gap (px)" id={p('gallery_gap_px')}>
+  <FormField label="Gap (px)" id={p('gallery_gap_px')} class="w-20">
     <FormInput
       id={p('gallery_gap_px')}
       name="gallery_gap_px"
@@ -62,8 +64,8 @@
   </FormField>
 </div>
 
-<div class="grid gap-3 sm:grid-cols-2">
-  <FormField label="Desktop Default" id={p('grid_desktop_default')}>
+<div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
+  <FormField label="Desktop Cols" id={p('grid_desktop_default')} class="w-20">
     <FormInput
       id={p('grid_desktop_default')}
       name="grid_desktop_default"
@@ -72,7 +74,7 @@
       {readonly}
     />
   </FormField>
-  <FormField label="Mobile Default" id={p('grid_mobile_default')}>
+  <FormField label="Mobile Cols" id={p('grid_mobile_default')} class="w-20">
     <FormInput
       id={p('grid_mobile_default')}
       name="grid_mobile_default"
@@ -81,10 +83,7 @@
       {readonly}
     />
   </FormField>
-</div>
-
-<div class="grid gap-3 sm:grid-cols-3">
-  <FormField label="Max Width (px)" id={p('max_content_width_px')}>
+  <FormField label="Max Width (px)" id={p('max_content_width_px')} class="w-28">
     <FormInput
       id={p('max_content_width_px')}
       name="max_content_width_px"
@@ -95,7 +94,7 @@
       {readonly}
     />
   </FormField>
-  <FormField label="Uniform Thumb Ratio" id={p('uniform_thumb_ratio')}>
+  <FormField label="Thumb Ratio" id={p('uniform_thumb_ratio')} class="w-28">
     <FormInput
       id={p('uniform_thumb_ratio')}
       name="uniform_thumb_ratio"
@@ -105,15 +104,20 @@
       {readonly}
     />
   </FormField>
+</div>
+
+<div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
   <FormField
-    label={'Transition Preset' + (disableTransitionPreset ? ' (Admin)' : '')}
+    label={'Transition' + (disableTransitionPreset ? ' (Admin)' : '')}
     id={p('transition_preset')}
+    class="w-fit"
   >
     <FormSelect
       name="transition_preset"
       id={p('transition_preset')}
       value={settings.transition_preset}
       disabled={readonly || disableTransitionPreset}
+      class="w-auto"
     >
       <option value="cinematic">cinematic</option>
       <option value="snappy">snappy</option>
@@ -122,38 +126,40 @@
   </FormField>
 </div>
 
-<label class="flex items-center gap-2 text-sm">
-  <input
-    type="checkbox"
-    name="allow_transition_toggle"
-    checked={settings.allow_transition_toggle}
-    disabled={readonly}
-  /> Allow Transition Toggle
-</label>
+<div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+  <label class="flex items-center gap-2 text-sm">
+    <input
+      type="checkbox"
+      name="allow_transition_toggle"
+      checked={settings.allow_transition_toggle}
+      disabled={readonly}
+    /> Allow Transition Toggle
+  </label>
 
-<label class="flex items-center gap-2 text-sm">
-  <input
-    type="checkbox"
-    name="show_search_bar"
-    checked={settings.show_search_bar}
-    disabled={readonly}
-  /> Show Search Bar
-</label>
+  <label class="flex items-center gap-2 text-sm">
+    <input
+      type="checkbox"
+      name="show_search_bar"
+      checked={settings.show_search_bar}
+      disabled={readonly}
+    /> Show Search Bar
+  </label>
 
-<label class="flex items-center gap-2 text-sm">
-  <input
-    type="checkbox"
-    name="show_photograph_info"
-    checked={settings.show_photograph_info}
-    disabled={readonly}
-  /> Show Photograph Info
-</label>
+  <label class="flex items-center gap-2 text-sm">
+    <input
+      type="checkbox"
+      name="show_photograph_info"
+      checked={settings.show_photograph_info}
+      disabled={readonly}
+    /> Show Photograph Info
+  </label>
 
-<label class="flex items-center gap-2 text-sm">
-  <input
-    type="checkbox"
-    name="show_thumbnail_zoom_hover"
-    checked={settings.show_thumbnail_zoom_hover}
-    disabled={readonly}
-  /> Show Thumbnail Zoom Hover
-</label>
+  <label class="flex items-center gap-2 text-sm">
+    <input
+      type="checkbox"
+      name="show_thumbnail_zoom_hover"
+      checked={settings.show_thumbnail_zoom_hover}
+      disabled={readonly}
+    /> Show Thumbnail Zoom Hover
+  </label>
+</div>

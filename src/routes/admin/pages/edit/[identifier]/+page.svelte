@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { resolve } from '$app/paths';
+
   import CodeEditor from '$lib/components/admin/CodeEditor.svelte';
   import SveditEditor from '$lib/components/admin/SveditEditor.svelte';
   import AdminCard from '$lib/components/admin/AdminCard.svelte';
@@ -51,14 +53,34 @@
       rawSveditJsonError = 'Invalid JSON. Fix syntax before formatting/saving.';
     }
   };
+
+  const confirmDelete = (event: MouseEvent) => {
+    if (!confirm('Are you sure you want to delete this page?')) {
+      event.preventDefault();
+    }
+  };
 </script>
 
-<div class="flex flex-wrap items-center justify-between gap-3">
-  <AdminHeading>Edit Page</AdminHeading>
-  <AdminButton href="/admin/pages">Back to Pages</AdminButton>
+<div class="flex items-center gap-3">
+  <a
+    href={resolve('/admin/pages')}
+    class="-m-2 p-2 text-text-muted transition-colors hover:text-brand"
+    aria-label="Back to Pages"
+  >
+    <svg
+      class="size-4"
+      viewBox="0 0 16 16"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
+      <path d="M10 3 5 8l5 5" />
+    </svg>
+  </a>
+  <AdminHeading>{page.title}: Edit</AdminHeading>
 </div>
-<p class="mt-2 text-sm text-text-muted">Editing `/{page.slug}`</p>
-
 {#if form?.message}
   <AdminStatusMessage
     type={form && 'success' in form && form.success ? 'success' : 'error'}
@@ -113,7 +135,23 @@
         placeholder="SEO title"
       />
     </FormField>
+    <FormField label="SEO description" id="page-edit-seo_description">
+      <FormTextarea
+        id="page-edit-seo_description"
+        name="seo_description"
+        bind:value={formSeoDescription}
+        rows={2}
+      />
+    </FormField>
   </div>
+  <FormField label="OG image path" id="page-edit-og_image_path">
+    <FormInput
+      id="page-edit-og_image_path"
+      name="og_image_path"
+      bind:value={formOgImagePath}
+      placeholder="OG image path"
+    />
+  </FormField>
 
   {#if formEditorMode === 'code'}
     <FormField label="HTML" id="page-edit-html_content">
@@ -181,22 +219,6 @@
     <input type="hidden" name="html_content" value="" />
     <input type="hidden" name="css_module" value="" />
   {/if}
-  <FormField label="SEO description" id="page-edit-seo_description">
-    <FormTextarea
-      id="page-edit-seo_description"
-      name="seo_description"
-      bind:value={formSeoDescription}
-      rows={2}
-    />
-  </FormField>
-  <FormField label="OG image path" id="page-edit-og_image_path">
-    <FormInput
-      id="page-edit-og_image_path"
-      name="og_image_path"
-      bind:value={formOgImagePath}
-      placeholder="OG image path"
-    />
-  </FormField>
 
   <div class="flex flex-wrap items-center gap-3">
     <label class="flex items-center gap-2 text-sm"
@@ -211,19 +233,29 @@
         class="w-24 rounded border border-border-strong px-2 py-1"
       /></label
     >
-    <AdminButton type="submit" variant="submit">Save and Return</AdminButton>
-    <AdminButton
-      type="submit"
-      variant="danger"
-      formaction="?/archive"
-      formmethod="POST">Archive and Return</AdminButton
-    >
-    <AdminButton
-      type="submit"
-      variant="submit"
-      formaction="?/restore"
-      formmethod="POST">Restore and Return</AdminButton
-    >
+    <AdminButton type="submit" variant="submit">Save</AdminButton>
+    {#if page.status === 'archived'}
+      <AdminButton
+        type="submit"
+        variant="submit"
+        formaction="?/restore"
+        formmethod="POST">Publish</AdminButton
+      >
+      <AdminButton
+        type="submit"
+        variant="danger"
+        formaction="?/delete"
+        formmethod="POST"
+        onclick={confirmDelete}>Delete</AdminButton
+      >
+    {:else}
+      <AdminButton
+        type="submit"
+        variant="danger"
+        formaction="?/archive"
+        formmethod="POST">Archive</AdminButton
+      >
+    {/if}
   </div>
 
   {#if revisions.length}
@@ -248,7 +280,7 @@
               formmethod="POST"
               size="sm"
             >
-              Rollback and Return
+              Rollback
             </AdminButton>
           </div>
         {/each}

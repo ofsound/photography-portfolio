@@ -22,7 +22,7 @@
     <div class="grid gap-3 rounded border border-border p-4 text-sm">
       <p>Signed in as <strong>{data.userEmail}</strong>.</p>
       <div class="flex flex-wrap items-center gap-2">
-        <AdminButton href="/admin/library">Go to Admin</AdminButton>
+        <AdminButton href="/admin/galleries">Go to Admin</AdminButton>
         <form method="POST" action="?/logout">
           <AdminButton type="submit">Sign Out</AdminButton>
         </form>

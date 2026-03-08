@@ -57,7 +57,7 @@
           name="category"
           value={filterCategoryId}
         >
-          <option value="">all</option>
+          <option value="">All</option>
           {#each categories as category (category.id)}
             <option value={category.id}>{category.name}</option>
           {/each}
@@ -67,7 +67,7 @@
     <div class="max-w-56 min-w-36 flex-1">
       <FormField label="Tag" id="filter-tag">
         <FormSelect id="filter-tag" name="tag" value={filterTagId}>
-          <option value="">all</option>
+          <option value="">All</option>
           {#each tags as tag (tag.id)}
             <option value={tag.id}>{tag.name}</option>
           {/each}
@@ -82,7 +82,7 @@
             name="gallery"
             value={filterGalleryId}
           >
-            <option value="">all</option>
+            <option value="">All</option>
             {#each galleries as gallery (gallery.id)}
               <option value={gallery.id}>{gallery.name}</option>
             {/each}

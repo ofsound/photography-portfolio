@@ -160,7 +160,7 @@
         <li {@attach sortable.attach} class:opacity-50={sortable.isDragging}>
           <AdminCard
             as="article"
-            variant="default"
+            variant="gradient"
             class="grid cursor-move gap-3 p-4 sm:grid-cols-[auto_1fr_auto] sm:items-center"
           >
             <div

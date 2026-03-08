@@ -2,6 +2,8 @@
   import { resolve } from '$app/paths';
   import { page } from '$app/state';
 
+  import AdminThemeToggle from '$lib/components/admin/AdminThemeToggle.svelte';
+
   const { data, children } = $props();
 
   const links = $derived.by(() => {
@@ -45,7 +47,7 @@
   style="--font-sans: var(--font-sans-admin); font-family: var(--font-sans)"
 >
   <aside
-    class="border-r border-border"
+    class="flex h-full flex-col border-r border-border"
     style="view-transition-name: admin-sidebar"
   >
     <div class="relative bg-surface-muted">
@@ -79,6 +81,11 @@
         </div>
       {/each}
     </nav>
+    <div
+      class="mt-auto flex items-center justify-center border-t border-border p-4"
+    >
+      <AdminThemeToggle />
+    </div>
   </aside>
 
   <section

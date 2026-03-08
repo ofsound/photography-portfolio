@@ -8,6 +8,10 @@
     type GalleryTransitionPhase,
   } from '$lib/context/gallery-transition';
   import {
+    adminThemeModeStore,
+    type AdminThemeMode,
+  } from '$lib/stores/admin-theme-mode.svelte';
+  import {
     getGalleryPrefs,
     galleryDensityStore,
     layoutModeStore,
@@ -101,7 +105,6 @@
     (data?.pendingConversionCount as number) ?? 0,
   );
   const maxDensity = 10;
-  let themeMode = $state<'light' | 'dark' | 'system'>('system');
   let transitionPreset = $state<'cinematic' | 'snappy' | 'experimental'>(
     'cinematic',
   );
@@ -127,8 +130,6 @@
 
     return '/all';
   });
-  const isAdminPage = $derived(page.url.pathname.startsWith('/admin/'));
-
   $effect(() => {
     if (!isViewerRoute(page.url.pathname)) return;
     const q = page.url.searchParams.get('q') ?? '';
@@ -185,7 +186,7 @@
     delete document.documentElement.dataset.vtReduced;
   };
 
-  const applyTheme = (mode: 'light' | 'dark' | 'system') => {
+  const applyTheme = (mode: AdminThemeMode) => {
     const isDarkSystem = window.matchMedia(
       '(prefers-color-scheme: dark)',
     ).matches;
@@ -201,12 +202,6 @@
       ? siteSettings.theme_default
       : 'system') as 'light' | 'dark' | 'system',
   );
-
-  const setAdminThemeMode = (mode: 'light' | 'dark' | 'system') => {
-    themeMode = mode;
-    localStorage.setItem('admin-theme', mode);
-    applyTheme(mode);
-  };
 
   const updateTransitionPreset = (
     preset: 'cinematic' | 'snappy' | 'experimental',
@@ -232,16 +227,16 @@
     const pathname = page.url.pathname;
     const onAdmin = pathname.startsWith('/admin/');
     transitionPreset = siteSettings?.transition_preset ?? 'cinematic';
+    let resolvedThemeMode: AdminThemeMode = siteThemeDefault;
 
     if (onAdmin) {
       const stored = localStorage.getItem('admin-theme');
-      themeMode =
+      resolvedThemeMode =
         stored === 'light' || stored === 'dark' || stored === 'system'
           ? stored
           : siteThemeDefault;
-    } else {
-      themeMode = siteThemeDefault;
     }
+    adminThemeModeStore.set(resolvedThemeMode);
 
     if (siteSettings?.allow_transition_toggle) {
       const storedPreset = localStorage.getItem('transition-preset');
@@ -257,7 +252,7 @@
     }
 
     applyTransitionPreset();
-    applyTheme(themeMode);
+    applyTheme(resolvedThemeMode);
     hasHydratedClientPrefs = true;
   });
 
@@ -265,16 +260,24 @@
     if (typeof window === 'undefined' || !hasHydratedClientPrefs) return;
     const pathname = page.url.pathname;
     const onAdmin = pathname.startsWith('/admin/');
+    let resolvedThemeMode: AdminThemeMode = siteThemeDefault;
     if (onAdmin) {
       const stored = localStorage.getItem('admin-theme');
-      themeMode =
+      resolvedThemeMode =
         stored === 'light' || stored === 'dark' || stored === 'system'
           ? stored
           : siteThemeDefault;
-    } else {
-      themeMode = siteThemeDefault;
     }
-    applyTheme(themeMode);
+    adminThemeModeStore.set(resolvedThemeMode);
+    applyTheme(resolvedThemeMode);
+  });
+
+  $effect(() => {
+    if (typeof window === 'undefined' || !hasHydratedClientPrefs) return;
+    if (!page.url.pathname.startsWith('/admin/')) return;
+    const selectedThemeMode = adminThemeModeStore.value;
+    localStorage.setItem('admin-theme', selectedThemeMode);
+    applyTheme(selectedThemeMode);
   });
 
   $effect(() => {
@@ -292,7 +295,7 @@
     if (typeof window === 'undefined') return;
     const media = window.matchMedia('(prefers-color-scheme: dark)');
     const listener = () => {
-      if (themeMode === 'system') {
+      if (adminThemeModeStore.value === 'system') {
         applyTheme('system');
       }
     };
@@ -462,27 +465,6 @@
         </div>
       {:else}
         <div class="flex items-center justify-end gap-2">
-          {#if isAdminPage && hasSession}
-            <label for="header-theme" class="text-xs tracking-widest uppercase"
-              >Admin Theme</label
-            >
-            <select
-              id="header-theme"
-              class="rounded border border-border-strong bg-transparent px-2 py-1 text-xs"
-              value={themeMode}
-              onchange={(e) =>
-                setAdminThemeMode(
-                  (e.currentTarget as HTMLSelectElement).value as
-                    | 'light'
-                    | 'dark'
-                    | 'system',
-                )}
-            >
-              <option value="light">Light</option>
-              <option value="dark">Dark</option>
-              <option value="system">System</option>
-            </select>
-          {/if}
           {#if siteSettings?.allow_transition_toggle}
             <label for="transition" class="text-xs tracking-widest uppercase"
               >Motion</label

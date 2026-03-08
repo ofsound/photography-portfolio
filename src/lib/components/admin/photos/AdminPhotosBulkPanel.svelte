@@ -182,6 +182,7 @@
           size="xs"
           type="submit"
           variant="submit"
+          class="shrink-0"
           disabled={selectedPhotoIds.length === 0 || !destinationGalleryId}
         >
           Move Selected

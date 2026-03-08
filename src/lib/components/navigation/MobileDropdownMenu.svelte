@@ -1,6 +1,6 @@
 <script lang="ts">
+  import { onNavigate } from '$app/navigation';
   import { fade, fly } from 'svelte/transition';
-  import { page } from '$app/state';
 
   import type { Snippet } from 'svelte';
 
@@ -8,16 +8,24 @@
     id,
     label,
     open = $bindable(false),
+    inertSelector = '[data-mobile-menu-root]',
     children,
   }: {
     id: string;
     label: string;
     open?: boolean;
+    inertSelector?: string;
     children?: Snippet;
   } = $props();
 
+  let isOpen = $state(Boolean(open));
   let panelEl = $state<HTMLElement | null>(null);
-  let previousBodyOverflow = $state<string | null>(null);
+  let previousBodyOverflow: string | null = null;
+
+  const setOpen = (next: boolean) => {
+    isOpen = next;
+    open = next;
+  };
   const panelTransition = () =>
     typeof window !== 'undefined' &&
     window.matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -32,10 +40,10 @@
   $effect(() => {
     if (typeof document === 'undefined') return;
     const inertRoots = Array.from(
-      document.querySelectorAll<HTMLElement>('[data-mobile-menu-root]'),
+      document.querySelectorAll<HTMLElement>(inertSelector),
     );
 
-    if (open) {
+    if (isOpen) {
       if (previousBodyOverflow === null) {
         previousBodyOverflow = document.body.style.overflow || '';
       }
@@ -60,15 +68,14 @@
     };
   });
 
-  $effect(() => {
-    const routeKey = `${page.url.pathname}${page.url.search}`;
-    if (routeKey && open) {
-      open = false;
+  onNavigate(() => {
+    if (isOpen) {
+      setOpen(false);
     }
   });
 
   $effect(() => {
-    if (typeof window === 'undefined' || !open) return;
+    if (typeof window === 'undefined' || !isOpen) return;
     const frame = window.requestAnimationFrame(() => {
       const firstFocusable = panelEl?.querySelector<HTMLElement>(
         [
@@ -86,13 +93,13 @@
   });
 
   $effect(() => {
-    if (typeof document === 'undefined' || !open) return;
+    if (typeof document === 'undefined' || !isOpen) return;
     const onDocumentClick = (event: MouseEvent) => {
       const target = event.target;
       if (!(target instanceof Element)) return;
       if (!panelEl || !panelEl.contains(target)) return;
       if (target.closest('a[href]')) {
-        open = false;
+        setOpen(false);
       }
     };
 
@@ -106,10 +113,10 @@
     type="button"
     aria-label={label}
     aria-controls={id}
-    aria-expanded={open}
+    aria-expanded={isOpen}
     class="inline-flex min-h-11 min-w-11 items-center justify-center rounded-md border border-border bg-surface text-text transition-colors hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
     onclick={() => {
-      open = !open;
+      setOpen(!isOpen);
     }}
   >
     <svg
@@ -122,7 +129,7 @@
       stroke-linejoin="round"
       aria-hidden="true"
     >
-      {#if open}
+      {#if isOpen}
         <path d="M18 6 6 18" />
         <path d="m6 6 12 12" />
       {:else}
@@ -136,13 +143,13 @@
 
 <svelte:window
   onkeydown={(event) => {
-    if (open && event.key === 'Escape') {
-      open = false;
+    if (isOpen && event.key === 'Escape') {
+      setOpen(false);
     }
   }}
 />
 
-{#if open}
+{#if isOpen}
   <div
     class="fixed inset-x-0 top-[var(--size-mobile-header-offset)] bottom-0 z-50 md:hidden"
   >
@@ -151,7 +158,7 @@
       class="absolute inset-0 bg-overlay/55"
       aria-label="Close menu"
       onclick={() => {
-        open = false;
+        setOpen(false);
       }}
       in:fade={scrimTransition()}
       out:fade={scrimTransition()}
@@ -160,7 +167,7 @@
     <section
       bind:this={panelEl}
       {id}
-      class="chrome-panel relative origin-top border-b border-border shadow-lg"
+      class="relative origin-top border-b border-border bg-surface shadow-lg"
       in:fly={panelTransition()}
       out:fly={panelTransition()}
     >

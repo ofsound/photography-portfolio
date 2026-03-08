@@ -58,6 +58,7 @@
       <MobileDropdownMenu
         id="admin-mobile-nav"
         label="Toggle admin navigation"
+        inertSelector="[data-admin-mobile-menu-root]"
         bind:open={adminMobileMenuOpen}
       >
         <nav
@@ -127,7 +128,7 @@
 
   <section
     class="flex min-h-screen flex-col p-4 pt-[calc(var(--size-mobile-header-offset)+1rem)] md:min-h-0 md:max-w-[1200px] md:overflow-y-auto md:p-6"
-    data-mobile-menu-root
+    data-admin-mobile-menu-root
     style="view-transition-name: admin-content"
   >
     {@render children()}

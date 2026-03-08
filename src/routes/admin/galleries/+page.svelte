@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { resolve } from '$app/paths';
   import { invalidateAll } from '$app/navigation';
   import { DragDropProvider } from '@dnd-kit/svelte';
   import { createSortable, isSortable } from '@dnd-kit/svelte/sortable';
@@ -14,6 +15,7 @@
     GALLERY_VISIBILITY_LABELS,
     type GalleryVisibilityStatus,
   } from '$lib/constants/gallery-visibility';
+  import { buildGalleryPath } from '$lib/utils/gallery-routes';
 
   const { data, form } = $props();
 
@@ -179,7 +181,9 @@
         <li {@attach sortable.attach} class:opacity-50={sortable.isDragging}>
           <AdminCard
             as="article"
-            variant="gradient"
+            variant={card.visibility_status === 'archived'
+              ? 'striped'
+              : 'gradient'}
             class="grid cursor-move gap-3 p-4 sm:grid-cols-[auto_1fr_auto] sm:items-center"
           >
             <div
@@ -197,14 +201,27 @@
             </div>
 
             <div>
-              <AdminHeading level={2}>{card.name}</AdminHeading>
-              <div class="mt-1 flex flex-wrap items-center gap-2 text-xs">
-                <p class="text-text-muted">/{card.slug}</p>
+              <div class="flex flex-wrap items-baseline gap-2">
+                <AdminHeading level={2}>{card.name}</AdminHeading>
                 <span
-                  class="rounded border border-border px-2 py-0.5 tracking-wider uppercase"
+                  class="text-xs tracking-widest text-text-subtle uppercase"
                 >
                   {GALLERY_VISIBILITY_LABELS[card.visibility_status]}
                 </span>
+              </div>
+              <div class="mt-1 flex flex-wrap items-baseline gap-2 text-xs">
+                {#if card.visibility_status === 'archived'}
+                  <p class="text-text-muted">/{card.slug}</p>
+                {:else}
+                  <a
+                    href={resolve(buildGalleryPath(card.slug) as `/${string}`)}
+                    class="cursor-pointer text-text-muted underline-offset-2 transition-colors hover:text-text hover:underline"
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    /{card.slug}
+                  </a>
+                {/if}
               </div>
             </div>
 

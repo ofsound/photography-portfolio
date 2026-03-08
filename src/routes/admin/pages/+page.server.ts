@@ -35,9 +35,7 @@ const parseOrderedPageIds = (value: FormDataEntryValue | null) => {
 export const load: PageServerLoad = async ({ locals, url }) => {
   const pagesWithSvedit = await locals.supabase
     .from('pages')
-    .select(
-      'id, slug, title, kind, editor_mode, status, show_in_nav, nav_order',
-    )
+    .select('id, slug, title, kind, editor_mode, visibility_status, nav_order')
     .neq('kind', 'home')
     .is('deleted_at', null)
     .order('nav_order', { ascending: true })

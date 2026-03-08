@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { resolve } from '$app/paths';
   import { invalidateAll } from '$app/navigation';
   import { DragDropProvider } from '@dnd-kit/svelte';
   import { createSortable, isSortable } from '@dnd-kit/svelte/sortable';
@@ -9,6 +10,11 @@
   import FormField from '$lib/components/FormField.svelte';
   import FormInput from '$lib/components/FormInput.svelte';
   import FormSelect from '$lib/components/FormSelect.svelte';
+  import {
+    PAGE_VISIBILITY_OPTIONS,
+    PAGE_VISIBILITY_LABELS,
+    type PageVisibilityStatus,
+  } from '$lib/constants/page-visibility';
 
   const { data, form } = $props();
 
@@ -18,8 +24,7 @@
     title: string;
     kind: string;
     editor_mode: 'code' | 'svedit';
-    status: 'published' | 'draft';
-    show_in_nav: boolean;
+    visibility_status: PageVisibilityStatus;
     nav_order: number;
   };
 
@@ -48,6 +53,7 @@
   );
 
   let createEditorMode = $state<'code' | 'svedit'>('code');
+  let createVisibilityStatus = $state<PageVisibilityStatus>('draft');
 
   const persistOrder = async (next: string[]) => {
     const payload = new FormData();
@@ -116,10 +122,15 @@
       <FormInput id="page-create-slug" name="slug" placeholder="Slug" />
     </FormField>
 
-    <FormField label="Status" id="page-create-status">
-      <FormSelect name="status" id="page-create-status" value="published">
-        <option value="published">published</option>
-        <option value="draft">draft</option>
+    <FormField label="Visibility" id="page-create-visibility_status">
+      <FormSelect
+        name="visibility_status"
+        id="page-create-visibility_status"
+        bind:value={createVisibilityStatus}
+      >
+        {#each PAGE_VISIBILITY_OPTIONS as option (option.value)}
+          <option value={option.value}>{option.label}</option>
+        {/each}
       </FormSelect>
     </FormField>
     <FormField label="Editor mode" id="page-create-editor_mode">
@@ -149,7 +160,9 @@
           <li {@attach sortable.attach} class:opacity-50={sortable.isDragging}>
             <AdminCard
               as="article"
-              variant={page.status === 'draft' ? 'striped' : 'gradient'}
+              variant={page.visibility_status === 'draft'
+                ? 'striped'
+                : 'gradient'}
               class="grid cursor-move gap-3 p-4 sm:grid-cols-[auto_1fr_auto] sm:items-center"
             >
               <div
@@ -169,18 +182,22 @@
               <div>
                 <div class="flex flex-wrap items-baseline gap-2">
                   <AdminHeading level={2}>{page.title}</AdminHeading>
-                  {#if page.status === 'draft'}
-                    <span
-                      class="text-xs tracking-widest text-text-subtle uppercase"
-                    >
-                      Draft
-                    </span>
-                  {/if}
+                  <span
+                    class="text-xs tracking-widest text-text-subtle uppercase"
+                  >
+                    {PAGE_VISIBILITY_LABELS[page.visibility_status]}
+                  </span>
                 </div>
-                <p class="text-xs text-text-muted">/{page.slug}</p>
-                <p class="mt-1 text-xs text-text-subtle normal-case">
-                  {page.show_in_nav ? 'Show in nav' : 'Hidden from nav'}
-                </p>
+                <div class="mt-1 flex flex-wrap items-baseline gap-2 text-xs">
+                  <a
+                    href={resolve(`/${page.slug}` as `/${string}`)}
+                    class="cursor-pointer text-text-muted underline-offset-2 transition-colors hover:text-text hover:underline"
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    /{page.slug}
+                  </a>
+                </div>
               </div>
 
               <div class="flex items-center gap-2">

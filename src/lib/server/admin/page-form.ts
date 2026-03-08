@@ -1,5 +1,5 @@
 import type { Database } from '$lib/types/database';
-import { asBoolean, asString, toSlug } from '$lib/server/admin-helpers';
+import { asString, toSlug } from '$lib/server/admin-helpers';
 import { sanitizeCmsCss, sanitizeCmsHtml } from '$lib/server/cms-sanitize';
 import { RESERVED_SLUGS } from '$lib/server/reserved-slugs';
 import {
@@ -12,8 +12,8 @@ const ALLOWED_SYSTEM_SLUGS = new Set(['about']);
 
 type PageKind = Database['public']['Enums']['page_kind'];
 type PageEditorMode = Database['public']['Enums']['page_editor_mode'];
-export type PublishStatus = Database['public']['Enums']['publish_status'];
-export type PagePublishStatus = Extract<PublishStatus, 'published' | 'draft'>;
+export type PageVisibilityStatus =
+  Database['public']['Enums']['page_visibility_status'];
 
 type PagePayload = {
   title: string;
@@ -24,8 +24,7 @@ type PagePayload = {
   editor_mode: PageEditorMode;
   svedit_doc: Database['public']['Tables']['pages']['Insert']['svedit_doc'];
   svedit_schema_version: number;
-  status: PagePublishStatus;
-  show_in_nav: boolean;
+  visibility_status: PageVisibilityStatus;
   seo_title: string | null;
   seo_description: string | null;
   og_image_path: string | null;
@@ -46,10 +45,11 @@ export const pagePayloadFromForm = (
   const title = asString(form.get('title')).trim();
   const slugRaw = asString(form.get('slug')).trim();
   const generatedSlug = toSlug(slugRaw || title, 'page');
-  const statusRaw = asString(form.get('status'), 'published');
-  const status: PagePublishStatus =
-    statusRaw === 'published' ? 'published' : 'draft';
-  const showInNav = asBoolean(form.get('show_in_nav'));
+  const visibilityRaw = asString(form.get('visibility_status'), 'draft');
+  const visibilityStatus: PageVisibilityStatus =
+    visibilityRaw === 'public' || visibilityRaw === 'unlisted'
+      ? visibilityRaw
+      : 'draft';
   const seoTitle = asString(form.get('seo_title')).trim() || null;
   const seoDescription = asString(form.get('seo_description')).trim() || null;
   const ogImagePath = asString(form.get('og_image_path')).trim() || null;
@@ -98,8 +98,7 @@ export const pagePayloadFromForm = (
       editor_mode: editorMode,
       svedit_doc: sveditDocResult?.ok ? sveditDocResult.document : null,
       svedit_schema_version: SVEDIT_PAGE_SCHEMA_VERSION,
-      status,
-      show_in_nav: showInNav,
+      visibility_status: visibilityStatus,
       seo_title: seoTitle,
       seo_description: seoDescription,
       og_image_path: ogImagePath,

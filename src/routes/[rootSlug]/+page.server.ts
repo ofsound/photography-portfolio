@@ -37,7 +37,6 @@ export const actions: Actions = {
       .from('pages')
       .select('id, editor_mode')
       .eq('slug', slug)
-      .eq('status', 'published')
       .is('deleted_at', null)
       .neq('kind', 'home')
       .maybeSingle();

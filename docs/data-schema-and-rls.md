@@ -12,7 +12,7 @@ Migration file: [`supabase/migrations/20260224_portfolio_v1.sql`](/Users/ben/Dev
 - `photo_categories`: many-to-many photo/category links.
 - `photo_tags`: many-to-many photo/tag links.
 - `homepage_slides`: ordered homepage slideshow source from existing `photo_images`.
-- `pages`: Home/About/Contact/custom static pages with constrained HTML/CSS fields.
+- `pages`: Home/About/Contact/custom static pages with constrained HTML/CSS fields and `visibility_status` (`public`/`unlisted`/`draft`).
 - `content_revisions`: immutable revision snapshots for rollback (`pages`, `site_settings`).
 - `audit_log`: immutable change audit stream.
 
@@ -45,7 +45,7 @@ Migration file: [`supabase/migrations/20260224_portfolio_v1.sql`](/Users/ben/Dev
 | `photo_categories` | Read links for published photos | Same as public | Full read/write | Full read/write |
 | `photo_tags` | Read links for published photos | Same as public | Full read/write | Full read/write |
 | `homepage_slides` | Read active slides linked to published photos | Same as public | Full read/write | Full read/write |
-| `pages` | Read published + not deleted | Same as public | Full read/write | Full read/write |
+| `pages` | Read non-draft + not deleted | Same as public | Full read/write | Full read/write |
 | `content_revisions` | No | No | Read + trigger-driven insert | Read + trigger-driven insert |
 | `audit_log` | No | No | Read + trigger-driven insert | Read + trigger-driven insert |
 | `storage.objects` in `photos` bucket | Read | Read | Full read/write | Full read/write |

@@ -21,8 +21,7 @@ export const load: LayoutServerLoad = async ({ locals }) => {
     locals.supabase
       .from('pages')
       .select('id, slug, title, nav_order')
-      .eq('status', 'published')
-      .eq('show_in_nav', true)
+      .eq('visibility_status', 'public')
       .is('deleted_at', null)
       .neq('kind', 'home')
       .order('nav_order', { ascending: true })

@@ -11,6 +11,11 @@
   import FormInput from '$lib/components/FormInput.svelte';
   import FormSelect from '$lib/components/FormSelect.svelte';
   import FormTextarea from '$lib/components/FormTextarea.svelte';
+  import {
+    PAGE_VISIBILITY_OPTIONS,
+    PAGE_VISIBILITY_LABELS,
+    type PageVisibilityStatus,
+  } from '$lib/constants/page-visibility';
   import type { ContentRevision } from '$lib/types/content';
 
   const { data, form } = $props();
@@ -20,8 +25,8 @@
 
   let formTitle = $state(initialPage().title);
   let formSlug = $state(initialPage().slug);
-  let formStatus = $state<'published' | 'draft'>(
-    initialPage().status === 'published' ? 'published' : 'draft',
+  let formVisibilityStatus = $state<PageVisibilityStatus>(
+    initialPage().visibility_status,
   );
   let formSeoTitle = $state(initialPage().seo_title ?? '');
   let formEditorMode = $state<'code' | 'svedit'>(
@@ -109,22 +114,20 @@
 
   <div class="grid gap-3 sm:grid-cols-2">
     <div class="grid gap-3 sm:grid-cols-2">
-      <FormField label="Status" id="page-edit-status">
-        <FormSelect name="status" id="page-edit-status" bind:value={formStatus}>
-          <option value="published">published</option>
-          <option value="draft">draft</option>
+      <FormField label="Visibility" id="page-edit-visibility_status">
+        <FormSelect
+          name="visibility_status"
+          id="page-edit-visibility_status"
+          bind:value={formVisibilityStatus}
+        >
+          {#each PAGE_VISIBILITY_OPTIONS as option (option.value)}
+            <option value={option.value}>{option.label}</option>
+          {/each}
         </FormSelect>
       </FormField>
-      <label
-        class="flex items-center gap-2 pt-1 text-sm"
-        for="page-edit-show_in_nav"
-        ><input
-          id="page-edit-show_in_nav"
-          name="show_in_nav"
-          type="checkbox"
-          checked={page.show_in_nav}
-        /> Show in nav</label
-      >
+      <p class="pt-2 text-xs text-text-subtle uppercase">
+        Current status: {PAGE_VISIBILITY_LABELS[page.visibility_status]}
+      </p>
     </div>
     <FormField label="Editor mode" id="page-edit-editor_mode">
       <FormSelect
@@ -233,31 +236,14 @@
   {/if}
 
   <div class="flex flex-wrap items-center gap-3">
-    <AdminButton type="submit" variant="submit">
-      {page.status === 'draft' ? 'Save Draft' : 'Save'}
-    </AdminButton>
-    {#if page.status === 'draft'}
-      <AdminButton
-        type="submit"
-        variant="submit"
-        formaction="?/publish"
-        formmethod="POST">Publish Draft</AdminButton
-      >
-      <AdminButton
-        type="submit"
-        variant="danger"
-        formaction="?/delete"
-        formmethod="POST"
-        onclick={confirmDelete}>Delete</AdminButton
-      >
-    {:else}
-      <AdminButton
-        type="submit"
-        variant="danger"
-        formaction="?/draft"
-        formmethod="POST">Set to Draft</AdminButton
-      >
-    {/if}
+    <AdminButton type="submit" variant="submit">Save</AdminButton>
+    <AdminButton
+      type="submit"
+      variant="danger"
+      formaction="?/delete"
+      formmethod="POST"
+      onclick={confirmDelete}>Delete</AdminButton
+    >
   </div>
 
   {#if revisions.length}

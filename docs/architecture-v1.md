@@ -89,16 +89,18 @@ Cons:
   - Strict sanitization/allowlist for HTML before publish.
   - No `iframe` embeds in v1 allowlist.
   - CSS namespaced per page wrapper to prevent cross-page leakage.
-- No draft workflow for v1:
-  - Save == publish.
-  - Every publish creates immutable revision snapshot.
+- Page visibility workflow:
+  - `public`: discoverable and in nav.
+  - `unlisted`: direct URL only.
+  - `draft`: hidden from public users.
+  - `admin`/`editor` users can still access drafts and use in-place `?edit=1` for Svedit pages.
 - Homepage curation:
   - Select and order existing photo images.
   - Image-only slides by default.
 
 ## Security & Access
 - Roles: `admin`, `editor`.
-- Public reads only published/non-archived content.
+- Public reads only non-draft/non-archived content.
 - Admin/editor write via RLS-protected tables.
 - `transition_preset` updates are admin-only.
 - Immutable audit log for key mutations.

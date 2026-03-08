@@ -32,6 +32,9 @@ Apply all migrations in order from:
 If you are updating an existing DB, make sure this draft-status migration is applied:
 - [`supabase/migrations/20260302_photo_draft_status.sql`](/Users/ben/Dev/SVELTE/photography-portfolio/supabase/migrations/20260302_photo_draft_status.sql)
 
+If you are updating an existing DB, also apply the page visibility migration:
+- [`supabase/migrations/20260315_pages_visibility_status.sql`](/Users/ben/Dev/SVELTE/photography-portfolio/supabase/migrations/20260315_pages_visibility_status.sql)
+
 ## Edge Function
 Function path:
 - [`supabase/functions/image-convert-on-upload/index.ts`](/Users/ben/Dev/SVELTE/photography-portfolio/supabase/functions/image-convert-on-upload/index.ts)

@@ -2,8 +2,8 @@ import { error, fail, redirect, type Actions } from '@sveltejs/kit';
 import { asString } from '$lib/server/admin-helpers';
 import {
   pagePayloadFromForm,
+  type PageVisibilityStatus,
   validateCmsPageSlug,
-  type PagePublishStatus,
 } from '$lib/server/admin/page-form';
 import { sanitizeCmsCss, sanitizeCmsHtml } from '$lib/server/cms-sanitize';
 import {
@@ -15,7 +15,7 @@ import type { Database } from '$lib/types/database';
 import type { PageServerLoad } from './$types';
 
 const PAGE_SELECT =
-  'id, slug, title, kind, html_content, css_module, editor_mode, svedit_doc, svedit_schema_version, seo_title, seo_description, og_image_path, status, show_in_nav, nav_order, deleted_at, updated_at';
+  'id, slug, title, kind, html_content, css_module, editor_mode, svedit_doc, svedit_schema_version, seo_title, seo_description, og_image_path, visibility_status, nav_order, deleted_at, updated_at';
 const UUID_REGEX =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 type PageRow = Database['public']['Tables']['pages']['Row'];
@@ -100,38 +100,6 @@ export const actions: Actions = {
     redirectToList('Page updated.');
   },
 
-  draft: async ({ locals, request }) => {
-    const form = await request.formData();
-    const id = asString(form.get('id'));
-    if (!id) return fail(400, { message: 'Missing page id.' });
-
-    const { error: draftError } = await locals.supabase
-      .from('pages')
-      .update({ status: 'draft', deleted_at: null })
-      .eq('id', id)
-      .neq('kind', 'home');
-
-    if (draftError) return fail(400, { message: draftError.message });
-
-    redirectToList('Page set to draft.');
-  },
-
-  publish: async ({ locals, request }) => {
-    const form = await request.formData();
-    const id = asString(form.get('id'));
-    if (!id) return fail(400, { message: 'Missing page id.' });
-
-    const { error: publishError } = await locals.supabase
-      .from('pages')
-      .update({ status: 'published', deleted_at: null })
-      .eq('id', id)
-      .neq('kind', 'home');
-
-    if (publishError) return fail(400, { message: publishError.message });
-
-    redirectToList('Page published.');
-  },
-
   delete: async ({ locals, request }) => {
     const form = await request.formData();
     const id = asString(form.get('id'));
@@ -140,7 +108,7 @@ export const actions: Actions = {
     const { error: deleteError } = await locals.supabase
       .from('pages')
       .update({
-        status: 'draft',
+        visibility_status: 'draft',
         deleted_at: 'now',
       })
       .eq('id', id)
@@ -178,7 +146,23 @@ export const actions: Actions = {
         message: 'Cannot roll back homepage from this route.',
       });
 
-    const statusVal = String(snapshot.status ?? 'published');
+    const visibilityRaw = String(snapshot.visibility_status ?? '').trim();
+    if (!visibilityRaw) {
+      return fail(400, {
+        message:
+          'This revision predates page visibility_status and cannot be rolled back.',
+      });
+    }
+    const visibilityStatus = (
+      visibilityRaw === 'public' ||
+      visibilityRaw === 'unlisted' ||
+      visibilityRaw === 'draft'
+        ? visibilityRaw
+        : null
+    ) as PageVisibilityStatus | null;
+    if (!visibilityStatus) {
+      return fail(400, { message: 'Invalid visibility status in revision.' });
+    }
     const editorMode = snapshot.editor_mode === 'svedit' ? 'svedit' : 'code';
     const sveditDocResult =
       editorMode === 'svedit'
@@ -217,10 +201,7 @@ export const actions: Actions = {
       og_image_path: snapshot.og_image_path
         ? String(snapshot.og_image_path)
         : null,
-      status: (statusVal === 'published'
-        ? 'published'
-        : 'draft') as PagePublishStatus,
-      show_in_nav: Boolean(snapshot.show_in_nav),
+      visibility_status: visibilityStatus,
       nav_order: Number(snapshot.nav_order ?? 0),
       deleted_at: null,
     };

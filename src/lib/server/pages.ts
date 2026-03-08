@@ -15,16 +15,16 @@ type CmsPage = {
   svedit_doc: unknown;
   svedit_schema_version: number;
   kind: 'home' | 'about' | 'contact' | 'custom';
+  visibility_status: 'public' | 'unlisted' | 'draft';
 };
 
 export const loadPageBySlug = async (locals: App.Locals, slug: string) => {
   const pageWithSvedit = await locals.supabase
     .from('pages')
     .select(
-      'id, slug, title, html_content, css_module, editor_mode, svedit_doc, svedit_schema_version, kind',
+      'id, slug, title, html_content, css_module, editor_mode, svedit_doc, svedit_schema_version, kind, visibility_status',
     )
     .eq('slug', slug)
-    .eq('status', 'published')
     .is('deleted_at', null)
     .maybeSingle();
 

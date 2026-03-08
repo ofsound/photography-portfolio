@@ -322,14 +322,13 @@ export type Database = {
           og_image_path: string | null;
           seo_description: string | null;
           seo_title: string | null;
-          show_in_nav: boolean;
           slug: string;
           svedit_doc: Json | null;
           svedit_schema_version: number;
-          status: Database['public']['Enums']['publish_status'];
           title: string;
           updated_at: string;
           updated_by: string | null;
+          visibility_status: Database['public']['Enums']['page_visibility_status'];
         };
         Insert: {
           created_at?: string;
@@ -344,14 +343,13 @@ export type Database = {
           og_image_path?: string | null;
           seo_description?: string | null;
           seo_title?: string | null;
-          show_in_nav?: boolean;
           slug: string;
           svedit_doc?: Json | null;
           svedit_schema_version?: number;
-          status?: Database['public']['Enums']['publish_status'];
           title: string;
           updated_at?: string;
           updated_by?: string | null;
+          visibility_status?: Database['public']['Enums']['page_visibility_status'];
         };
         Update: {
           created_at?: string;
@@ -366,14 +364,13 @@ export type Database = {
           og_image_path?: string | null;
           seo_description?: string | null;
           seo_title?: string | null;
-          show_in_nav?: boolean;
           slug?: string;
           svedit_doc?: Json | null;
           svedit_schema_version?: number;
-          status?: Database['public']['Enums']['publish_status'];
           title?: string;
           updated_at?: string;
           updated_by?: string | null;
+          visibility_status?: Database['public']['Enums']['page_visibility_status'];
         };
         Relationships: [];
       };
@@ -842,6 +839,7 @@ export type Database = {
       layout_mode: 'uniform' | 'masonry' | 'coverage' | 'rows' | 'columns';
       page_editor_mode: 'code' | 'svedit';
       page_kind: 'home' | 'about' | 'contact' | 'custom';
+      page_visibility_status: 'public' | 'unlisted' | 'draft';
       publish_status: 'published' | 'archived' | 'draft';
       theme_mode: 'light' | 'dark' | 'system';
       transition_preset: 'cinematic' | 'snappy' | 'experimental';
@@ -982,6 +980,7 @@ export const Constants = {
       layout_mode: ['uniform', 'masonry', 'coverage', 'rows', 'columns'],
       page_editor_mode: ['code', 'svedit'],
       page_kind: ['home', 'about', 'contact', 'custom'],
+      page_visibility_status: ['public', 'unlisted', 'draft'],
       publish_status: ['published', 'archived', 'draft'],
       theme_mode: ['light', 'dark', 'system'],
       transition_preset: ['cinematic', 'snappy', 'experimental'],

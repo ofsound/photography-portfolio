@@ -103,7 +103,6 @@
           <rect x="3" y="11" width="18" height="10" rx="2" />
           <path d="M7 11V7a5 5 0 0 1 10 0v4" />
         </svg>
-        <span>Private Draft</span>
       </div>
     {/if}
     <div class="relative flex-1 overflow-hidden">

@@ -23,7 +23,7 @@
 </script>
 
 <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
-  <FormField label="Site Theme" id={p('theme_default')} class="w-fit">
+  <FormField label="Gallery Theme" id={p('theme_default')} class="w-fit">
     <FormSelect
       name="theme_default"
       id={p('theme_default')}
@@ -51,35 +51,13 @@
       <option value="columns">columns</option>
     </FormSelect>
   </FormField>
-  <FormField label="Gap (px)" id={p('gallery_gap_px')} class="w-20">
+  <FormField label="Thumb Ratio" id={p('uniform_thumb_ratio')} class="w-28">
     <FormInput
-      id={p('gallery_gap_px')}
-      name="gallery_gap_px"
+      id={p('uniform_thumb_ratio')}
+      name="uniform_thumb_ratio"
       type="number"
-      min="0"
-      max="20"
-      value={String(settings.gallery_gap_px ?? 8)}
-      {readonly}
-    />
-  </FormField>
-</div>
-
-<div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
-  <FormField label="Desktop Cols" id={p('grid_desktop_default')} class="w-20">
-    <FormInput
-      id={p('grid_desktop_default')}
-      name="grid_desktop_default"
-      type="number"
-      value={String(settings.grid_desktop_default)}
-      {readonly}
-    />
-  </FormField>
-  <FormField label="Mobile Cols" id={p('grid_mobile_default')} class="w-20">
-    <FormInput
-      id={p('grid_mobile_default')}
-      name="grid_mobile_default"
-      type="number"
-      value={String(settings.grid_mobile_default)}
+      step="0.001"
+      value={String(settings.uniform_thumb_ratio)}
       {readonly}
     />
   </FormField>
@@ -94,13 +72,41 @@
       {readonly}
     />
   </FormField>
-  <FormField label="Thumb Ratio" id={p('uniform_thumb_ratio')} class="w-28">
+</div>
+
+<div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:gap-6">
+  <FormField
+    label="Desktop Columns"
+    id={p('grid_desktop_default')}
+    class="w-fit"
+  >
     <FormInput
-      id={p('uniform_thumb_ratio')}
-      name="uniform_thumb_ratio"
+      id={p('grid_desktop_default')}
+      name="grid_desktop_default"
       type="number"
-      step="0.001"
-      value={String(settings.uniform_thumb_ratio)}
+      value={String(settings.grid_desktop_default)}
+      class="w-20"
+      {readonly}
+    />
+  </FormField>
+  <FormField label="Mobile Columns" id={p('grid_mobile_default')} class="w-fit">
+    <FormInput
+      id={p('grid_mobile_default')}
+      name="grid_mobile_default"
+      type="number"
+      value={String(settings.grid_mobile_default)}
+      class="w-20"
+      {readonly}
+    />
+  </FormField>
+  <FormField label="Gap (px)" id={p('gallery_gap_px')} class="w-fit">
+    <FormInput
+      id={p('gallery_gap_px')}
+      name="gallery_gap_px"
+      type="number"
+      min="0"
+      max="20"
+      value={String(settings.gallery_gap_px ?? 8)}
       {readonly}
     />
   </FormField>
@@ -126,7 +132,7 @@
   </FormField>
 </div>
 
-<div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+<div class="mt-4 flex flex-col gap-3">
   <label class="flex items-center gap-2 text-sm">
     <input
       type="checkbox"

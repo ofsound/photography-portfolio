@@ -20,8 +20,8 @@
 
   let formTitle = $state(initialPage().title);
   let formSlug = $state(initialPage().slug);
-  let formStatus = $state<'published' | 'archived'>(
-    initialPage().status === 'archived' ? 'archived' : 'published',
+  let formStatus = $state<'published' | 'draft'>(
+    initialPage().status === 'published' ? 'published' : 'draft',
   );
   let formSeoTitle = $state(initialPage().seo_title ?? '');
   let formEditorMode = $state<'code' | 'svedit'>(
@@ -108,12 +108,24 @@
   </div>
 
   <div class="grid gap-3 sm:grid-cols-2">
-    <FormField label="Status" id="page-edit-status">
-      <FormSelect name="status" id="page-edit-status" bind:value={formStatus}>
-        <option value="published">published</option>
-        <option value="archived">archived</option>
-      </FormSelect>
-    </FormField>
+    <div class="grid gap-3 sm:grid-cols-2">
+      <FormField label="Status" id="page-edit-status">
+        <FormSelect name="status" id="page-edit-status" bind:value={formStatus}>
+          <option value="published">published</option>
+          <option value="draft">draft</option>
+        </FormSelect>
+      </FormField>
+      <label
+        class="flex items-center gap-2 pt-1 text-sm"
+        for="page-edit-show_in_nav"
+        ><input
+          id="page-edit-show_in_nav"
+          name="show_in_nav"
+          type="checkbox"
+          checked={page.show_in_nav}
+        /> Show in nav</label
+      >
+    </div>
     <FormField label="Editor mode" id="page-edit-editor_mode">
       <FormSelect
         name="editor_mode"
@@ -221,25 +233,15 @@
   {/if}
 
   <div class="flex flex-wrap items-center gap-3">
-    <label class="flex items-center gap-2 text-sm"
-      ><input name="show_in_nav" type="checkbox" checked={page.show_in_nav} /> Show
-      in nav</label
-    >
-    <label class="flex items-center gap-2 text-sm"
-      >Nav order <input
-        type="number"
-        name="nav_order"
-        value={page.nav_order}
-        class="w-24 rounded border border-border-strong px-2 py-1"
-      /></label
-    >
-    <AdminButton type="submit" variant="submit">Save</AdminButton>
-    {#if page.status === 'archived'}
+    <AdminButton type="submit" variant="submit">
+      {page.status === 'draft' ? 'Save Draft' : 'Save'}
+    </AdminButton>
+    {#if page.status === 'draft'}
       <AdminButton
         type="submit"
         variant="submit"
-        formaction="?/restore"
-        formmethod="POST">Publish</AdminButton
+        formaction="?/publish"
+        formmethod="POST">Publish Draft</AdminButton
       >
       <AdminButton
         type="submit"
@@ -252,8 +254,8 @@
       <AdminButton
         type="submit"
         variant="danger"
-        formaction="?/archive"
-        formmethod="POST">Archive</AdminButton
+        formaction="?/draft"
+        formmethod="POST">Set to Draft</AdminButton
       >
     {/if}
   </div>

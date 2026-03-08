@@ -18,7 +18,7 @@
     title: string;
     kind: string;
     editor_mode: 'code' | 'svedit';
-    status: 'published' | 'archived';
+    status: 'published' | 'draft';
     show_in_nav: boolean;
     nav_order: number;
   };
@@ -119,7 +119,7 @@
     <FormField label="Status" id="page-create-status">
       <FormSelect name="status" id="page-create-status" value="published">
         <option value="published">published</option>
-        <option value="archived">archived</option>
+        <option value="draft">draft</option>
       </FormSelect>
     </FormField>
     <FormField label="Editor mode" id="page-create-editor_mode">
@@ -149,7 +149,7 @@
           <li {@attach sortable.attach} class:opacity-50={sortable.isDragging}>
             <AdminCard
               as="article"
-              variant={page.status === 'archived' ? 'striped' : 'gradient'}
+              variant={page.status === 'draft' ? 'striped' : 'gradient'}
               class="grid cursor-move gap-3 p-4 sm:grid-cols-[auto_1fr_auto] sm:items-center"
             >
               <div
@@ -169,11 +169,11 @@
               <div>
                 <div class="flex flex-wrap items-baseline gap-2">
                   <AdminHeading level={2}>{page.title}</AdminHeading>
-                  {#if page.status === 'archived'}
+                  {#if page.status === 'draft'}
                     <span
                       class="text-xs tracking-widest text-text-subtle uppercase"
                     >
-                      {page.status}
+                      Draft
                     </span>
                   {/if}
                 </div>

@@ -3,7 +3,7 @@ import { asString } from '$lib/server/admin-helpers';
 import {
   pagePayloadFromForm,
   validateCmsPageSlug,
-  type PublishStatus,
+  type PagePublishStatus,
 } from '$lib/server/admin/page-form';
 import { sanitizeCmsCss, sanitizeCmsHtml } from '$lib/server/cms-sanitize';
 import {
@@ -100,36 +100,36 @@ export const actions: Actions = {
     redirectToList('Page updated.');
   },
 
-  archive: async ({ locals, request }) => {
+  draft: async ({ locals, request }) => {
     const form = await request.formData();
     const id = asString(form.get('id'));
     if (!id) return fail(400, { message: 'Missing page id.' });
 
-    const { error: archiveError } = await locals.supabase
+    const { error: draftError } = await locals.supabase
       .from('pages')
-      .update({ status: 'archived', deleted_at: null })
+      .update({ status: 'draft', deleted_at: null })
       .eq('id', id)
       .neq('kind', 'home');
 
-    if (archiveError) return fail(400, { message: archiveError.message });
+    if (draftError) return fail(400, { message: draftError.message });
 
-    redirectToList('Page archived.');
+    redirectToList('Page set to draft.');
   },
 
-  restore: async ({ locals, request }) => {
+  publish: async ({ locals, request }) => {
     const form = await request.formData();
     const id = asString(form.get('id'));
     if (!id) return fail(400, { message: 'Missing page id.' });
 
-    const { error: restoreError } = await locals.supabase
+    const { error: publishError } = await locals.supabase
       .from('pages')
       .update({ status: 'published', deleted_at: null })
       .eq('id', id)
       .neq('kind', 'home');
 
-    if (restoreError) return fail(400, { message: restoreError.message });
+    if (publishError) return fail(400, { message: publishError.message });
 
-    redirectToList('Page restored.');
+    redirectToList('Page published.');
   },
 
   delete: async ({ locals, request }) => {
@@ -140,7 +140,7 @@ export const actions: Actions = {
     const { error: deleteError } = await locals.supabase
       .from('pages')
       .update({
-        status: 'archived',
+        status: 'draft',
         deleted_at: 'now',
       })
       .eq('id', id)
@@ -217,9 +217,9 @@ export const actions: Actions = {
       og_image_path: snapshot.og_image_path
         ? String(snapshot.og_image_path)
         : null,
-      status: (statusVal === 'archived'
-        ? 'archived'
-        : 'published') as PublishStatus,
+      status: (statusVal === 'published'
+        ? 'published'
+        : 'draft') as PagePublishStatus,
       show_in_nav: Boolean(snapshot.show_in_nav),
       nav_order: Number(snapshot.nav_order ?? 0),
       deleted_at: null,

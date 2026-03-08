@@ -22,6 +22,7 @@
     isGalleryDetailPath,
   } from '$lib/utils/gallery-routes';
   import ZoomControl from '$lib/components/ZoomControl.svelte';
+  import MobileDropdownMenu from '$lib/components/navigation/MobileDropdownMenu.svelte';
   import type { LayoutData } from './$types';
 
   const { data, children } = $props<{
@@ -105,8 +106,10 @@
   );
   let hasHydratedClientPrefs = $state(false);
   let siteHeaderEl: HTMLElement | null = null;
+  let publicMobileMenuOpen = $state(false);
 
   const isViewer = $derived(isViewerRoute(page.url.pathname));
+  const isAdminRoute = $derived(page.url.pathname.startsWith('/admin/'));
 
   $effect(() => {
     if (typeof window === 'undefined' || !isViewer) return;
@@ -171,7 +174,19 @@
   };
 
   const syncSiteHeaderHeight = () => {
-    if (typeof document === 'undefined' || !siteHeaderEl) return;
+    if (typeof document === 'undefined' || typeof window === 'undefined')
+      return;
+    const isMobile = window.matchMedia('(max-width: 767px)').matches;
+
+    if (isMobile) {
+      document.documentElement.style.setProperty(
+        '--site-header-height',
+        isAdminRoute ? '0px' : 'var(--size-mobile-header-offset)',
+      );
+      return;
+    }
+
+    if (!siteHeaderEl) return;
     document.documentElement.style.setProperty(
       '--site-header-height',
       `${siteHeaderEl.getBoundingClientRect().height}px`,
@@ -270,15 +285,26 @@
   });
 
   $effect(() => {
-    if (typeof window === 'undefined' || !siteHeaderEl) return;
+    if (typeof window === 'undefined') return;
     syncSiteHeaderHeight();
-    const observer = new ResizeObserver(syncSiteHeaderHeight);
-    observer.observe(siteHeaderEl);
+    const observer = siteHeaderEl
+      ? new ResizeObserver(syncSiteHeaderHeight)
+      : null;
+    if (observer && siteHeaderEl) {
+      observer.observe(siteHeaderEl);
+    }
     window.addEventListener('resize', syncSiteHeaderHeight);
     return () => {
-      observer.disconnect();
+      observer?.disconnect();
       window.removeEventListener('resize', syncSiteHeaderHeight);
     };
+  });
+
+  $effect(() => {
+    const pathname = page.url.pathname;
+    if (pathname) {
+      syncSiteHeaderHeight();
+    }
   });
 
   onNavigate((navigation) => {
@@ -334,12 +360,132 @@
 
 <div class="min-h-screen bg-bg text-text">
   <header
+    class="chrome-panel fixed inset-x-0 top-0 z-[60] border-b border-border px-4 pt-[env(safe-area-inset-top)] transition-opacity duration-(--duration-chrome) ease-out md:hidden"
+    class:hidden={isAdminRoute}
+    class:opacity-0={chromeHidden}
+  >
+    <div
+      class="mx-auto flex h-[var(--size-mobile-header)] w-full items-center justify-between gap-3"
+    >
+      <a
+        href={resolve('/')}
+        class="text-xs tracking-[0.22em] uppercase"
+        aria-label="Go to Home"
+      >
+        Home
+      </a>
+
+      <MobileDropdownMenu
+        id="public-mobile-nav"
+        label="Toggle site navigation"
+        bind:open={publicMobileMenuOpen}
+      >
+        <nav
+          aria-label="Site mobile navigation"
+          class="text-md flex flex-col border-y border-border font-medium"
+        >
+          <a
+            href={resolve('/')}
+            class="border-t border-border px-4 py-3 first:border-t-0">Home</a
+          >
+          <a href={resolve('/search')} class="border-t border-border px-4 py-3"
+            >Search</a
+          >
+          {#each navGalleries as navGallery (navGallery.id)}
+            <a
+              href={resolve(buildGalleryPath(navGallery.slug) as `/${string}`)}
+              class="border-t border-border px-4 py-3"
+            >
+              {navGallery.name}
+            </a>
+          {/each}
+          {#each navPages as navPage (navPage.id)}
+            <a
+              href={resolve(`/${navPage.slug}`)}
+              class="border-t border-border px-4 py-3">{navPage.title}</a
+            >
+          {/each}
+          {#if hasSession}
+            <a
+              href={resolve('/admin/galleries')}
+              class="border-t border-border px-4 py-3"
+            >
+              Admin
+            </a>
+          {/if}
+        </nav>
+
+        {#if isViewer}
+          <div class="grid gap-3 border-t border-border pt-3">
+            <label
+              for="header-layout-mobile"
+              class="text-xs tracking-widest uppercase"
+            >
+              Layout
+            </label>
+            <select
+              id="header-layout-mobile"
+              class="h-10 rounded border border-border-strong bg-transparent px-3 text-sm tracking-wider uppercase"
+              aria-label="Gallery layout"
+              value={layoutModeStore.value}
+              onchange={(e) =>
+                updateHeaderLayoutMode(
+                  (e.currentTarget as HTMLSelectElement).value as
+                    | 'uniform'
+                    | 'masonry'
+                    | 'coverage'
+                    | 'rows'
+                    | 'columns',
+                )}
+            >
+              <option value="uniform">Uniform</option>
+              <option value="masonry">Masonry</option>
+              <option value="coverage">Coverage</option>
+              <option value="rows">Rows</option>
+              <option value="columns">Columns</option>
+            </select>
+            <ZoomControl
+              label="Zoom"
+              min={1}
+              max={maxDensity}
+              value={toUiZoomValue(galleryDensityStore.value)}
+              onUpdate={updateHeaderDensity}
+            />
+          </div>
+        {:else if siteSettings?.allow_transition_toggle}
+          <div class="grid gap-2 border-t border-border pt-3">
+            <label
+              for="transition-mobile"
+              class="text-xs tracking-widest uppercase">Motion</label
+            >
+            <select
+              id="transition-mobile"
+              class="h-10 rounded border border-border-strong bg-transparent px-3 text-sm"
+              bind:value={transitionPreset}
+              onchange={(event) =>
+                updateTransitionPreset(
+                  (event.currentTarget as HTMLSelectElement)
+                    .value as typeof transitionPreset,
+                )}
+            >
+              <option value="cinematic">Cinematic</option>
+              <option value="snappy">Snappy</option>
+              <option value="experimental">Experimental</option>
+            </select>
+          </div>
+        {/if}
+      </MobileDropdownMenu>
+    </div>
+  </header>
+
+  <header
     bind:this={siteHeaderEl}
-    class="chrome-panel sticky top-0 z-40 border-b border-border px-4 transition-opacity duration-(--duration-chrome) ease-out"
+    class="chrome-panel sticky top-0 z-40 hidden border-b border-border px-4 transition-opacity duration-(--duration-chrome) ease-out md:block"
     class:opacity-0={chromeHidden}
   >
     <div class="mx-auto flex w-full items-center justify-between gap-3">
       <nav
+        aria-label="Site primary navigation"
         class="flex items-center gap-6 py-3 text-sm tracking-widest uppercase"
       >
         <a href={resolve('/')}>Home</a>
@@ -415,7 +561,12 @@
     </div>
   </header>
 
-  <main class="site-main">{@render children()}</main>
+  <main
+    class="site-main pt-[var(--site-header-height)] md:pt-0"
+    data-mobile-menu-root
+  >
+    {@render children()}
+  </main>
 </div>
 
 <style>

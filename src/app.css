@@ -102,6 +102,10 @@
 
   /* Layout */
   --size-header: 54px;
+  --size-mobile-header: 48px;
+  --size-mobile-header-offset: calc(
+    var(--size-mobile-header) + env(safe-area-inset-top)
+  );
 }
 
 html,

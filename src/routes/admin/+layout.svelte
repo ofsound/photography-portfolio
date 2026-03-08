@@ -3,8 +3,10 @@
   import { page } from '$app/state';
 
   import AdminThemeToggle from '$lib/components/admin/AdminThemeToggle.svelte';
+  import MobileDropdownMenu from '$lib/components/navigation/MobileDropdownMenu.svelte';
 
   const { data, children } = $props();
+  let adminMobileMenuOpen = $state(false);
 
   const links = $derived.by(() => {
     const list = [
@@ -43,11 +45,48 @@
 </script>
 
 <div
-  class="grid h-[calc(100vh-var(--site-header-height))] grid-cols-[220px_1fr]"
+  class="min-h-screen md:grid md:h-[calc(100vh-var(--site-header-height))] md:grid-cols-[220px_1fr]"
   style="--font-sans: var(--font-sans-admin); font-family: var(--font-sans)"
 >
+  <header
+    class="chrome-panel fixed inset-x-0 top-0 z-[60] border-b border-border px-4 pt-[env(safe-area-inset-top)] md:hidden"
+  >
+    <div
+      class="flex h-[var(--size-mobile-header)] items-center justify-between gap-3"
+    >
+      <p class="text-base font-bold tracking-[0.28em] uppercase">CMS</p>
+      <MobileDropdownMenu
+        id="admin-mobile-nav"
+        label="Toggle admin navigation"
+        bind:open={adminMobileMenuOpen}
+      >
+        <nav
+          aria-label="Admin mobile navigation"
+          class="text-md flex flex-col border-y border-border font-medium"
+        >
+          {#each links as link, i (link.href)}
+            <a
+              href={resolve(link.href as `/${string}`)}
+              class="border-t border-border px-4 py-3 transition-shadow duration-300 first:border-t-0"
+              class:bg-surface-subtle={!isActiveLink(link.href) && i % 2 === 1}
+              class:bg-surface-strong={isActiveLink(link.href)}
+              style="box-shadow: {isActiveLink(link.href)
+                ? 'inset 3px 0 0 var(--color-brand), inset 0 2px 8px rgba(0,0,0,0.14)'
+                : 'inset 3px 0 0 transparent, inset 0 2px 8px transparent'}"
+            >
+              {link.label}
+            </a>
+          {/each}
+        </nav>
+        <div class="pt-3">
+          <AdminThemeToggle />
+        </div>
+      </MobileDropdownMenu>
+    </div>
+  </header>
+
   <aside
-    class="flex h-full flex-col border-r border-border"
+    class="hidden h-full flex-col border-r border-border md:flex"
     style="view-transition-name: admin-sidebar"
   >
     <div class="relative bg-surface-muted">
@@ -87,7 +126,8 @@
   </aside>
 
   <section
-    class="flex min-h-0 max-w-[1200px] flex-col overflow-y-auto p-6"
+    class="flex min-h-screen flex-col p-4 pt-[calc(var(--size-mobile-header-offset)+1rem)] md:min-h-0 md:max-w-[1200px] md:overflow-y-auto md:p-6"
+    data-mobile-menu-root
     style="view-transition-name: admin-content"
   >
     {@render children()}

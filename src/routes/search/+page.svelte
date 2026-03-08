@@ -157,48 +157,6 @@
 <section
   class="mx-auto flex w-full max-w-7xl flex-col gap-8 px-5 py-8 sm:px-6 lg:px-8"
 >
-  <header
-    class="grid gap-5 rounded-3xl border border-border bg-surface/80 p-5 shadow-sm backdrop-blur sm:p-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(18rem,0.8fr)] lg:items-end"
-  >
-    <div class="space-y-3">
-      <p class="text-xs tracking-[0.35em] text-text-muted uppercase">
-        Public gallery explorer
-      </p>
-      <div class="space-y-2">
-        <h1 class="text-3xl font-semibold tracking-tight sm:text-4xl">
-          Search across every public photograph.
-        </h1>
-        <p class="max-w-3xl text-sm leading-6 text-text-muted sm:text-base">
-          Browse the full public archive with live filtering across galleries,
-          tags, categories, and descriptive text.
-        </p>
-      </div>
-    </div>
-
-    <div class="rounded-2xl border border-border-strong bg-bg/70 p-4">
-      <p class="text-xs tracking-[0.28em] text-text-muted uppercase">Visible</p>
-      <div class="mt-2 flex items-end justify-between gap-4">
-        <div>
-          <p class="text-3xl font-semibold tabular-nums">
-            {visiblePhotos.length}
-          </p>
-          <p class="text-sm text-text-muted">
-            of {data.photos.length} public photographs
-          </p>
-        </div>
-        {#if hasActiveFilters}
-          <button
-            type="button"
-            class="rounded-full border border-border-strong px-3 py-1.5 text-xs tracking-[0.24em] uppercase transition-colors hover:bg-surface-muted"
-            onclick={clearFilters}
-          >
-            Reset all
-          </button>
-        {/if}
-      </div>
-    </div>
-  </header>
-
   <section
     class="grid gap-4 rounded-3xl border border-border bg-surface/70 p-5 shadow-sm backdrop-blur sm:grid-cols-2 sm:p-6 xl:grid-cols-[minmax(0,1.5fr)_repeat(3,minmax(0,0.75fr))]"
   >
@@ -274,12 +232,6 @@
             {item}
           </span>
         {/each}
-      {:else}
-        <span
-          class="rounded-full border border-border bg-surface px-3 py-1 text-xs tracking-[0.22em] text-text-muted uppercase"
-        >
-          Showing the full public archive
-        </span>
       {/if}
     </div>
 

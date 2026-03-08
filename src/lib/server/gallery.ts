@@ -1,3 +1,4 @@
+import { GALLERY_SETTINGS_DEFAULTS } from '$lib/constants/gallery-settings';
 import { throwLoaderError } from '$lib/server/load-error';
 import type { Database } from '$lib/types/database';
 import { buildGalleryPhotoPath } from '$lib/utils/gallery-routes';
@@ -338,20 +339,7 @@ export const loadGallerySettings = async (
     );
   }
 
-  return (fallbackQuery.data ?? {
-    theme_default: 'system',
-    grid_desktop_default: 6,
-    grid_mobile_default: 3,
-    max_content_width_px: null,
-    gallery_layout_mode: 'uniform',
-    gallery_gap_px: 8,
-    uniform_thumb_ratio: 1,
-    transition_preset: 'cinematic',
-    allow_transition_toggle: true,
-    show_search_bar: true,
-    show_photograph_info: true,
-    show_thumbnail_zoom_hover: true,
-  }) as SettingsFields;
+  return (fallbackQuery.data ?? GALLERY_SETTINGS_DEFAULTS) as SettingsFields;
 };
 
 export const loadActiveNavGalleries = async (locals: App.Locals) => {

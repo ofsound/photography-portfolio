@@ -1,3 +1,4 @@
+import { GALLERY_SETTINGS_DEFAULTS } from '$lib/constants/gallery-settings';
 import {
   asBoolean,
   asOptionalNumber,
@@ -48,15 +49,27 @@ const readPayload = (
   const payload: Record<string, unknown> = {
     theme_default: asThemeMode(form.get('theme_default')),
     grid_desktop_default:
-      asOptionalNumber(form.get('grid_desktop_default')) ?? 6,
-    grid_mobile_default: asOptionalNumber(form.get('grid_mobile_default')) ?? 3,
+      asOptionalNumber(form.get('grid_desktop_default')) ??
+      GALLERY_SETTINGS_DEFAULTS.grid_desktop_default,
+    grid_mobile_default:
+      asOptionalNumber(form.get('grid_mobile_default')) ??
+      GALLERY_SETTINGS_DEFAULTS.grid_mobile_default,
     max_content_width_px: asOptionalNumber(form.get('max_content_width_px')),
     gallery_layout_mode: asLayoutMode(form.get('gallery_layout_mode')),
     gallery_gap_px: Math.max(
       0,
-      Math.min(20, asOptionalNumber(form.get('gallery_gap_px')) ?? 8),
+      Math.min(
+        20,
+        asOptionalNumber(form.get('gallery_gap_px')) ??
+          GALLERY_SETTINGS_DEFAULTS.gallery_gap_px,
+      ),
     ),
-    uniform_thumb_ratio: Number(asString(form.get('uniform_thumb_ratio'), '1')),
+    uniform_thumb_ratio: Number(
+      asString(
+        form.get('uniform_thumb_ratio'),
+        String(GALLERY_SETTINGS_DEFAULTS.uniform_thumb_ratio),
+      ),
+    ),
     allow_transition_toggle: asBoolean(form.get('allow_transition_toggle')),
     show_search_bar: asBoolean(form.get('show_search_bar')),
     show_photograph_info: asBoolean(form.get('show_photograph_info')),

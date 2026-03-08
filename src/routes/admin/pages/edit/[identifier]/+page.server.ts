@@ -11,35 +11,17 @@ import {
   SVEDIT_PAGE_SCHEMA_VERSION,
 } from '$lib/svedit/page-document';
 import { isGallerySlugTaken } from '$lib/server/root-slug';
-import {
-  getSveditMigrationNotice,
-  isMissingSveditColumnsError,
-} from '$lib/server/svedit-columns';
 import type { Database } from '$lib/types/database';
 import type { PageServerLoad } from './$types';
 
 const PAGE_SELECT =
   'id, slug, title, kind, html_content, css_module, editor_mode, svedit_doc, svedit_schema_version, seo_title, seo_description, og_image_path, status, show_in_nav, nav_order, deleted_at, updated_at';
-const PAGE_SELECT_LEGACY =
-  'id, slug, title, kind, html_content, css_module, seo_title, seo_description, og_image_path, status, show_in_nav, nav_order, deleted_at, updated_at';
 const UUID_REGEX =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 type PageRow = Database['public']['Tables']['pages']['Row'];
 
 const redirectToList = (message: string) => {
   throw redirect(303, `/admin/pages?message=${encodeURIComponent(message)}`);
-};
-
-const withLegacySveditDefaults = (
-  row: Record<string, unknown> | null,
-): PageRow | null => {
-  if (!row) return null;
-  return {
-    ...row,
-    editor_mode: 'code',
-    svedit_doc: null,
-    svedit_schema_version: SVEDIT_PAGE_SCHEMA_VERSION,
-  } as PageRow;
 };
 
 export const load: PageServerLoad = async ({ locals, params }) => {
@@ -53,22 +35,8 @@ export const load: PageServerLoad = async ({ locals, params }) => {
       .eq('id', identifier)
       .neq('kind', 'home')
       .maybeSingle();
-    if (byId.error && !isMissingSveditColumnsError(byId.error))
-      throw error(500, byId.error.message);
-    if (byId.error && isMissingSveditColumnsError(byId.error)) {
-      const legacyById = await locals.supabase
-        .from('pages')
-        .select(PAGE_SELECT_LEGACY)
-        .eq('id', identifier)
-        .neq('kind', 'home')
-        .maybeSingle();
-      if (legacyById.error) throw error(500, legacyById.error.message);
-      page = withLegacySveditDefaults(
-        legacyById.data as Record<string, unknown> | null,
-      );
-    } else {
-      page = byId.data as PageRow | null;
-    }
+    if (byId.error) throw error(500, byId.error.message);
+    page = byId.data as PageRow | null;
   }
 
   if (!page) {
@@ -78,22 +46,8 @@ export const load: PageServerLoad = async ({ locals, params }) => {
       .eq('slug', identifier)
       .neq('kind', 'home')
       .maybeSingle();
-    if (bySlug.error && !isMissingSveditColumnsError(bySlug.error))
-      throw error(500, bySlug.error.message);
-    if (bySlug.error && isMissingSveditColumnsError(bySlug.error)) {
-      const legacyBySlug = await locals.supabase
-        .from('pages')
-        .select(PAGE_SELECT_LEGACY)
-        .eq('slug', identifier)
-        .neq('kind', 'home')
-        .maybeSingle();
-      if (legacyBySlug.error) throw error(500, legacyBySlug.error.message);
-      page = withLegacySveditDefaults(
-        legacyBySlug.data as Record<string, unknown> | null,
-      );
-    } else {
-      page = bySlug.data as PageRow | null;
-    }
+    if (bySlug.error) throw error(500, bySlug.error.message);
+    page = bySlug.data as PageRow | null;
   }
 
   if (!page) {
@@ -132,29 +86,11 @@ export const actions: Actions = {
       });
     }
 
-    const {
-      editor_mode: _editor_mode,
-      svedit_doc: _svedit_doc,
-      svedit_schema_version: _svedit_schema_version,
-      ...legacyPayload
-    } = result.payload;
-
     const updateResult = await locals.supabase
       .from('pages')
       .update(result.payload)
       .eq('id', id)
       .neq('kind', 'home');
-    if (updateResult.error && isMissingSveditColumnsError(updateResult.error)) {
-      const legacyUpdateResult = await locals.supabase
-        .from('pages')
-        .update(legacyPayload)
-        .eq('id', id)
-        .neq('kind', 'home');
-      if (legacyUpdateResult.error) {
-        return fail(400, { message: legacyUpdateResult.error.message });
-      }
-      redirectToList(`Page updated. ${getSveditMigrationNotice()}`);
-    }
 
     if (updateResult.error)
       return fail(400, { message: updateResult.error.message });
@@ -283,29 +219,11 @@ export const actions: Actions = {
         message: 'Cannot roll back to iframe content in v1.',
       });
 
-    const {
-      editor_mode: _editor_mode,
-      svedit_doc: _svedit_doc,
-      svedit_schema_version: _svedit_schema_version,
-      ...legacyPayload
-    } = payload;
-
     const updateResult = await locals.supabase
       .from('pages')
       .update(payload)
       .eq('id', id)
       .neq('kind', 'home');
-    if (updateResult.error && isMissingSveditColumnsError(updateResult.error)) {
-      const legacyUpdateResult = await locals.supabase
-        .from('pages')
-        .update(legacyPayload)
-        .eq('id', id)
-        .neq('kind', 'home');
-      if (legacyUpdateResult.error) {
-        return fail(400, { message: legacyUpdateResult.error.message });
-      }
-      redirectToList(`Page rolled back. ${getSveditMigrationNotice()}`);
-    }
 
     if (updateResult.error)
       return fail(400, { message: updateResult.error.message });

@@ -28,10 +28,29 @@
   let formHtmlContent = $state(initialPage().html_content ?? '');
   let formCssModule = $state(initialPage().css_module ?? '');
   let formSveditDoc = $state(
-    initialPage().svedit_doc ? JSON.stringify(initialPage().svedit_doc) : '',
+    initialPage().svedit_doc
+      ? JSON.stringify(initialPage().svedit_doc, null, 2)
+      : '',
   );
   let formSeoDescription = $state(initialPage().seo_description ?? '');
   let formOgImagePath = $state(initialPage().og_image_path ?? '');
+  let showRawSveditJson = $state(false);
+  let rawSveditJsonError = $state<string | null>(null);
+
+  const formatRawSveditJson = () => {
+    const value = formSveditDoc.trim();
+    if (!value) {
+      rawSveditJsonError = null;
+      return;
+    }
+
+    try {
+      formSveditDoc = JSON.stringify(JSON.parse(value), null, 2);
+      rawSveditJsonError = null;
+    } catch {
+      rawSveditJsonError = 'Invalid JSON. Fix syntax before formatting/saving.';
+    }
+  };
 </script>
 
 <div class="flex flex-wrap items-center justify-between gap-3">
@@ -122,6 +141,43 @@
         height="40rem"
       />
     </FormField>
+    <div class="border-border-subtle grid gap-2 rounded border p-3">
+      <div class="flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          class="rounded border border-border-strong px-2 py-1 text-xs tracking-widest uppercase"
+          onclick={() => {
+            showRawSveditJson = !showRawSveditJson;
+            rawSveditJsonError = null;
+          }}
+        >
+          {showRawSveditJson ? 'Hide Raw JSON' : 'Edit Raw JSON'}
+        </button>
+        {#if showRawSveditJson}
+          <button
+            type="button"
+            class="rounded border border-border-strong px-2 py-1 text-xs tracking-widest uppercase"
+            onclick={formatRawSveditJson}
+          >
+            Format JSON
+          </button>
+        {/if}
+      </div>
+
+      {#if showRawSveditJson}
+        <FormTextarea
+          id="page-edit-svedit_doc_raw"
+          rows={18}
+          bind:value={formSveditDoc}
+          placeholder="Paste a full Svedit JSON document here"
+          class="font-mono text-xs"
+        />
+      {/if}
+
+      {#if rawSveditJsonError}
+        <p class="text-xs text-red-600">{rawSveditJsonError}</p>
+      {/if}
+    </div>
     <input type="hidden" name="html_content" value="" />
     <input type="hidden" name="css_module" value="" />
   {/if}

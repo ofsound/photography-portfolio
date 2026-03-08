@@ -1,6 +1,5 @@
 import { sanitizeCmsCss, sanitizeCmsHtml } from '$lib/server/cms-sanitize';
 import { throwLoaderError } from '$lib/server/load-error';
-import { isMissingSveditColumnsError } from '$lib/server/svedit-columns';
 import {
   createDefaultSveditPageDocument,
   parseSveditPageDocument,
@@ -29,10 +28,7 @@ export const loadPageBySlug = async (locals: App.Locals, slug: string) => {
     .is('deleted_at', null)
     .maybeSingle();
 
-  if (
-    pageWithSvedit.error &&
-    !isMissingSveditColumnsError(pageWithSvedit.error)
-  ) {
+  if (pageWithSvedit.error) {
     throwLoaderError(
       {
         route: '/[rootSlug]',
@@ -41,44 +37,6 @@ export const loadPageBySlug = async (locals: App.Locals, slug: string) => {
       },
       pageWithSvedit.error,
     );
-  }
-
-  if (
-    pageWithSvedit.error &&
-    isMissingSveditColumnsError(pageWithSvedit.error)
-  ) {
-    const legacyPage = await locals.supabase
-      .from('pages')
-      .select('id, slug, title, html_content, css_module, kind')
-      .eq('slug', slug)
-      .eq('status', 'published')
-      .is('deleted_at', null)
-      .maybeSingle();
-
-    if (legacyPage.error) {
-      throwLoaderError(
-        {
-          route: '/[rootSlug]',
-          operation: 'loadPageBySlug (legacy fallback)',
-          details: { slug },
-        },
-        legacyPage.error,
-      );
-    }
-
-    if (!legacyPage.data) return null;
-
-    return {
-      ...legacyPage.data,
-      editor_mode: 'code',
-      html_content: sanitizeCmsHtml(legacyPage.data.html_content ?? ''),
-      css_module: sanitizeCmsCss(
-        legacyPage.data.css_module ?? '',
-        legacyPage.data.slug || legacyPage.data.kind,
-      ),
-      svedit_doc: createDefaultSveditPageDocument(),
-      svedit_schema_version: 1,
-    } as CmsPage;
   }
 
   const data = pageWithSvedit.data;

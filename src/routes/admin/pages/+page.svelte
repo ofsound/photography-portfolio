@@ -22,6 +22,24 @@
 
   let createEditorMode = $state<'code' | 'svedit'>('code');
   let createSveditDoc = $state('');
+  let showCreateRawSveditJson = $state(false);
+  let createRawSveditJsonError = $state<string | null>(null);
+
+  const formatCreateRawSveditJson = () => {
+    const value = createSveditDoc.trim();
+    if (!value) {
+      createRawSveditJsonError = null;
+      return;
+    }
+
+    try {
+      createSveditDoc = JSON.stringify(JSON.parse(value), null, 2);
+      createRawSveditJsonError = null;
+    } catch {
+      createRawSveditJsonError =
+        'Invalid JSON. Fix syntax before formatting/saving.';
+    }
+  };
 </script>
 
 <AdminCreateListLayout
@@ -90,6 +108,43 @@
           height="40rem"
         />
       </FormField>
+      <div class="border-border-subtle grid gap-2 rounded border p-3">
+        <div class="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            class="rounded border border-border-strong px-2 py-1 text-xs tracking-widest uppercase"
+            onclick={() => {
+              showCreateRawSveditJson = !showCreateRawSveditJson;
+              createRawSveditJsonError = null;
+            }}
+          >
+            {showCreateRawSveditJson ? 'Hide Raw JSON' : 'Edit Raw JSON'}
+          </button>
+          {#if showCreateRawSveditJson}
+            <button
+              type="button"
+              class="rounded border border-border-strong px-2 py-1 text-xs tracking-widest uppercase"
+              onclick={formatCreateRawSveditJson}
+            >
+              Format JSON
+            </button>
+          {/if}
+        </div>
+
+        {#if showCreateRawSveditJson}
+          <FormTextarea
+            id="page-create-svedit_doc_raw"
+            rows={18}
+            bind:value={createSveditDoc}
+            placeholder="Paste a full Svedit JSON document here"
+            class="font-mono text-xs"
+          />
+        {/if}
+
+        {#if createRawSveditJsonError}
+          <p class="text-xs text-red-600">{createRawSveditJsonError}</p>
+        {/if}
+      </div>
       <input type="hidden" name="html_content" value="" />
       <input type="hidden" name="css_module" value="" />
     {/if}

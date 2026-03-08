@@ -1,5 +1,8 @@
 const ANNOTATION_TYPES = ['strong', 'emphasis', 'link'] as const;
 const BLOCK_TYPES = [
+  'hero',
+  'section',
+  'feature',
   'heading',
   'paragraph',
   'list',
@@ -27,6 +30,35 @@ type SveditPageNode = {
   id: string;
   type: 'page';
   body: string[];
+};
+
+type SveditHeroNode = {
+  id: string;
+  type: 'hero';
+  eyebrow: SveditAnnotatedText;
+  heading: SveditAnnotatedText;
+  subheading: SveditAnnotatedText;
+  button_label: SveditAnnotatedText;
+  button_href: SveditAnnotatedText;
+  background_image: SveditAnnotatedText;
+};
+
+type SveditSectionNode = {
+  id: string;
+  type: 'section';
+  heading: SveditAnnotatedText;
+  content: SveditAnnotatedText;
+};
+
+type SveditFeatureNode = {
+  id: string;
+  type: 'feature';
+  heading: SveditAnnotatedText;
+  content: SveditAnnotatedText;
+  image_src: SveditAnnotatedText;
+  image_alt: SveditAnnotatedText;
+  button_label: SveditAnnotatedText;
+  button_href: SveditAnnotatedText;
 };
 
 type SveditHeadingNode = {
@@ -101,6 +133,9 @@ type SveditLinkAnnotationNode = {
 
 export type SveditPageNodeRecord =
   | SveditPageNode
+  | SveditHeroNode
+  | SveditSectionNode
+  | SveditFeatureNode
   | SveditHeadingNode
   | SveditParagraphNode
   | SveditListNode
@@ -127,7 +162,85 @@ export const PAGE_SVEDIT_SCHEMA = {
       body: {
         type: 'node_array',
         node_types: [...BLOCK_TYPES],
-        default_node_type: 'paragraph',
+        default_node_type: 'section',
+      },
+    },
+  },
+  hero: {
+    kind: 'block',
+    properties: {
+      eyebrow: {
+        type: 'annotated_text',
+        allow_newlines: false,
+        node_types: [...ANNOTATION_TYPES],
+      },
+      heading: {
+        type: 'annotated_text',
+        allow_newlines: false,
+        node_types: [...ANNOTATION_TYPES],
+      },
+      subheading: {
+        type: 'annotated_text',
+        allow_newlines: true,
+        node_types: [...ANNOTATION_TYPES],
+      },
+      button_label: {
+        type: 'annotated_text',
+        allow_newlines: false,
+      },
+      button_href: {
+        type: 'annotated_text',
+        allow_newlines: false,
+      },
+      background_image: {
+        type: 'annotated_text',
+        allow_newlines: false,
+      },
+    },
+  },
+  section: {
+    kind: 'block',
+    properties: {
+      heading: {
+        type: 'annotated_text',
+        allow_newlines: false,
+        node_types: [...ANNOTATION_TYPES],
+      },
+      content: {
+        type: 'annotated_text',
+        allow_newlines: true,
+        node_types: [...ANNOTATION_TYPES],
+      },
+    },
+  },
+  feature: {
+    kind: 'block',
+    properties: {
+      heading: {
+        type: 'annotated_text',
+        allow_newlines: false,
+        node_types: [...ANNOTATION_TYPES],
+      },
+      content: {
+        type: 'annotated_text',
+        allow_newlines: true,
+        node_types: [...ANNOTATION_TYPES],
+      },
+      image_src: {
+        type: 'annotated_text',
+        allow_newlines: false,
+      },
+      image_alt: {
+        type: 'annotated_text',
+        allow_newlines: false,
+      },
+      button_label: {
+        type: 'annotated_text',
+        allow_newlines: false,
+      },
+      button_href: {
+        type: 'annotated_text',
+        allow_newlines: false,
       },
     },
   },
@@ -360,6 +473,30 @@ export const sanitizeSveditHref = (href: string | null | undefined) => {
   return isSafeSveditHref(href) ? href : '#';
 };
 
+const parseSafeHrefProperty = (
+  value: unknown,
+  field: string,
+  nodes: Record<string, unknown>,
+  options: { allowEmpty: boolean },
+) => {
+  const parsed = asAnnotatedText(value, field, nodes, []);
+  if (!parsed.ok) return parsed;
+
+  const hrefText = parsed.data.text.trim();
+  if (!hrefText && options.allowEmpty) {
+    return { ok: true, data: parsed.data } as const;
+  }
+
+  if (!hrefText || !isSafeSveditHref(hrefText)) {
+    return {
+      ok: false,
+      message: `${field} must be ${options.allowEmpty ? 'empty or ' : ''}a safe URL.`,
+    } as const;
+  }
+
+  return { ok: true, data: parsed.data } as const;
+};
+
 const extractNodeReferences = (node: SveditPageNodeRecord) => {
   const refs: string[] = [];
 
@@ -489,6 +626,162 @@ const parsePageNode = (
     return { ok: true, data: { id, type, body } };
   }
 
+  if (type === 'hero') {
+    const eyebrow = asAnnotatedText(
+      node.eyebrow,
+      `${id}.eyebrow`,
+      nodes,
+      ANNOTATION_TYPES,
+    );
+    if (!eyebrow.ok) return eyebrow;
+
+    const heading = asAnnotatedText(
+      node.heading,
+      `${id}.heading`,
+      nodes,
+      ANNOTATION_TYPES,
+    );
+    if (!heading.ok) return heading;
+
+    const subheading = asAnnotatedText(
+      node.subheading,
+      `${id}.subheading`,
+      nodes,
+      ANNOTATION_TYPES,
+    );
+    if (!subheading.ok) return subheading;
+
+    const buttonLabel = asAnnotatedText(
+      node.button_label,
+      `${id}.button_label`,
+      nodes,
+      [],
+    );
+    if (!buttonLabel.ok) return buttonLabel;
+
+    const buttonHref = parseSafeHrefProperty(
+      node.button_href,
+      `${id}.button_href`,
+      nodes,
+      { allowEmpty: true },
+    );
+    if (!buttonHref.ok) return buttonHref;
+
+    const backgroundImage = parseSafeHrefProperty(
+      node.background_image,
+      `${id}.background_image`,
+      nodes,
+      { allowEmpty: true },
+    );
+    if (!backgroundImage.ok) return backgroundImage;
+
+    return {
+      ok: true,
+      data: {
+        id,
+        type,
+        eyebrow: eyebrow.data,
+        heading: heading.data,
+        subheading: subheading.data,
+        button_label: buttonLabel.data,
+        button_href: buttonHref.data,
+        background_image: backgroundImage.data,
+      },
+    };
+  }
+
+  if (type === 'section') {
+    const heading = asAnnotatedText(
+      node.heading,
+      `${id}.heading`,
+      nodes,
+      ANNOTATION_TYPES,
+    );
+    if (!heading.ok) return heading;
+
+    const content = asAnnotatedText(
+      node.content,
+      `${id}.content`,
+      nodes,
+      ANNOTATION_TYPES,
+    );
+    if (!content.ok) return content;
+
+    return {
+      ok: true,
+      data: {
+        id,
+        type,
+        heading: heading.data,
+        content: content.data,
+      },
+    };
+  }
+
+  if (type === 'feature') {
+    const heading = asAnnotatedText(
+      node.heading,
+      `${id}.heading`,
+      nodes,
+      ANNOTATION_TYPES,
+    );
+    if (!heading.ok) return heading;
+
+    const content = asAnnotatedText(
+      node.content,
+      `${id}.content`,
+      nodes,
+      ANNOTATION_TYPES,
+    );
+    if (!content.ok) return content;
+
+    const imageSrc = parseSafeHrefProperty(
+      node.image_src,
+      `${id}.image_src`,
+      nodes,
+      { allowEmpty: true },
+    );
+    if (!imageSrc.ok) return imageSrc;
+
+    const imageAlt = asAnnotatedText(
+      node.image_alt,
+      `${id}.image_alt`,
+      nodes,
+      [],
+    );
+    if (!imageAlt.ok) return imageAlt;
+
+    const buttonLabel = asAnnotatedText(
+      node.button_label,
+      `${id}.button_label`,
+      nodes,
+      [],
+    );
+    if (!buttonLabel.ok) return buttonLabel;
+
+    const buttonHref = parseSafeHrefProperty(
+      node.button_href,
+      `${id}.button_href`,
+      nodes,
+      { allowEmpty: true },
+    );
+    if (!buttonHref.ok) return buttonHref;
+
+    return {
+      ok: true,
+      data: {
+        id,
+        type,
+        heading: heading.data,
+        content: content.data,
+        image_src: imageSrc.data,
+        image_alt: imageAlt.data,
+        button_label: buttonLabel.data,
+        button_href: buttonHref.data,
+      },
+    };
+  }
+
   if (type === 'heading') {
     const levelRaw = node.level;
     if (
@@ -577,16 +870,10 @@ const parsePageNode = (
   }
 
   if (type === 'image') {
-    const src = asAnnotatedText(node.src, `${id}.src`, nodes, []);
+    const src = parseSafeHrefProperty(node.src, `${id}.src`, nodes, {
+      allowEmpty: false,
+    });
     if (!src.ok) return src;
-
-    const srcText = src.data.text.trim();
-    if (!srcText || !isSafeSveditHref(srcText)) {
-      return {
-        ok: false,
-        message: `Node ${id}.src must contain a safe URL.`,
-      };
-    }
 
     const alt = asAnnotatedText(node.alt, `${id}.alt`, nodes, []);
     if (!alt.ok) return alt;
@@ -640,21 +927,13 @@ const parsePageNode = (
     );
     if (!buttonLabel.ok) return buttonLabel;
 
-    const buttonHref = asAnnotatedText(
+    const buttonHref = parseSafeHrefProperty(
       node.button_href,
       `${id}.button_href`,
       nodes,
-      [],
+      { allowEmpty: true },
     );
     if (!buttonHref.ok) return buttonHref;
-
-    const hrefText = buttonHref.data.text.trim();
-    if (hrefText && !isSafeSveditHref(hrefText)) {
-      return {
-        ok: false,
-        message: `Node ${id}.button_href must be empty or a safe URL.`,
-      };
-    }
 
     return {
       ok: true,
@@ -765,22 +1044,60 @@ export const createDefaultAnnotatedText = (text = ''): SveditAnnotatedText => ({
 
 export const createDefaultSveditPageDocument = (): SveditPageDocument => {
   const rootId = 'page_root';
-  const paragraphId = 'paragraph_intro';
+  const heroId = 'hero_main';
+  const sectionId = 'section_intro';
+  const featureId = 'feature_primary';
+  const calloutId = 'callout_main';
 
   return {
     document_id: rootId,
     nodes: {
-      [paragraphId]: {
-        id: paragraphId,
-        type: 'paragraph',
-        content: createDefaultAnnotatedText(
-          'Start writing your page content here.',
+      [heroId]: {
+        id: heroId,
+        type: 'hero',
+        eyebrow: createDefaultAnnotatedText('Featured story'),
+        heading: createDefaultAnnotatedText('Make this page your own.'),
+        subheading: createDefaultAnnotatedText(
+          'Edit directly on the live layout. Add sections, media, and calls to action without touching code.',
         ),
+        button_label: createDefaultAnnotatedText('Explore work'),
+        button_href: createDefaultAnnotatedText('/all'),
+        background_image: createDefaultAnnotatedText(''),
+      },
+      [sectionId]: {
+        id: sectionId,
+        type: 'section',
+        heading: createDefaultAnnotatedText('About this page'),
+        content: createDefaultAnnotatedText(
+          'This section is fully inline editable. Use keyboard shortcuts for emphasis and links, or insert additional section blocks.',
+        ),
+      },
+      [featureId]: {
+        id: featureId,
+        type: 'feature',
+        heading: createDefaultAnnotatedText('Spotlight feature'),
+        content: createDefaultAnnotatedText(
+          'Pair a visual with supporting copy. Great for testimonials, featured sessions, or service highlights.',
+        ),
+        image_src: createDefaultAnnotatedText(''),
+        image_alt: createDefaultAnnotatedText('Feature image'),
+        button_label: createDefaultAnnotatedText('Book now'),
+        button_href: createDefaultAnnotatedText('/contact'),
+      },
+      [calloutId]: {
+        id: calloutId,
+        type: 'callout',
+        title: createDefaultAnnotatedText('Ready to publish?'),
+        content: createDefaultAnnotatedText(
+          'Use Cmd/Ctrl+S while editing to save changes without leaving the page.',
+        ),
+        button_label: createDefaultAnnotatedText('Contact us'),
+        button_href: createDefaultAnnotatedText('/contact'),
       },
       [rootId]: {
         id: rootId,
         type: 'page',
-        body: [paragraphId],
+        body: [heroId, sectionId, featureId, calloutId],
       },
     },
   };

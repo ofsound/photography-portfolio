@@ -21,11 +21,13 @@
     name,
     readonly = false,
     height = '32rem',
+    variant = 'admin',
   } = $props<{
     value?: string;
     name?: string;
     readonly?: boolean;
     height?: string;
+    variant?: 'admin' | 'inline';
   }>();
 
   const initial = parseSveditPageDocument(value);
@@ -51,8 +53,27 @@
   setContext('key_mapper', keyMapper);
 
   const editable = $derived(!readonly);
+  const isInline = $derived(variant === 'inline');
 
   const commands = $derived(session.commands as Record<string, EditorCommand>);
+
+  const toolbarClass = $derived.by(() =>
+    isInline
+      ? 'sticky top-20 z-20 flex flex-wrap gap-2 rounded-lg border border-border-strong bg-surface/95 p-2 backdrop-blur'
+      : 'flex flex-wrap gap-2 rounded border border-border-strong bg-surface p-2',
+  );
+
+  const canvasShellClass = $derived.by(() =>
+    isInline
+      ? 'rounded-xl border border-border-subtle bg-transparent p-0'
+      : 'overflow-auto rounded border border-border-strong bg-surface p-4',
+  );
+
+  const canvasClass = $derived.by(() =>
+    isInline
+      ? 'text-text-main grid gap-8 px-2 py-4 sm:px-4'
+      : 'text-text-main grid gap-6',
+  );
 
   $effect(() => {
     void session.doc;
@@ -78,10 +99,8 @@
 
 <svelte:window onkeydown={(event) => keyMapper.handle_keydown(event)} />
 
-<div class="grid gap-3">
-  <div
-    class="flex flex-wrap gap-2 rounded border border-border-strong bg-surface p-2"
-  >
+<div class={isInline ? 'grid gap-4' : 'grid gap-3'}>
+  <div class={toolbarClass}>
     <button
       type="button"
       class="rounded border border-border-strong px-2 py-1 text-xs"
@@ -117,6 +136,48 @@
     <button
       type="button"
       class="rounded border border-border-strong px-2 py-1 text-xs"
+      disabled={commands.insert_hero?.disabled}
+      onclick={() => run('insert_hero')}>Hero</button
+    >
+    <button
+      type="button"
+      class="rounded border border-border-strong px-2 py-1 text-xs"
+      disabled={commands.insert_section?.disabled}
+      onclick={() => run('insert_section')}>Section</button
+    >
+    <button
+      type="button"
+      class="rounded border border-border-strong px-2 py-1 text-xs"
+      disabled={commands.insert_feature?.disabled}
+      onclick={() => run('insert_feature')}>Feature</button
+    >
+    <button
+      type="button"
+      class="rounded border border-border-strong px-2 py-1 text-xs"
+      disabled={commands.insert_callout?.disabled}
+      onclick={() => run('insert_callout')}>Callout</button
+    >
+    <button
+      type="button"
+      class="rounded border border-border-strong px-2 py-1 text-xs"
+      disabled={commands.insert_image?.disabled}
+      onclick={() => run('insert_image')}>Image</button
+    >
+    <button
+      type="button"
+      class="rounded border border-border-strong px-2 py-1 text-xs"
+      disabled={commands.insert_quote?.disabled}
+      onclick={() => run('insert_quote')}>Quote</button
+    >
+    <button
+      type="button"
+      class="rounded border border-border-strong px-2 py-1 text-xs"
+      disabled={commands.insert_list?.disabled}
+      onclick={() => run('insert_list')}>List</button
+    >
+    <button
+      type="button"
+      class="rounded border border-border-strong px-2 py-1 text-xs"
       disabled={commands.insert_heading?.disabled}
       onclick={() => run('insert_heading')}>Heading</button
     >
@@ -129,44 +190,17 @@
     <button
       type="button"
       class="rounded border border-border-strong px-2 py-1 text-xs"
-      disabled={commands.insert_list?.disabled}
-      onclick={() => run('insert_list')}>List</button
-    >
-    <button
-      type="button"
-      class="rounded border border-border-strong px-2 py-1 text-xs"
-      disabled={commands.insert_quote?.disabled}
-      onclick={() => run('insert_quote')}>Quote</button
-    >
-    <button
-      type="button"
-      class="rounded border border-border-strong px-2 py-1 text-xs"
-      disabled={commands.insert_image?.disabled}
-      onclick={() => run('insert_image')}>Image</button
-    >
-    <button
-      type="button"
-      class="rounded border border-border-strong px-2 py-1 text-xs"
       disabled={commands.insert_divider?.disabled}
       onclick={() => run('insert_divider')}>Divider</button
     >
-    <button
-      type="button"
-      class="rounded border border-border-strong px-2 py-1 text-xs"
-      disabled={commands.insert_callout?.disabled}
-      onclick={() => run('insert_callout')}>Callout</button
-    >
   </div>
 
-  <div
-    class="overflow-auto rounded border border-border-strong bg-surface p-4"
-    style:height
-  >
+  <div class={canvasShellClass} style:height={isInline ? undefined : height}>
     <Svedit
       {session}
       {editable}
       path={[session.document_id]}
-      class="text-text-main grid gap-6"
+      class={canvasClass}
     />
   </div>
 

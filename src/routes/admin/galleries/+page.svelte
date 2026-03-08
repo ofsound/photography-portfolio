@@ -128,7 +128,7 @@
 {/snippet}
 
 {#snippet createForm()}
-  <form method="POST" action="?/create" class="grid h-fit gap-3">
+  <form method="POST" action="?/create" class="flex flex-col gap-3">
     <FormField label="Name" id="gallery-create-name">
       <FormInput
         id="gallery-create-name"
@@ -146,9 +146,9 @@
         oninput={onCreateSlugInput}
       />
     </FormField>
-    <div class="text-left">
-      <AdminButton type="submit" variant="submit">Create Gallery</AdminButton>
-    </div>
+    <AdminButton type="submit" variant="leftColumnFormSubmit">
+      Create Gallery
+    </AdminButton>
   </form>
 {/snippet}
 

@@ -4,6 +4,7 @@ export type Size = 'xs' | 'sm' | 'md' | 'md-tall' | 'chip';
 export type Variant =
   | 'default'
   | 'submit'
+  | 'leftColumnFormSubmit'
   | 'danger'
   | 'ghost'
   | 'toggle'
@@ -23,6 +24,8 @@ export const variantClasses: Record<Variant, string> = {
     'rounded border border-admin-btn-border bg-admin-btn-bg hover:bg-border',
   submit:
     'rounded border border-success/40 bg-success text-white hover:opacity-90',
+  leftColumnFormSubmit:
+    'w-fit rounded border border-success/40 bg-success text-white hover:opacity-90 mt-4',
   danger:
     'rounded border border-danger/60 bg-danger text-white hover:opacity-90',
   ghost:

@@ -229,7 +229,7 @@
     <form
       method="POST"
       action="?/save"
-      class="mt-4 flex flex-col gap-6"
+      class="mt-4 flex flex-col gap-3"
       onsubmit={onSaveSubmit}
     >
       <input
@@ -269,9 +269,9 @@
         <p class="text-text-danger text-sm">{timingValidationError}</p>
       {/if}
 
-      <div class="text-left">
-        <AdminButton type="submit" variant="submit">Save Slides</AdminButton>
-      </div>
+      <AdminButton type="submit" variant="leftColumnFormSubmit">
+        Save Slides
+      </AdminButton>
     </form>
   </div>
 {/snippet}

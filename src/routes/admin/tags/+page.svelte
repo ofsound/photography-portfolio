@@ -6,6 +6,32 @@
   import FormInput from '$lib/components/FormInput.svelte';
 
   const { data, form } = $props();
+
+  const slugify = (input: string) =>
+    input
+      .trim()
+      .toLowerCase()
+      .replace(/['"]/g, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+
+  let createName = $state('');
+  let createSlug = $state('');
+  let hasManualSlugEdit = $state(false);
+
+  const onCreateNameInput = () => {
+    if (!hasManualSlugEdit) {
+      createSlug = slugify(createName);
+    }
+  };
+
+  const onCreateSlugInput = (event: Event) => {
+    const value = (event.currentTarget as HTMLInputElement).value.trim();
+    hasManualSlugEdit = value.length > 0;
+    if (!hasManualSlugEdit) {
+      createSlug = slugify(createName);
+    }
+  };
 </script>
 
 <AdminCreateListLayout
@@ -20,10 +46,21 @@
   <form method="POST" action="?/create" class="grid h-fit gap-3">
     <div class="grid gap-3 sm:grid-cols-2">
       <FormField label="Name" id="tag-create-name">
-        <FormInput id="tag-create-name" name="name" required />
+        <FormInput
+          id="tag-create-name"
+          name="name"
+          bind:value={createName}
+          required
+          oninput={onCreateNameInput}
+        />
       </FormField>
-      <FormField label="Slug" id="tag-create-slug" helper="Optional">
-        <FormInput id="tag-create-slug" name="slug" />
+      <FormField label="Slug" id="tag-create-slug">
+        <FormInput
+          id="tag-create-slug"
+          name="slug"
+          bind:value={createSlug}
+          oninput={onCreateSlugInput}
+        />
       </FormField>
     </div>
     <FormField label="Description" id="tag-create-description">
@@ -32,9 +69,9 @@
     <label class="flex items-center gap-2 text-sm">
       <input name="is_active" type="checkbox" checked /> Active
     </label>
-    <div class="text-left">
-      <AdminButton type="submit" variant="submit">Create Tag</AdminButton>
-    </div>
+    <AdminButton type="submit" variant="leftColumnFormSubmit">
+      Create Tag
+    </AdminButton>
   </form>
 {/snippet}
 

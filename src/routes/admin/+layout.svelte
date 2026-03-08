@@ -81,9 +81,7 @@
         </div>
       {/each}
     </nav>
-    <div
-      class="mt-auto flex items-center justify-center border-t border-border p-4"
-    >
+    <div class="mt-auto flex items-center justify-center p-4">
       <AdminThemeToggle />
     </div>
   </aside>

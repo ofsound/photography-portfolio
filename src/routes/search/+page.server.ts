@@ -11,11 +11,11 @@ export const load: PageServerLoad = async ({ locals, url }) => {
   const query = await locals.supabase
     .from('photos')
     .select(
-      'id, slug, title, description, gallery_id, galleries!inner(slug, is_active)',
+      'id, slug, title, description, gallery_id, galleries!inner(slug, visibility_status)',
     )
     .eq('status', 'published')
     .is('deleted_at', null)
-    .eq('galleries.is_active', true)
+    .eq('galleries.visibility_status', 'public')
     .textSearch('search_tsv', q, { type: 'websearch' })
     .limit(80);
 

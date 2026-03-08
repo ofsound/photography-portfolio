@@ -76,8 +76,8 @@ export const pagePayloadFromForm = (
   const sveditDocResult =
     editorMode === 'svedit'
       ? parseSveditPageDocument(
-        rawSveditDoc || createDefaultSveditPageDocument(),
-      )
+          rawSveditDoc || createDefaultSveditPageDocument(),
+        )
       : null;
 
   if (sveditDocResult && !sveditDocResult.ok) {

@@ -3,6 +3,7 @@ import { asString, getCmsRole, parseUuidList } from '$lib/server/admin-helpers';
 import {
   createGalleryWithAutoSlug,
   listGalleriesForAdmin,
+  parseGalleryVisibilityStatus,
   validateGallerySlugInput,
 } from '$lib/server/admin/galleries';
 import type { PageServerLoad } from './$types';
@@ -73,6 +74,9 @@ export const actions: Actions = {
         name,
         slugInput,
         navOrder,
+        visibilityStatus: parseGalleryVisibilityStatus(
+          form.get('visibility_status'),
+        ),
       });
 
       const requested = slugInput || name;

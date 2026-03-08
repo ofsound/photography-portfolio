@@ -119,45 +119,42 @@ export type Database = {
           created_by: string | null;
           description: string | null;
           id: string;
-          is_active: boolean;
           name: string;
           nav_order: number;
           seo_description: string | null;
           seo_title: string | null;
-          show_in_nav: boolean;
           slug: string;
           updated_at: string;
           updated_by: string | null;
+          visibility_status: Database['public']['Enums']['gallery_visibility_status'];
         };
         Insert: {
           created_at?: string;
           created_by?: string | null;
           description?: string | null;
           id?: string;
-          is_active?: boolean;
           name: string;
           nav_order?: number;
           seo_description?: string | null;
           seo_title?: string | null;
-          show_in_nav?: boolean;
           slug: string;
           updated_at?: string;
           updated_by?: string | null;
+          visibility_status?: Database['public']['Enums']['gallery_visibility_status'];
         };
         Update: {
           created_at?: string;
           created_by?: string | null;
           description?: string | null;
           id?: string;
-          is_active?: boolean;
           name?: string;
           nav_order?: number;
           seo_description?: string | null;
           seo_title?: string | null;
-          show_in_nav?: boolean;
           slug?: string;
           updated_at?: string;
           updated_by?: string | null;
+          visibility_status?: Database['public']['Enums']['gallery_visibility_status'];
         };
         Relationships: [];
       };
@@ -841,6 +838,7 @@ export type Database = {
       app_role: 'admin' | 'editor';
       asset_kind: 'lead' | 'additional';
       gallery_settings_scope: 'gallery' | 'all';
+      gallery_visibility_status: 'public' | 'unlisted' | 'archived';
       layout_mode: 'uniform' | 'masonry' | 'coverage' | 'rows' | 'columns';
       page_editor_mode: 'code' | 'svedit';
       page_kind: 'home' | 'about' | 'contact' | 'custom';
@@ -980,6 +978,7 @@ export const Constants = {
       app_role: ['admin', 'editor'],
       asset_kind: ['lead', 'additional'],
       gallery_settings_scope: ['gallery', 'all'],
+      gallery_visibility_status: ['public', 'unlisted', 'archived'],
       layout_mode: ['uniform', 'masonry', 'coverage', 'rows', 'columns'],
       page_editor_mode: ['code', 'svedit'],
       page_kind: ['home', 'about', 'contact', 'custom'],

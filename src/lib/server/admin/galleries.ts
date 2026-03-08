@@ -1,3 +1,4 @@
+import type { GalleryVisibilityStatus } from '$lib/constants/gallery-visibility';
 import { toSlug } from '$lib/server/admin-helpers';
 import {
   isGallerySlugTaken,
@@ -12,13 +13,25 @@ type GalleryRow = {
   description: string | null;
   seo_title: string | null;
   seo_description: string | null;
-  is_active: boolean;
-  show_in_nav: boolean;
   nav_order: number;
+  visibility_status: GalleryVisibilityStatus;
 };
 
 const GALLERY_SELECT =
-  'id, slug, name, description, seo_title, seo_description, is_active, show_in_nav, nav_order';
+  'id, slug, name, description, seo_title, seo_description, nav_order, visibility_status';
+
+const isGalleryVisibilityStatus = (
+  value: string,
+): value is GalleryVisibilityStatus =>
+  value === 'public' || value === 'unlisted' || value === 'archived';
+
+export const parseGalleryVisibilityStatus = (
+  value: FormDataEntryValue | null,
+): GalleryVisibilityStatus => {
+  const normalized =
+    typeof value === 'string' ? value.trim().toLowerCase() : '';
+  return isGalleryVisibilityStatus(normalized) ? normalized : 'public';
+};
 
 const normalize = (value: string) => value.trim().toLowerCase();
 
@@ -196,9 +209,8 @@ export const createGalleryWithAutoSlug = async (
     description?: string | null;
     seoTitle?: string | null;
     seoDescription?: string | null;
-    isActive?: boolean;
-    showInNav?: boolean;
     navOrder?: number;
+    visibilityStatus?: GalleryVisibilityStatus;
   },
 ) => {
   const slug = await buildUniqueGallerySlug(
@@ -213,9 +225,8 @@ export const createGalleryWithAutoSlug = async (
       description: payload.description ?? null,
       seo_title: payload.seoTitle ?? null,
       seo_description: payload.seoDescription ?? null,
-      is_active: payload.isActive ?? true,
-      show_in_nav: payload.showInNav ?? true,
       nav_order: payload.navOrder ?? 0,
+      visibility_status: payload.visibilityStatus ?? 'public',
     })
     .select(GALLERY_SELECT)
     .single();
@@ -240,9 +251,8 @@ export const updateGalleryWithAutoSlug = async (
     description?: string | null;
     seoTitle?: string | null;
     seoDescription?: string | null;
-    isActive?: boolean;
-    showInNav?: boolean;
     navOrder?: number;
+    visibilityStatus?: GalleryVisibilityStatus;
   },
 ) => {
   const requestedBase = payload.slugInput || payload.name;
@@ -260,9 +270,8 @@ export const updateGalleryWithAutoSlug = async (
       description: payload.description ?? null,
       seo_title: payload.seoTitle ?? null,
       seo_description: payload.seoDescription ?? null,
-      is_active: payload.isActive ?? true,
-      show_in_nav: payload.showInNav ?? true,
       nav_order: payload.navOrder ?? 0,
+      visibility_status: payload.visibilityStatus ?? 'public',
     })
     .eq('id', gallery.id)
     .select(GALLERY_SELECT)

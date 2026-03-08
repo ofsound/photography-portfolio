@@ -1,4 +1,5 @@
 import { GALLERY_SETTINGS_DEFAULTS } from '$lib/constants/gallery-settings';
+import type { GalleryVisibilityStatus } from '$lib/constants/gallery-visibility';
 import { throwLoaderError } from '$lib/server/load-error';
 import type { Database } from '$lib/types/database';
 import { buildGalleryPhotoPath } from '$lib/utils/gallery-routes';
@@ -10,7 +11,10 @@ import {
 type GalleryRow = Database['public']['Tables']['galleries']['Row'];
 type SiteSettingsRow = Database['public']['Tables']['site_settings']['Row'];
 
-type GalleryRelation = { slug: string; is_active?: boolean } | null;
+type GalleryRelation = {
+  slug: string;
+  visibility_status?: GalleryVisibilityStatus;
+} | null;
 
 type GalleryPhotoNeighbors = {
   prevSlug: string | null;
@@ -99,9 +103,8 @@ type ResolvedGalleryScope =
   | (BaseScope & {
       kind: 'gallery';
       id: string;
-      isActive: boolean;
-      showInNav: boolean;
       navOrder: number;
+      visibilityStatus: GalleryVisibilityStatus;
     })
   | (BaseScope & {
       kind: 'all';
@@ -142,7 +145,7 @@ const gallerySettingsSelect = [
 ].join(', ');
 
 const photoListSelect =
-  'id, gallery_id, slug, title, description, capture_date, galleries(slug, is_active), photo_images(id, kind, position, delivery_storage_path, alt_text, dimensions, thumb_crop_x, thumb_crop_y, thumb_crop_zoom)';
+  'id, gallery_id, slug, title, description, capture_date, galleries(slug, visibility_status), photo_images(id, kind, position, delivery_storage_path, alt_text, dimensions, thumb_crop_x, thumb_crop_y, thumb_crop_zoom)';
 
 const readGalleryRelation = (
   value: GalleryRelation | GalleryRelation[] | null | undefined,
@@ -226,7 +229,7 @@ export const resolveGalleryScope = async (
 
   const galleryQuery = await locals.supabase
     .from('galleries')
-    .select('id, slug, name, is_active, show_in_nav, nav_order')
+    .select('id, slug, name, nav_order, visibility_status')
     .eq('slug', slug)
     .maybeSingle();
 
@@ -244,8 +247,11 @@ export const resolveGalleryScope = async (
   if (galleryQuery.data) {
     const gallery = galleryQuery.data as Pick<
       GalleryRow,
-      'id' | 'slug' | 'name' | 'is_active' | 'show_in_nav' | 'nav_order'
+      'id' | 'slug' | 'name' | 'nav_order' | 'visibility_status'
     >;
+    if (gallery.visibility_status === 'archived') {
+      return { kind: 'none' };
+    }
     return {
       kind: 'scope',
       scope: {
@@ -253,16 +259,15 @@ export const resolveGalleryScope = async (
         id: gallery.id,
         slug: gallery.slug,
         name: gallery.name,
-        isActive: gallery.is_active,
-        showInNav: gallery.show_in_nav,
         navOrder: gallery.nav_order,
+        visibilityStatus: gallery.visibility_status,
       },
     };
   }
 
   const historyQuery = await locals.supabase
     .from('gallery_slug_history')
-    .select('created_at, galleries!inner(slug)')
+    .select('created_at, galleries!inner(slug, visibility_status)')
     .eq('old_slug', slug)
     .order('created_at', { ascending: false })
     .limit(1);
@@ -281,9 +286,9 @@ export const resolveGalleryScope = async (
   const row = (historyQuery.data?.[0] ?? null) as {
     galleries: GalleryRelation | GalleryRelation[] | null;
   } | null;
-  const currentSlug = readGalleryRelation(row?.galleries)?.slug ?? null;
-  if (currentSlug) {
-    return { kind: 'redirect', toSlug: currentSlug };
+  const currentGallery = readGalleryRelation(row?.galleries);
+  if (currentGallery?.slug && currentGallery.visibility_status !== 'archived') {
+    return { kind: 'redirect', toSlug: currentGallery.slug };
   }
 
   return { kind: 'none' };
@@ -346,8 +351,7 @@ export const loadActiveNavGalleries = async (locals: App.Locals) => {
   const galleriesQuery = await locals.supabase
     .from('galleries')
     .select('id, slug, name, nav_order')
-    .eq('is_active', true)
-    .eq('show_in_nav', true)
+    .eq('visibility_status', 'public')
     .order('nav_order', { ascending: true })
     .order('name', { ascending: true });
 
@@ -383,8 +387,8 @@ const buildPhotosQuery = (
   const baseSelect =
     scope.kind === 'all'
       ? photoListSelect.replace(
-          'galleries(slug, is_active)',
-          'galleries!inner(slug, is_active)',
+          'galleries(slug, visibility_status)',
+          'galleries!inner(slug, visibility_status)',
         )
       : photoListSelect;
 
@@ -408,7 +412,7 @@ const buildPhotosQuery = (
   }
 
   query = query
-    .eq('galleries.is_active', true)
+    .eq('galleries.visibility_status', 'public')
     .order('capture_date', { ascending: false, nullsFirst: false })
     .order('created_at', { ascending: false })
     .order('id', { ascending: false });
@@ -542,12 +546,12 @@ const findPublishedPhotoBySlug = async (
       : await locals.supabase
           .from('photos')
           .select(
-            'id, slug, gallery_id, capture_date, created_at, galleries!inner(slug, is_active)',
+            'id, slug, gallery_id, capture_date, created_at, galleries!inner(slug, visibility_status)',
           )
           .eq('slug', photoSlug)
           .eq('status', 'published')
           .is('deleted_at', null)
-          .eq('galleries.is_active', true)
+          .eq('galleries.visibility_status', 'public')
           .order('capture_date', { ascending: false, nullsFirst: false })
           .order('created_at', { ascending: false })
           .order('id', { ascending: false })
@@ -568,10 +572,7 @@ const findPublishedPhotoBySlug = async (
   return parsePhotoIdentity((query.data ?? null) as CurrentPhotoRow | null);
 };
 
-const resolveHistoryRows = (
-  rows: PhotoHistoryRow[],
-  options: { includeInactive: boolean },
-) => {
+const resolveHistoryRows = (rows: PhotoHistoryRow[]) => {
   for (const row of rows) {
     const rawPhoto = Array.isArray(row.photos) ? row.photos[0] : row.photos;
     if (!rawPhoto) continue;
@@ -581,7 +582,7 @@ const resolveHistoryRows = (
 
     const gallery = readGalleryRelation(rawPhoto.galleries);
     if (!gallery?.slug) continue;
-    if (!options.includeInactive && gallery.is_active === false) continue;
+    if (gallery.visibility_status === 'archived') continue;
 
     return {
       id: rawPhoto.id,
@@ -605,7 +606,7 @@ const resolvePhotoSlugRedirect = async (
       ? locals.supabase
           .from('photo_slug_history')
           .select(
-            'created_at, photos!inner(id, slug, gallery_id, status, deleted_at, galleries!inner(slug, is_active))',
+            'created_at, photos!inner(id, slug, gallery_id, status, deleted_at, galleries!inner(slug, visibility_status))',
           )
           .eq('old_gallery_id', scope.id)
           .eq('old_slug', oldPhotoSlug)
@@ -614,7 +615,7 @@ const resolvePhotoSlugRedirect = async (
       : locals.supabase
           .from('photo_slug_history')
           .select(
-            'created_at, photos!inner(id, slug, gallery_id, status, deleted_at, capture_date, created_at, galleries!inner(slug, is_active))',
+            'created_at, photos!inner(id, slug, gallery_id, status, deleted_at, capture_date, created_at, galleries!inner(slug, visibility_status))',
           )
           .eq('old_slug', oldPhotoSlug)
           .order('created_at', { ascending: false })
@@ -632,9 +633,7 @@ const resolvePhotoSlugRedirect = async (
     );
   }
 
-  const resolved = resolveHistoryRows((data ?? []) as PhotoHistoryRow[], {
-    includeInactive: scope.kind === 'gallery',
-  });
+  const resolved = resolveHistoryRows((data ?? []) as PhotoHistoryRow[]);
   if (!resolved) return null;
 
   const targetGallerySlug = scope.kind === 'all' ? 'all' : resolved.gallerySlug;

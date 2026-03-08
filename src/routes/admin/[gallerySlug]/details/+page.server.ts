@@ -1,7 +1,8 @@
 import { error, fail, redirect } from '@sveltejs/kit';
-import { asBoolean, asString, getCmsRole } from '$lib/server/admin-helpers';
+import { asString, getCmsRole } from '$lib/server/admin-helpers';
 import {
   deleteGalleryIfEmpty,
+  parseGalleryVisibilityStatus,
   resolveGalleryForAdmin,
   updateGalleryWithAutoSlug,
   validateGallerySlugInput,
@@ -91,9 +92,10 @@ export const actions: Actions = {
         description: asNullableString(form.get('description')),
         seoTitle: asNullableString(form.get('seo_title')),
         seoDescription: asNullableString(form.get('seo_description')),
-        isActive: asBoolean(form.get('is_active')),
-        showInNav: asBoolean(form.get('show_in_nav')),
         navOrder: gallery.nav_order,
+        visibilityStatus: parseGalleryVisibilityStatus(
+          form.get('visibility_status'),
+        ),
       });
     } catch (cause) {
       return fail(400, {

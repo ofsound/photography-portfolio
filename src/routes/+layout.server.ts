@@ -28,7 +28,10 @@ export const load: LayoutServerLoad = async ({ locals }) => {
       .order('nav_order', { ascending: true })
       .order('title', { ascending: true }),
     loadActiveNavGalleries(locals),
-    locals.supabase.from('galleries').select('slug'),
+    locals.supabase
+      .from('galleries')
+      .select('slug')
+      .neq('visibility_status', 'archived'),
   ]);
 
   if (settingsResult.error) {

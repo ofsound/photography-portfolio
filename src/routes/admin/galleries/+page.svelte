@@ -8,6 +8,12 @@
   import AdminHeading from '$lib/components/admin/AdminHeading.svelte';
   import FormField from '$lib/components/FormField.svelte';
   import FormInput from '$lib/components/FormInput.svelte';
+  import FormSelect from '$lib/components/FormSelect.svelte';
+
+  import {
+    GALLERY_VISIBILITY_LABELS,
+    type GalleryVisibilityStatus,
+  } from '$lib/constants/gallery-visibility';
 
   const { data, form } = $props();
 
@@ -16,6 +22,7 @@
     slug: string;
     name: string;
     nav_order: number;
+    visibility_status: GalleryVisibilityStatus;
   };
 
   const galleries = $derived((data.galleries as GalleryCard[]) ?? []);
@@ -52,6 +59,7 @@
 
   let createName = $state('');
   let createSlug = $state('');
+  let createVisibilityStatus = $state<GalleryVisibilityStatus>('public');
   let hasManualSlugEdit = $state(false);
 
   const onCreateNameInput = () => {
@@ -146,6 +154,17 @@
         oninput={onCreateSlugInput}
       />
     </FormField>
+    <FormField label="Status" id="gallery-create-visibility_status">
+      <FormSelect
+        id="gallery-create-visibility_status"
+        name="visibility_status"
+        bind:value={createVisibilityStatus}
+      >
+        <option value="public">Public</option>
+        <option value="unlisted">Unlisted</option>
+        <option value="archived">Archived</option>
+      </FormSelect>
+    </FormField>
     <AdminButton type="submit" variant="leftColumnFormSubmit">
       Create Gallery
     </AdminButton>
@@ -179,9 +198,14 @@
 
             <div>
               <AdminHeading level={2}>{card.name}</AdminHeading>
-              <p class="text-xs text-text-muted">
-                /{card.slug}
-              </p>
+              <div class="mt-1 flex flex-wrap items-center gap-2 text-xs">
+                <p class="text-text-muted">/{card.slug}</p>
+                <span
+                  class="rounded border border-border px-2 py-0.5 tracking-wider uppercase"
+                >
+                  {GALLERY_VISIBILITY_LABELS[card.visibility_status]}
+                </span>
+              </div>
             </div>
 
             <div class="flex items-center gap-2">

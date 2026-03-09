@@ -1,10 +1,8 @@
 <script lang="ts">
-  import { replaceState } from '$app/navigation';
+  import { pushState, replaceState } from '$app/navigation';
   import { resolve } from '$app/paths';
   import { page } from '$app/state';
-  import { onMount } from 'svelte';
-
-  import { buildGalleryPhotoPath } from '$lib/utils/gallery-routes';
+  import { onDestroy, onMount } from 'svelte';
 
   const { data }: import('./$types').PageProps = $props();
 
@@ -14,6 +12,8 @@
     category: string;
     tag: string;
   };
+
+  type Direction = 'prev' | 'next';
 
   const sanitizeState = (input: FilterState): FilterState => ({
     q: input.q.trim(),
@@ -34,12 +34,18 @@
       tag: url.searchParams.get('tag') ?? '',
     });
 
-  const serializeState = (state: FilterState) =>
+  const readPhotoId = (url: URL) => {
+    const photo = (url.searchParams.get('photo') ?? '').trim();
+    return photo || null;
+  };
+
+  const serializeState = (state: FilterState, photoId: string | null = null) =>
     [
       state.q ? `q=${encodeURIComponent(state.q)}` : '',
       state.gallery ? `gallery=${encodeURIComponent(state.gallery)}` : '',
       state.category ? `category=${encodeURIComponent(state.category)}` : '',
       state.tag ? `tag=${encodeURIComponent(state.tag)}` : '',
+      photoId ? `photo=${encodeURIComponent(photoId)}` : '',
     ]
       .filter(Boolean)
       .join('&');
@@ -53,12 +59,95 @@
     a.category === b.category &&
     a.tag === b.tag;
 
-  let filters = $state<FilterState>(readUrlState(readCurrentUrl()));
+  const matchesFilters = (
+    photo: (typeof data.photos)[number],
+    state: FilterState,
+    normalizedTextQuery: string,
+  ) => {
+    if (state.gallery && photo.gallerySlug !== state.gallery) return false;
+    if (
+      state.category &&
+      !photo.categories.some((entry) => entry.slug === state.category)
+    ) {
+      return false;
+    }
+    if (state.tag && !photo.tags.some((entry) => entry.slug === state.tag)) {
+      return false;
+    }
+    if (
+      normalizedTextQuery &&
+      !photo.searchText.includes(normalizedTextQuery)
+    ) {
+      return false;
+    }
+    return true;
+  };
+
+  const filterPhotos = (state: FilterState) => {
+    const normalizedTextQuery = state.q.trim().toLowerCase();
+    return data.photos.filter((photo) =>
+      matchesFilters(photo, state, normalizedTextQuery),
+    );
+  };
+
+  const sanitizePhotoForState = (
+    state: FilterState,
+    photoId: string | null,
+  ) => {
+    if (!photoId) return null;
+    const normalizedPhotoId = photoId.trim();
+    if (!normalizedPhotoId) return null;
+
+    const visible = filterPhotos(state);
+    return visible.some((photo) => photo.id === normalizedPhotoId)
+      ? normalizedPhotoId
+      : null;
+  };
+
+  const initialUrl = readCurrentUrl();
+  const initialFilters = readUrlState(initialUrl);
+  const initialPhotoId = sanitizePhotoForState(
+    initialFilters,
+    readPhotoId(initialUrl),
+  );
+
+  let filters = $state<FilterState>(initialFilters);
+  let activePhotoId = $state<string | null>(initialPhotoId);
+
+  const replaceUrlWithState = (
+    state: FilterState,
+    photoId: string | null,
+    currentUrl: URL = readCurrentUrl(),
+  ) => {
+    const nextKey = serializeState(state, photoId);
+    const currentKey = serializeState(
+      readUrlState(currentUrl),
+      readPhotoId(currentUrl),
+    );
+    if (nextKey === currentKey) return;
+
+    const target = nextKey
+      ? `${currentUrl.pathname}?${nextKey}`
+      : currentUrl.pathname;
+    const resolvedTarget = resolve(target as `/${string}`);
+    replaceState(resolvedTarget, page.state);
+  };
 
   const syncFromUrl = (url: URL) => {
     const urlState = readUrlState(url);
-    if (isSameState(filters, urlState)) return;
-    filters = urlState;
+    const rawPhotoId = readPhotoId(url);
+    const nextPhotoId = sanitizePhotoForState(urlState, rawPhotoId);
+
+    if (!isSameState(filters, urlState)) {
+      filters = urlState;
+    }
+    if (activePhotoId !== nextPhotoId) {
+      activePhotoId = nextPhotoId;
+    }
+
+    if (rawPhotoId && !nextPhotoId) {
+      replaceUrlWithState(urlState, null, url);
+    }
   };
 
   onMount(() => {
@@ -70,33 +159,14 @@
     return () => window.removeEventListener('popstate', onPopState);
   });
 
-  const normalizedQuery = $derived(filters.q.trim().toLowerCase());
-  const visiblePhotos = $derived.by(() =>
-    data.photos.filter((photo) => {
-      if (filters.gallery && photo.gallerySlug !== filters.gallery)
-        return false;
-      if (
-        filters.category &&
-        !photo.categories.some((entry) => entry.slug === filters.category)
-      ) {
-        return false;
-      }
-      if (
-        filters.tag &&
-        !photo.tags.some((entry) => entry.slug === filters.tag)
-      ) {
-        return false;
-      }
-      if (normalizedQuery && !photo.searchText.includes(normalizedQuery)) {
-        return false;
-      }
-      return true;
-    }),
-  );
+  const visiblePhotos = $derived.by(() => filterPhotos(filters));
   const activeFilterSummary = $derived.by(() => {
     const summary: string[] = [];
 
-    if (filters.q) summary.push(`Query: ${filters.q}`);
+    if (filters.q) {
+      summary.push(`Query: ${filters.q}`);
+      summary.push(`${visiblePhotos.length}/${data.photos.length} matches`);
+    }
     if (filters.gallery) {
       summary.push(
         `Gallery: ${data.galleries.find((entry) => entry.slug === filters.gallery)?.name ?? filters.gallery}`,
@@ -122,22 +192,51 @@
       : 'No public photographs are available yet.',
   );
 
-  const syncUrl = (nextState: FilterState) => {
+  const buildHref = (state: FilterState, photoId: string | null = null) => {
+    const key = serializeState(state, photoId);
+    const pathname = page.url.pathname;
+    return key ? `${pathname}?${key}` : pathname;
+  };
+
+  const syncUrl = (nextState: FilterState, photoId = activePhotoId) => {
     const next = sanitizeState(nextState);
+    const nextPhotoId = sanitizePhotoForState(next, photoId);
+
     if (!isSameState(filters, next)) {
       filters = next;
     }
+    if (activePhotoId !== nextPhotoId) {
+      activePhotoId = nextPhotoId;
+    }
+
+    replaceUrlWithState(next, nextPhotoId);
+  };
+
+  const pushUrl = (nextState: FilterState, photoId: string) => {
+    const next = sanitizeState(nextState);
+    const nextPhotoId = sanitizePhotoForState(next, photoId);
+    if (!nextPhotoId) return;
+
+    if (!isSameState(filters, next)) {
+      filters = next;
+    }
+    if (activePhotoId !== nextPhotoId) {
+      activePhotoId = nextPhotoId;
+    }
 
     const currentUrl = readCurrentUrl();
-    const nextKey = serializeState(next);
-    const currentKey = serializeState(readUrlState(currentUrl));
+    const nextKey = serializeState(next, nextPhotoId);
+    const currentKey = serializeState(
+      readUrlState(currentUrl),
+      readPhotoId(currentUrl),
+    );
     if (nextKey === currentKey) return;
 
     const target = nextKey
       ? `${currentUrl.pathname}?${nextKey}`
       : currentUrl.pathname;
     const resolvedTarget = resolve(target as `/${string}`);
-    replaceState(resolvedTarget, page.state);
+    pushState(resolvedTarget, page.state);
   };
 
   const updateQuery = (event: Event) => {
@@ -169,18 +268,99 @@
   };
 
   const clearFilters = () => {
-    syncUrl({
-      q: '',
-      gallery: '',
-      category: '',
-      tag: '',
-    });
+    syncUrl(
+      {
+        q: '',
+        gallery: '',
+        category: '',
+        tag: '',
+      },
+      null,
+    );
   };
+
+  const activePhoto = $derived.by(
+    () =>
+      (activePhotoId
+        ? visiblePhotos.find((photo) => photo.id === activePhotoId)
+        : null) ?? null,
+  );
+
+  const activePhotoIndex = $derived.by(() => {
+    if (!activePhotoId) return -1;
+    return visiblePhotos.findIndex((photo) => photo.id === activePhotoId);
+  });
+  const activePhotoPosition = $derived(
+    activePhotoIndex >= 0 ? activePhotoIndex + 1 : 0,
+  );
+
+  const canNavigate = $derived(
+    visiblePhotos.length > 1 && activePhotoIndex >= 0,
+  );
+
+  const movePhoto = (direction: Direction) => {
+    if (!canNavigate) return;
+
+    const currentIndex = activePhotoIndex;
+    if (currentIndex < 0) return;
+
+    const offset = direction === 'next' ? 1 : -1;
+    const nextIndex =
+      (currentIndex + offset + visiblePhotos.length) % visiblePhotos.length;
+    const target = visiblePhotos[nextIndex];
+    if (!target) return;
+
+    pushUrl(filters, target.id);
+  };
+
+  const openPhoto = (event: MouseEvent, photoId: string) => {
+    event.preventDefault();
+    pushUrl(filters, photoId);
+  };
+
+  const closePhoto = (event?: MouseEvent | KeyboardEvent) => {
+    event?.preventDefault();
+    syncUrl(filters, null);
+  };
+
+  const onViewerKeydown = (event: KeyboardEvent) => {
+    if (!activePhoto) return;
+    if (event.repeat) return;
+
+    if (event.key === 'Escape') {
+      closePhoto(event);
+      return;
+    }
+
+    if (event.key === 'ArrowLeft') {
+      event.preventDefault();
+      movePhoto('prev');
+      return;
+    }
+
+    if (event.key === 'ArrowRight') {
+      event.preventDefault();
+      movePhoto('next');
+    }
+  };
+
+  $effect(() => {
+    if (typeof document === 'undefined') return;
+    document.body.style.overflow = activePhoto ? 'hidden' : '';
+  });
+
+  onDestroy(() => {
+    if (typeof document !== 'undefined') {
+      document.body.style.overflow = '';
+    }
+  });
 </script>
 
 <svelte:head>
   <title>Search</title>
 </svelte:head>
+
+<svelte:window onkeydown={onViewerKeydown} />
 
 <section
   class="mx-auto flex w-full max-w-7xl flex-col gap-8 px-5 py-8 sm:px-6 lg:px-8"
@@ -288,13 +468,9 @@
       <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {#each visiblePhotos as photo (photo.id)}
           <a
-            href={resolve(
-              buildGalleryPhotoPath(
-                photo.gallerySlug,
-                photo.slug,
-              ) as `/${string}`,
-            )}
+            href={resolve(buildHref(filters, photo.id) as `/${string}`)}
             class="overflow-hidden rounded-sm border border-border bg-surface transition-colors transition-transform duration-200"
+            onclick={(event: MouseEvent) => openPhoto(event, photo.id)}
           >
             <div class="aspect-[4/3] overflow-hidden bg-surface-muted/60">
               {#if photo.thumb}
@@ -334,3 +510,81 @@
     {/if}
   </section>
 </section>
+
+{#if activePhoto}
+  <button
+    type="button"
+    class="fixed inset-0 z-50 bg-black/75"
+    aria-label="Close photo viewer"
+    onclick={(event: MouseEvent) => closePhoto(event)}
+  ></button>
+
+  <div
+    class="fixed inset-0 z-[60] flex items-center justify-center px-4 py-6 sm:px-8"
+    role="dialog"
+    aria-modal="true"
+    aria-label={activePhoto.title}
+  >
+    <div class="relative flex w-full max-w-6xl flex-col gap-4">
+      <div class="flex items-center justify-between gap-3">
+        <div class="min-w-0">
+          <p class="truncate text-sm tracking-[0.2em] text-white uppercase">
+            {activePhoto.title}
+          </p>
+          <p class="mt-1 text-xs tracking-[0.2em] text-white/70 uppercase">
+            Image {activePhotoPosition} of {visiblePhotos.length}
+          </p>
+        </div>
+        <button
+          type="button"
+          class="rounded-sm border border-white/60 px-3 py-2 text-xs tracking-[0.2em] text-white uppercase"
+          onclick={(event: MouseEvent) => closePhoto(event)}
+        >
+          Close
+        </button>
+      </div>
+
+      <div
+        class="relative overflow-hidden rounded-sm border border-white/20 bg-black"
+      >
+        {#if activePhoto.thumb}
+          <img
+            src={activePhoto.thumb}
+            alt={activePhoto.thumbAlt}
+            class="max-h-[78vh] w-full object-contain"
+          />
+        {:else}
+          <div
+            class="grid h-[52vh] place-items-center text-xs tracking-[0.24em] text-white/70 uppercase"
+          >
+            Image pending
+          </div>
+        {/if}
+
+        {#if canNavigate}
+          <button
+            type="button"
+            class="absolute top-1/2 left-0 -translate-y-1/2 border border-white/30 bg-black/50 px-4 py-5 text-xl text-white"
+            onclick={() => movePhoto('prev')}
+            aria-label="Previous photo"
+          >
+            ←
+          </button>
+
+          <button
+            type="button"
+            class="absolute top-1/2 right-0 -translate-y-1/2 border border-white/30 bg-black/50 px-4 py-5 text-xl text-white"
+            onclick={() => movePhoto('next')}
+            aria-label="Next photo"
+          >
+            →
+          </button>
+        {/if}
+      </div>
+
+      <p class="text-xs tracking-[0.2em] text-white/70 uppercase">
+        {activePhoto.galleryName}
+      </p>
+    </div>
+  </div>
+{/if}

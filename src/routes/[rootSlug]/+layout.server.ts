@@ -100,11 +100,11 @@ const loadGalleryModeData = async ({
 
   const resolvedRoute = routePhoto
     ? await resolvePhotoRoute(
-      locals,
-      scope,
-      routePhoto.photoSlug,
-      routePhoto.imageId,
-    )
+        locals,
+        scope,
+        routePhoto.photoSlug,
+        routePhoto.imageId,
+      )
     : null;
 
   if (resolvedRoute?.kind === 'redirect') {

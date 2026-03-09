@@ -61,7 +61,7 @@ const readPayload = (
       Math.min(
         20,
         asOptionalNumber(form.get('gallery_gap_px')) ??
-        GALLERY_SETTINGS_DEFAULTS.gallery_gap_px,
+          GALLERY_SETTINGS_DEFAULTS.gallery_gap_px,
       ),
     ),
     uniform_thumb_ratio: Number(
@@ -100,16 +100,16 @@ const loadScopeSettings = async (locals: App.Locals, scope: SettingsScope) => {
   const query =
     scope.kind === 'all'
       ? await locals.supabase
-        .from('gallery_settings')
-        .select(`id, scope, gallery_id, ${settingsFieldSelect}`)
-        .eq('scope', 'all')
-        .maybeSingle()
+          .from('gallery_settings')
+          .select(`id, scope, gallery_id, ${settingsFieldSelect}`)
+          .eq('scope', 'all')
+          .maybeSingle()
       : await locals.supabase
-        .from('gallery_settings')
-        .select(`id, scope, gallery_id, ${settingsFieldSelect}`)
-        .eq('scope', 'gallery')
-        .eq('gallery_id', scope.galleryId)
-        .maybeSingle();
+          .from('gallery_settings')
+          .select(`id, scope, gallery_id, ${settingsFieldSelect}`)
+          .eq('scope', 'gallery')
+          .eq('gallery_id', scope.galleryId)
+          .maybeSingle();
 
   if (query.error) throw new Error(query.error.message);
   if (query.data) return query.data;
@@ -152,14 +152,14 @@ const saveScopeSettings = async (
   const update =
     scope.kind === 'all'
       ? await locals.supabase
-        .from('gallery_settings')
-        .update(payload)
-        .eq('scope', 'all')
+          .from('gallery_settings')
+          .update(payload)
+          .eq('scope', 'all')
       : await locals.supabase
-        .from('gallery_settings')
-        .update(payload)
-        .eq('scope', 'gallery')
-        .eq('gallery_id', scope.galleryId);
+          .from('gallery_settings')
+          .update(payload)
+          .eq('scope', 'gallery')
+          .eq('gallery_id', scope.galleryId);
   if (update.error) throw new Error(update.error.message);
 };
 

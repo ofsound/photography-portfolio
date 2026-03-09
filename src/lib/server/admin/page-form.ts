@@ -47,11 +47,11 @@ export const pagePayloadFromForm = async (
 ): Promise<
   | { ok: true; payload: PagePayload }
   | {
-    ok: false;
-    message: string;
-    fieldErrors?: FieldErrors;
-    values?: FormValues;
-  }
+      ok: false;
+      message: string;
+      fieldErrors?: FieldErrors;
+      values?: FormValues;
+    }
 > => {
   const kind: PageKind = 'custom';
   const title = asString(form.get('title')).trim();
@@ -115,8 +115,8 @@ export const pagePayloadFromForm = async (
   const sveditDocResult =
     editorMode === 'svedit'
       ? parseSveditPageDocument(
-        rawSveditDoc || createDefaultSveditPageDocument(),
-      )
+          rawSveditDoc || createDefaultSveditPageDocument(),
+        )
       : null;
 
   if (sveditDocResult && !sveditDocResult.ok) {

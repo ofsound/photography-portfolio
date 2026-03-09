@@ -6,6 +6,10 @@ import {
   validateCmsPageSlug,
 } from '$lib/server/admin/page-form';
 import { sanitizeCmsCssRaw, sanitizeCmsHtml } from '$lib/server/cms-sanitize';
+import {
+  compileCmsTailwindCss,
+  CmsTailwindCompileError,
+} from '$lib/server/cms-tailwind';
 import { failForm } from '$lib/server/form-errors';
 import {
   parseSveditPageDocument,
@@ -16,7 +20,7 @@ import type { Database } from '$lib/types/database';
 import type { PageServerLoad } from './$types';
 
 const PAGE_SELECT =
-  'id, slug, title, kind, html_content, css_module, editor_mode, svedit_doc, svedit_schema_version, seo_title, seo_description, og_image_path, visibility_status, nav_order, deleted_at, updated_at';
+  'id, slug, title, kind, html_content, css_module, tailwind_css, editor_mode, svedit_doc, svedit_schema_version, seo_title, seo_description, og_image_path, visibility_status, nav_order, deleted_at, updated_at';
 const UUID_REGEX =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 type PageRow = Database['public']['Tables']['pages']['Row'];
@@ -81,7 +85,7 @@ export const actions: Actions = {
     const id = asString(form.get('id'));
     if (!id) return fail(400, { message: 'Missing page id.' });
 
-    const result = pagePayloadFromForm(form);
+    const result = await pagePayloadFromForm(form);
     if (!result.ok) {
       return failForm(result.message, {
         fieldErrors: result.fieldErrors,
@@ -193,19 +197,33 @@ export const actions: Actions = {
         message: `Cannot roll back invalid Svedit revision: ${sveditDocResult.message}`,
       });
     }
+    const sanitizedHtml =
+      editorMode === 'code'
+        ? sanitizeCmsHtml(String(snapshot.html_content ?? ''))
+        : '';
+    let tailwindCss = '';
+    if (editorMode === 'code') {
+      try {
+        tailwindCss = await compileCmsTailwindCss(sanitizedHtml);
+      } catch (error: unknown) {
+        const message =
+          error instanceof CmsTailwindCompileError
+            ? error.message
+            : 'Failed to compile Tailwind CSS for this rollback.';
+        return fail(400, { message });
+      }
+    }
 
     const payload = {
       slug: String(snapshot.slug ?? ''),
       title: String(snapshot.title ?? ''),
       kind: 'custom' as const,
-      html_content:
-        editorMode === 'code'
-          ? sanitizeCmsHtml(String(snapshot.html_content ?? ''))
-          : '',
+      html_content: sanitizedHtml,
       css_module:
         editorMode === 'code'
           ? sanitizeCmsCssRaw(String(snapshot.css_module ?? ''))
           : '',
+      tailwind_css: tailwindCss,
       editor_mode:
         editorMode as Database['public']['Enums']['page_editor_mode'],
       svedit_doc: sveditDocResult?.ok ? sveditDocResult.document : null,

@@ -11,6 +11,7 @@ type CmsPage = {
   title: string;
   html_content: string;
   css_module: string;
+  tailwind_css: string;
   editor_mode: 'code' | 'svedit';
   svedit_doc: unknown;
   svedit_schema_version: number;
@@ -22,7 +23,7 @@ export const loadPageBySlug = async (locals: App.Locals, slug: string) => {
   const pageWithSvedit = await locals.supabase
     .from('pages')
     .select(
-      'id, slug, title, html_content, css_module, editor_mode, svedit_doc, svedit_schema_version, kind, visibility_status',
+      'id, slug, title, html_content, css_module, tailwind_css, editor_mode, svedit_doc, svedit_schema_version, kind, visibility_status',
     )
     .eq('slug', slug)
     .is('deleted_at', null)
@@ -54,6 +55,7 @@ export const loadPageBySlug = async (locals: App.Locals, slug: string) => {
       editorMode === 'code'
         ? sanitizeCmsCss(data.css_module ?? '', data.slug || data.kind)
         : '',
+    tailwind_css: editorMode === 'code' ? String(data.tailwind_css ?? '') : '',
     svedit_doc: parsedSveditDoc.ok
       ? parsedSveditDoc.document
       : createDefaultSveditPageDocument(),

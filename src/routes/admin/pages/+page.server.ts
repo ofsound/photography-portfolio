@@ -58,7 +58,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 export const actions: Actions = {
   create: async ({ locals, request }) => {
     const form = await request.formData();
-    const result = pagePayloadFromForm(form);
+    const result = await pagePayloadFromForm(form);
 
     if (!result.ok) {
       return failForm(result.message, {

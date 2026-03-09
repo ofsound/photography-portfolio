@@ -1,6 +1,10 @@
 import type { Database } from '$lib/types/database';
 import { asString, toSlug } from '$lib/server/admin-helpers';
 import { sanitizeCmsCssRaw, sanitizeCmsHtml } from '$lib/server/cms-sanitize';
+import {
+  compileCmsTailwindCss,
+  CmsTailwindCompileError,
+} from '$lib/server/cms-tailwind';
 import type { FieldErrors, FormValues } from '$lib/server/form-errors';
 import { RESERVED_SLUGS } from '$lib/server/reserved-slugs';
 import {
@@ -22,6 +26,7 @@ type PagePayload = {
   kind: PageKind;
   html_content: string;
   css_module: string;
+  tailwind_css: string;
   editor_mode: PageEditorMode;
   svedit_doc: Database['public']['Tables']['pages']['Insert']['svedit_doc'];
   svedit_schema_version: number;
@@ -39,16 +44,17 @@ export const validateCmsPageSlug = (slug: string) => {
   return null;
 };
 
-export const pagePayloadFromForm = (
+export const pagePayloadFromForm = async (
   form: FormData,
-):
+): Promise<
   | { ok: true; payload: PagePayload }
   | {
       ok: false;
       message: string;
       fieldErrors?: FieldErrors;
       values?: FormValues;
-    } => {
+    }
+> => {
   const kind: PageKind = 'custom';
   const title = asString(form.get('title')).trim();
   const slugRaw = asString(form.get('slug')).trim();
@@ -124,14 +130,35 @@ export const pagePayloadFromForm = (
     };
   }
 
+  const sanitizedHtml = editorMode === 'code' ? sanitizeCmsHtml(rawHtml) : '';
+  let tailwindCss = '';
+
+  if (editorMode === 'code') {
+    try {
+      tailwindCss = await compileCmsTailwindCss(sanitizedHtml);
+    } catch (error: unknown) {
+      const message =
+        error instanceof CmsTailwindCompileError
+          ? error.message
+          : 'Failed to compile Tailwind CSS for this page.';
+      return {
+        ok: false,
+        message,
+        fieldErrors: { html_content: message },
+        values,
+      };
+    }
+  }
+
   return {
     ok: true,
     payload: {
       title,
       slug: generatedSlug,
       kind,
-      html_content: editorMode === 'code' ? sanitizeCmsHtml(rawHtml) : '',
+      html_content: sanitizedHtml,
       css_module: editorMode === 'code' ? sanitizeCmsCssRaw(rawCss) : '',
+      tailwind_css: tailwindCss,
       editor_mode: editorMode,
       svedit_doc: sveditDocResult?.ok ? sveditDocResult.document : null,
       svedit_schema_version: SVEDIT_PAGE_SCHEMA_VERSION,

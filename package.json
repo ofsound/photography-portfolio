@@ -39,6 +39,7 @@
     "@dnd-kit/svelte": "^0.3.2",
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.97.0",
+    "@tailwindcss/node": "^4.2.1",
     "codemirror": "^6.0.2",
     "sanitize-html": "^2.17.1",
     "svedit": "^0.6.4",

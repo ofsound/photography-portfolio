@@ -14,6 +14,7 @@
     slug: string;
     html_content: string;
     css_module: string;
+    tailwind_css?: string;
     editor_mode?: 'code' | 'svedit';
     svedit_doc?: unknown;
   };
@@ -37,19 +38,36 @@
   });
 
   $effect(() => {
-    if (typeof document === 'undefined' || !isCodeMode || !page.css_module)
-      return;
-    const styleEl = document.createElement('style');
-    styleEl.dataset.cmsPage = scopeKey;
-    styleEl.textContent = page.css_module;
-    document.head.append(styleEl);
-    return () => styleEl.remove();
+    if (typeof document === 'undefined' || !isCodeMode) return;
+
+    const styleElements: HTMLStyleElement[] = [];
+
+    if (page.tailwind_css) {
+      const tailwindStyleEl = document.createElement('style');
+      tailwindStyleEl.dataset.cmsTailwind = scopeKey;
+      tailwindStyleEl.textContent = page.tailwind_css;
+      document.head.append(tailwindStyleEl);
+      styleElements.push(tailwindStyleEl);
+    }
+
+    if (page.css_module) {
+      const scopedStyleEl = document.createElement('style');
+      scopedStyleEl.dataset.cmsPage = scopeKey;
+      scopedStyleEl.textContent = page.css_module;
+      document.head.append(scopedStyleEl);
+      styleElements.push(scopedStyleEl);
+    }
+
+    if (styleElements.length === 0) return;
+    return () => {
+      for (const styleEl of styleElements) styleEl.remove();
+    };
   });
 </script>
 
 {#if isCodeMode}
   <section class="mx-auto max-w-5xl px-5 py-14" data-cms-scope={scopeKey}>
-    <article class="prose mt-6 max-w-none">
+    <article class="prose mt-6 flow-root max-w-none">
       {@html page.html_content}
     </article>
   </section>

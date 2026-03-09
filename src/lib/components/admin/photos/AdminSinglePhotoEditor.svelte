@@ -110,7 +110,6 @@
     additionalOrder={orderedAdditional}
     {onTogglePhotoSelected}
     {onAdditionalReorder}
-    initialExpanded={true}
     editorOnly={true}
     formState={form ?? undefined}
   />

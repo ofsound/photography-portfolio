@@ -4,7 +4,6 @@ export type Size = 'xs' | 'sm' | 'md' | 'md-tall' | 'chip';
 export type Variant =
   | 'default'
   | 'submit'
-  | 'leftColumnFormSubmit'
   | 'danger'
   | 'ghost'
   | 'toggle'
@@ -21,13 +20,11 @@ export const sizeClasses: Record<Size, string> = {
 
 export const variantClasses: Record<Variant, string> = {
   default:
-    'rounded border border-admin-btn-border bg-admin-btn-bg hover:bg-border',
+    'w-fit rounded border border-admin-btn-border bg-admin-btn-bg transition-colors duration-150 hover:border-admin-btn-hover hover:bg-admin-btn-hover active:border-admin-btn-active active:bg-admin-btn-active focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-admin-btn-focus disabled:border-admin-btn-border-disabled disabled:bg-admin-btn-disabled disabled:cursor-not-allowed disabled:opacity-75',
   submit:
-    'rounded border border-success/40 bg-success text-white hover:opacity-90',
-  leftColumnFormSubmit:
-    'w-fit rounded border border-success/40 bg-success text-white hover:opacity-90 mt-4',
+    'w-fit rounded border border-success/40 bg-success text-white transition-colors duration-150 hover:border-success-border-hover hover:bg-success-hover active:border-success-border-active active:bg-success-active focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-success-focus disabled:border-success-border-disabled disabled:bg-success-disabled disabled:cursor-not-allowed disabled:text-white/75',
   danger:
-    'rounded border border-danger/60 bg-danger text-white hover:opacity-90',
+    'rounded border border-danger/60 bg-danger text-white transition-colors duration-150 hover:border-danger-border-hover hover:bg-danger-hover active:border-danger-border-active active:bg-danger-active focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger-focus disabled:border-danger-border-disabled disabled:bg-danger-disabled disabled:cursor-not-allowed disabled:text-white/75',
   ghost:
     'rounded text-text-muted transition-colors hover:bg-border hover:text-text',
   toggle: 'rounded border border-border-strong',

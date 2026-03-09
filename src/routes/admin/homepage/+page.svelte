@@ -637,7 +637,7 @@
         </FormField>
       </div>
 
-      <AdminButton type="submit" variant="leftColumnFormSubmit">
+      <AdminButton type="submit" variant="submit" class="mt-4">
         Save Slides
       </AdminButton>
     </form>

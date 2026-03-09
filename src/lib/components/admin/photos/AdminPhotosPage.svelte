@@ -482,7 +482,6 @@
                 {@const sortable = createSortable({ id, index })}
                 <li {@attach sortable.attach} class="cursor-move">
                   <AdminPhotoCard
-                    {index}
                     {photo}
                     editHref={`/admin/${photo.gallery_slug}/photos/edit/${photo.id}`}
                     images={imagesForPhoto(photo.id)}
@@ -495,7 +494,6 @@
                     additionalOrder={additionalOrder(photo.id)}
                     onTogglePhotoSelected={togglePhotoSelected}
                     {onAdditionalReorder}
-                    gridMode={true}
                     isDraggingPhoto={sortable.isDragging}
                     formState={form ?? undefined}
                   />
@@ -503,7 +501,6 @@
               {:else}
                 <li>
                   <AdminPhotoCard
-                    {index}
                     {photo}
                     editHref={`/admin/${photo.gallery_slug}/photos/edit/${photo.id}`}
                     images={imagesForPhoto(photo.id)}
@@ -516,7 +513,6 @@
                     additionalOrder={additionalOrder(photo.id)}
                     onTogglePhotoSelected={togglePhotoSelected}
                     {onAdditionalReorder}
-                    gridMode={true}
                     isDraggingPhoto={false}
                     formState={form ?? undefined}
                   />

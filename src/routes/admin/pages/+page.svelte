@@ -206,7 +206,7 @@
         <option value="svedit">Svedit</option>
       </FormSelect>
     </FormField>
-    <AdminButton type="submit" variant="leftColumnFormSubmit">
+    <AdminButton type="submit" variant="submit" class="mt-4">
       Create Page
     </AdminButton>
   </form>

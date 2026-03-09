@@ -24,74 +24,77 @@ Scope: `src/lib/components/**/*.svelte`
 3. Counted per-prop call-site usage frequency.
 4. Classified props into categories: `data`, `behavior`, `styling`, `layout`, `callback`.
 5. Applied rubric:
+
 - `P0`: API complexity blocks common customization or drives call-site churn.
 - `P1`: API is workable but has avoidable complexity or one-off style/layout coupling.
 - `P2`: mostly fine, minor simplification opportunity.
 - `P3`: no immediate action needed.
 
 Notes:
+
 - `children` usage is undercounted in frequency extraction because snippet body content is not an attribute.
 - Category split is heuristic and intended for complexity trend analysis, not type-system truth.
 
 ## Full Matrix
 
-| Component | Score | Props | Split (D/B/S/L/C) | Class | Rest | Uses | Primitive |
-|---|---:|---:|---|---:|---:|---:|---:|
-| FormInput | P0 | 16 | 5/10/1/0/0 | Y | N | 40 | Y |
-| FormTextarea | P0 | 12 | 4/6/1/1/0 | Y | N | 7 | Y |
-| FormSelect | P0 | 10 | 4/5/1/0/0 | Y | N | 13 | Y |
-| GalleryDetailViewer | P1 | 20 | 11/2/0/0/7 | N | N | 1 | N |
-| AdminPhotoCard | P1 | 18 | 8/2/0/1/7 | N | N | 3 | N |
-| AdminPhotosBulkPanel | P1 | 18 | 10/0/0/0/8 | N | N | 1 | N |
-| AdminPhotoCardCompact | P1 | 14 | 7/2/0/1/4 | N | N | 2 | N |
-| AdminPhotosFilterForm | P1 | 13 | 10/0/0/2/1 | N | N | 1 | N |
-| AdminButton | P1 | 10 | 3/3/3/1/0 | Y | Y | 58 | Y |
-| AdminCreateListLayout | P1 | 10 | 9/0/0/1/0 | N | N | 6 | Y |
-| FormField | P1 | 10 | 6/2/2/0/0 | Y | N | 72 | Y |
-| PhotoTaxonomyEditor | P1 | 10 | 5/0/0/0/5 | N | N | 2 | N |
-| ZoomControl | P1 | 5 | 1/3/0/0/1 | N | N | 3 | Y |
-| AdminPhotoMetadataForm | P2 | 9 | 7/0/0/0/2 | N | N | 1 | N |
-| ThumbnailCropEditor | P2 | 7 | 7/0/0/0/0 | N | N | 1 | N |
-| AdminGalleryNav | P2 | 6 | 5/1/0/0/0 | N | N | 2 | N |
-| AdminPhotoImageManager | P2 | 6 | 4/0/0/0/2 | N | N | 1 | N |
-| CodeEditor | P2 | 6 | 2/3/0/1/0 | N | N | 2 | N |
-| MobileDropdownMenu | P2 | 5 | 3/0/0/1/1 | N | N | 2 | Y |
-| AdminThemeToggle | P2 | 0 | 0/0/0/0/0 | N | N | 2 | Y |
-| GalleryPreloader | P3 | 5 | 3/2/0/0/0 | N | N | 1 | N |
-| PhotoUploadZone | P3 | 5 | 5/0/0/0/0 | N | N | 1 | N |
-| SveditEditor | P3 | 5 | 1/2/1/1/0 | N | N | 2 | N |
-| AdminCard | P3 | 4 | 1/0/2/1/0 | Y | Y | 14 | Y |
-| AdminPhotosPage | P3 | 4 | 3/1/0/0/0 | N | N | 2 | N |
-| GallerySettingsFormFields | P3 | 4 | 2/1/0/1/0 | N | N | 2 | N |
-| AdminHeading | P3 | 3 | 1/0/1/1/0 | Y | N | 17 | Y |
-| AdminStatusMessage | P3 | 3 | 1/1/1/0/0 | Y | N | 10 | Y |
-| HomeSlideshow | P3 | 3 | 3/0/0/0/0 | N | N | 1 | N |
-| AdminSinglePhotoEditor | P3 | 2 | 1/1/0/0/0 | N | N | 1 | N |
-| CmsPageView | P3 | 2 | 1/1/0/0/0 | N | N | 2 | N |
-| Link | P3 | 2 | 2/0/0/0/0 | N | N | 0 | N |
-| Callout | P3 | 1 | 1/0/0/0/0 | N | N | 0 | N |
-| Divider | P3 | 1 | 1/0/0/0/0 | N | N | 0 | N |
-| Emphasis | P3 | 1 | 1/0/0/0/0 | N | N | 0 | N |
-| Feature | P3 | 1 | 1/0/0/0/0 | N | N | 0 | N |
-| GalleryColumns | P3 | 1 | 1/0/0/0/0 | N | N | 1 | N |
-| GalleryCoverage | P3 | 1 | 1/0/0/0/0 | N | N | 1 | N |
-| GalleryGrid | P3 | 1 | 1/0/0/0/0 | N | N | 1 | N |
-| GalleryRows | P3 | 1 | 1/0/0/0/0 | N | N | 1 | N |
-| GalleryScene | P3 | 1 | 1/0/0/0/0 | N | N | 1 | N |
-| GalleryTiles | P3 | 1 | 1/0/0/0/0 | N | N | 2 | N |
-| Heading | P3 | 1 | 1/0/0/0/0 | N | N | 0 | N |
-| Hero | P3 | 1 | 1/0/0/0/0 | N | N | 0 | N |
-| Image | P3 | 1 | 1/0/0/0/0 | N | N | 0 | N |
-| List | P3 | 1 | 1/0/0/0/0 | N | N | 0 | N |
-| ListItem | P3 | 1 | 1/0/0/0/0 | N | N | 0 | N |
-| NodeCursorTrap | P3 | 1 | 0/1/0/0/0 | N | N | 0 | N |
-| Page | P3 | 1 | 1/0/0/0/0 | N | N | 0 | N |
-| Paragraph | P3 | 1 | 1/0/0/0/0 | N | N | 0 | N |
-| Quote | P3 | 1 | 1/0/0/0/0 | N | N | 0 | N |
-| Section | P3 | 1 | 1/0/0/0/0 | N | N | 0 | N |
-| Strong | P3 | 1 | 1/0/0/0/0 | N | N | 0 | N |
-| SveditPageRenderer | P3 | 1 | 1/0/0/0/0 | N | N | 1 | N |
-| Overlays | P3 | 0 | 0/0/0/0/0 | N | N | 0 | N |
+| Component                 | Score | Props | Split (D/B/S/L/C) | Class | Rest | Uses | Primitive |
+| ------------------------- | ----: | ----: | ----------------- | ----: | ---: | ---: | --------: |
+| FormInput                 |    P0 |    16 | 5/10/1/0/0        |     Y |    N |   40 |         Y |
+| FormTextarea              |    P0 |    12 | 4/6/1/1/0         |     Y |    N |    7 |         Y |
+| FormSelect                |    P0 |    10 | 4/5/1/0/0         |     Y |    N |   13 |         Y |
+| GalleryDetailViewer       |    P1 |    20 | 11/2/0/0/7        |     N |    N |    1 |         N |
+| AdminPhotoCard            |    P1 |    16 | 8/2/0/0/6         |     N |    N |    3 |         N |
+| AdminPhotosBulkPanel      |    P1 |    18 | 10/0/0/0/8        |     N |    N |    1 |         N |
+| AdminPhotoCardCompact     |    P1 |     8 | 5/1/0/0/2         |     N |    N |    1 |         N |
+| AdminPhotosFilterForm     |    P1 |    13 | 10/0/0/2/1        |     N |    N |    1 |         N |
+| AdminButton               |    P1 |    10 | 3/3/3/1/0         |     Y |    Y |   58 |         Y |
+| AdminCreateListLayout     |    P1 |    10 | 9/0/0/1/0         |     N |    N |    6 |         Y |
+| FormField                 |    P1 |    10 | 6/2/2/0/0         |     Y |    N |   72 |         Y |
+| PhotoTaxonomyEditor       |    P1 |    10 | 5/0/0/0/5         |     N |    N |    2 |         N |
+| ZoomControl               |    P1 |     5 | 1/3/0/0/1         |     N |    N |    3 |         Y |
+| AdminPhotoMetadataForm    |    P2 |     9 | 7/0/0/0/2         |     N |    N |    1 |         N |
+| ThumbnailCropEditor       |    P2 |     7 | 7/0/0/0/0         |     N |    N |    1 |         N |
+| AdminGalleryNav           |    P2 |     6 | 5/1/0/0/0         |     N |    N |    2 |         N |
+| AdminPhotoImageManager    |    P2 |     6 | 4/0/0/0/2         |     N |    N |    1 |         N |
+| CodeEditor                |    P2 |     6 | 2/3/0/1/0         |     N |    N |    2 |         N |
+| MobileDropdownMenu        |    P2 |     5 | 3/0/0/1/1         |     N |    N |    2 |         Y |
+| AdminThemeToggle          |    P2 |     0 | 0/0/0/0/0         |     N |    N |    2 |         Y |
+| GalleryPreloader          |    P3 |     5 | 3/2/0/0/0         |     N |    N |    1 |         N |
+| PhotoUploadZone           |    P3 |     5 | 5/0/0/0/0         |     N |    N |    1 |         N |
+| SveditEditor              |    P3 |     5 | 1/2/1/1/0         |     N |    N |    2 |         N |
+| AdminCard                 |    P3 |     4 | 1/0/2/1/0         |     Y |    Y |   14 |         Y |
+| AdminPhotosPage           |    P3 |     4 | 3/1/0/0/0         |     N |    N |    2 |         N |
+| GallerySettingsFormFields |    P3 |     4 | 2/1/0/1/0         |     N |    N |    2 |         N |
+| AdminHeading              |    P3 |     3 | 1/0/1/1/0         |     Y |    N |   17 |         Y |
+| AdminStatusMessage        |    P3 |     3 | 1/1/1/0/0         |     Y |    N |   10 |         Y |
+| HomeSlideshow             |    P3 |     3 | 3/0/0/0/0         |     N |    N |    1 |         N |
+| AdminSinglePhotoEditor    |    P3 |     2 | 1/1/0/0/0         |     N |    N |    1 |         N |
+| CmsPageView               |    P3 |     2 | 1/1/0/0/0         |     N |    N |    2 |         N |
+| Link                      |    P3 |     2 | 2/0/0/0/0         |     N |    N |    0 |         N |
+| Callout                   |    P3 |     1 | 1/0/0/0/0         |     N |    N |    0 |         N |
+| Divider                   |    P3 |     1 | 1/0/0/0/0         |     N |    N |    0 |         N |
+| Emphasis                  |    P3 |     1 | 1/0/0/0/0         |     N |    N |    0 |         N |
+| Feature                   |    P3 |     1 | 1/0/0/0/0         |     N |    N |    0 |         N |
+| GalleryColumns            |    P3 |     1 | 1/0/0/0/0         |     N |    N |    1 |         N |
+| GalleryCoverage           |    P3 |     1 | 1/0/0/0/0         |     N |    N |    1 |         N |
+| GalleryGrid               |    P3 |     1 | 1/0/0/0/0         |     N |    N |    1 |         N |
+| GalleryRows               |    P3 |     1 | 1/0/0/0/0         |     N |    N |    1 |         N |
+| GalleryScene              |    P3 |     1 | 1/0/0/0/0         |     N |    N |    1 |         N |
+| GalleryTiles              |    P3 |     1 | 1/0/0/0/0         |     N |    N |    2 |         N |
+| Heading                   |    P3 |     1 | 1/0/0/0/0         |     N |    N |    0 |         N |
+| Hero                      |    P3 |     1 | 1/0/0/0/0         |     N |    N |    0 |         N |
+| Image                     |    P3 |     1 | 1/0/0/0/0         |     N |    N |    0 |         N |
+| List                      |    P3 |     1 | 1/0/0/0/0         |     N |    N |    0 |         N |
+| ListItem                  |    P3 |     1 | 1/0/0/0/0         |     N |    N |    0 |         N |
+| NodeCursorTrap            |    P3 |     1 | 0/1/0/0/0         |     N |    N |    0 |         N |
+| Page                      |    P3 |     1 | 1/0/0/0/0         |     N |    N |    0 |         N |
+| Paragraph                 |    P3 |     1 | 1/0/0/0/0         |     N |    N |    0 |         N |
+| Quote                     |    P3 |     1 | 1/0/0/0/0         |     N |    N |    0 |         N |
+| Section                   |    P3 |     1 | 1/0/0/0/0         |     N |    N |    0 |         N |
+| Strong                    |    P3 |     1 | 1/0/0/0/0         |     N |    N |    0 |         N |
+| SveditPageRenderer        |    P3 |     1 | 1/0/0/0/0         |     N |    N |    1 |         N |
+| Overlays                  |    P3 |     0 | 0/0/0/0/0         |     N |    N |    0 |         N |
+
 ## Prioritized Findings And Recommendations
 
 ### P0 Findings
@@ -161,13 +164,13 @@ Notes:
 #### 5) `AdminButton` (`src/lib/components/admin/AdminButton.svelte`, `src/lib/styles/admin-buttons.ts`)
 
 - Why overcomplicated:
-  - Good base contract (`class` + `...rest` exists), but variant set includes layout-specific style (`leftColumnFormSubmit`) that leaks page layout into primitive API.
-  - Variant usage: `leftColumnFormSubmit` appears 5 times, while `variant` overall is 45/58.
+  - Good base contract (`class` + `...rest` exists). ~~Variant set included layout-specific style (`leftColumnFormSubmit`) that leaked page layout into primitive API.~~ **Done:** `leftColumnFormSubmit` removed; replaced with `submit` + call-site `class="mt-4"`.
+  - Variant usage: `variant` overall is 45/58.
 - Class customization status:
   - Sufficient and healthy; call sites already use `class` where needed.
 - Recommended target API shape:
   - Keep semantic variants (`submit`, `danger`, `toggle`, etc.).
-  - Remove `leftColumnFormSubmit`; replace with `variant="submit"` + call-site class.
+  - ~~Remove `leftColumnFormSubmit`; replace with `variant="submit"` + call-site class.~~ **Done.**
 - Migration notes:
   - Impact: low (5 call sites).
   - Remove this variant early; easy confidence win.
@@ -218,8 +221,8 @@ Notes:
 #### 9) `AdminPhotoCard` + `AdminPhotoCardCompact`
 
 - Why overcomplicated:
-  - `AdminPhotoCard`: 18 props across 3 call sites.
-  - `AdminPhotoCardCompact`: 14 props across 2 call sites.
+  - `AdminPhotoCard`: 16 props across 3 call sites.
+  - `AdminPhotoCardCompact`: 8 props at 1 call site (list mode removed 2026-03).
   - Large shared prop bundles indicate view-model style object opportunity.
 - Class customization status:
   - Not a primary issue here.
@@ -246,22 +249,27 @@ Notes:
 ## Concrete Refactor Sequence
 
 1. Primitive Contract Standardization
+
 - `FormInput`, `FormTextarea`, `FormSelect`: add native attr forwarding (`...rest`) and keep semantic overrides.
 - Preserve existing props initially for compatibility.
 
 2. Primitive Surface Cleanup
+
 - Remove/alias redundant props: `FormField.helper` -> `hint`.
 - Add `class`/`...rest` to `ZoomControl` and `AdminCreateListLayout`.
 
 3. Style Variant Simplification
-- Remove `AdminButton`'s `leftColumnFormSubmit` variant.
-- Update 5 call sites to semantic variant + class utilities.
+
+- ~~Remove `AdminButton`'s `leftColumnFormSubmit` variant.~~ **Done.**
+- ~~Update 5 call sites to semantic variant + class utilities.~~ **Done (4 call sites).**
 
 4. Domain Signature Compaction
+
 - Group prop bags in `GalleryDetailViewer`, `AdminPhotoCard`, `AdminPhotosBulkPanel`, `AdminPhotosFilterForm`, `PhotoTaxonomyEditor`.
 - Prioritize single-parent components first.
 
 5. Final API Tightening
+
 - After compatibility window, remove explicit primitive props that are fully replaced by forwarded attrs.
 
 ## Refactor Verification Checklist

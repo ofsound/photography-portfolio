@@ -130,7 +130,7 @@
         Active
       </label>
     </FormField>
-    <AdminButton type="submit" variant="leftColumnFormSubmit">
+    <AdminButton type="submit" variant="submit" class="mt-4">
       Create {singularLabel}
     </AdminButton>
   </form>

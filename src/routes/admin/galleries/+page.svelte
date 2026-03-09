@@ -195,7 +195,7 @@
         <option value="archived">Archived</option>
       </FormSelect>
     </FormField>
-    <AdminButton type="submit" variant="leftColumnFormSubmit">
+    <AdminButton type="submit" variant="submit" class="mt-4">
       Create Gallery
     </AdminButton>
   </form>

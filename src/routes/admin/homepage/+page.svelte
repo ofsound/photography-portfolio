@@ -165,8 +165,22 @@
               class:opacity-50={sortable.isDragging}
             >
               <AdminCard
-                class="grid cursor-move gap-2 p-2 sm:grid-cols-[auto_1fr_auto] sm:items-center"
+                variant="gradient"
+                class="grid cursor-move gap-2 p-2 sm:grid-cols-[auto_auto_1fr_auto] sm:items-center"
               >
+                <div
+                  aria-hidden="true"
+                  class="mx-2 hidden self-center text-text-muted sm:flex sm:items-center"
+                >
+                  <div
+                    class="grid grid-cols-3 gap-0.5 rounded border border-border px-1 py-0.5"
+                  >
+                    {#each [0, 1, 2, 3, 4, 5] as dot (dot)}
+                      <span class="h-0.5 w-0.5 rounded-full bg-text-muted/80"
+                      ></span>
+                    {/each}
+                  </div>
+                </div>
                 {#if slide.delivery_storage_path}
                   <img
                     src={photoPublicUrl(slide.delivery_storage_path, 180)}
@@ -207,7 +221,7 @@
 
       <div class="flex flex-wrap items-end gap-6">
         <FormField
-          label="Slide Duration (ms)"
+          label="Duration (ms)"
           id="homepage-slide-duration-ms"
           hint="Leave blank to use defaults; provided values are clamped."
           class="w-fit"
@@ -222,7 +236,7 @@
           />
         </FormField>
         <FormField
-          label="Transition Duration (ms)"
+          label="Transition (ms)"
           id="homepage-transition-duration-ms"
           hint="Leave blank to use defaults; provided values are clamped."
           class="w-fit"
@@ -250,6 +264,7 @@
     {#each availableImages as image (image.id)}
       <li class="w-40">
         <AdminCard
+          variant="gradient"
           class="group flex cursor-pointer flex-col gap-2 p-2"
           role="button"
           tabindex="0"

@@ -49,9 +49,6 @@
 
 {#if isCodeMode}
   <section class="mx-auto max-w-5xl px-5 py-14" data-cms-scope={scopeKey}>
-    <h1 class="text-3xl tracking-widest uppercase">
-      {page.title}
-    </h1>
     <article class="prose mt-6 max-w-none">
       {@html page.html_content}
     </article>

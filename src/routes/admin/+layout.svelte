@@ -142,9 +142,7 @@
          Variation 4 · POLAR COORDINATE LATTICE
          Architectural polar grid radiating from offset origin
          ══════════════════════════════════════════════════ -->
-    <div
-      class="relative overflow-hidden border-t border-border bg-surface-muted"
-    >
+    <div class="relative overflow-hidden bg-surface-muted">
       <div
         class="pointer-events-none absolute inset-0 opacity-50 mix-blend-screen"
         style="background: radial-gradient(circle at 0% 20%, color-mix(in srgb, var(--color-info) 10%, transparent), transparent 75%)"
@@ -421,7 +419,7 @@
         aria-hidden="true">SYS.CMS</span
       >
       <p
-        class="relative px-4 py-5 text-center text-3xl font-bold tracking-[0.3em] uppercase"
+        class="relative px-5 py-5 text-center text-3xl font-bold tracking-[0.3em] uppercase"
         style="color: var(--color-text) "
       >
         CMS
@@ -433,19 +431,19 @@
     >
       {#each links as link, i (link.href)}
         <div
-          class="relative flex items-center justify-between border-t border-border transition-shadow duration-300 first:border-t-0"
+          class="relative flex items-center justify-between border-t border-border transition-shadow duration-300 first:border-t-0 last:border-b"
           class:bg-surface-subtle={!isActiveLink(link.href) && i % 2 === 1}
           class:bg-surface-strong={isActiveLink(link.href)}
           style="box-shadow: {isActiveLink(link.href)
-            ? 'inset 3px 0 0 var(--color-brand), inset 0 2px 8px rgba(0,0,0,0.14)'
-            : 'inset 3px 0 0 transparent, inset 0 2px 8px transparent'}"
+            ? 'inset 4px 0 0 var(--color-brand), inset 0 2px 6px rgba(0,0,0,0.1)'
+            : 'inset 4px 0 0 transparent, inset 0 2px 8px transparent'}"
         >
           <a
             href={resolve(link.href as `/${string}`)}
             class="absolute inset-0 z-0"
             aria-label={link.label}
           ></a>
-          <span class="pointer-events-none z-10 px-4 py-3">{link.label}</span>
+          <span class="pointer-events-none z-10 px-5 py-3">{link.label}</span>
         </div>
       {/each}
     </nav>
@@ -455,11 +453,13 @@
   </aside>
 
   <section
-    class="flex min-h-screen flex-col p-4 pt-[calc(var(--size-mobile-header-offset)+1rem)] md:min-h-0 md:max-w-[1200px] md:overflow-y-auto md:p-6"
+    class="flex min-h-screen flex-col p-4 pt-[calc(var(--size-mobile-header-offset)+1rem)] md:min-h-0 md:overflow-y-auto md:p-6"
     data-admin-mobile-menu-root
     style="view-transition-name: admin-content"
   >
-    {@render children()}
+    <div class="w-full md:max-w-[1200px]">
+      {@render children()}
+    </div>
   </section>
 </div>
 

@@ -14,7 +14,7 @@ export type Variant =
 export const sizeClasses: Record<Size, string> = {
   xs: 'px-2.5 py-0.5 text-xs uppercase tracking-widest',
   sm: 'px-3 py-1 text-xs uppercase tracking-widest',
-  md: 'px-3.5 py-1 text-sm uppercase tracking-widest',
+  md: 'px-3 py-1 text-sm uppercase tracking-widest',
   'md-tall': 'h-11 px-3 py-1 text-base uppercase tracking-widest',
   chip: 'px-2 py-1 text-xs',
 };

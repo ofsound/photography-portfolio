@@ -162,7 +162,11 @@
     {/if}
 
     {#if allowMove && galleries.length > 0}
-      <form method="POST" action="?/bulkMovePhotos" class="ml-2 flex gap-2">
+      <form
+        method="POST"
+        action="?/bulkMovePhotos"
+        class="ml-2 flex items-center gap-2"
+      >
         <input
           type="hidden"
           name="selected_photo_ids"
@@ -171,7 +175,7 @@
         <FormSelect
           name="destination_gallery_id"
           bind:value={destinationGalleryId}
-          class="min-w-0 px-2 py-1 text-xs"
+          class="min-w-0 px-0 py-0 text-xs"
         >
           <option value="">Move to...</option>
           {#each galleries as gallery (gallery.id)}

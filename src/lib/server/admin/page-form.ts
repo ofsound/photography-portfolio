@@ -1,6 +1,6 @@
 import type { Database } from '$lib/types/database';
 import { asString, toSlug } from '$lib/server/admin-helpers';
-import { sanitizeCmsCss, sanitizeCmsHtml } from '$lib/server/cms-sanitize';
+import { sanitizeCmsCssRaw, sanitizeCmsHtml } from '$lib/server/cms-sanitize';
 import type { FieldErrors, FormValues } from '$lib/server/form-errors';
 import { RESERVED_SLUGS } from '$lib/server/reserved-slugs';
 import {
@@ -131,10 +131,7 @@ export const pagePayloadFromForm = (
       slug: generatedSlug,
       kind,
       html_content: editorMode === 'code' ? sanitizeCmsHtml(rawHtml) : '',
-      css_module:
-        editorMode === 'code'
-          ? sanitizeCmsCss(rawCss, generatedSlug || kind)
-          : '',
+      css_module: editorMode === 'code' ? sanitizeCmsCssRaw(rawCss) : '',
       editor_mode: editorMode,
       svedit_doc: sveditDocResult?.ok ? sveditDocResult.document : null,
       svedit_schema_version: SVEDIT_PAGE_SCHEMA_VERSION,

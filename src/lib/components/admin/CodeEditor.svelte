@@ -23,12 +23,15 @@
     height = '300px',
   }: Props = $props();
 
-  let isDarkMode = $state(false);
+  const readIsDarkMode = () =>
+    typeof document !== 'undefined' &&
+    document.documentElement.getAttribute('data-theme') === 'dark';
+
+  let isDarkMode = $state(readIsDarkMode());
 
   onMount(() => {
     const checkTheme = () => {
-      isDarkMode =
-        document.documentElement.getAttribute('data-theme') === 'dark';
+      isDarkMode = readIsDarkMode();
     };
 
     checkTheme();
@@ -66,12 +69,35 @@
     bind:value
     {placeholder}
     {readonly}
+    drawSelection={false}
     {extensions}
     class="h-full"
     styles={{
       '&': { height: '100%' },
       '.cm-scroller': { overflow: 'auto' },
       '.cm-content, .cm-gutter': { minHeight: '100%' },
+      '.cm-editor, .cm-scroller': {
+        backgroundColor: 'var(--color-surface)',
+      },
+      '.cm-content': {
+        color: 'var(--color-text)',
+      },
+      '.cm-gutters': {
+        backgroundColor: 'var(--color-surface)',
+        color: 'var(--color-text-muted)',
+        borderRight: '1px solid var(--color-border)',
+      },
+      '.cm-activeLine, .cm-activeLineGutter': {
+        backgroundColor:
+          'color-mix(in srgb, var(--color-surface-muted) 65%, var(--color-surface))',
+      },
+      '.cm-cursor, .cm-dropCursor': {
+        borderLeftColor: 'var(--color-text)',
+      },
+      '.cm-content ::selection': {
+        backgroundColor:
+          'color-mix(in srgb, var(--color-brand) 35%, var(--color-surface))',
+      },
     }}
   />
 

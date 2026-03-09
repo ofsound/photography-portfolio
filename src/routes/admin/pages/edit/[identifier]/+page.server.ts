@@ -5,7 +5,7 @@ import {
   type PageVisibilityStatus,
   validateCmsPageSlug,
 } from '$lib/server/admin/page-form';
-import { sanitizeCmsCss, sanitizeCmsHtml } from '$lib/server/cms-sanitize';
+import { sanitizeCmsCssRaw, sanitizeCmsHtml } from '$lib/server/cms-sanitize';
 import { failForm } from '$lib/server/form-errors';
 import {
   parseSveditPageDocument,
@@ -204,10 +204,7 @@ export const actions: Actions = {
           : '',
       css_module:
         editorMode === 'code'
-          ? sanitizeCmsCss(
-              String(snapshot.css_module ?? ''),
-              String(snapshot.slug ?? 'page'),
-            )
+          ? sanitizeCmsCssRaw(String(snapshot.css_module ?? ''))
           : '',
       editor_mode:
         editorMode as Database['public']['Enums']['page_editor_mode'],

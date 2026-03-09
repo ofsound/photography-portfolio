@@ -60,6 +60,8 @@ const safeImageSchemes = new Set(['http:', 'https:']);
 const unsafeCssValuePattern =
   /(expression\s*\(|javascript:|vbscript:|data:\s*text\/html|@import)/i;
 const unsafeCssPropertyPattern = /^(behavior|-moz-binding)$/i;
+const cmsScopeSelectorPattern =
+  /^\[data-cms-scope\s*=\s*("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')\]\s*/i;
 
 const splitSelectors = (selectors: string) => {
   const parts: string[] = [];
@@ -261,12 +263,104 @@ const scopeSelectors = (selectors: string, scopeSelector: string) => {
     .join(', ');
 };
 
-const scopeAndSanitizeCss = (
-  css: string,
-  scopeSelector: string,
-  shouldScopeSelectors = true,
-): string => {
+const stripLeadingCmsScopeSelector = (selector: string) => {
+  let remaining = selector.trim();
+  let removed = false;
+
+  while (remaining) {
+    const match = remaining.match(cmsScopeSelectorPattern);
+    if (!match) break;
+    removed = true;
+    remaining = remaining.slice(match[0].length).trimStart();
+  }
+
+  if (!removed) return selector.trim();
+  return remaining || ':root';
+};
+
+const descopeSelectors = (selectors: string) => {
+  return splitSelectors(selectors)
+    .map((selector) => stripLeadingCmsScopeSelector(selector))
+    .join(', ');
+};
+
+type SanitizeCssOptions = {
+  scopeSelector?: string;
+  shouldScopeSelectors?: boolean;
+  shouldDescopeSelectors?: boolean;
+};
+
+const formatCssDeclarations = (declarations: string, indentLevel: number) => {
+  const indent = '  '.repeat(indentLevel);
+  return declarations
+    .split(';')
+    .map((declaration) => declaration.trim())
+    .filter(Boolean)
+    .map((declaration) => `${indent}${declaration};`)
+    .join('\n');
+};
+
+const hasNestedCssRules = (css: string) => {
+  let quote: '"' | "'" | null = null;
+
+  for (let i = 0; i < css.length; i += 1) {
+    const char = css[i];
+
+    if (quote) {
+      if (char === quote && css[i - 1] !== '\\') {
+        quote = null;
+      }
+      continue;
+    }
+
+    if (char === '"' || char === "'") {
+      quote = char;
+      continue;
+    }
+
+    if (char === '{') return true;
+  }
+
+  return false;
+};
+
+const formatCssRules = (css: string, indentLevel = 0): string => {
+  let output = '';
+  let index = 0;
+  const indent = '  '.repeat(indentLevel);
+
+  while (index < css.length) {
+    const openBrace = css.indexOf('{', index);
+    if (openBrace === -1) break;
+
+    const prelude = css.slice(index, openBrace).trim();
+    const closeBrace = findMatchingBrace(css, openBrace);
+    if (!prelude || closeBrace === -1) break;
+
+    const body = css.slice(openBrace + 1, closeBrace).trim();
+    index = closeBrace + 1;
+    if (!body) continue;
+
+    const separator = output ? '\n\n' : '';
+    if (hasNestedCssRules(body)) {
+      const nested = formatCssRules(body, indentLevel + 1);
+      if (!nested) continue;
+      output += `${separator}${indent}${prelude} {\n${nested}\n${indent}}`;
+      continue;
+    }
+
+    const declarations = formatCssDeclarations(body, indentLevel + 1);
+    if (!declarations) continue;
+    output += `${separator}${indent}${prelude} {\n${declarations}\n${indent}}`;
+  }
+
+  return output;
+};
+
+const sanitizeCss = (css: string, options: SanitizeCssOptions): string => {
   const input = css.replace(/\/\*[\s\S]*?\*\//g, '');
+  const { scopeSelector, shouldScopeSelectors, shouldDescopeSelectors } =
+    options;
   let output = '';
   let index = 0;
 
@@ -292,16 +386,23 @@ const scopeAndSanitizeCss = (
         continue;
       }
       if (atName.endsWith('keyframes')) {
-        output += `${prelude}{${scopeAndSanitizeCss(body, scopeSelector, false)}}`;
+        output += `${prelude}{${sanitizeCss(body, {
+          shouldScopeSelectors: false,
+          shouldDescopeSelectors: false,
+        })}}`;
         continue;
       }
-      output += `${prelude}{${scopeAndSanitizeCss(body, scopeSelector, shouldScopeSelectors)}}`;
+      output += `${prelude}{${sanitizeCss(body, options)}}`;
       continue;
     }
 
-    const scopedSelectors = shouldScopeSelectors
-      ? scopeSelectors(prelude, scopeSelector)
+    const normalizedSelectors = shouldDescopeSelectors
+      ? descopeSelectors(prelude)
       : prelude;
+    const scopedSelectors =
+      shouldScopeSelectors && scopeSelector
+        ? scopeSelectors(normalizedSelectors, scopeSelector)
+        : normalizedSelectors;
     const sanitizedDeclarations = sanitizeCssDeclarationBlock(body);
     if (!sanitizedDeclarations) continue;
     output += `${scopedSelectors}{${sanitizedDeclarations}}`;
@@ -338,11 +439,24 @@ export const sanitizeCmsHtml = (html: string): string => {
   });
 };
 
+export const sanitizeCmsCssRaw = (css: string): string => {
+  if (!css.trim()) return '';
+  const sanitized = sanitizeCss(css, {
+    shouldScopeSelectors: false,
+    shouldDescopeSelectors: true,
+  });
+  return formatCssRules(sanitized);
+};
+
 export const sanitizeCmsCss = (
   css: string,
   pageSlug?: string | null,
 ): string => {
   if (!css.trim()) return '';
   const scopeSelector = `[data-cms-scope="${createCmsScopeKey(pageSlug)}"]`;
-  return scopeAndSanitizeCss(css, scopeSelector);
+  return sanitizeCss(css, {
+    scopeSelector,
+    shouldScopeSelectors: true,
+    shouldDescopeSelectors: true,
+  });
 };

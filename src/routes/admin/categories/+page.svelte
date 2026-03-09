@@ -6,11 +6,25 @@
   import FormInput from '$lib/components/FormInput.svelte';
   import { slugify } from '$lib/utils/slug';
 
+  type FormState = {
+    message?: string;
+    success?: boolean;
+    fieldErrors?: Record<string, string | undefined>;
+    values?: Record<string, string | undefined>;
+  };
+
   const { data, form } = $props();
+  const typedForm = $derived(
+    (form as FormState | null | undefined) ?? undefined,
+  );
 
   let createName = $state('');
   let createSlug = $state('');
   let hasManualSlugEdit = $state(false);
+  const createFieldErrors = $derived(
+    typedForm?.values?.id ? {} : (typedForm?.fieldErrors ?? {}),
+  );
+  const activeEditId = $derived(typedForm?.values?.id ?? '');
 
   const onCreateNameInput = () => {
     if (!hasManualSlugEdit) {
@@ -25,6 +39,14 @@
       createSlug = slugify(createName);
     }
   };
+
+  $effect(() => {
+    if (typedForm?.values?.id) return;
+    const nextName = typedForm?.values?.name;
+    const nextSlug = typedForm?.values?.slug;
+    if (typeof nextName === 'string') createName = nextName;
+    if (typeof nextSlug === 'string') createSlug = nextSlug;
+  });
 </script>
 
 <AdminCreateListLayout
@@ -38,16 +60,25 @@
 {#snippet createForm()}
   <form method="POST" action="?/create" class="grid h-fit gap-3">
     <div class="grid gap-3 sm:grid-cols-2">
-      <FormField label="Name" id="cat-create-name">
+      <FormField
+        label="Name"
+        id="cat-create-name"
+        required
+        error={createFieldErrors.name}
+      >
         <FormInput
           id="cat-create-name"
           name="name"
           bind:value={createName}
-          required
           oninput={onCreateNameInput}
         />
       </FormField>
-      <FormField label="Slug" id="cat-create-slug">
+      <FormField
+        label="Slug"
+        id="cat-create-slug"
+        hint="Leave blank to auto-generate."
+        error={createFieldErrors.slug}
+      >
         <FormInput
           id="cat-create-slug"
           name="slug"
@@ -57,11 +88,25 @@
       </FormField>
     </div>
     <FormField label="Description" id="cat-create-description">
-      <FormInput id="cat-create-description" name="description" />
+      <FormInput
+        id="cat-create-description"
+        name="description"
+        value={typedForm?.values?.id
+          ? ''
+          : (typedForm?.values?.description ?? '')}
+      />
     </FormField>
-    <label class="flex items-center gap-2 text-sm">
-      <input name="is_active" type="checkbox" checked /> Active
-    </label>
+    <FormField label="Status" id="cat-create-is-active">
+      <label class="flex items-center gap-2 text-sm">
+        <input
+          id="cat-create-is-active"
+          name="is_active"
+          type="checkbox"
+          checked
+        />
+        Active
+      </label>
+    </FormField>
     <AdminButton type="submit" variant="leftColumnFormSubmit">
       Create Category
     </AdminButton>
@@ -79,20 +124,36 @@
     >
       <input type="hidden" name="id" value={category.id} />
       <div class="grid gap-3 sm:grid-cols-2">
-        <FormField label="Name" id="cat-edit-name-{category.id}">
+        <FormField
+          label="Name"
+          id="cat-edit-name-{category.id}"
+          required
+          error={activeEditId === category.id
+            ? typedForm?.fieldErrors?.name
+            : undefined}
+        >
           <FormInput
             id="cat-edit-name-{category.id}"
             name="name"
-            value={category.name}
-            required
+            value={activeEditId === category.id
+              ? (typedForm?.values?.name ?? category.name)
+              : category.name}
           />
         </FormField>
-        <FormField label="Slug" id="cat-edit-slug-{category.id}">
+        <FormField
+          label="Slug"
+          id="cat-edit-slug-{category.id}"
+          hint="Leave blank to auto-generate."
+          error={activeEditId === category.id
+            ? typedForm?.fieldErrors?.slug
+            : undefined}
+        >
           <FormInput
             id="cat-edit-slug-{category.id}"
             name="slug"
-            value={category.slug}
-            required
+            value={activeEditId === category.id
+              ? (typedForm?.values?.slug ?? category.slug)
+              : category.slug}
           />
         </FormField>
       </div>
@@ -100,17 +161,23 @@
         <FormInput
           id="cat-edit-description-{category.id}"
           name="description"
-          value={category.description ?? ''}
+          value={activeEditId === category.id
+            ? (typedForm?.values?.description ?? '')
+            : (category.description ?? '')}
         />
       </FormField>
       <div class="flex flex-wrap items-center gap-3">
-        <label class="flex items-center gap-2 text-sm">
-          <input
-            name="is_active"
-            type="checkbox"
-            checked={category.is_active}
-          /> Active
-        </label>
+        <FormField label="Status" id="cat-edit-is-active-{category.id}">
+          <label class="flex items-center gap-2 text-sm">
+            <input
+              id="cat-edit-is-active-{category.id}"
+              name="is_active"
+              type="checkbox"
+              checked={category.is_active}
+            />
+            Active
+          </label>
+        </FormField>
       </div>
 
       <div class="flex items-center gap-2">

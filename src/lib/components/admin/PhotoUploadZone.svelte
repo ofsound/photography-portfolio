@@ -4,6 +4,8 @@
   import AdminCard from '$lib/components/admin/AdminCard.svelte';
   import AdminButton from '$lib/components/admin/AdminButton.svelte';
   import AdminHeading from '$lib/components/admin/AdminHeading.svelte';
+  import FormField from '$lib/components/FormField.svelte';
+  import FormInput from '$lib/components/FormInput.svelte';
   import FormSelect from '$lib/components/FormSelect.svelte';
 
   const {
@@ -73,15 +75,31 @@
         </span>
       </div>
       <div class="grid gap-2 sm:grid-cols-2 sm:items-center">
-        <FormSelect name="kind" value={defaultKind}>
-          <option value="lead">Lead image</option>
-          <option value="additional">Additional image</option>
-        </FormSelect>
-        <input
-          name="alt_text"
-          placeholder="Alt text"
-          class="rounded border border-border-strong bg-surface px-3 py-2"
-        />
+        <FormField
+          label="Image Type"
+          id={`photo-upload-kind-${photoId}`}
+          labelSrOnly
+        >
+          <FormSelect
+            id={`photo-upload-kind-${photoId}`}
+            name="kind"
+            value={defaultKind}
+          >
+            <option value="lead">Lead image</option>
+            <option value="additional">Additional image</option>
+          </FormSelect>
+        </FormField>
+        <FormField
+          label="Alt text"
+          id={`photo-upload-alt-text-${photoId}`}
+          optional
+        >
+          <FormInput
+            id={`photo-upload-alt-text-${photoId}`}
+            name="alt_text"
+            placeholder="Alt text"
+          />
+        </FormField>
       </div>
     </div>
     <p class="text-xs text-text-muted">

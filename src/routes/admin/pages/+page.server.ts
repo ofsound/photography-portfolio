@@ -1,6 +1,7 @@
 import { fail, redirect, type Actions } from '@sveltejs/kit';
 import { asString, parseUuidList } from '$lib/server/admin-helpers';
 import { pagePayloadFromForm } from '$lib/server/admin/page-form';
+import { failForm } from '$lib/server/form-errors';
 import { throwLoaderError } from '$lib/server/load-error';
 import { isGallerySlugTaken } from '$lib/server/root-slug';
 import type { PageServerLoad } from './$types';
@@ -59,10 +60,21 @@ export const actions: Actions = {
     const form = await request.formData();
     const result = pagePayloadFromForm(form);
 
-    if (!result.ok) return fail(400, { message: result.message });
+    if (!result.ok) {
+      return failForm(result.message, {
+        fieldErrors: result.fieldErrors,
+        values: result.values,
+      });
+    }
     if (await isGallerySlugTaken(locals, result.payload.slug)) {
-      return fail(400, {
-        message: 'Slug conflicts with an existing gallery.',
+      return failForm('Slug conflicts with an existing gallery.', {
+        fieldErrors: { slug: 'Slug conflicts with an existing gallery.' },
+        values: {
+          title: asString(form.get('title')).trim(),
+          slug: asString(form.get('slug')).trim(),
+          visibility_status: asString(form.get('visibility_status')).trim(),
+          editor_mode: asString(form.get('editor_mode')).trim(),
+        },
       });
     }
 

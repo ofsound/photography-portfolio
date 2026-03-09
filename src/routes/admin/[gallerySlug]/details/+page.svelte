@@ -14,13 +14,34 @@
   } from '$lib/constants/gallery-visibility';
   import { GALLERY_SETTINGS_DEFAULTS } from '$lib/constants/gallery-settings';
 
+  type FormState = {
+    message?: string;
+    success?: boolean;
+    fieldErrors?: Record<string, string | undefined>;
+    values?: Record<string, string | undefined>;
+  };
+
   const { data, form } = $props();
+  const typedForm = $derived(
+    (form as FormState | null | undefined) ?? undefined,
+  );
 
   const settings = $derived(data.settings ?? GALLERY_SETTINGS_DEFAULTS);
   const isAdmin = $derived(data.role === 'admin');
-  let visibilityStatus = $derived<GalleryVisibilityStatus>(
+  let visibilityStatus = $state<GalleryVisibilityStatus>(
     data.gallery.visibility_status,
   );
+  const fieldErrors = $derived(typedForm?.fieldErrors ?? {});
+  const values = $derived(typedForm?.values ?? {});
+
+  $effect(() => {
+    const next = values.visibility_status;
+    if (next === 'public' || next === 'unlisted' || next === 'archived') {
+      visibilityStatus = next;
+      return;
+    }
+    visibilityStatus = data.gallery.visibility_status;
+  });
 </script>
 
 <AdminGalleryNav
@@ -43,21 +64,29 @@
 
   <div class="mt-4 flex flex-col gap-4 sm:flex-row sm:items-start">
     <div class="grid min-w-0 gap-3 sm:flex-1">
-      <FormField label="Name" id="details-name">
+      <FormField
+        label="Name"
+        id="details-name"
+        required
+        error={fieldErrors.name}
+      >
         <FormInput
           id="details-name"
           name="name"
-          value={data.gallery.name}
-          required
+          value={values.name ?? data.gallery.name}
           readonly={!isAdmin}
         />
       </FormField>
-      <FormField label="Slug" id="details-slug">
+      <FormField
+        label="Slug"
+        id="details-slug"
+        hint="Leave blank to auto-generate."
+        error={fieldErrors.slug}
+      >
         <FormInput
           id="details-slug"
           name="slug"
-          value={data.gallery.slug}
-          required
+          value={values.slug ?? data.gallery.slug}
           readonly={!isAdmin}
         />
       </FormField>
@@ -66,7 +95,7 @@
           id="details-description"
           name="description"
           rows={3}
-          value={data.gallery.description ?? ''}
+          value={values.description ?? data.gallery.description ?? ''}
           readonly={!isAdmin}
         />
       </FormField>
@@ -74,7 +103,7 @@
         <FormInput
           id="details-seo-title"
           name="seo_title"
-          value={data.gallery.seo_title ?? ''}
+          value={values.seo_title ?? data.gallery.seo_title ?? ''}
           readonly={!isAdmin}
         />
       </FormField>
@@ -83,36 +112,37 @@
           id="details-seo-description"
           name="seo_description"
           rows={2}
-          value={data.gallery.seo_description ?? ''}
+          value={values.seo_description ?? data.gallery.seo_description ?? ''}
           readonly={!isAdmin}
         />
       </FormField>
     </div>
 
     <div class="grid min-w-0 gap-2 sm:flex-1">
-      <span class="text-sm font-medium tracking-wider text-text"
-        >Visibility</span
-      >
-      <div class="grid gap-2">
-        {#each GALLERY_VISIBILITY_OPTIONS as option (option.value)}
-          <label
-            class="flex items-start gap-3 rounded border border-border p-3 transition-colors hover:border-border-strong"
-          >
-            <input
-              type="radio"
-              name="visibility_status"
-              bind:group={visibilityStatus}
-              value={option.value}
-              disabled={!isAdmin}
-              class="mt-1"
-            />
-            <span class="grid gap-1">
-              <span class="text-sm font-medium text-text">{option.label}</span>
-              <span class="text-xs text-text-muted">{option.description}</span>
-            </span>
-          </label>
-        {/each}
-      </div>
+      <FormField label="Visibility" id="details-visibility">
+        <div class="grid gap-2">
+          {#each GALLERY_VISIBILITY_OPTIONS as option (option.value)}
+            <label
+              class="flex items-start gap-3 rounded border border-border p-3 transition-colors hover:border-border-strong"
+            >
+              <input
+                type="radio"
+                name="visibility_status"
+                bind:group={visibilityStatus}
+                value={option.value}
+                disabled={!isAdmin}
+                class="mt-1"
+              />
+              <span class="grid gap-1">
+                <span class="text-sm font-medium text-text">{option.label}</span
+                >
+                <span class="text-xs text-text-muted">{option.description}</span
+                >
+              </span>
+            </label>
+          {/each}
+        </div>
+      </FormField>
     </div>
   </div>
 

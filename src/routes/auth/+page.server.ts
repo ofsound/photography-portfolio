@@ -1,4 +1,5 @@
-import { fail, redirect, type Actions } from '@sveltejs/kit';
+import { redirect, type Actions } from '@sveltejs/kit';
+import { failForm } from '$lib/server/form-errors';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals }) => {
@@ -16,7 +17,13 @@ export const actions: Actions = {
     const password = String(form.get('password') ?? '');
 
     if (!email || !password) {
-      return fail(400, { message: 'Email and password are required.' });
+      return failForm('Email and password are required.', {
+        fieldErrors: {
+          email: !email ? 'Email is required.' : undefined,
+          password: !password ? 'Password is required.' : undefined,
+        },
+        values: { email },
+      });
     }
 
     const { error } = await locals.supabase.auth.signInWithPassword({
@@ -25,7 +32,7 @@ export const actions: Actions = {
     });
 
     if (error) {
-      return fail(400, { message: error.message });
+      return failForm(error.message);
     }
 
     throw redirect(303, '/admin/galleries');

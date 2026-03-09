@@ -77,4 +77,4 @@
   </p>
 {/if}
 
-<AdminSinglePhotoEditor {data} />
+<AdminSinglePhotoEditor {data} {form} />

@@ -18,7 +18,17 @@
   } from '$lib/constants/page-visibility';
   import type { ContentRevision } from '$lib/types/content';
 
+  type FormState = {
+    message?: string;
+    success?: boolean;
+    fieldErrors?: Record<string, string | undefined>;
+    values?: Record<string, string | undefined>;
+  };
+
   const { data, form } = $props();
+  const typedForm = $derived(
+    (form as FormState | null | undefined) ?? undefined,
+  );
   const page = $derived(data.page);
   const revisions = $derived(data.revisions as ContentRevision[]);
   const initialPage = () => data.page;
@@ -43,6 +53,38 @@
   let formOgImagePath = $state(initialPage().og_image_path ?? '');
   let showRawSveditJson = $state(false);
   let rawSveditJsonError = $state<string | null>(null);
+  const fieldErrors = $derived(typedForm?.fieldErrors ?? {});
+
+  $effect(() => {
+    const values = typedForm?.values;
+    if (!values) return;
+
+    if (typeof values.title === 'string') formTitle = values.title;
+    if (typeof values.slug === 'string') formSlug = values.slug;
+    if (typeof values.seo_title === 'string') formSeoTitle = values.seo_title;
+    if (typeof values.seo_description === 'string') {
+      formSeoDescription = values.seo_description;
+    }
+    if (typeof values.og_image_path === 'string') {
+      formOgImagePath = values.og_image_path;
+    }
+    if (typeof values.html_content === 'string')
+      formHtmlContent = values.html_content;
+    if (typeof values.css_module === 'string')
+      formCssModule = values.css_module;
+    if (typeof values.svedit_doc === 'string')
+      formSveditDoc = values.svedit_doc;
+    if (
+      values.visibility_status === 'draft' ||
+      values.visibility_status === 'public' ||
+      values.visibility_status === 'unlisted'
+    ) {
+      formVisibilityStatus = values.visibility_status;
+    }
+    if (values.editor_mode === 'code' || values.editor_mode === 'svedit') {
+      formEditorMode = values.editor_mode;
+    }
+  });
 
   const formatRawSveditJson = () => {
     const value = formSveditDoc.trim();
@@ -99,15 +141,20 @@
   <input type="hidden" name="id" value={page.id} />
 
   <div class="grid gap-3 sm:grid-cols-2">
-    <FormField label="Title" id="page-edit-title">
-      <FormInput
-        id="page-edit-title"
-        name="title"
-        bind:value={formTitle}
-        required
-      />
+    <FormField
+      label="Title"
+      id="page-edit-title"
+      required
+      error={fieldErrors.title}
+    >
+      <FormInput id="page-edit-title" name="title" bind:value={formTitle} />
     </FormField>
-    <FormField label="Slug" id="page-edit-slug">
+    <FormField
+      label="Slug"
+      id="page-edit-slug"
+      hint="Leave blank to auto-generate."
+      error={fieldErrors.slug}
+    >
       <FormInput id="page-edit-slug" name="slug" bind:value={formSlug} />
     </FormField>
   </div>
@@ -169,7 +216,11 @@
   </FormField>
 
   {#if formEditorMode === 'code'}
-    <FormField label="HTML" id="page-edit-html_content">
+    <FormField
+      label="HTML"
+      id="page-edit-html_content"
+      error={fieldErrors.html_content}
+    >
       <CodeEditor
         name="html_content"
         bind:value={formHtmlContent}
@@ -187,7 +238,11 @@
     </FormField>
     <input type="hidden" name="svedit_doc" value="" />
   {:else}
-    <FormField label="Svedit Document" id="page-edit-svedit_doc">
+    <FormField
+      label="Svedit Document"
+      id="page-edit-svedit_doc"
+      error={fieldErrors.svedit_doc}
+    >
       <SveditEditor
         name="svedit_doc"
         bind:value={formSveditDoc}

@@ -1,5 +1,10 @@
 import { fail, type Actions } from '@sveltejs/kit';
 import { asOptionalDate, asString, toSlug } from '$lib/server/admin-helpers';
+import {
+  failForm,
+  type FieldErrors,
+  type FormValues,
+} from '$lib/server/form-errors';
 
 type MinimalDraftSeed = {
   title?: string;
@@ -85,12 +90,35 @@ type PhotoPayload = {
 
 const upsertPhotoPayload = (
   form: FormData,
-): { ok: true; payload: PhotoPayload } | { ok: false; message: string } => {
+):
+  | { ok: true; payload: PhotoPayload }
+  | {
+      ok: false;
+      message: string;
+      fieldErrors?: FieldErrors;
+      values?: FormValues;
+    } => {
   const title = asString(form.get('title')).trim();
   const slugInput = asString(form.get('slug')).trim();
+  const values: FormValues = {
+    title,
+    slug: slugInput,
+    capture_date: asString(form.get('capture_date')).trim(),
+    description: asString(form.get('description')).trim(),
+    dimensions: asString(form.get('dimensions')).trim(),
+    license_text: asString(form.get('license_text')).trim(),
+    og_title: asString(form.get('og_title')).trim(),
+    og_description: asString(form.get('og_description')).trim(),
+    og_image_path: asString(form.get('og_image_path')).trim(),
+  };
 
   if (!title) {
-    return { ok: false, message: 'Title is required.' };
+    return {
+      ok: false,
+      message: 'Title is required.',
+      fieldErrors: { title: 'Title is required.' },
+      values,
+    };
   }
 
   return {
@@ -118,7 +146,12 @@ export const photoCoreActions: Actions = {
     }
     const result = upsertPhotoPayload(form);
 
-    if (!result.ok) return fail(400, { message: result.message });
+    if (!result.ok) {
+      return failForm(result.message, {
+        fieldErrors: result.fieldErrors,
+        values: result.values,
+      });
+    }
 
     const { error } = await locals.supabase.from('photos').insert({
       gallery_id: galleryId,
@@ -141,7 +174,17 @@ export const photoCoreActions: Actions = {
     if (!id) return fail(400, { message: 'Missing photo id.' });
 
     const result = upsertPhotoPayload(form);
-    if (!result.ok) return fail(400, { message: result.message });
+    if (!result.ok) {
+      return failForm(result.message, {
+        fieldErrors: result.fieldErrors,
+        values: result.values
+          ? {
+              ...result.values,
+              id,
+            }
+          : { id },
+      });
+    }
 
     let query = locals.supabase
       .from('photos')

@@ -14,6 +14,7 @@
     onTitleInput,
     onSlugInput,
     trailingField,
+    fieldErrors = {},
   } = $props<{
     photoFormId: string;
     title: string;
@@ -23,21 +24,31 @@
     onTitleInput?: (event: Event) => void;
     onSlugInput: (event: Event) => void;
     trailingField?: Snippet;
+    fieldErrors?: Record<string, string | undefined>;
   }>();
 </script>
 
 <div class="grid gap-3 sm:grid-cols-2">
-  <FormField label="Title" id="edit-title-{photoFormId}">
+  <FormField
+    label="Title"
+    id="edit-title-{photoFormId}"
+    required
+    error={fieldErrors.title}
+  >
     <FormInput
       id="edit-title-{photoFormId}"
       name="title"
       bind:value={title}
       placeholder="Title"
       oninput={onTitleInput}
-      required
     />
   </FormField>
-  <FormField label="Slug" id="edit-slug-{photoFormId}">
+  <FormField
+    label="Slug"
+    id="edit-slug-{photoFormId}"
+    hint="Leave blank to auto-generate."
+    error={fieldErrors.slug}
+  >
     <FormInput
       id="edit-slug-{photoFormId}"
       name="slug"

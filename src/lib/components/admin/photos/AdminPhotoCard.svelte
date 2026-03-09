@@ -45,6 +45,7 @@
     index = 0,
     gridMode = false,
     isDraggingPhoto = false,
+    formState,
   } = $props<{
     photo: AdminPhoto | (Omit<AdminPhoto, 'id'> & { id: null });
     images: AdminPhotoImage[];
@@ -70,6 +71,10 @@
     index?: number;
     gridMode?: boolean;
     isDraggingPhoto?: boolean;
+    formState?: {
+      fieldErrors?: Record<string, string | undefined>;
+      values?: Record<string, string | undefined>;
+    };
   }>();
 
   // Local form state to avoid overwriting user edits on re-renders (e.g. taxonomy checkbox changes)
@@ -106,6 +111,15 @@
   );
   const isPublic = $derived(photoStatus === 'published');
   const photoFormId = $derived(isDraft ? 'draft' : photo.id);
+  const activeFormState = $derived.by(() => {
+    if (!formState) return null;
+    const targetId = formState.values?.id;
+    if (!targetId) return isDraft ? formState : null;
+    if (!isDraft && targetId === photo.id) return formState;
+    return null;
+  });
+  const activeFieldErrors = $derived(activeFormState?.fieldErrors ?? {});
+  const activeValues = $derived(activeFormState?.values ?? {});
 
   const onTitleInput = () => {
     if (hasManualSlugEdit) return;
@@ -119,6 +133,34 @@
       form.slug = slugify(form.title);
     }
   };
+
+  $effect(() => {
+    if (!activeFormState) return;
+
+    if (typeof activeValues.title === 'string') form.title = activeValues.title;
+    if (typeof activeValues.slug === 'string') form.slug = activeValues.slug;
+    if (typeof activeValues.description === 'string') {
+      form.description = activeValues.description;
+    }
+    if (typeof activeValues.capture_date === 'string') {
+      form.captureDate = activeValues.capture_date;
+    }
+    if (typeof activeValues.dimensions === 'string') {
+      form.dimensions = activeValues.dimensions;
+    }
+    if (typeof activeValues.license_text === 'string') {
+      form.licenseText = activeValues.license_text;
+    }
+    if (typeof activeValues.og_title === 'string') {
+      form.ogTitle = activeValues.og_title;
+    }
+    if (typeof activeValues.og_description === 'string') {
+      form.ogDescription = activeValues.og_description;
+    }
+    if (typeof activeValues.og_image_path === 'string') {
+      form.ogImagePath = activeValues.og_image_path;
+    }
+  });
 
   let hasUserToggled = $state(false);
   let toggledExpanded = $state(false);
@@ -276,6 +318,7 @@
                   {onTitleInput}
                   {onSlugInput}
                   trailingField={dimensionsField}
+                  fieldErrors={activeFieldErrors}
                 />
               </form>
 

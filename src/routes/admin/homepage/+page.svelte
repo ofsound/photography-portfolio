@@ -5,6 +5,7 @@
   import AdminButton from '$lib/components/admin/AdminButton.svelte';
   import AdminHeading from '$lib/components/admin/AdminHeading.svelte';
   import AdminCreateListLayout from '$lib/components/admin/AdminCreateListLayout.svelte';
+  import FormField from '$lib/components/FormField.svelte';
   import FormInput from '$lib/components/FormInput.svelte';
   import { photoPublicUrl } from '$lib/utils/storage-url';
   import type { HomepageImage, HomepageSlide } from '$lib/types/content';
@@ -17,7 +18,6 @@
   let selectedIds = $state<string[]>([]);
   let slideDurationMs = $state<number>(4000);
   let transitionDurationMs = $state<number>(2000);
-  let timingValidationError = $state<string | null>(null);
   let undoStack = $state<string[][]>([]);
   let redoStack = $state<string[][]>([]);
   const historyLimit = 100;
@@ -83,34 +83,6 @@
     if (target.value !== cleaned) {
       target.value = cleaned;
     }
-    timingValidationError = null;
-  };
-
-  const isMissingOrZero = (value: string) => {
-    const trimmed = value.trim();
-    if (!trimmed.length) return true;
-    const numeric = Number(trimmed);
-    return !Number.isFinite(numeric) || numeric === 0;
-  };
-
-  const onSaveSubmit = (event: SubmitEvent) => {
-    const form = event.currentTarget as HTMLFormElement | null;
-    if (!form) return;
-
-    const data = new FormData(form);
-    const slideDuration = String(data.get('slide_duration_ms') ?? '').trim();
-    const transitionDuration = String(
-      data.get('transition_duration_ms') ?? '',
-    ).trim();
-
-    if (isMissingOrZero(slideDuration) || isMissingOrZero(transitionDuration)) {
-      event.preventDefault();
-      timingValidationError =
-        'Slide duration and transition duration must be filled and greater than 0.';
-      return;
-    }
-
-    timingValidationError = null;
   };
 
   const addSlide = (id: string) => {
@@ -226,48 +198,45 @@
       </DragDropProvider>
     {/if}
 
-    <form
-      method="POST"
-      action="?/save"
-      class="mt-4 flex flex-col gap-3"
-      onsubmit={onSaveSubmit}
-    >
+    <form method="POST" action="?/save" class="mt-4 flex flex-col gap-3">
       <input
         type="hidden"
         name="ordered_image_ids"
         value={selectedIds.join('\n')}
       />
 
-      <div class="flex flex-wrap items-center gap-6">
-        <label
-          class="grid w-fit gap-1 text-xs tracking-widest whitespace-nowrap uppercase"
+      <div class="flex flex-wrap items-end gap-6">
+        <FormField
+          label="Slide Duration (ms)"
+          id="homepage-slide-duration-ms"
+          hint="Leave blank to use defaults; provided values are clamped."
+          class="w-fit"
         >
-          Slide Duration (ms)
           <FormInput
+            id="homepage-slide-duration-ms"
             class="max-w-[80px] bg-transparent tracking-normal normal-case"
             type="text"
             name="slide_duration_ms"
             value={String(slideDurationMs)}
             oninput={sanitizeNumericInput}
           />
-        </label>
-        <label
-          class="grid w-fit gap-1 text-xs tracking-widest whitespace-nowrap uppercase"
+        </FormField>
+        <FormField
+          label="Transition Duration (ms)"
+          id="homepage-transition-duration-ms"
+          hint="Leave blank to use defaults; provided values are clamped."
+          class="w-fit"
         >
-          Transition Duration (ms)
           <FormInput
+            id="homepage-transition-duration-ms"
             class="max-w-[80px] bg-transparent tracking-normal normal-case"
             type="text"
             name="transition_duration_ms"
             value={String(transitionDurationMs)}
             oninput={sanitizeNumericInput}
           />
-        </label>
+        </FormField>
       </div>
-
-      {#if timingValidationError}
-        <p class="text-text-danger text-sm">{timingValidationError}</p>
-      {/if}
 
       <AdminButton type="submit" variant="leftColumnFormSubmit">
         Save Slides

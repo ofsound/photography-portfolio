@@ -5,6 +5,7 @@ import {
   assertTitle,
   toSlug,
 } from '$lib/server/admin-helpers';
+import { failForm } from '$lib/server/form-errors';
 import { throwLoaderError } from '$lib/server/load-error';
 import type { PageServerLoad } from './$types';
 
@@ -33,7 +34,12 @@ export const actions: Actions = {
     const isActive = asBoolean(form.get('is_active'));
 
     const titleError = assertTitle(name);
-    if (titleError) return fail(400, { message: titleError });
+    if (titleError) {
+      return failForm(titleError, {
+        fieldErrors: { name: titleError },
+        values: { name, slug: slugInput, description: description ?? '' },
+      });
+    }
 
     const slug = toSlug(slugInput || name, 'tag');
 
@@ -64,7 +70,12 @@ export const actions: Actions = {
     }
 
     const titleError = assertTitle(name);
-    if (titleError) return fail(400, { message: titleError });
+    if (titleError) {
+      return failForm(titleError, {
+        fieldErrors: { name: titleError },
+        values: { id, name, slug: slugInput, description: description ?? '' },
+      });
+    }
 
     const slug = toSlug(slugInput || name, 'tag');
 

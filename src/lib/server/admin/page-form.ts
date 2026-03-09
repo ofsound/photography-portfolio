@@ -1,6 +1,7 @@
 import type { Database } from '$lib/types/database';
 import { asString, toSlug } from '$lib/server/admin-helpers';
 import { sanitizeCmsCss, sanitizeCmsHtml } from '$lib/server/cms-sanitize';
+import type { FieldErrors, FormValues } from '$lib/server/form-errors';
 import { RESERVED_SLUGS } from '$lib/server/reserved-slugs';
 import {
   createDefaultSveditPageDocument,
@@ -40,7 +41,14 @@ export const validateCmsPageSlug = (slug: string) => {
 
 export const pagePayloadFromForm = (
   form: FormData,
-): { ok: true; payload: PagePayload } | { ok: false; message: string } => {
+):
+  | { ok: true; payload: PagePayload }
+  | {
+      ok: false;
+      message: string;
+      fieldErrors?: FieldErrors;
+      values?: FormValues;
+    } => {
   const kind: PageKind = 'custom';
   const title = asString(form.get('title')).trim();
   const slugRaw = asString(form.get('slug')).trim();
@@ -59,18 +67,45 @@ export const pagePayloadFromForm = (
   const editorModeRaw = asString(form.get('editor_mode'), 'code');
   const editorMode: PageEditorMode =
     editorModeRaw === 'svedit' ? 'svedit' : 'code';
+  const values: FormValues = {
+    title,
+    slug: slugRaw,
+    visibility_status: visibilityRaw,
+    seo_title: seoTitle ?? '',
+    seo_description: seoDescription ?? '',
+    og_image_path: ogImagePath ?? '',
+    editor_mode: editorMode,
+    html_content: rawHtml,
+    css_module: rawCss,
+    svedit_doc: rawSveditDoc,
+  };
 
   if (!title) {
-    return { ok: false, message: 'Title is required.' };
+    return {
+      ok: false,
+      message: 'Title is required.',
+      fieldErrors: { title: 'Title is required.' },
+      values,
+    };
   }
 
   if (editorMode === 'code' && rawHtml.toLowerCase().includes('<iframe')) {
-    return { ok: false, message: 'iframe embeds are blocked in v1.' };
+    return {
+      ok: false,
+      message: 'iframe embeds are blocked in v1.',
+      fieldErrors: { html_content: 'iframe embeds are blocked in v1.' },
+      values,
+    };
   }
 
   const slugProblem = validateCmsPageSlug(generatedSlug);
   if (slugProblem) {
-    return { ok: false, message: slugProblem };
+    return {
+      ok: false,
+      message: slugProblem,
+      fieldErrors: { slug: slugProblem },
+      values,
+    };
   }
 
   const sveditDocResult =
@@ -81,7 +116,12 @@ export const pagePayloadFromForm = (
       : null;
 
   if (sveditDocResult && !sveditDocResult.ok) {
-    return { ok: false, message: sveditDocResult.message };
+    return {
+      ok: false,
+      message: sveditDocResult.message,
+      fieldErrors: { svedit_doc: sveditDocResult.message },
+      values,
+    };
   }
 
   return {

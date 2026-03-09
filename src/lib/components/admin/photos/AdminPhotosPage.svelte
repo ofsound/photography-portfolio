@@ -73,6 +73,8 @@
     | {
         message?: string;
         success?: boolean;
+        fieldErrors?: Record<string, string | undefined>;
+        values?: Record<string, string | undefined>;
       }
     | null
     | undefined;
@@ -495,6 +497,7 @@
                     {onAdditionalReorder}
                     gridMode={true}
                     isDraggingPhoto={sortable.isDragging}
+                    formState={form ?? undefined}
                   />
                 </li>
               {:else}
@@ -515,6 +518,7 @@
                     {onAdditionalReorder}
                     gridMode={true}
                     isDraggingPhoto={false}
+                    formState={form ?? undefined}
                   />
                 </li>
               {/if}

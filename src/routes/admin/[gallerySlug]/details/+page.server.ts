@@ -7,6 +7,7 @@ import {
   updateGalleryWithAutoSlug,
   validateGallerySlugInput,
 } from '$lib/server/admin/galleries';
+import { failForm } from '$lib/server/form-errors';
 import {
   loadSettingsEditor,
   saveSettingsEditor,
@@ -56,12 +57,34 @@ export const actions: Actions = {
     const slugInput = asString(form.get('slug')).trim();
     if (role === 'admin') {
       if (!name) {
-        return fail(400, { message: 'Name is required.' });
+        return failForm('Name is required.', {
+          fieldErrors: { name: 'Name is required.' },
+          values: {
+            name,
+            slug: slugInput,
+            visibility_status: asString(form.get('visibility_status')).trim(),
+            description: asNullableString(form.get('description')) ?? '',
+            seo_title: asNullableString(form.get('seo_title')) ?? '',
+            seo_description:
+              asNullableString(form.get('seo_description')) ?? '',
+          },
+        });
       }
 
       const slugProblem = validateGallerySlugInput(slugInput || name);
       if (slugProblem) {
-        return fail(400, { message: slugProblem });
+        return failForm(slugProblem, {
+          fieldErrors: { slug: slugProblem },
+          values: {
+            name,
+            slug: slugInput,
+            visibility_status: asString(form.get('visibility_status')).trim(),
+            description: asNullableString(form.get('description')) ?? '',
+            seo_title: asNullableString(form.get('seo_title')) ?? '',
+            seo_description:
+              asNullableString(form.get('seo_description')) ?? '',
+          },
+        });
       }
     }
 

@@ -18,7 +18,17 @@
   import { buildGalleryPath } from '$lib/utils/gallery-routes';
   import { slugify } from '$lib/utils/slug';
 
+  type FormState = {
+    message?: string;
+    success?: boolean;
+    fieldErrors?: Record<string, string | undefined>;
+    values?: Record<string, string | undefined>;
+  };
+
   const { data, form } = $props();
+  const typedForm = $derived(
+    (form as FormState | null | undefined) ?? undefined,
+  );
 
   type GalleryCard = {
     id: string;
@@ -56,6 +66,7 @@
   let createSlug = $state('');
   let createVisibilityStatus = $state<GalleryVisibilityStatus>('public');
   let hasManualSlugEdit = $state(false);
+  const createFieldErrors = $derived(typedForm?.fieldErrors ?? {});
 
   const onCreateNameInput = () => {
     if (!hasManualSlugEdit) {
@@ -70,6 +81,21 @@
       createSlug = slugify(createName);
     }
   };
+
+  $effect(() => {
+    const nextName = typedForm?.values?.name;
+    const nextSlug = typedForm?.values?.slug;
+    const nextVisibility = typedForm?.values?.visibility_status;
+    if (typeof nextName === 'string') createName = nextName;
+    if (typeof nextSlug === 'string') createSlug = nextSlug;
+    if (
+      nextVisibility === 'public' ||
+      nextVisibility === 'unlisted' ||
+      nextVisibility === 'archived'
+    ) {
+      createVisibilityStatus = nextVisibility;
+    }
+  });
 
   const persistOrder = async (next: string[]) => {
     const payload = new FormData();
@@ -132,16 +158,25 @@
 
 {#snippet createForm()}
   <form method="POST" action="?/create" class="flex flex-col gap-3">
-    <FormField label="Name" id="gallery-create-name">
+    <FormField
+      label="Name"
+      id="gallery-create-name"
+      required
+      error={createFieldErrors.name}
+    >
       <FormInput
         id="gallery-create-name"
         name="name"
         bind:value={createName}
-        required
         oninput={onCreateNameInput}
       />
     </FormField>
-    <FormField label="Slug" id="gallery-create-slug">
+    <FormField
+      label="Slug"
+      id="gallery-create-slug"
+      hint="Leave blank to auto-generate."
+      error={createFieldErrors.slug}
+    >
       <FormInput
         id="gallery-create-slug"
         name="slug"

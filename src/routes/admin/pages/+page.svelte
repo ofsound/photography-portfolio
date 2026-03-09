@@ -17,7 +17,17 @@
   } from '$lib/constants/page-visibility';
   import { slugify } from '$lib/utils/slug';
 
+  type FormState = {
+    message?: string;
+    success?: boolean;
+    fieldErrors?: Record<string, string | undefined>;
+    values?: Record<string, string | undefined>;
+  };
+
   const { data, form } = $props();
+  const typedForm = $derived(
+    (form as FormState | null | undefined) ?? undefined,
+  );
 
   type PageCard = {
     id: string;
@@ -58,6 +68,7 @@
   let hasManualSlugEdit = $state(false);
   let createEditorMode = $state<'code' | 'svedit'>('code');
   let createVisibilityStatus = $state<PageVisibilityStatus>('draft');
+  const createFieldErrors = $derived(typedForm?.fieldErrors ?? {});
 
   const onCreateTitleInput = () => {
     if (!hasManualSlugEdit) {
@@ -72,6 +83,25 @@
       createSlug = slugify(createTitle);
     }
   };
+
+  $effect(() => {
+    const nextTitle = typedForm?.values?.title;
+    const nextSlug = typedForm?.values?.slug;
+    const nextVisibility = typedForm?.values?.visibility_status;
+    const nextEditorMode = typedForm?.values?.editor_mode;
+    if (typeof nextTitle === 'string') createTitle = nextTitle;
+    if (typeof nextSlug === 'string') createSlug = nextSlug;
+    if (
+      nextVisibility === 'draft' ||
+      nextVisibility === 'public' ||
+      nextVisibility === 'unlisted'
+    ) {
+      createVisibilityStatus = nextVisibility;
+    }
+    if (nextEditorMode === 'code' || nextEditorMode === 'svedit') {
+      createEditorMode = nextEditorMode;
+    }
+  });
 
   const persistOrder = async (next: string[]) => {
     const payload = new FormData();
@@ -128,17 +158,26 @@
 
 {#snippet createForm()}
   <form method="POST" action="?/create" class="grid h-fit gap-3">
-    <FormField label="Title" id="page-create-title">
+    <FormField
+      label="Title"
+      id="page-create-title"
+      required
+      error={createFieldErrors.title}
+    >
       <FormInput
         id="page-create-title"
         name="title"
         placeholder="Title"
         bind:value={createTitle}
-        required
         oninput={onCreateTitleInput}
       />
     </FormField>
-    <FormField label="Slug" id="page-create-slug">
+    <FormField
+      label="Slug"
+      id="page-create-slug"
+      hint="Leave blank to auto-generate."
+      error={createFieldErrors.slug}
+    >
       <FormInput
         id="page-create-slug"
         name="slug"

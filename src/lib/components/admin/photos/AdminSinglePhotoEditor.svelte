@@ -12,7 +12,7 @@
     AdminTag,
   } from '$lib/types/content';
 
-  const { data } = $props<{
+  const { data, form } = $props<{
     data: {
       photo: AdminPhoto | (Omit<AdminPhoto, 'id'> & { id: null });
       categories: AdminCategory[];
@@ -22,6 +22,10 @@
       selectedTagIds: string[];
       photoConversionState: 'no-images' | 'pending' | 'ready' | 'mixed';
     };
+    form?: {
+      fieldErrors?: Record<string, string | undefined>;
+      values?: Record<string, string | undefined>;
+    } | null;
   }>();
 
   const photo = $derived(data.photo);
@@ -108,5 +112,6 @@
     {onAdditionalReorder}
     initialExpanded={true}
     editorOnly={true}
+    formState={form ?? undefined}
   />
 </section>

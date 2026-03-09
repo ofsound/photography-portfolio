@@ -133,39 +133,67 @@
 </div>
 
 <div class="mt-4 flex flex-col gap-3">
-  <label class="flex items-center gap-2 text-sm">
-    <input
-      type="checkbox"
-      name="allow_transition_toggle"
-      checked={settings.allow_transition_toggle}
-      disabled={readonly}
-    /> Allow Transition Toggle
-  </label>
+  <FormField
+    label="Allow Transition Toggle"
+    id={p('allow_transition_toggle')}
+    labelSrOnly
+  >
+    <label class="flex items-center gap-2 text-sm">
+      <input
+        id={p('allow_transition_toggle')}
+        type="checkbox"
+        name="allow_transition_toggle"
+        checked={settings.allow_transition_toggle}
+        disabled={readonly}
+      />
+      Enable toggle in gallery UI
+    </label>
+  </FormField>
 
-  <label class="flex items-center gap-2 text-sm">
-    <input
-      type="checkbox"
-      name="show_search_bar"
-      checked={settings.show_search_bar}
-      disabled={readonly}
-    /> Show Search Bar
-  </label>
+  <FormField label="Show Search Bar" id={p('show_search_bar')} labelSrOnly>
+    <label class="flex items-center gap-2 text-sm">
+      <input
+        id={p('show_search_bar')}
+        type="checkbox"
+        name="show_search_bar"
+        checked={settings.show_search_bar}
+        disabled={readonly}
+      />
+      Display search control
+    </label>
+  </FormField>
 
-  <label class="flex items-center gap-2 text-sm">
-    <input
-      type="checkbox"
-      name="show_photograph_info"
-      checked={settings.show_photograph_info}
-      disabled={readonly}
-    /> Show Photograph Info
-  </label>
+  <FormField
+    label="Show Photograph Info"
+    id={p('show_photograph_info')}
+    labelSrOnly
+  >
+    <label class="flex items-center gap-2 text-sm">
+      <input
+        id={p('show_photograph_info')}
+        type="checkbox"
+        name="show_photograph_info"
+        checked={settings.show_photograph_info}
+        disabled={readonly}
+      />
+      Show metadata in viewer
+    </label>
+  </FormField>
 
-  <label class="flex items-center gap-2 text-sm">
-    <input
-      type="checkbox"
-      name="show_thumbnail_zoom_hover"
-      checked={settings.show_thumbnail_zoom_hover}
-      disabled={readonly}
-    /> Show Thumbnail Zoom Hover
-  </label>
+  <FormField
+    label="Show Thumbnail Zoom Hover"
+    id={p('show_thumbnail_zoom_hover')}
+    labelSrOnly
+  >
+    <label class="flex items-center gap-2 text-sm">
+      <input
+        id={p('show_thumbnail_zoom_hover')}
+        type="checkbox"
+        name="show_thumbnail_zoom_hover"
+        checked={settings.show_thumbnail_zoom_hover}
+        disabled={readonly}
+      />
+      Enable hover zoom treatment
+    </label>
+  </FormField>
 </div>

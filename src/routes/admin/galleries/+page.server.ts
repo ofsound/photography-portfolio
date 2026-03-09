@@ -1,5 +1,6 @@
 import { error, fail, type Actions } from '@sveltejs/kit';
 import { asString, getCmsRole, parseUuidList } from '$lib/server/admin-helpers';
+import { failForm } from '$lib/server/form-errors';
 import {
   createGalleryWithAutoSlug,
   listGalleriesForAdmin,
@@ -60,12 +61,26 @@ export const actions: Actions = {
     const name = asString(form.get('name')).trim();
     const slugInput = asString(form.get('slug')).trim();
     if (!name) {
-      return fail(400, { message: 'Name is required.' });
+      return failForm('Name is required.', {
+        fieldErrors: { name: 'Name is required.' },
+        values: {
+          name,
+          slug: slugInput,
+          visibility_status: asString(form.get('visibility_status')).trim(),
+        },
+      });
     }
 
     const slugProblem = validateGallerySlugInput(slugInput || name);
     if (slugProblem) {
-      return fail(400, { message: slugProblem });
+      return failForm(slugProblem, {
+        fieldErrors: { slug: slugProblem },
+        values: {
+          name,
+          slug: slugInput,
+          visibility_status: asString(form.get('visibility_status')).trim(),
+        },
+      });
     }
 
     try {

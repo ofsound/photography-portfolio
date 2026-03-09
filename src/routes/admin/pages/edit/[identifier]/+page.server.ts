@@ -6,6 +6,7 @@ import {
   validateCmsPageSlug,
 } from '$lib/server/admin/page-form';
 import { sanitizeCmsCss, sanitizeCmsHtml } from '$lib/server/cms-sanitize';
+import { failForm } from '$lib/server/form-errors';
 import {
   parseSveditPageDocument,
   SVEDIT_PAGE_SCHEMA_VERSION,
@@ -81,10 +82,28 @@ export const actions: Actions = {
     if (!id) return fail(400, { message: 'Missing page id.' });
 
     const result = pagePayloadFromForm(form);
-    if (!result.ok) return fail(400, { message: result.message });
+    if (!result.ok) {
+      return failForm(result.message, {
+        fieldErrors: result.fieldErrors,
+        values: result.values,
+      });
+    }
     if (await isGallerySlugTaken(locals, result.payload.slug)) {
-      return fail(400, {
-        message: 'Slug conflicts with an existing gallery.',
+      return failForm('Slug conflicts with an existing gallery.', {
+        fieldErrors: { slug: 'Slug conflicts with an existing gallery.' },
+        values: {
+          id,
+          title: asString(form.get('title')).trim(),
+          slug: asString(form.get('slug')).trim(),
+          visibility_status: asString(form.get('visibility_status')).trim(),
+          editor_mode: asString(form.get('editor_mode')).trim(),
+          seo_title: asString(form.get('seo_title')).trim(),
+          seo_description: asString(form.get('seo_description')).trim(),
+          og_image_path: asString(form.get('og_image_path')).trim(),
+          html_content: asString(form.get('html_content')),
+          css_module: asString(form.get('css_module')),
+          svedit_doc: asString(form.get('svedit_doc')),
+        },
       });
     }
 

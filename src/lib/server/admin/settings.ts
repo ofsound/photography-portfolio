@@ -13,7 +13,7 @@ type SettingsScope =
   | { kind: 'gallery'; galleryId: string };
 
 const settingsFieldSelect =
-  'theme_default, grid_desktop_default, grid_mobile_default, max_content_width_px, gallery_layout_mode, gallery_gap_px, uniform_thumb_ratio, transition_preset, allow_transition_toggle, show_search_bar, show_photograph_info, show_thumbnail_zoom_hover';
+  'theme_default, grid_desktop_default, grid_mobile_default, max_content_width_px, gallery_layout_mode, gallery_gap_px, uniform_thumb_ratio, transition_preset, allow_transition_toggle, show_photograph_info, show_thumbnail_zoom_hover';
 
 const asThemeMode = (value: FormDataEntryValue | null) => {
   const mode = asString(value, 'system');
@@ -61,7 +61,7 @@ const readPayload = (
       Math.min(
         20,
         asOptionalNumber(form.get('gallery_gap_px')) ??
-          GALLERY_SETTINGS_DEFAULTS.gallery_gap_px,
+        GALLERY_SETTINGS_DEFAULTS.gallery_gap_px,
       ),
     ),
     uniform_thumb_ratio: Number(
@@ -71,7 +71,6 @@ const readPayload = (
       ),
     ),
     allow_transition_toggle: asBoolean(form.get('allow_transition_toggle')),
-    show_search_bar: asBoolean(form.get('show_search_bar')),
     show_photograph_info: asBoolean(form.get('show_photograph_info')),
     show_thumbnail_zoom_hover: asBoolean(form.get('show_thumbnail_zoom_hover')),
   };
@@ -101,16 +100,16 @@ const loadScopeSettings = async (locals: App.Locals, scope: SettingsScope) => {
   const query =
     scope.kind === 'all'
       ? await locals.supabase
-          .from('gallery_settings')
-          .select(`id, scope, gallery_id, ${settingsFieldSelect}`)
-          .eq('scope', 'all')
-          .maybeSingle()
+        .from('gallery_settings')
+        .select(`id, scope, gallery_id, ${settingsFieldSelect}`)
+        .eq('scope', 'all')
+        .maybeSingle()
       : await locals.supabase
-          .from('gallery_settings')
-          .select(`id, scope, gallery_id, ${settingsFieldSelect}`)
-          .eq('scope', 'gallery')
-          .eq('gallery_id', scope.galleryId)
-          .maybeSingle();
+        .from('gallery_settings')
+        .select(`id, scope, gallery_id, ${settingsFieldSelect}`)
+        .eq('scope', 'gallery')
+        .eq('gallery_id', scope.galleryId)
+        .maybeSingle();
 
   if (query.error) throw new Error(query.error.message);
   if (query.data) return query.data;
@@ -153,14 +152,14 @@ const saveScopeSettings = async (
   const update =
     scope.kind === 'all'
       ? await locals.supabase
-          .from('gallery_settings')
-          .update(payload)
-          .eq('scope', 'all')
+        .from('gallery_settings')
+        .update(payload)
+        .eq('scope', 'all')
       : await locals.supabase
-          .from('gallery_settings')
-          .update(payload)
-          .eq('scope', 'gallery')
-          .eq('gallery_id', scope.galleryId);
+        .from('gallery_settings')
+        .update(payload)
+        .eq('scope', 'gallery')
+        .eq('gallery_id', scope.galleryId);
   if (update.error) throw new Error(update.error.message);
 };
 

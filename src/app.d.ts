@@ -23,10 +23,9 @@ declare global {
         transition_preset: 'cinematic' | 'snappy' | 'experimental';
         allow_transition_toggle: boolean;
         show_photograph_info: boolean;
-        show_search_bar: boolean;
       } | null;
     }
   }
 }
 
-export {};
+export { };

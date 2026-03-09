@@ -89,7 +89,6 @@
       theme_default?: 'light' | 'dark' | 'system' | null;
       transition_preset?: 'cinematic' | 'snappy' | 'experimental' | null;
       allow_transition_toggle?: boolean | null;
-      show_search_bar?: boolean | null;
     } | null,
   );
   const siteSettings = $derived(

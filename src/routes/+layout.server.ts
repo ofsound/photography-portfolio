@@ -14,7 +14,7 @@ export const load: LayoutServerLoad = async ({ locals }) => {
     locals.supabase
       .from('site_settings')
       .select(
-        'theme_default, transition_preset, allow_transition_toggle, show_search_bar, show_photograph_info',
+        'theme_default, transition_preset, allow_transition_toggle, show_photograph_info',
       )
       .eq('singleton_id', 1)
       .maybeSingle(),

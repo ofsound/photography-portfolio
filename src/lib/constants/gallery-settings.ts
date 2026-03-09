@@ -11,7 +11,6 @@ export type GallerySettingsDefaults = Pick<
   | 'uniform_thumb_ratio'
   | 'transition_preset'
   | 'allow_transition_toggle'
-  | 'show_search_bar'
   | 'show_photograph_info'
   | 'show_thumbnail_zoom_hover'
 >;
@@ -26,7 +25,6 @@ export const GALLERY_SETTINGS_DEFAULTS: GallerySettingsDefaults = {
   uniform_thumb_ratio: 1,
   transition_preset: 'cinematic',
   allow_transition_toggle: true,
-  show_search_bar: true,
   show_photograph_info: true,
   show_thumbnail_zoom_hover: true,
 };

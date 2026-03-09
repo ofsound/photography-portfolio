@@ -30,7 +30,6 @@
 </script>
 
 <nav class="mb-6 flex justify-between">
-  <!-- Gallery title + back link + Active/Archived badges (left) -->
   <div class="flex items-center gap-3">
     <a
       href={resolve('/admin/galleries')}
@@ -70,12 +69,11 @@
     {/if}
   </div>
 
-  <!-- View tabs (center) -->
   <div class="flex items-center gap-4">
     <div class="relative flex rounded-md bg-surface-muted">
       <a
         href={resolve(photosRoute, { gallerySlug })}
-        class="relative z-10 grid place-items-center rounded-md px-4 py-1.5 text-xs font-semibold tracking-wider uppercase transition-all duration-300 ease-(--ease-cinematic)"
+        class="relative z-10 grid place-items-center rounded-md px-4 py-1.5 text-sm font-semibold tracking-wider uppercase transition-all duration-300 ease-(--ease-cinematic)"
         class:text-brand-contrast={currentView === 'photos'}
         class:text-text-subtle={currentView !== 'photos'}
         class:hover:text-text={currentView !== 'photos'}
@@ -87,7 +85,7 @@
       </a>
       <a
         href={resolve(detailsRoute, { gallerySlug })}
-        class="relative z-10 grid place-items-center rounded-md px-4 py-1.5 text-xs font-semibold tracking-wider uppercase transition-all duration-300 ease-(--ease-cinematic)"
+        class="relative z-10 grid place-items-center rounded-md px-4 py-1.5 text-sm font-semibold tracking-wider uppercase transition-all duration-300 ease-(--ease-cinematic)"
         class:text-brand-contrast={currentView === 'details'}
         class:text-text-subtle={currentView !== 'details'}
         class:hover:text-text={currentView !== 'details'}
@@ -101,10 +99,8 @@
   </div>
 </nav>
 
-<!-- Add Photos (left) -->
 {#if currentView === 'photos'}
   <div class="flex flex-wrap items-center gap-3 pt-1">
-    <!-- Variation A: Soft gradient with camera icon -->
     <a
       href={uploadHref}
       class="group inline-flex items-center gap-2 rounded-lg bg-linear-to-r from-brand to-indigo-500 px-4 py-2 text-sm font-semibold tracking-wider text-white transition-all hover:scale-[1.01] active:scale-[0.98]"

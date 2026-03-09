@@ -150,19 +150,6 @@
     </label>
   </FormField>
 
-  <FormField label="Show Search Bar" id={p('show_search_bar')} labelSrOnly>
-    <label class="flex items-center gap-2 text-sm">
-      <input
-        id={p('show_search_bar')}
-        type="checkbox"
-        name="show_search_bar"
-        checked={settings.show_search_bar}
-        disabled={readonly}
-      />
-      Display search control
-    </label>
-  </FormField>
-
   <FormField
     label="Show Photograph Info"
     id={p('show_photograph_info')}

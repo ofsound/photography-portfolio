@@ -144,7 +144,7 @@ const readDefaultsTemplate = async (locals: App.Locals) => {
   const { data, error } = await locals.supabase
     .from('site_settings')
     .select(
-      'theme_default, grid_desktop_default, grid_mobile_default, max_content_width_px, gallery_layout_mode, gallery_gap_px, uniform_thumb_ratio, transition_preset, allow_transition_toggle, show_search_bar, show_photograph_info, show_thumbnail_zoom_hover',
+      'theme_default, grid_desktop_default, grid_mobile_default, max_content_width_px, gallery_layout_mode, gallery_gap_px, uniform_thumb_ratio, transition_preset, allow_transition_toggle, show_photograph_info, show_thumbnail_zoom_hover',
     )
     .eq('singleton_id', 1)
     .maybeSingle();

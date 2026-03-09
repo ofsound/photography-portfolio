@@ -123,7 +123,7 @@
         <div class="grid gap-2">
           {#each GALLERY_VISIBILITY_OPTIONS as option (option.value)}
             <label
-              class="flex items-start gap-3 rounded border border-border p-3 transition-colors hover:border-border-strong"
+              class="flex items-start gap-3 rounded border border-border bg-surface p-3 transition-colors hover:border-border-strong"
             >
               <input
                 type="radio"

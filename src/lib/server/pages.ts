@@ -9,6 +9,7 @@ type CmsPage = {
   id: string;
   slug: string;
   title: string;
+  hero_vertical_alignment_pct: number;
   seo_title: string | null;
   seo_description: string | null;
   og_image_path: string | null;
@@ -26,6 +27,7 @@ const toCmsPage = (data: {
   id: string;
   slug: string;
   title: string;
+  hero_vertical_alignment_pct: number | null;
   seo_title: string | null;
   seo_description: string | null;
   og_image_path: string | null;
@@ -38,11 +40,15 @@ const toCmsPage = (data: {
   kind: 'home' | 'custom';
   visibility_status: 'public' | 'unlisted' | 'draft';
 }): CmsPage => {
+  const heroVerticalAlignmentPct = Number(data.hero_vertical_alignment_pct);
   const editorMode = data.editor_mode === 'svedit' ? 'svedit' : 'code';
   const parsedSveditDoc = parseSveditPageDocument(data.svedit_doc);
 
   return {
     ...data,
+    hero_vertical_alignment_pct: Number.isFinite(heroVerticalAlignmentPct)
+      ? Math.min(100, Math.max(0, Math.round(heroVerticalAlignmentPct)))
+      : 50,
     editor_mode: editorMode,
     html_content:
       editorMode === 'code' ? sanitizeCmsHtml(data.html_content ?? '') : '',
@@ -62,7 +68,7 @@ export const loadPageBySlug = async (locals: App.Locals, slug: string) => {
   const pageWithSvedit = await locals.supabase
     .from('pages')
     .select(
-      'id, slug, title, seo_title, seo_description, og_image_path, html_content, css_module, tailwind_css, editor_mode, svedit_doc, svedit_schema_version, kind, visibility_status',
+      'id, slug, title, hero_vertical_alignment_pct, seo_title, seo_description, og_image_path, html_content, css_module, tailwind_css, editor_mode, svedit_doc, svedit_schema_version, kind, visibility_status',
     )
     .eq('slug', slug)
     .is('deleted_at', null)
@@ -96,7 +102,7 @@ export const loadHomePage = async (locals: App.Locals) => {
   const homeResult = await locals.supabase
     .from('pages')
     .select(
-      'id, slug, title, seo_title, seo_description, og_image_path, html_content, css_module, tailwind_css, editor_mode, svedit_doc, svedit_schema_version, kind, visibility_status',
+      'id, slug, title, hero_vertical_alignment_pct, seo_title, seo_description, og_image_path, html_content, css_module, tailwind_css, editor_mode, svedit_doc, svedit_schema_version, kind, visibility_status',
     )
     .eq('kind', 'home')
     .is('deleted_at', null)

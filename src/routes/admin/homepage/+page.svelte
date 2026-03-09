@@ -32,14 +32,22 @@
 
   type HomePageEditorData = {
     id: string;
+    title: string;
+    updated_at: string;
     editor_mode: 'code' | 'svedit';
     html_content: string;
     css_module: string;
     svedit_doc: unknown;
+    hero_vertical_alignment_pct: number;
     seo_title: string | null;
     seo_description: string | null;
     og_image_path: string | null;
     visibility_status: 'public' | 'unlisted' | 'draft';
+  };
+
+  const clampHeroVerticalAlignmentPct = (value: number) => {
+    if (!Number.isFinite(value)) return 50;
+    return Math.min(100, Math.max(0, Math.round(value)));
   };
 
   const { data, form } = $props();
@@ -72,13 +80,17 @@
   const historyLimit = 100;
 
   let heroVisibilityStatus = $state<'public' | 'draft'>('draft');
+  let heroTitle = $state('');
   let heroEditorMode = $state<'code' | 'svedit'>('code');
   let heroHtmlContent = $state('');
   let heroCssModule = $state('');
   let heroSveditDoc = $state('');
+  let heroVerticalAlignmentPct = $state(50);
   let heroSeoTitle = $state('');
   let heroSeoDescription = $state('');
   let heroOgImagePath = $state('');
+  let heroEditorSeed = $state(0);
+  let heroLoadedStateKey = $state<string | null>(null);
   let showRawSveditJson = $state(false);
   let rawSveditJsonError = $state<string | null>(null);
 
@@ -116,9 +128,13 @@
   $effect(() => {
     const currentHomePage = homePage;
     if (!currentHomePage) return;
+    const nextLoadedStateKey = `${currentHomePage.id}:${currentHomePage.updated_at}`;
+    if (heroLoadedStateKey === nextLoadedStateKey) return;
+    heroLoadedStateKey = nextLoadedStateKey;
 
     heroVisibilityStatus =
       currentHomePage.visibility_status === 'public' ? 'public' : 'draft';
+    heroTitle = currentHomePage.title ?? '';
     heroEditorMode =
       currentHomePage.editor_mode === 'svedit' ? 'svedit' : 'code';
     heroHtmlContent = currentHomePage.html_content ?? '';
@@ -126,11 +142,15 @@
     heroSveditDoc = currentHomePage.svedit_doc
       ? JSON.stringify(currentHomePage.svedit_doc, null, 2)
       : '';
+    heroVerticalAlignmentPct = clampHeroVerticalAlignmentPct(
+      currentHomePage.hero_vertical_alignment_pct ?? 50,
+    );
     heroSeoTitle = currentHomePage.seo_title ?? '';
     heroSeoDescription = currentHomePage.seo_description ?? '';
     heroOgImagePath = currentHomePage.og_image_path ?? '';
     showRawSveditJson = false;
     rawSveditJsonError = null;
+    heroEditorSeed += 1;
   });
 
   $effect(() => {
@@ -143,6 +163,7 @@
     ) {
       heroVisibilityStatus = values.visibility_status;
     }
+    if (typeof values.title === 'string') heroTitle = values.title;
     if (values.editor_mode === 'code' || values.editor_mode === 'svedit') {
       heroEditorMode = values.editor_mode;
     }
@@ -152,6 +173,11 @@
       heroCssModule = values.css_module;
     if (typeof values.svedit_doc === 'string')
       heroSveditDoc = values.svedit_doc;
+    if (typeof values.hero_vertical_alignment_pct === 'string') {
+      heroVerticalAlignmentPct = clampHeroVerticalAlignmentPct(
+        Number(values.hero_vertical_alignment_pct),
+      );
+    }
     if (typeof values.seo_title === 'string') heroSeoTitle = values.seo_title;
     if (typeof values.seo_description === 'string') {
       heroSeoDescription = values.seo_description;
@@ -276,10 +302,21 @@
       class="mt-6 grid max-w-5xl gap-3"
     >
       <input type="hidden" name="id" value={homePage.id} />
-      <input type="hidden" name="title" value="Homepage Hero" />
       <input type="hidden" name="slug" value="home" />
 
       <div class="grid gap-3 sm:grid-cols-2">
+        <FormField
+          label="Title"
+          id="homepage-hero-title"
+          error={heroFieldErrors.title}
+        >
+          <FormInput
+            id="homepage-hero-title"
+            name="title"
+            bind:value={heroTitle}
+          />
+        </FormField>
+
         <FormField label="Visibility" id="homepage-hero-visibility_status">
           <FormSelect
             name="visibility_status"
@@ -302,6 +339,25 @@
           </FormSelect>
         </FormField>
       </div>
+
+      <FormField
+        label="Vertical Alignment"
+        id="homepage-hero-vertical-alignment"
+      >
+        <div class="grid gap-2">
+          <input
+            id="homepage-hero-vertical-alignment"
+            type="range"
+            name="hero_vertical_alignment_pct"
+            min="0"
+            max="100"
+            step="1"
+            bind:value={heroVerticalAlignmentPct}
+            class="w-full accent-brand"
+          />
+          <p class="text-xs text-text-muted">{heroVerticalAlignmentPct}%</p>
+        </div>
+      </FormField>
 
       <div class="grid gap-3 sm:grid-cols-2">
         <FormField label="SEO title" id="homepage-hero-seo_title">
@@ -330,26 +386,28 @@
       </FormField>
 
       {#if heroEditorMode === 'code'}
-        <FormField
-          label="HTML"
-          id="homepage-hero-html_content"
-          error={heroFieldErrors.html_content}
-        >
-          <CodeEditor
-            name="html_content"
-            bind:value={heroHtmlContent}
-            lang="html"
-            height="32rem"
-          />
-        </FormField>
-        <FormField label="Scoped CSS" id="homepage-hero-css_module">
-          <CodeEditor
-            name="css_module"
-            bind:value={heroCssModule}
-            lang="css"
-            height="16rem"
-          />
-        </FormField>
+        {#key heroEditorSeed}
+          <FormField
+            label="HTML"
+            id="homepage-hero-html_content"
+            error={heroFieldErrors.html_content}
+          >
+            <CodeEditor
+              name="html_content"
+              bind:value={heroHtmlContent}
+              lang="html"
+              height="32rem"
+            />
+          </FormField>
+          <FormField label="Scoped CSS" id="homepage-hero-css_module">
+            <CodeEditor
+              name="css_module"
+              bind:value={heroCssModule}
+              lang="css"
+              height="16rem"
+            />
+          </FormField>
+        {/key}
         <input type="hidden" name="svedit_doc" value="" />
       {:else}
         <FormField

@@ -30,9 +30,12 @@ import type { Database } from '$lib/types/database';
 import type { PageServerLoad } from './$types';
 
 const PAGE_SELECT =
-  'id, slug, title, kind, html_content, css_module, tailwind_css, editor_mode, svedit_doc, svedit_schema_version, seo_title, seo_description, og_image_path, visibility_status, nav_order, deleted_at, updated_at';
+  'id, slug, title, kind, html_content, css_module, tailwind_css, editor_mode, svedit_doc, svedit_schema_version, hero_vertical_alignment_pct, seo_title, seo_description, og_image_path, visibility_status, nav_order, deleted_at, updated_at';
 const HOME_PAGE_SLUG = 'home';
-const HOME_PAGE_TITLE = 'Homepage Hero';
+const DEFAULT_HOME_PAGE_TITLE = 'Homepage Hero';
+const HERO_VERTICAL_ALIGNMENT_MIN_PCT = 0;
+const HERO_VERTICAL_ALIGNMENT_MAX_PCT = 100;
+const HERO_VERTICAL_ALIGNMENT_DEFAULT_PCT = 50;
 
 type HomePageRow = Database['public']['Tables']['pages']['Row'];
 
@@ -40,6 +43,16 @@ type HomepageSection = 'slides' | 'hero';
 
 const normalizeSection = (value: string | null): HomepageSection =>
   value === 'hero' ? 'hero' : 'slides';
+
+const clampHeroVerticalAlignmentPct = (value: number | null) => {
+  if (value == null || !Number.isFinite(value))
+    return HERO_VERTICAL_ALIGNMENT_DEFAULT_PCT;
+  const normalized = Math.round(value);
+  return Math.min(
+    HERO_VERTICAL_ALIGNMENT_MAX_PCT,
+    Math.max(HERO_VERTICAL_ALIGNMENT_MIN_PCT, normalized),
+  );
+};
 
 const ensureHomePageRecord = async (locals: App.Locals) => {
   const homeQuery = await locals.supabase
@@ -64,7 +77,7 @@ const ensureHomePageRecord = async (locals: App.Locals) => {
     .from('pages')
     .insert({
       slug: HOME_PAGE_SLUG,
-      title: HOME_PAGE_TITLE,
+      title: DEFAULT_HOME_PAGE_TITLE,
       kind: 'home',
       html_content: '',
       css_module: '',
@@ -72,6 +85,7 @@ const ensureHomePageRecord = async (locals: App.Locals) => {
       editor_mode: 'code',
       svedit_doc: null,
       svedit_schema_version: SVEDIT_PAGE_SCHEMA_VERSION,
+      hero_vertical_alignment_pct: HERO_VERTICAL_ALIGNMENT_DEFAULT_PCT,
       seo_title: null,
       seo_description: null,
       og_image_path: null,
@@ -344,12 +358,18 @@ export const actions: Actions = {
 
   saveHero: async ({ locals, request }) => {
     const form = await request.formData();
+    const heroVerticalAlignmentPct = clampHeroVerticalAlignmentPct(
+      asOptionalNumber(form.get('hero_vertical_alignment_pct')),
+    );
     const result = await pagePayloadFromForm(form);
 
     if (!result.ok) {
       return failForm(result.message, {
         fieldErrors: result.fieldErrors,
-        values: result.values,
+        values: {
+          ...(result.values ?? {}),
+          hero_vertical_alignment_pct: String(heroVerticalAlignmentPct),
+        },
       });
     }
 
@@ -370,8 +390,8 @@ export const actions: Actions = {
         ...result.payload,
         kind: 'home',
         slug: HOME_PAGE_SLUG,
-        title: HOME_PAGE_TITLE,
         visibility_status: visibilityStatus,
+        hero_vertical_alignment_pct: heroVerticalAlignmentPct,
         nav_order: 0,
         deleted_at: null,
       })
@@ -446,12 +466,17 @@ export const actions: Actions = {
       String(snapshot.visibility_status ?? '').trim() === 'public'
         ? 'public'
         : 'draft';
+    const heroVerticalAlignmentPct = clampHeroVerticalAlignmentPct(
+      Number(snapshot.hero_vertical_alignment_pct ?? 50),
+    );
+    const title =
+      String(snapshot.title ?? '').trim() || DEFAULT_HOME_PAGE_TITLE;
 
     const updateResult = await locals.supabase
       .from('pages')
       .update({
         slug: HOME_PAGE_SLUG,
-        title: HOME_PAGE_TITLE,
+        title,
         kind: 'home',
         html_content: sanitizedHtml,
         css_module:
@@ -470,6 +495,7 @@ export const actions: Actions = {
           ? String(snapshot.og_image_path)
           : null,
         visibility_status: visibilityStatus,
+        hero_vertical_alignment_pct: heroVerticalAlignmentPct,
         nav_order: 0,
         deleted_at: null,
       })

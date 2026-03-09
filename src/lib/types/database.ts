@@ -312,6 +312,7 @@ export type Database = {
           css_module: string;
           deleted_at: string | null;
           editor_mode: Database['public']['Enums']['page_editor_mode'];
+          hero_vertical_alignment_pct: number;
           html_content: string;
           id: string;
           kind: Database['public']['Enums']['page_kind'];
@@ -334,6 +335,7 @@ export type Database = {
           css_module?: string;
           deleted_at?: string | null;
           editor_mode?: Database['public']['Enums']['page_editor_mode'];
+          hero_vertical_alignment_pct?: number;
           html_content?: string;
           id?: string;
           kind: Database['public']['Enums']['page_kind'];
@@ -356,6 +358,7 @@ export type Database = {
           css_module?: string;
           deleted_at?: string | null;
           editor_mode?: Database['public']['Enums']['page_editor_mode'];
+          hero_vertical_alignment_pct?: number;
           html_content?: string;
           id?: string;
           kind?: Database['public']['Enums']['page_kind'];

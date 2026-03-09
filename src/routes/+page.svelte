@@ -11,6 +11,11 @@
   const heroPage = $derived(data.heroPage);
   const canEditPublicly = $derived(Boolean(data.canEditPublicPages));
   const showHero = $derived(Boolean(heroPage));
+  const heroVerticalAlignmentPct = $derived.by(() => {
+    const value = Number(heroPage?.hero_vertical_alignment_pct ?? 50);
+    if (!Number.isFinite(value)) return 50;
+    return Math.min(100, Math.max(0, Math.round(value)));
+  });
   const isSveditHero = $derived(heroPage?.editor_mode === 'svedit');
   const isEditMode = $derived(
     showHero &&
@@ -97,12 +102,13 @@
   />
 
   {#if showHero && heroPage}
-    <div class="pointer-events-none absolute inset-0 z-20">
-      <div class="h-full overflow-auto px-5 py-8">
+    <div class="pointer-events-none absolute inset-0 z-20 overflow-hidden">
+      <div class="relative h-full px-5">
         <div
-          class="pointer-events-auto mx-auto flex min-h-full w-full max-w-6xl"
+          class="pointer-events-auto absolute top-0 left-1/2 w-full max-w-6xl -translate-x-1/2 -translate-y-1/2"
+          style={`top: ${heroVerticalAlignmentPct}%`}
         >
-          <div class="my-auto w-full">
+          <div class="w-full">
             {#if form?.message}
               <p class="mb-4 text-sm text-red-600">{form.message}</p>
             {/if}

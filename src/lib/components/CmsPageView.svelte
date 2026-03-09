@@ -19,16 +19,40 @@
     svedit_doc?: unknown;
   };
 
-  const { page, editable = false } = $props<{
+  const {
+    page,
+    editable = false,
+    layout,
+  } = $props<{
     page: CmsPageData;
     editable?: boolean;
+    layout?: 'page' | 'homepage-overlay';
   }>();
 
   const scopeKey = $derived(createCmsScopeKey(page.slug));
+  const layoutVariant = $derived(layout ?? 'page');
 
   const isCodeMode = $derived(page.editor_mode !== 'svedit');
   const isEditableSvedit = $derived(
     !isCodeMode && editable && Boolean(page.editor_mode === 'svedit'),
+  );
+  const codeSectionClass = $derived(
+    layoutVariant === 'homepage-overlay'
+      ? 'w-full'
+      : 'mx-auto max-w-5xl px-5 py-14',
+  );
+  const codeArticleClass = $derived(
+    layoutVariant === 'homepage-overlay'
+      ? 'prose flow-root max-w-none'
+      : 'prose mt-6 flow-root max-w-none',
+  );
+  const editableSveditSectionClass = $derived(
+    layoutVariant === 'homepage-overlay'
+      ? 'w-full'
+      : 'mx-auto max-w-6xl px-5 py-8',
+  );
+  const sveditRendererSectionClass = $derived(
+    layoutVariant === 'homepage-overlay' ? 'w-full' : undefined,
   );
   const serializedSveditDoc = $derived.by(() => {
     const parsedDoc = parseSveditPageDocument(page.svedit_doc);
@@ -52,13 +76,13 @@
 </svelte:head>
 
 {#if isCodeMode}
-  <section class="mx-auto max-w-5xl px-5 py-14" data-cms-scope={scopeKey}>
-    <article class="prose mt-6 flow-root max-w-none">
+  <section class={codeSectionClass} data-cms-scope={scopeKey}>
+    <article class={codeArticleClass}>
       {@html page.html_content}
     </article>
   </section>
 {:else if isEditableSvedit}
-  <section class="mx-auto max-w-6xl px-5 py-8">
+  <section class={editableSveditSectionClass}>
     <form
       id="public-svedit-form"
       method="POST"
@@ -86,5 +110,5 @@
     </form>
   </section>
 {:else}
-  <SveditPageRenderer {page} />
+  <SveditPageRenderer {page} sectionClass={sveditRendererSectionClass} />
 {/if}

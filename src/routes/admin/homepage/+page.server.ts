@@ -1,9 +1,18 @@
 import { fail, type Actions } from '@sveltejs/kit';
+
 import {
   asOptionalNumber,
   asString,
   parseUuidList,
 } from '$lib/server/admin-helpers';
+import { pagePayloadFromForm } from '$lib/server/admin/page-form';
+import { sanitizeCmsCssRaw, sanitizeCmsHtml } from '$lib/server/cms-sanitize';
+import {
+  compileCmsTailwindCss,
+  CmsTailwindCompileError,
+} from '$lib/server/cms-tailwind';
+import { failForm } from '$lib/server/form-errors';
+import { throwLoaderError } from '$lib/server/load-error';
 import {
   DEFAULT_SLIDE_DURATION_MS,
   DEFAULT_TRANSITION_DURATION_MS,
@@ -13,11 +22,91 @@ import {
   TRANSITION_DURATION_MAX_MS,
   clampInt,
 } from '$lib/server/slideshow-constants';
-import { throwLoaderError } from '$lib/server/load-error';
+import {
+  parseSveditPageDocument,
+  SVEDIT_PAGE_SCHEMA_VERSION,
+} from '$lib/svedit/page-document';
+import type { Database } from '$lib/types/database';
 import type { PageServerLoad } from './$types';
 
-export const load: PageServerLoad = async ({ locals }) => {
-  const [slidesQuery, imagesQuery, pendingQuery, settingsQuery] =
+const PAGE_SELECT =
+  'id, slug, title, kind, html_content, css_module, tailwind_css, editor_mode, svedit_doc, svedit_schema_version, seo_title, seo_description, og_image_path, visibility_status, nav_order, deleted_at, updated_at';
+const HOME_PAGE_SLUG = 'home';
+const HOME_PAGE_TITLE = 'Homepage Hero';
+
+type HomePageRow = Database['public']['Tables']['pages']['Row'];
+
+type HomepageSection = 'slides' | 'hero';
+
+const normalizeSection = (value: string | null): HomepageSection =>
+  value === 'hero' ? 'hero' : 'slides';
+
+const ensureHomePageRecord = async (locals: App.Locals) => {
+  const homeQuery = await locals.supabase
+    .from('pages')
+    .select(PAGE_SELECT)
+    .eq('kind', 'home')
+    .is('deleted_at', null)
+    .maybeSingle();
+
+  if (homeQuery.error) {
+    throwLoaderError(
+      { route: '/admin/homepage', operation: 'load home page record' },
+      homeQuery.error,
+    );
+  }
+
+  if (homeQuery.data) {
+    return homeQuery.data as HomePageRow;
+  }
+
+  const insertQuery = await locals.supabase
+    .from('pages')
+    .insert({
+      slug: HOME_PAGE_SLUG,
+      title: HOME_PAGE_TITLE,
+      kind: 'home',
+      html_content: '',
+      css_module: '',
+      tailwind_css: '',
+      editor_mode: 'code',
+      svedit_doc: null,
+      svedit_schema_version: SVEDIT_PAGE_SCHEMA_VERSION,
+      seo_title: null,
+      seo_description: null,
+      og_image_path: null,
+      visibility_status: 'draft',
+      nav_order: 0,
+      deleted_at: null,
+    })
+    .select(PAGE_SELECT)
+    .single();
+
+  if (insertQuery.error) {
+    const retryQuery = await locals.supabase
+      .from('pages')
+      .select(PAGE_SELECT)
+      .eq('kind', 'home')
+      .is('deleted_at', null)
+      .maybeSingle();
+
+    if (!retryQuery.error && retryQuery.data) {
+      return retryQuery.data as HomePageRow;
+    }
+
+    throwLoaderError(
+      { route: '/admin/homepage', operation: 'auto-create home page record' },
+      insertQuery.error,
+    );
+  }
+
+  return insertQuery.data as HomePageRow;
+};
+
+export const load: PageServerLoad = async ({ locals, url }) => {
+  const section = normalizeSection(url.searchParams.get('section'));
+
+  const [slidesQuery, imagesQuery, pendingQuery, settingsQuery, homeQuery] =
     await Promise.all([
       locals.supabase
         .from('homepage_slides')
@@ -43,6 +132,12 @@ export const load: PageServerLoad = async ({ locals }) => {
         .from('site_settings')
         .select('homepage_slide_duration_ms, homepage_transition_duration_ms')
         .eq('singleton_id', 1)
+        .maybeSingle(),
+      locals.supabase
+        .from('pages')
+        .select(PAGE_SELECT)
+        .eq('kind', 'home')
+        .is('deleted_at', null)
         .maybeSingle(),
     ]);
 
@@ -71,6 +166,13 @@ export const load: PageServerLoad = async ({ locals }) => {
     throwLoaderError(
       { route: '/admin/homepage', operation: 'load slideshow timing settings' },
       settingsQuery.error,
+    );
+  }
+
+  if (homeQuery.error) {
+    throwLoaderError(
+      { route: '/admin/homepage', operation: 'load home page record' },
+      homeQuery.error,
     );
   }
 
@@ -149,12 +251,46 @@ export const load: PageServerLoad = async ({ locals }) => {
     ),
   );
 
+  let homePage = (homeQuery.data as HomePageRow | null) ?? null;
+
+  if (!homePage && section === 'hero') {
+    homePage = await ensureHomePageRecord(locals);
+  }
+
+  let revisions: Array<
+    Database['public']['Tables']['content_revisions']['Row']
+  > = [];
+
+  if (homePage) {
+    const revisionsQuery = await locals.supabase
+      .from('content_revisions')
+      .select(
+        'id, entity_type, entity_pk, version_no, changed_at, changed_by, snapshot, reason',
+      )
+      .eq('entity_type', 'page')
+      .eq('entity_pk', String(homePage.id))
+      .order('changed_at', { ascending: false })
+      .limit(100);
+
+    if (revisionsQuery.error) {
+      throwLoaderError(
+        { route: '/admin/homepage', operation: 'load home page revisions' },
+        revisionsQuery.error,
+      );
+    }
+
+    revisions = revisionsQuery.data ?? [];
+  }
+
   return {
+    section,
     slides,
     images,
     pendingConversionCount: pendingQuery.count ?? 0,
     slideDurationMs,
     transitionDurationMs,
+    homePage,
+    revisions,
   };
 };
 
@@ -204,5 +340,146 @@ export const actions: Actions = {
       return fail(400, { message: settingsResult.error.message });
 
     return { success: true, message: 'Homepage slideshow updated.' };
+  },
+
+  saveHero: async ({ locals, request }) => {
+    const form = await request.formData();
+    const result = await pagePayloadFromForm(form);
+
+    if (!result.ok) {
+      return failForm(result.message, {
+        fieldErrors: result.fieldErrors,
+        values: result.values,
+      });
+    }
+
+    const visibilityStatus =
+      asString(form.get('visibility_status')).trim() === 'public'
+        ? 'public'
+        : 'draft';
+
+    let homePageId = asString(form.get('id')).trim();
+    if (!homePageId) {
+      const homePage = await ensureHomePageRecord(locals);
+      homePageId = homePage.id;
+    }
+
+    const updateResult = await locals.supabase
+      .from('pages')
+      .update({
+        ...result.payload,
+        kind: 'home',
+        slug: HOME_PAGE_SLUG,
+        title: HOME_PAGE_TITLE,
+        visibility_status: visibilityStatus,
+        nav_order: 0,
+        deleted_at: null,
+      })
+      .eq('id', homePageId)
+      .eq('kind', 'home');
+
+    if (updateResult.error) {
+      return fail(400, { message: updateResult.error.message });
+    }
+
+    return { success: true, message: 'Homepage hero updated.' };
+  },
+
+  rollbackHero: async ({ locals, request }) => {
+    const form = await request.formData();
+
+    const id = asString(form.get('id')).trim();
+    if (!id) {
+      return fail(400, { message: 'Missing home page id.' });
+    }
+
+    const revisionId = Number(asString(form.get('revision_id')));
+    if (!Number.isFinite(revisionId)) {
+      return fail(400, { message: 'Invalid revision id.' });
+    }
+
+    const revisionQuery = await locals.supabase
+      .from('content_revisions')
+      .select('id, entity_type, entity_pk, snapshot')
+      .eq('id', revisionId)
+      .eq('entity_type', 'page')
+      .eq('entity_pk', id)
+      .maybeSingle();
+
+    if (revisionQuery.error || !revisionQuery.data) {
+      return fail(404, { message: 'Revision not found.' });
+    }
+
+    const snapshot = revisionQuery.data.snapshot as Record<string, unknown>;
+    const editorMode = snapshot.editor_mode === 'svedit' ? 'svedit' : 'code';
+
+    const sveditDocResult =
+      editorMode === 'svedit'
+        ? parseSveditPageDocument(snapshot.svedit_doc ?? null)
+        : null;
+
+    if (sveditDocResult && !sveditDocResult.ok) {
+      return fail(400, {
+        message: `Cannot roll back invalid Svedit revision: ${sveditDocResult.message}`,
+      });
+    }
+
+    const sanitizedHtml =
+      editorMode === 'code'
+        ? sanitizeCmsHtml(String(snapshot.html_content ?? ''))
+        : '';
+
+    let tailwindCss = '';
+    if (editorMode === 'code') {
+      try {
+        tailwindCss = await compileCmsTailwindCss(sanitizedHtml);
+      } catch (error: unknown) {
+        const message =
+          error instanceof CmsTailwindCompileError
+            ? error.message
+            : 'Failed to compile Tailwind CSS for this rollback.';
+        return fail(400, { message });
+      }
+    }
+
+    const visibilityStatus =
+      String(snapshot.visibility_status ?? '').trim() === 'public'
+        ? 'public'
+        : 'draft';
+
+    const updateResult = await locals.supabase
+      .from('pages')
+      .update({
+        slug: HOME_PAGE_SLUG,
+        title: HOME_PAGE_TITLE,
+        kind: 'home',
+        html_content: sanitizedHtml,
+        css_module:
+          editorMode === 'code'
+            ? sanitizeCmsCssRaw(String(snapshot.css_module ?? ''))
+            : '',
+        tailwind_css: tailwindCss,
+        editor_mode: editorMode,
+        svedit_doc: sveditDocResult?.ok ? sveditDocResult.document : null,
+        svedit_schema_version: SVEDIT_PAGE_SCHEMA_VERSION,
+        seo_title: snapshot.seo_title ? String(snapshot.seo_title) : null,
+        seo_description: snapshot.seo_description
+          ? String(snapshot.seo_description)
+          : null,
+        og_image_path: snapshot.og_image_path
+          ? String(snapshot.og_image_path)
+          : null,
+        visibility_status: visibilityStatus,
+        nav_order: 0,
+        deleted_at: null,
+      })
+      .eq('id', id)
+      .eq('kind', 'home');
+
+    if (updateResult.error) {
+      return fail(400, { message: updateResult.error.message });
+    }
+
+    return { success: true, message: 'Homepage hero rolled back.' };
   },
 };

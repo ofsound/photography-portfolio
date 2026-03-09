@@ -7,10 +7,11 @@
   } from '$lib/svedit/page-document';
   import { createPageSveditSession } from '$lib/svedit/page-session';
 
-  const { page } = $props<{
+  const { page, sectionClass } = $props<{
     page: {
       svedit_doc: unknown;
     };
+    sectionClass?: string;
   }>();
 
   const parsedDocument = $derived(parseSveditPageDocument(page.svedit_doc));
@@ -22,7 +23,7 @@
   const session = $derived(createPageSveditSession(document));
 </script>
 
-<section class="mx-auto max-w-6xl px-5 py-10">
+<section class={sectionClass ?? 'mx-auto max-w-6xl px-5 py-10'}>
   <Svedit
     {session}
     editable={false}

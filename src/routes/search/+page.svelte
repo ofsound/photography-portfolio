@@ -186,7 +186,7 @@
   class="mx-auto flex w-full max-w-7xl flex-col gap-8 px-5 py-8 sm:px-6 lg:px-8"
 >
   <section
-    class="grid gap-4 rounded-3xl border border-border bg-surface/70 p-5 shadow-sm backdrop-blur sm:grid-cols-2 sm:p-6 xl:grid-cols-[minmax(0,1.5fr)_repeat(3,minmax(0,0.75fr))]"
+    class="grid gap-4 rounded-sm border border-border bg-surface/70 p-5 backdrop-blur sm:grid-cols-2 sm:p-6 xl:grid-cols-[minmax(0,1.5fr)_repeat(3,minmax(0,0.75fr))]"
   >
     <label class="flex min-w-0 flex-col gap-2">
       <span class="text-xs tracking-[0.24em] text-text-muted uppercase">
@@ -196,7 +196,7 @@
         value={filters.q}
         type="search"
         placeholder="Title, description, gallery, category, tag"
-        class="w-full rounded-2xl border border-border-strong bg-transparent px-4 py-3 text-sm transition-colors outline-none placeholder:text-text-muted focus:border-text"
+        class="w-full rounded-sm border border-border-strong bg-transparent px-4 py-3 text-sm transition-colors outline-none placeholder:text-text-muted focus:border-text"
         oninput={updateQuery}
       />
     </label>
@@ -207,7 +207,7 @@
       </span>
       <select
         value={filters.gallery}
-        class="w-full rounded-2xl border border-border-strong bg-transparent px-4 py-3 text-sm transition-colors outline-none focus:border-text"
+        class="w-full rounded-sm border border-border-strong bg-transparent px-4 py-3 text-sm transition-colors outline-none focus:border-text"
         onchange={updateGallery}
       >
         <option value="">All public galleries</option>
@@ -223,7 +223,7 @@
       </span>
       <select
         value={filters.category}
-        class="w-full rounded-2xl border border-border-strong bg-transparent px-4 py-3 text-sm transition-colors outline-none focus:border-text"
+        class="w-full rounded-sm border border-border-strong bg-transparent px-4 py-3 text-sm transition-colors outline-none focus:border-text"
         onchange={updateCategory}
       >
         <option value="">All categories</option>
@@ -239,7 +239,7 @@
       </span>
       <select
         value={filters.tag}
-        class="w-full rounded-2xl border border-border-strong bg-transparent px-4 py-3 text-sm transition-colors outline-none focus:border-text"
+        class="w-full rounded-sm border border-border-strong bg-transparent px-4 py-3 text-sm transition-colors outline-none focus:border-text"
         onchange={updateTag}
       >
         <option value="">All tags</option>
@@ -255,7 +255,7 @@
       {#if hasActiveFilters}
         {#each activeFilterSummary as item (item)}
           <span
-            class="rounded-full border border-border-strong bg-surface px-3 py-1 text-xs tracking-[0.22em] uppercase"
+            class="rounded-sm border border-border-strong bg-surface px-3 py-1 text-xs tracking-[0.22em] uppercase"
           >
             {item}
           </span>
@@ -265,7 +265,7 @@
 
     {#if visiblePhotos.length === 0}
       <div
-        class="grid min-h-64 place-items-center rounded-3xl border border-dashed border-border-strong bg-surface-muted/40 p-8 text-center"
+        class="grid min-h-64 place-items-center rounded-sm border border-dashed border-border-strong bg-surface-muted/40 p-8 text-center"
       >
         <div class="max-w-md space-y-3">
           <p class="text-lg font-medium">{emptyStateCopy}</p>
@@ -276,7 +276,7 @@
           {#if hasActiveFilters}
             <button
               type="button"
-              class="rounded-full border border-border-strong px-4 py-2 text-xs tracking-[0.24em] uppercase transition-colors hover:bg-surface"
+              class="rounded-sm border border-border-strong px-4 py-2 text-xs tracking-[0.24em] uppercase transition-colors"
               onclick={clearFilters}
             >
               Clear filters
@@ -294,14 +294,14 @@
                 photo.slug,
               ) as `/${string}`,
             )}
-            class="group overflow-hidden rounded-3xl border border-border bg-surface shadow-sm transition-colors transition-transform duration-200 hover:-translate-y-0.5 hover:border-border-strong hover:shadow-md"
+            class="overflow-hidden rounded-sm border border-border bg-surface transition-colors transition-transform duration-200"
           >
             <div class="aspect-[4/3] overflow-hidden bg-surface-muted/60">
               {#if photo.thumb}
                 <img
                   src={photo.thumb}
                   alt={photo.thumbAlt}
-                  class="h-full w-full object-cover transition duration-500 group-hover:scale-[1.02]"
+                  class="h-full w-full object-cover transition duration-500"
                   loading="lazy"
                 />
               {:else}

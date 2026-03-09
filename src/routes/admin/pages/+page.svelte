@@ -15,6 +15,7 @@
     PAGE_VISIBILITY_LABELS,
     type PageVisibilityStatus,
   } from '$lib/constants/page-visibility';
+  import { slugify } from '$lib/utils/slug';
 
   const { data, form } = $props();
 
@@ -52,8 +53,25 @@
       .filter((card): card is PageCard => Boolean(card)),
   );
 
+  let createTitle = $state('');
+  let createSlug = $state('');
+  let hasManualSlugEdit = $state(false);
   let createEditorMode = $state<'code' | 'svedit'>('code');
   let createVisibilityStatus = $state<PageVisibilityStatus>('draft');
+
+  const onCreateTitleInput = () => {
+    if (!hasManualSlugEdit) {
+      createSlug = slugify(createTitle);
+    }
+  };
+
+  const onCreateSlugInput = (event: Event) => {
+    const value = (event.currentTarget as HTMLInputElement).value.trim();
+    hasManualSlugEdit = value.length > 0;
+    if (!hasManualSlugEdit) {
+      createSlug = slugify(createTitle);
+    }
+  };
 
   const persistOrder = async (next: string[]) => {
     const payload = new FormData();
@@ -115,11 +133,19 @@
         id="page-create-title"
         name="title"
         placeholder="Title"
+        bind:value={createTitle}
         required
+        oninput={onCreateTitleInput}
       />
     </FormField>
     <FormField label="Slug" id="page-create-slug">
-      <FormInput id="page-create-slug" name="slug" placeholder="Slug" />
+      <FormInput
+        id="page-create-slug"
+        name="slug"
+        placeholder="Slug"
+        bind:value={createSlug}
+        oninput={onCreateSlugInput}
+      />
     </FormField>
 
     <FormField label="Visibility" id="page-create-visibility_status">

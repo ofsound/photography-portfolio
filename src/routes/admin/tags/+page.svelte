@@ -4,16 +4,9 @@
   import AdminCreateListLayout from '$lib/components/admin/AdminCreateListLayout.svelte';
   import FormField from '$lib/components/FormField.svelte';
   import FormInput from '$lib/components/FormInput.svelte';
+  import { slugify } from '$lib/utils/slug';
 
   const { data, form } = $props();
-
-  const slugify = (input: string) =>
-    input
-      .trim()
-      .toLowerCase()
-      .replace(/['"]/g, '')
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '');
 
   let createName = $state('');
   let createSlug = $state('');

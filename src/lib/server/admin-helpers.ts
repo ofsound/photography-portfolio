@@ -1,10 +1,4 @@
-const slugify = (input: string) =>
-  input
-    .trim()
-    .toLowerCase()
-    .replace(/['"]/g, '')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '');
+import { slugify } from '$lib/utils/slug';
 
 export const toSlug = (source: string, fallback = 'item') => {
   const value = slugify(source);

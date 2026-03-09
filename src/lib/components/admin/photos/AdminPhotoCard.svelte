@@ -14,6 +14,7 @@
   import FormInput from '$lib/components/FormInput.svelte';
   import FormTextarea from '$lib/components/FormTextarea.svelte';
   import { formControlContainerClass } from '$lib/constants/form';
+  import { slugify } from '$lib/utils/slug';
 
   import type {
     AdminCategory,
@@ -70,14 +71,6 @@
     gridMode?: boolean;
     isDraggingPhoto?: boolean;
   }>();
-
-  const slugify = (input: string) =>
-    input
-      .trim()
-      .toLowerCase()
-      .replace(/['"]/g, '')
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '');
 
   // Local form state to avoid overwriting user edits on re-renders (e.g. taxonomy checkbox changes)
   const form = $state(

@@ -16,6 +16,7 @@
     type GalleryVisibilityStatus,
   } from '$lib/constants/gallery-visibility';
   import { buildGalleryPath } from '$lib/utils/gallery-routes';
+  import { slugify } from '$lib/utils/slug';
 
   const { data, form } = $props();
 
@@ -50,14 +51,6 @@
       .map((cardId) => galleryCardById.get(cardId))
       .filter((card): card is GalleryCard => Boolean(card)),
   );
-
-  const slugify = (input: string) =>
-    input
-      .trim()
-      .toLowerCase()
-      .replace(/['"]/g, '')
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '');
 
   let createName = $state('');
   let createSlug = $state('');

@@ -100,11 +100,7 @@
 
           <div class="flex flex-col items-end gap-2">
             {#if lead.source_storage_path}
-              <AdminButton
-                size="sm"
-                variant="subtle"
-                href="/admin/download-original/{lead.id}"
-              >
+              <AdminButton size="sm" href="/admin/download-original/{lead.id}">
                 Download Original
               </AdminButton>
             {/if}
@@ -184,7 +180,6 @@
                         {#if image.source_storage_path}
                           <AdminButton
                             size="sm"
-                            variant="subtle"
                             href="/admin/download-original/{image.id}"
                           >
                             Download Original

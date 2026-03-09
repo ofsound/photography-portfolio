@@ -385,7 +385,7 @@
       <AdminHeading>{allScopeLabel}</AdminHeading>
       <AdminButton
         size="sm"
-        variant="toggle"
+        variant="default"
         selected={!data.showArchived}
         href={routeBasePath}
       >
@@ -393,7 +393,7 @@
       </AdminButton>
       <AdminButton
         size="sm"
-        variant="toggle"
+        variant="default"
         selected={data.showArchived}
         href={`${routeBasePath}?showArchived=1`}
       >

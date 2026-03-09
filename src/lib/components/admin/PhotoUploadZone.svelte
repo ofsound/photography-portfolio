@@ -59,7 +59,7 @@
     <AdminHeading level={3}>Upload Image</AdminHeading>
     <div class="grid gap-2">
       <div class="flex flex-wrap items-center gap-2">
-        <AdminButton as="label" variant="surface" class="relative">
+        <AdminButton as="label" class="relative">
           <input
             type="file"
             name="image_file"
@@ -110,7 +110,7 @@
       {/if}
     </p>
     <div class="flex justify-center">
-      <AdminButton type="submit" variant="surface" disabled={uploading}>
+      <AdminButton type="submit" disabled={uploading}>
         {uploading ? 'Uploading…' : 'Upload'}
       </AdminButton>
     </div>

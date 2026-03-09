@@ -40,10 +40,9 @@
 
   const classes = $derived(
     [
-      ['link', 'ghost'].includes(variant) ? '' : sizeClasses[size as Size],
+      variant === 'link' ? '' : sizeClasses[size as Size],
       variantClasses[variant as Variant],
-      variant === 'toggle' && selected ? 'bg-border' : '',
-      variant === 'toggle' && !selected ? 'opacity-40' : '',
+      variant === 'default' && selected === true ? 'bg-border' : '',
       variant === 'default' && selected === false ? 'opacity-40' : '',
       disabled ? 'pointer-events-none opacity-40' : 'cursor-pointer',
       className,

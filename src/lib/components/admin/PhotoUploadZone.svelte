@@ -94,11 +94,7 @@
           id={`photo-upload-alt-text-${photoId}`}
           optional
         >
-          <FormInput
-            id={`photo-upload-alt-text-${photoId}`}
-            name="alt_text"
-            placeholder="Alt text"
-          />
+          <FormInput id={`photo-upload-alt-text-${photoId}`} name="alt_text" />
         </FormField>
       </div>
     </div>

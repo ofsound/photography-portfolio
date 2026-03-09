@@ -9,7 +9,11 @@
     "preview": "vite preview",
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "lint": "eslint . && prettier --check \"src/**/*.{svelte,ts,js,json}\"",
-    "knip": "knip"
+    "knip": "knip",
+    "autofix:queue:next": "node scripts/autofix-batch.mjs next",
+    "autofix:queue:status": "node scripts/autofix-batch.mjs status",
+    "autofix:queue:reset": "node scripts/autofix-batch.mjs reset",
+    "autofix:queue:mark": "node scripts/autofix-batch.mjs mark"
   },
   "devDependencies": {
     "@sveltejs/adapter-vercel": "^6.3.3",

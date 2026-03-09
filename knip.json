@@ -1,6 +1,7 @@
 {
   "$schema": "https://unpkg.com/knip@5/schema.json",
   "ignoreFiles": [
+    "src/lib/review-queue/autofix-batch.config.ts",
     "eslint.config.js",
     "supabase/functions/_shared/cors.ts",
     "supabase/functions/image-convert-on-upload/index.ts"

@@ -39,7 +39,6 @@
       id="edit-title-{photoFormId}"
       name="title"
       bind:value={title}
-      placeholder="Title"
       oninput={onTitleInput}
     />
   </FormField>
@@ -53,7 +52,6 @@
       id="edit-slug-{photoFormId}"
       name="slug"
       bind:value={slug}
-      placeholder="Leave blank to auto-generate from title"
       oninput={onSlugInput}
     />
   </FormField>
@@ -65,7 +63,6 @@
     name="description"
     bind:value={description}
     rows={2}
-    placeholder="Description"
   />
 </FormField>
 
@@ -76,7 +73,6 @@
       name="capture_date"
       bind:value={captureDate}
       type="text"
-      placeholder="Date"
     />
   </FormField>
   {#if trailingField}

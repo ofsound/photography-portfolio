@@ -194,7 +194,6 @@
         id="page-edit-seo_title"
         name="seo_title"
         bind:value={formSeoTitle}
-        placeholder="SEO title"
       />
     </FormField>
     <FormField label="SEO description" id="page-edit-seo_description">
@@ -211,7 +210,6 @@
       id="page-edit-og_image_path"
       name="og_image_path"
       bind:value={formOgImagePath}
-      placeholder="OG image path"
     />
   </FormField>
 

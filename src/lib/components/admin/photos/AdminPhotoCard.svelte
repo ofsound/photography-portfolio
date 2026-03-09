@@ -304,7 +304,6 @@
                       name="dimensions"
                       bind:value={form.dimensions}
                       type="text"
-                      placeholder="Dimensions"
                     />
                   </FormField>
                 {/snippet}
@@ -409,7 +408,6 @@
                       name="license_text"
                       bind:value={form.licenseText}
                       rows={2}
-                      placeholder="License text"
                       form="photo-update-form-{photoFormId}"
                     />
                   </FormField>
@@ -418,7 +416,6 @@
                       id="edit-og_title-{photoFormId}"
                       name="og_title"
                       bind:value={form.ogTitle}
-                      placeholder="OG title"
                       form="photo-update-form-{photoFormId}"
                     />
                   </FormField>
@@ -431,7 +428,6 @@
                       name="og_description"
                       bind:value={form.ogDescription}
                       rows={2}
-                      placeholder="OG description"
                       form="photo-update-form-{photoFormId}"
                     />
                   </FormField>
@@ -443,7 +439,6 @@
                       id="edit-og_image_path-{photoFormId}"
                       name="og_image_path"
                       bind:value={form.ogImagePath}
-                      placeholder="OG image path"
                       form="photo-update-form-{photoFormId}"
                     />
                   </FormField>

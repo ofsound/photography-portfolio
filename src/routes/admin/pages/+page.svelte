@@ -167,7 +167,6 @@
       <FormInput
         id="page-create-title"
         name="title"
-        placeholder="Title"
         bind:value={createTitle}
         oninput={onCreateTitleInput}
       />
@@ -181,7 +180,6 @@
       <FormInput
         id="page-create-slug"
         name="slug"
-        placeholder="Slug"
         bind:value={createSlug}
         oninput={onCreateSlugInput}
       />

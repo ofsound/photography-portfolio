@@ -1,9 +1,9 @@
 <script lang="ts">
-  import type { Snippet } from 'svelte';
-
   import FormField from '$lib/components/FormField.svelte';
   import FormInput from '$lib/components/FormInput.svelte';
   import FormTextarea from '$lib/components/FormTextarea.svelte';
+
+  import type { Snippet } from 'svelte';
 
   let {
     photoFormId,

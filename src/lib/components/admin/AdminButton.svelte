@@ -1,12 +1,13 @@
 <script lang="ts">
   /* eslint-disable svelte/no-navigation-without-resolve -- external/fragment use raw href; internal use resolve(href) */
+  import { resolve } from '$app/paths';
+
   import {
     sizeClasses,
     variantClasses,
     type Size,
     type Variant,
   } from '$lib/styles/admin-buttons';
-  import { resolve } from '$app/paths';
 
   const {
     size = 'md',

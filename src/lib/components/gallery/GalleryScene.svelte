@@ -12,7 +12,6 @@
     galleryDensityStore,
     layoutModeStore,
   } from '$lib/stores/gallery-prefs.svelte';
-  import type { GalleryPhoto } from '$lib/types/content';
   import { parseDimensions } from '$lib/utils/parse-dimensions';
   import {
     GALLERY_DETAIL_SHARED_WIDTH,
@@ -22,12 +21,6 @@
     createGallerySceneState,
     routeKeyFromActive,
   } from './scene/createGallerySceneState.svelte';
-  import type { GalleryGridModel } from './scene/gallery-grid-model';
-  import type {
-    ActiveRoute,
-    GalleryImage,
-    ViewerData,
-  } from './scene/gallery-scene.types';
   import { createGalleryLayout } from './scene/useGalleryLayout.svelte';
   import { createGalleryNavigation } from './scene/useGalleryNavigation.svelte';
   import { createGalleryPagination } from './scene/useGalleryPagination.svelte';
@@ -37,6 +30,14 @@
     routeKeyFor,
   } from './scene/useGalleryRouter.svelte';
   import { createGalleryTileAnimator } from './scene/useGalleryTileAnimator.svelte';
+
+  import type { GalleryPhoto } from '$lib/types/content';
+  import type { GalleryGridModel } from './scene/gallery-grid-model';
+  import type {
+    ActiveRoute,
+    GalleryImage,
+    ViewerData,
+  } from './scene/gallery-scene.types';
 
   const { data } = $props<{ data: ViewerData }>();
   const readInitialData = () => data;

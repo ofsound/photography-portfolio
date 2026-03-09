@@ -3,11 +3,12 @@
   import { quartOut } from 'svelte/easing';
   import { fade } from 'svelte/transition';
   import { useSwipeGesture } from '$lib/actions/useSwipeGesture.svelte';
-  import type { GalleryPhoto } from '$lib/types/content';
   import {
     GALLERY_DETAIL_SHARED_WIDTH,
     photoPublicUrl,
   } from '$lib/utils/storage-url';
+
+  import type { GalleryPhoto } from '$lib/types/content';
 
   type PortalAction = (node: HTMLElement) => { destroy: () => void };
 

@@ -1,8 +1,11 @@
 <script lang="ts">
-  import '../app.css';
   import { invalidateAll, onNavigate } from '$app/navigation';
   import { resolve } from '$app/paths';
   import { page } from '$app/state';
+
+  import ZoomControl from '$lib/components/ZoomControl.svelte';
+  import MobileDropdownMenu from '$lib/components/navigation/MobileDropdownMenu.svelte';
+
   import {
     setGalleryTransitionContext,
     type GalleryTransitionPhase,
@@ -21,9 +24,10 @@
     buildGalleryPath,
     isGalleryDetailPath,
   } from '$lib/utils/gallery-routes';
-  import ZoomControl from '$lib/components/ZoomControl.svelte';
-  import MobileDropdownMenu from '$lib/components/navigation/MobileDropdownMenu.svelte';
+
   import type { LayoutData } from './$types';
+
+  import '../app.css';
 
   const { data, children } = $props<{
     data: LayoutData | null;

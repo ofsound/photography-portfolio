@@ -1,6 +1,6 @@
 ---
 description: Svelte 5 best practices — runes, snippets, Remote Functions
-globs: "**/*.svelte,**/*.svelte.ts,src/**/*.ts"
+globs: '**/*.svelte,**/*.svelte.ts,src/**/*.ts'
 alwaysApply: false
 ---
 

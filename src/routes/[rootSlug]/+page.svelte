@@ -78,27 +78,63 @@
 {/if}
 
 {#if data.viewerMode === 'page' && data.customPage}
-  {#if isSveditPage && canEditPublicly}
-    <div class="mx-auto max-w-5xl px-5 py-4">
-      {#if isEditMode}
-        <button
-          type="button"
-          class="rounded border border-border-strong px-3 py-2 text-xs tracking-widest uppercase"
-          onclick={() => setEditMode(false)}
-        >
-          Exit edit mode
-        </button>
-      {:else}
-        <button
-          type="button"
-          class="rounded border border-border-strong px-3 py-2 text-xs tracking-widest uppercase"
-          onclick={() => setEditMode(true)}
-        >
-          Edit page
-        </button>
-      {/if}
-    </div>
-  {/if}
+  {#if data.customPage.bg_image_url}
+    <div class="relative min-h-screen">
+      <img
+        src={data.customPage.bg_image_url}
+        alt=""
+        aria-hidden="true"
+        class="absolute inset-0 h-full w-full object-cover"
+      />
+      <div class="relative z-10">
+        {#if isSveditPage && canEditPublicly}
+          <div class="mx-auto max-w-5xl px-5 py-4">
+            {#if isEditMode}
+              <button
+                type="button"
+                class="rounded border border-border-strong px-3 py-2 text-xs tracking-widest uppercase"
+                onclick={() => setEditMode(false)}
+              >
+                Exit edit mode
+              </button>
+            {:else}
+              <button
+                type="button"
+                class="rounded border border-border-strong px-3 py-2 text-xs tracking-widest uppercase"
+                onclick={() => setEditMode(true)}
+              >
+                Edit page
+              </button>
+            {/if}
+          </div>
+        {/if}
 
-  <CmsPageView page={data.customPage} editable={isEditMode} />
+        <CmsPageView page={data.customPage} editable={isEditMode} />
+      </div>
+    </div>
+  {:else}
+    {#if isSveditPage && canEditPublicly}
+      <div class="mx-auto max-w-5xl px-5 py-4">
+        {#if isEditMode}
+          <button
+            type="button"
+            class="rounded border border-border-strong px-3 py-2 text-xs tracking-widest uppercase"
+            onclick={() => setEditMode(false)}
+          >
+            Exit edit mode
+          </button>
+        {:else}
+          <button
+            type="button"
+            class="rounded border border-border-strong px-3 py-2 text-xs tracking-widest uppercase"
+            onclick={() => setEditMode(true)}
+          >
+            Edit page
+          </button>
+        {/if}
+      </div>
+    {/if}
+
+    <CmsPageView page={data.customPage} editable={isEditMode} />
+  {/if}
 {/if}

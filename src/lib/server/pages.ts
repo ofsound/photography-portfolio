@@ -4,6 +4,7 @@ import {
   createDefaultSveditPageDocument,
   parseSveditPageDocument,
 } from '$lib/svedit/page-document';
+import { photoPublicUrl } from '$lib/utils/storage-url';
 
 type CmsPage = {
   id: string;
@@ -13,6 +14,7 @@ type CmsPage = {
   seo_title: string | null;
   seo_description: string | null;
   og_image_path: string | null;
+  bg_image_url: string | null;
   html_content: string;
   css_module: string;
   tailwind_css: string;
@@ -31,6 +33,7 @@ const toCmsPage = (data: {
   seo_title: string | null;
   seo_description: string | null;
   og_image_path: string | null;
+  bg_image_id: string | null;
   html_content: string | null;
   css_module: string | null;
   tailwind_css: string | null;
@@ -39,16 +42,34 @@ const toCmsPage = (data: {
   svedit_schema_version: number | null;
   kind: 'home' | 'custom';
   visibility_status: 'public' | 'unlisted' | 'draft';
+  background_image?:
+    | { delivery_storage_path?: string | null }
+    | Array<{ delivery_storage_path?: string | null }>
+    | null;
 }): CmsPage => {
   const heroVerticalAlignmentPct = Number(data.hero_vertical_alignment_pct);
   const editorMode = data.editor_mode === 'svedit' ? 'svedit' : 'code';
   const parsedSveditDoc = parseSveditPageDocument(data.svedit_doc);
+  const backgroundImage = Array.isArray(data.background_image)
+    ? data.background_image[0]
+    : data.background_image;
+  const backgroundStoragePath = backgroundImage?.delivery_storage_path ?? null;
 
   return {
-    ...data,
+    id: data.id,
+    slug: data.slug,
+    title: data.title,
+    seo_title: data.seo_title,
+    seo_description: data.seo_description,
+    og_image_path: data.og_image_path,
+    kind: data.kind,
+    visibility_status: data.visibility_status,
     hero_vertical_alignment_pct: Number.isFinite(heroVerticalAlignmentPct)
       ? Math.min(100, Math.max(0, Math.round(heroVerticalAlignmentPct)))
       : 50,
+    bg_image_url: backgroundStoragePath
+      ? photoPublicUrl(backgroundStoragePath, 2200)
+      : null,
     editor_mode: editorMode,
     html_content:
       editorMode === 'code' ? sanitizeCmsHtml(data.html_content ?? '') : '',
@@ -68,7 +89,7 @@ export const loadPageBySlug = async (locals: App.Locals, slug: string) => {
   const pageWithSvedit = await locals.supabase
     .from('pages')
     .select(
-      'id, slug, title, hero_vertical_alignment_pct, seo_title, seo_description, og_image_path, html_content, css_module, tailwind_css, editor_mode, svedit_doc, svedit_schema_version, kind, visibility_status',
+      'id, slug, title, hero_vertical_alignment_pct, seo_title, seo_description, og_image_path, bg_image_id, html_content, css_module, tailwind_css, editor_mode, svedit_doc, svedit_schema_version, kind, visibility_status, background_image:bg_image_id(delivery_storage_path)',
     )
     .eq('slug', slug)
     .is('deleted_at', null)
@@ -102,7 +123,7 @@ export const loadHomePage = async (locals: App.Locals) => {
   const homeResult = await locals.supabase
     .from('pages')
     .select(
-      'id, slug, title, hero_vertical_alignment_pct, seo_title, seo_description, og_image_path, html_content, css_module, tailwind_css, editor_mode, svedit_doc, svedit_schema_version, kind, visibility_status',
+      'id, slug, title, hero_vertical_alignment_pct, seo_title, seo_description, og_image_path, bg_image_id, html_content, css_module, tailwind_css, editor_mode, svedit_doc, svedit_schema_version, kind, visibility_status, background_image:bg_image_id(delivery_storage_path)',
     )
     .eq('kind', 'home')
     .is('deleted_at', null)

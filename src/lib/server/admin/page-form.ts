@@ -32,8 +32,12 @@ type PagePayload = {
   seo_title: string | null;
   seo_description: string | null;
   og_image_path: string | null;
+  bg_image_id: string | null;
   deleted_at: string | null;
 };
+
+const UUID_REGEX =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 export const validateCmsPageSlug = (slug: string) => {
   if (RESERVED_SLUGS.has(slug)) {
@@ -65,6 +69,8 @@ export const pagePayloadFromForm = async (
   const seoTitle = asString(form.get('seo_title')).trim() || null;
   const seoDescription = asString(form.get('seo_description')).trim() || null;
   const ogImagePath = asString(form.get('og_image_path')).trim() || null;
+  const bgImageIdRaw = asString(form.get('bg_image_id')).trim();
+  const bgImageId = bgImageIdRaw ? bgImageIdRaw : null;
   const rawHtml = asString(form.get('html_content'));
   const rawCss = asString(form.get('css_module'));
   const rawSveditDoc = asString(form.get('svedit_doc'));
@@ -78,11 +84,21 @@ export const pagePayloadFromForm = async (
     seo_title: seoTitle ?? '',
     seo_description: seoDescription ?? '',
     og_image_path: ogImagePath ?? '',
+    bg_image_id: bgImageIdRaw,
     editor_mode: editorMode,
     html_content: rawHtml,
     css_module: rawCss,
     svedit_doc: rawSveditDoc,
   };
+
+  if (bgImageId && !UUID_REGEX.test(bgImageId)) {
+    return {
+      ok: false,
+      message: 'Background image selection is invalid.',
+      fieldErrors: { bg_image_id: 'Background image selection is invalid.' },
+      values,
+    };
+  }
 
   if (!title) {
     return {
@@ -164,6 +180,7 @@ export const pagePayloadFromForm = async (
       seo_title: seoTitle,
       seo_description: seoDescription,
       og_image_path: ogImagePath,
+      bg_image_id: bgImageId,
       deleted_at: null,
     },
   };

@@ -3,6 +3,7 @@
 
   import CodeEditor from '$lib/components/admin/CodeEditor.svelte';
   import SveditEditor from '$lib/components/admin/SveditEditor.svelte';
+  import BackgroundImagePickerModal from '$lib/components/admin/BackgroundImagePickerModal.svelte';
   import AdminCard from '$lib/components/admin/AdminCard.svelte';
   import AdminButton from '$lib/components/admin/AdminButton.svelte';
   import AdminHeading from '$lib/components/admin/AdminHeading.svelte';
@@ -11,12 +12,13 @@
   import FormInput from '$lib/components/FormInput.svelte';
   import FormSelect from '$lib/components/FormSelect.svelte';
   import FormTextarea from '$lib/components/FormTextarea.svelte';
+  import { photoPublicUrl } from '$lib/utils/storage-url';
   import {
     PAGE_VISIBILITY_OPTIONS,
     PAGE_VISIBILITY_LABELS,
     type PageVisibilityStatus,
   } from '$lib/constants/page-visibility';
-  import type { ContentRevision } from '$lib/types/content';
+  import type { ContentRevision, HomepageImage } from '$lib/types/content';
 
   type FormState = {
     message?: string;
@@ -31,6 +33,7 @@
   );
   const page = $derived(data.page);
   const revisions = $derived(data.revisions as ContentRevision[]);
+  const images = $derived((data.images as HomepageImage[]) ?? []);
   const initialPage = () => data.page;
 
   let formTitle = $state(initialPage().title);
@@ -51,9 +54,16 @@
   );
   let formSeoDescription = $state(initialPage().seo_description ?? '');
   let formOgImagePath = $state(initialPage().og_image_path ?? '');
+  let formBgImageId = $state<string | null>(initialPage().bg_image_id ?? null);
+  let showBgPicker = $state(false);
   let showRawSveditJson = $state(false);
   let rawSveditJsonError = $state<string | null>(null);
   const fieldErrors = $derived(typedForm?.fieldErrors ?? {});
+  const selectedBgImage = $derived(
+    formBgImageId
+      ? (images.find((image) => image.id === formBgImageId) ?? null)
+      : null,
+  );
 
   $effect(() => {
     const values = typedForm?.values;
@@ -67,6 +77,9 @@
     }
     if (typeof values.og_image_path === 'string') {
       formOgImagePath = values.og_image_path;
+    }
+    if (typeof values.bg_image_id === 'string') {
+      formBgImageId = values.bg_image_id.trim() || null;
     }
     if (typeof values.html_content === 'string')
       formHtmlContent = values.html_content;
@@ -139,6 +152,7 @@
 
 <form method="POST" action="?/update" class="mt-6 grid gap-3">
   <input type="hidden" name="id" value={page.id} />
+  <input type="hidden" name="bg_image_id" value={formBgImageId ?? ''} />
 
   <div class="grid gap-3 sm:grid-cols-2">
     <FormField
@@ -212,6 +226,51 @@
       bind:value={formOgImagePath}
     />
   </FormField>
+
+  <AdminCard class="grid gap-3 p-3">
+    <div class="flex flex-wrap items-center justify-between gap-2">
+      <div>
+        <p class="text-xs tracking-widest uppercase">Page Background</p>
+        <p class="text-xs text-text-muted">Select a published lead image.</p>
+      </div>
+      <div class="flex flex-wrap items-center gap-2">
+        <AdminButton
+          type="button"
+          size="sm"
+          onclick={() => (showBgPicker = true)}>Choose Background</AdminButton
+        >
+        <AdminButton
+          type="button"
+          size="sm"
+          variant="default"
+          disabled={!formBgImageId}
+          onclick={() => {
+            formBgImageId = null;
+          }}>Remove Background</AdminButton
+        >
+      </div>
+    </div>
+
+    {#if fieldErrors.bg_image_id}
+      <p class="text-xs text-red-600">{fieldErrors.bg_image_id}</p>
+    {/if}
+
+    {#if selectedBgImage && selectedBgImage.delivery_storage_path}
+      <div class="grid w-fit gap-2 text-xs">
+        <img
+          src={photoPublicUrl(selectedBgImage.delivery_storage_path, 220)}
+          alt={selectedBgImage.photo_title}
+          class="h-20 w-28 rounded object-cover"
+        />
+        <p class="max-w-52 truncate">{selectedBgImage.photo_title}</p>
+      </div>
+    {:else if formBgImageId}
+      <p class="text-xs text-text-muted">
+        Selected image is no longer available in picker results.
+      </p>
+      <p class="text-xs text-text-subtle">ID: {formBgImageId}</p>
+    {/if}
+  </AdminCard>
 
   {#if formEditorMode === 'code'}
     <FormField
@@ -329,3 +388,17 @@
     </AdminCard>
   {/if}
 </form>
+
+{#if showBgPicker}
+  <BackgroundImagePickerModal
+    {images}
+    selectedId={formBgImageId}
+    onselect={(id) => {
+      formBgImageId = id;
+      showBgPicker = false;
+    }}
+    onclose={() => {
+      showBgPicker = false;
+    }}
+  />
+{/if}

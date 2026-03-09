@@ -307,6 +307,7 @@ export type Database = {
       };
       pages: {
         Row: {
+          bg_image_id: string | null;
           created_at: string;
           created_by: string | null;
           css_module: string;
@@ -330,6 +331,7 @@ export type Database = {
           visibility_status: Database['public']['Enums']['page_visibility_status'];
         };
         Insert: {
+          bg_image_id?: string | null;
           created_at?: string;
           created_by?: string | null;
           css_module?: string;
@@ -353,6 +355,7 @@ export type Database = {
           visibility_status?: Database['public']['Enums']['page_visibility_status'];
         };
         Update: {
+          bg_image_id?: string | null;
           created_at?: string;
           created_by?: string | null;
           css_module?: string;
@@ -375,7 +378,15 @@ export type Database = {
           updated_by?: string | null;
           visibility_status?: Database['public']['Enums']['page_visibility_status'];
         };
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: 'pages_bg_image_id_fkey';
+            columns: ['bg_image_id'];
+            isOneToOne: false;
+            referencedRelation: 'photo_images';
+            referencedColumns: ['id'];
+          },
+        ];
       };
       photo_categories: {
         Row: {

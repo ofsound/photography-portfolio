@@ -392,6 +392,7 @@ export const actions: Actions = {
         slug: HOME_PAGE_SLUG,
         visibility_status: visibilityStatus,
         hero_vertical_alignment_pct: heroVerticalAlignmentPct,
+        bg_image_id: null,
         nav_order: 0,
         deleted_at: null,
       })
@@ -496,6 +497,7 @@ export const actions: Actions = {
           : null,
         visibility_status: visibilityStatus,
         hero_vertical_alignment_pct: heroVerticalAlignmentPct,
+        bg_image_id: null,
         nav_order: 0,
         deleted_at: null,
       })

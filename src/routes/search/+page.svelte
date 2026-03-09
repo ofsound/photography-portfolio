@@ -1,7 +1,8 @@
 <script lang="ts">
-  import { pushState, replaceState } from '$app/navigation';
+  import { replaceState } from '$app/navigation';
   import { resolve } from '$app/paths';
   import { page } from '$app/state';
+  import { onMount } from 'svelte';
 
   import { buildGalleryPhotoPath } from '$lib/utils/gallery-routes';
 
@@ -43,18 +44,47 @@
       .filter(Boolean)
       .join('&');
 
-  const state = $derived(readUrlState(page.url));
-  const normalizedQuery = $derived(state.q.trim().toLowerCase());
+  const readCurrentUrl = () =>
+    typeof window === 'undefined' ? page.url : new URL(window.location.href);
+
+  const isSameState = (a: FilterState, b: FilterState) =>
+    a.q === b.q &&
+    a.gallery === b.gallery &&
+    a.category === b.category &&
+    a.tag === b.tag;
+
+  let filters = $state<FilterState>(readUrlState(readCurrentUrl()));
+
+  const syncFromUrl = (url: URL) => {
+    const urlState = readUrlState(url);
+    if (isSameState(filters, urlState)) return;
+    filters = urlState;
+  };
+
+  onMount(() => {
+    const onPopState = () => {
+      syncFromUrl(new URL(window.location.href));
+    };
+
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  });
+
+  const normalizedQuery = $derived(filters.q.trim().toLowerCase());
   const visiblePhotos = $derived.by(() =>
     data.photos.filter((photo) => {
-      if (state.gallery && photo.gallerySlug !== state.gallery) return false;
+      if (filters.gallery && photo.gallerySlug !== filters.gallery)
+        return false;
       if (
-        state.category &&
-        !photo.categories.some((entry) => entry.slug === state.category)
+        filters.category &&
+        !photo.categories.some((entry) => entry.slug === filters.category)
       ) {
         return false;
       }
-      if (state.tag && !photo.tags.some((entry) => entry.slug === state.tag)) {
+      if (
+        filters.tag &&
+        !photo.tags.some((entry) => entry.slug === filters.tag)
+      ) {
         return false;
       }
       if (normalizedQuery && !photo.searchText.includes(normalizedQuery)) {
@@ -66,20 +96,20 @@
   const activeFilterSummary = $derived.by(() => {
     const summary: string[] = [];
 
-    if (state.q) summary.push(`Query: ${state.q}`);
-    if (state.gallery) {
+    if (filters.q) summary.push(`Query: ${filters.q}`);
+    if (filters.gallery) {
       summary.push(
-        `Gallery: ${data.galleries.find((entry) => entry.slug === state.gallery)?.name ?? state.gallery}`,
+        `Gallery: ${data.galleries.find((entry) => entry.slug === filters.gallery)?.name ?? filters.gallery}`,
       );
     }
-    if (state.category) {
+    if (filters.category) {
       summary.push(
-        `Category: ${data.categories.find((entry) => entry.slug === state.category)?.name ?? state.category}`,
+        `Category: ${data.categories.find((entry) => entry.slug === filters.category)?.name ?? filters.category}`,
       );
     }
-    if (state.tag) {
+    if (filters.tag) {
       summary.push(
-        `Tag: ${data.tags.find((entry) => entry.slug === state.tag)?.name ?? state.tag}`,
+        `Tag: ${data.tags.find((entry) => entry.slug === filters.tag)?.name ?? filters.tag}`,
       );
     }
 
@@ -94,48 +124,46 @@
 
   const syncUrl = (nextState: FilterState) => {
     const next = sanitizeState(nextState);
-    const nextKey = serializeState(next);
-    const currentKey = page.url.searchParams.toString();
+    if (!isSameState(filters, next)) {
+      filters = next;
+    }
 
+    const currentUrl = readCurrentUrl();
+    const nextKey = serializeState(next);
+    const currentKey = serializeState(readUrlState(currentUrl));
     if (nextKey === currentKey) return;
 
     const target = nextKey
-      ? `${page.url.pathname}?${nextKey}`
-      : page.url.pathname;
+      ? `${currentUrl.pathname}?${nextKey}`
+      : currentUrl.pathname;
     const resolvedTarget = resolve(target as `/${string}`);
-
-    if (currentKey !== serializeState(readUrlState(page.url))) {
-      replaceState(resolvedTarget, page.state);
-      return;
-    }
-
-    pushState(resolvedTarget, page.state);
+    replaceState(resolvedTarget, page.state);
   };
 
   const updateQuery = (event: Event) => {
     syncUrl({
-      ...state,
+      ...filters,
       q: (event.currentTarget as HTMLInputElement).value,
     });
   };
 
   const updateGallery = (event: Event) => {
     syncUrl({
-      ...state,
+      ...filters,
       gallery: (event.currentTarget as HTMLSelectElement).value,
     });
   };
 
   const updateCategory = (event: Event) => {
     syncUrl({
-      ...state,
+      ...filters,
       category: (event.currentTarget as HTMLSelectElement).value,
     });
   };
 
   const updateTag = (event: Event) => {
     syncUrl({
-      ...state,
+      ...filters,
       tag: (event.currentTarget as HTMLSelectElement).value,
     });
   };
@@ -165,7 +193,7 @@
         Search
       </span>
       <input
-        value={state.q}
+        value={filters.q}
         type="search"
         placeholder="Title, description, gallery, category, tag"
         class="w-full rounded-2xl border border-border-strong bg-transparent px-4 py-3 text-sm transition-colors outline-none placeholder:text-text-muted focus:border-text"
@@ -178,7 +206,7 @@
         Gallery
       </span>
       <select
-        value={state.gallery}
+        value={filters.gallery}
         class="w-full rounded-2xl border border-border-strong bg-transparent px-4 py-3 text-sm transition-colors outline-none focus:border-text"
         onchange={updateGallery}
       >
@@ -194,7 +222,7 @@
         Category
       </span>
       <select
-        value={state.category}
+        value={filters.category}
         class="w-full rounded-2xl border border-border-strong bg-transparent px-4 py-3 text-sm transition-colors outline-none focus:border-text"
         onchange={updateCategory}
       >
@@ -210,7 +238,7 @@
         Tag
       </span>
       <select
-        value={state.tag}
+        value={filters.tag}
         class="w-full rounded-2xl border border-border-strong bg-transparent px-4 py-3 text-sm transition-colors outline-none focus:border-text"
         onchange={updateTag}
       >

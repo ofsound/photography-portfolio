@@ -36,34 +36,20 @@
       parsedDoc.ok ? parsedDoc.document : createDefaultSveditPageDocument(),
     );
   });
-
-  $effect(() => {
-    if (typeof document === 'undefined' || !isCodeMode) return;
-
-    const styleElements: HTMLStyleElement[] = [];
-
-    if (page.tailwind_css) {
-      const tailwindStyleEl = document.createElement('style');
-      tailwindStyleEl.dataset.cmsTailwind = scopeKey;
-      tailwindStyleEl.textContent = page.tailwind_css;
-      document.head.append(tailwindStyleEl);
-      styleElements.push(tailwindStyleEl);
-    }
-
-    if (page.css_module) {
-      const scopedStyleEl = document.createElement('style');
-      scopedStyleEl.dataset.cmsPage = scopeKey;
-      scopedStyleEl.textContent = page.css_module;
-      document.head.append(scopedStyleEl);
-      styleElements.push(scopedStyleEl);
-    }
-
-    if (styleElements.length === 0) return;
-    return () => {
-      for (const styleEl of styleElements) styleEl.remove();
-    };
-  });
 </script>
+
+<svelte:head>
+  {#if isCodeMode && page.tailwind_css}
+    <svelte:element this={'style'} data-cms-tailwind={scopeKey}
+      >{page.tailwind_css}</svelte:element
+    >
+  {/if}
+  {#if isCodeMode && page.css_module}
+    <svelte:element this={'style'} data-cms-page={scopeKey}
+      >{page.css_module}</svelte:element
+    >
+  {/if}
+</svelte:head>
 
 {#if isCodeMode}
   <section class="mx-auto max-w-5xl px-5 py-14" data-cms-scope={scopeKey}>

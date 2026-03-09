@@ -4,7 +4,6 @@ export const RESERVED_SLUGS = new Set([
   'library',
   'gallery',
   'photo',
-  'about',
   'search',
   'auth',
   'api',

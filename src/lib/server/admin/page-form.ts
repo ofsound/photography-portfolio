@@ -13,8 +13,6 @@ import {
   SVEDIT_PAGE_SCHEMA_VERSION,
 } from '$lib/svedit/page-document';
 
-const ALLOWED_SYSTEM_SLUGS = new Set(['about']);
-
 type PageKind = Database['public']['Enums']['page_kind'];
 type PageEditorMode = Database['public']['Enums']['page_editor_mode'];
 export type PageVisibilityStatus =
@@ -38,7 +36,7 @@ type PagePayload = {
 };
 
 export const validateCmsPageSlug = (slug: string) => {
-  if (RESERVED_SLUGS.has(slug) && !ALLOWED_SYSTEM_SLUGS.has(slug)) {
+  if (RESERVED_SLUGS.has(slug)) {
     return 'Slug is reserved.';
   }
   return null;
@@ -49,11 +47,11 @@ export const pagePayloadFromForm = async (
 ): Promise<
   | { ok: true; payload: PagePayload }
   | {
-      ok: false;
-      message: string;
-      fieldErrors?: FieldErrors;
-      values?: FormValues;
-    }
+    ok: false;
+    message: string;
+    fieldErrors?: FieldErrors;
+    values?: FormValues;
+  }
 > => {
   const kind: PageKind = 'custom';
   const title = asString(form.get('title')).trim();
@@ -117,8 +115,8 @@ export const pagePayloadFromForm = async (
   const sveditDocResult =
     editorMode === 'svedit'
       ? parseSveditPageDocument(
-          rawSveditDoc || createDefaultSveditPageDocument(),
-        )
+        rawSveditDoc || createDefaultSveditPageDocument(),
+      )
       : null;
 
   if (sveditDocResult && !sveditDocResult.ok) {

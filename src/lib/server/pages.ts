@@ -15,7 +15,7 @@ type CmsPage = {
   editor_mode: 'code' | 'svedit';
   svedit_doc: unknown;
   svedit_schema_version: number;
-  kind: 'home' | 'about' | 'contact' | 'custom';
+  kind: 'home' | 'custom';
   visibility_status: 'public' | 'unlisted' | 'draft';
 };
 

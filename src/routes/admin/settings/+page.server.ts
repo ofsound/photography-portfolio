@@ -174,6 +174,6 @@ export const actions: Actions = {
       });
     }
 
-    return { success: true, message: 'Typography settings saved.' };
+    return { success: true, message: 'Site settings saved.' };
   },
 };

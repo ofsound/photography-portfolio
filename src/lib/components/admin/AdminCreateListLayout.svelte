@@ -74,9 +74,9 @@
   </section>
 {:else}
   <section
-    class="mt-6 flex gap-8 lg:flex-row {reverseOnMobile
-      ? 'flex-col-reverse'
-      : 'flex-col'}"
+    class="mt-6 flex gap-8 {reverseOnMobile
+      ? 'flex-col-reverse lg:flex-row-reverse'
+      : 'flex-col lg:flex-row'}"
   >
     <div class="min-w-0 lg:w-96 lg:shrink-0">
       {@render create()}

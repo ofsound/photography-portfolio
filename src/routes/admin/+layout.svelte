@@ -16,7 +16,6 @@
       { href: '/admin/tags', label: 'Tags' },
       { href: '/admin/homepage', label: 'Homepage' },
       { href: '/admin/pages', label: 'Pages' },
-      { href: '/admin/audit', label: 'Audit' },
       { href: '/admin/settings', label: 'Settings' },
     ];
 
@@ -455,7 +454,7 @@
         </div>
       {/each}
     </nav>
-    <div class="mt-auto flex items-center justify-center p-4">
+    <div class="mt-auto mb-4 flex items-center justify-center p-4">
       <AdminThemeToggle />
     </div>
   </aside>

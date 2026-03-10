@@ -1,4 +1,5 @@
 <script lang="ts">
+  import AdminHeader from '$lib/components/admin/AdminHeader.svelte';
   import AdminButton from '$lib/components/admin/AdminButton.svelte';
   import AdminHeading from '$lib/components/admin/AdminHeading.svelte';
   import AdminToastEmitter from '$lib/components/admin/AdminToastEmitter.svelte';
@@ -110,16 +111,18 @@
   );
 </script>
 
-<AdminHeading>Site Settings</AdminHeading>
+<AdminHeader>
+  <AdminHeading>Site Settings</AdminHeading>
 
-{#if form?.message}
-  <AdminToastEmitter
-    message={form.message}
-    type={form && 'success' in form && form.success ? 'success' : 'error'}
-  />
-{/if}
+  {#if form?.message}
+    <AdminToastEmitter
+      message={form.message}
+      type={form && 'success' in form && form.success ? 'success' : 'error'}
+    />
+  {/if}
+</AdminHeader>
 
-<form method="POST" action="?/saveTypography" class="mt-6 grid gap-4">
+<form method="POST" action="?/saveTypography" class="grid gap-4">
   <div class="grid gap-3">
     <FormField
       label="Public Google Font Import URL"

@@ -5,6 +5,7 @@
   import { DragDropProvider, DragOverlay } from '@dnd-kit/svelte';
   import { createSortable, isSortable } from '@dnd-kit/svelte/sortable';
 
+  import AdminHeader from '$lib/components/admin/AdminHeader.svelte';
   import AdminButton from '$lib/components/admin/AdminButton.svelte';
   import AdminGalleryNav from '$lib/components/admin/AdminGalleryNav.svelte';
   import AdminHeading from '$lib/components/admin/AdminHeading.svelte';
@@ -380,38 +381,40 @@
     currentView="photos"
   />
 {:else}
-  <div class="flex items-baseline justify-between gap-4">
-    <div class="flex items-center gap-3">
-      <AdminHeading>{allScopeLabel}</AdminHeading>
-      <AdminButton
-        size="sm"
-        variant="default"
-        selected={!data.showArchived}
-        href={routeBasePath}
-      >
-        Active ({data.activeCount})
-      </AdminButton>
-      <AdminButton
-        size="sm"
-        variant="default"
-        selected={data.showArchived}
-        href={`${routeBasePath}?showArchived=1`}
-      >
-        Archived ({data.archivedCount})
-      </AdminButton>
-    </div>
-    {#if filteredGallerySlug}
-      <div class="flex gap-2">
+  <AdminHeader>
+    <div class="flex items-baseline justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <AdminHeading>{allScopeLabel}</AdminHeading>
         <AdminButton
-          href={`/admin/${filteredGallerySlug}/photos/upload`}
-          variant="submit"
-          size="xs"
+          size="sm"
+          variant="default"
+          selected={!data.showArchived}
+          href={routeBasePath}
         >
-          Add Photos
+          Active ({data.activeCount})
+        </AdminButton>
+        <AdminButton
+          size="sm"
+          variant="default"
+          selected={data.showArchived}
+          href={`${routeBasePath}?showArchived=1`}
+        >
+          Archived ({data.archivedCount})
         </AdminButton>
       </div>
-    {/if}
-  </div>
+      {#if filteredGallerySlug}
+        <div class="flex gap-2">
+          <AdminButton
+            href={`/admin/${filteredGallerySlug}/photos/upload`}
+            variant="submit"
+            size="xs"
+          >
+            Add Photos
+          </AdminButton>
+        </div>
+      {/if}
+    </div>
+  </AdminHeader>
 {/if}
 
 <AdminToastEmitter

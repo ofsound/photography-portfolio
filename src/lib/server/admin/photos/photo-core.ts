@@ -17,7 +17,7 @@ const draftStatusMigrationHint =
 
 const normalizeDraftStatusErrorMessage = (message: string) =>
   message.includes('invalid input value for enum publish_status') &&
-    message.includes('"draft"')
+  message.includes('"draft"')
     ? draftStatusMigrationHint
     : message;
 
@@ -97,11 +97,11 @@ const upsertPhotoPayload = (
 ):
   | { ok: true; payload: PhotoPayload }
   | {
-    ok: false;
-    message: string;
-    fieldErrors?: FieldErrors;
-    values?: FormValues;
-  } => {
+      ok: false;
+      message: string;
+      fieldErrors?: FieldErrors;
+      values?: FormValues;
+    } => {
   const title = asString(form.get('title')).trim();
   const slugInput = asString(form.get('slug')).trim();
   const values: FormValues = {
@@ -187,9 +187,9 @@ export const photoCoreActions: Actions = {
         fieldErrors: result.fieldErrors,
         values: result.values
           ? {
-            ...result.values,
-            id,
-          }
+              ...result.values,
+              id,
+            }
           : { id },
       });
     }

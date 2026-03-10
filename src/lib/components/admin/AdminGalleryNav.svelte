@@ -1,6 +1,7 @@
 <script lang="ts">
   import { resolve } from '$app/paths';
 
+  import AdminHeader from '$lib/components/admin/AdminHeader.svelte';
   import AdminButton from '$lib/components/admin/AdminButton.svelte';
   import AdminHeading from '$lib/components/admin/AdminHeading.svelte';
   import AdminSegmentedToggle from '$lib/components/admin/AdminSegmentedToggle.svelte';
@@ -40,77 +41,79 @@
   ]);
 </script>
 
-<nav class="mb-6 flex justify-between">
-  <div class="flex items-center gap-3">
-    <a
-      href={resolve('/admin/galleries')}
-      class="-m-2 p-2 text-text-muted transition-colors hover:text-brand"
-      aria-label="Back to Galleries"
-    >
-      <svg
-        class="size-4"
-        viewBox="0 0 16 16"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="2"
-        stroke-linecap="round"
-        stroke-linejoin="round"
+<AdminHeader>
+  <nav class="flex justify-between">
+    <div class="flex items-center gap-3">
+      <a
+        href={resolve('/admin/galleries')}
+        class="-m-2 p-2 text-text-muted transition-colors hover:text-brand"
+        aria-label="Back to Galleries"
       >
-        <path d="M10 3 5 8l5 5" />
-      </svg>
-    </a>
-    <AdminHeading>{galleryName}</AdminHeading>
-    {#if currentView === 'photos'}
-      <AdminButton
-        href={photosHref}
-        variant="default"
-        size="xs"
-        selected={!showArchived}
-      >
-        Active ({activeCount})
-      </AdminButton>
-      <AdminButton
-        href={`${photosHref}?showArchived=1`}
-        variant="default"
-        size="xs"
-        selected={showArchived}
-      >
-        Archived ({archivedCount})
-      </AdminButton>
-    {/if}
-  </div>
+        <svg
+          class="size-4"
+          viewBox="0 0 16 16"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M10 3 5 8l5 5" />
+        </svg>
+      </a>
+      <AdminHeading>{galleryName}</AdminHeading>
+      {#if currentView === 'photos'}
+        <AdminButton
+          href={photosHref}
+          variant="default"
+          size="xs"
+          selected={!showArchived}
+        >
+          Active ({activeCount})
+        </AdminButton>
+        <AdminButton
+          href={`${photosHref}?showArchived=1`}
+          variant="default"
+          size="xs"
+          selected={showArchived}
+        >
+          Archived ({archivedCount})
+        </AdminButton>
+      {/if}
+    </div>
 
-  <div class="flex items-center gap-4">
-    <AdminSegmentedToggle
-      segments={sections}
-      activeKey={currentView}
-      ariaLabel="Gallery admin sections"
-    />
-  </div>
-</nav>
+    <div class="flex items-center gap-4">
+      <AdminSegmentedToggle
+        segments={sections}
+        activeKey={currentView}
+        ariaLabel="Gallery admin sections"
+      />
+    </div>
+  </nav>
 
-{#if currentView === 'photos'}
-  <div class="flex flex-wrap items-center gap-3 pt-1">
-    <a
-      href={resolve(uploadRoute, { gallerySlug })}
-      class="group inline-flex items-center gap-2 rounded-lg bg-linear-to-r from-brand to-indigo-500 px-4 py-2 text-sm font-semibold tracking-wider text-white transition-all hover:scale-[1.01] active:scale-[0.98]"
-    >
-      <svg
-        class="size-4 transition-transform group-hover:scale-101"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="2"
-        stroke-linecap="round"
-        stroke-linejoin="round"
+  {#if currentView === 'photos'}
+    <div class="flex flex-wrap items-center gap-3 pt-1">
+      <a
+        href={resolve(uploadRoute, { gallerySlug })}
+        class="group inline-flex items-center gap-2 rounded-lg bg-linear-to-r from-brand to-indigo-500 px-4 py-2 text-sm font-semibold tracking-wider text-white transition-all hover:scale-[1.01] active:scale-[0.98]"
       >
-        <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-        <circle cx="8.5" cy="8.5" r="1.5" />
-        <polyline points="21 15 16 10 5 21" />
-        <line x1="16" y1="5" x2="22" y2="5" />
-        <line x1="19" y1="2" x2="19" y2="8" />
-      </svg>
-      Add Photos
-    </a>
-  </div>
-{/if}
+        <svg
+          class="size-4 transition-transform group-hover:scale-101"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+          <circle cx="8.5" cy="8.5" r="1.5" />
+          <polyline points="21 15 16 10 5 21" />
+          <line x1="16" y1="5" x2="22" y2="5" />
+          <line x1="19" y1="2" x2="19" y2="8" />
+        </svg>
+        Add Photos
+      </a>
+    </div>
+  {/if}
+</AdminHeader>

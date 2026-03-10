@@ -6,6 +6,7 @@
   import SveditEditor from '$lib/components/admin/SveditEditor.svelte';
   import AdminCard from '$lib/components/admin/AdminCard.svelte';
   import AdminButton from '$lib/components/admin/AdminButton.svelte';
+  import AdminHeader from '$lib/components/admin/AdminHeader.svelte';
   import AdminHeading from '$lib/components/admin/AdminHeading.svelte';
   import AdminCreateListLayout from '$lib/components/admin/AdminCreateListLayout.svelte';
   import AdminRevisionsDrawer from '$lib/components/admin/AdminRevisionsDrawer.svelte';
@@ -281,14 +282,16 @@
   };
 </script>
 
-<div class="flex flex-wrap items-center justify-between gap-4">
-  <AdminHeading>Homepage</AdminHeading>
-  <AdminSegmentedToggle
-    segments={sections}
-    activeKey={section}
-    ariaLabel="Homepage admin sections"
-  />
-</div>
+<AdminHeader>
+  <div class="flex flex-wrap items-center justify-between gap-4">
+    <AdminHeading>Homepage</AdminHeading>
+    <AdminSegmentedToggle
+      segments={sections}
+      activeKey={section}
+      ariaLabel="Homepage admin sections"
+    />
+  </div>
+</AdminHeader>
 
 {#if section === 'slides'}
   <AdminCreateListLayout
@@ -305,11 +308,7 @@
   />
 
   {#if homePage}
-    <form
-      method="POST"
-      action="?/saveHero&section=hero"
-      class="mt-6 grid gap-3"
-    >
+    <form method="POST" action="?/saveHero&section=hero" class="grid gap-3">
       <input type="hidden" name="id" value={homePage.id} />
       <input type="hidden" name="slug" value="home" />
 

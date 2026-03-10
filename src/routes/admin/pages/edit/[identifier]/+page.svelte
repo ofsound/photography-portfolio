@@ -6,6 +6,7 @@
   import BackgroundImagePickerModal from '$lib/components/admin/BackgroundImagePickerModal.svelte';
   import AdminCard from '$lib/components/admin/AdminCard.svelte';
   import AdminButton from '$lib/components/admin/AdminButton.svelte';
+  import AdminHeader from '$lib/components/admin/AdminHeader.svelte';
   import AdminHeading from '$lib/components/admin/AdminHeading.svelte';
   import AdminRevisionsDrawer from '$lib/components/admin/AdminRevisionsDrawer.svelte';
   import AdminSeoSocialDrawer from '$lib/components/admin/AdminSeoSocialDrawer.svelte';
@@ -138,43 +139,45 @@
   };
 </script>
 
-<div class="flex items-center gap-3">
-  <a
-    href={resolve('/admin/pages')}
-    class="-m-2 p-2 text-text-muted transition-colors hover:text-brand"
-    aria-label="Back to Pages"
-  >
-    <svg
-      class="size-4"
-      viewBox="0 0 16 16"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="2"
-      stroke-linecap="round"
-      stroke-linejoin="round"
+<AdminHeader>
+  <div class="flex items-center gap-3">
+    <a
+      href={resolve('/admin/pages')}
+      class="-m-2 p-2 text-text-muted transition-colors hover:text-brand"
+      aria-label="Back to Pages"
     >
-      <path d="M10 3 5 8l5 5" />
-    </svg>
-  </a>
-  <AdminHeading>{page.title}: Edit</AdminHeading>
-</div>
-<AdminToastEmitter
-  message={form?.message ?? data.message}
-  type={form?.success === true
-    ? 'success'
-    : form?.message
-      ? 'error'
-      : data.messageSuccess
-        ? 'success'
-        : 'neutral'}
-  clearQueryMessage
-/>
+      <svg
+        class="size-4"
+        viewBox="0 0 16 16"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <path d="M10 3 5 8l5 5" />
+      </svg>
+    </a>
+    <AdminHeading>{page.title}: Edit</AdminHeading>
+  </div>
+  <AdminToastEmitter
+    message={form?.message ?? data.message}
+    type={form?.success === true
+      ? 'success'
+      : form?.message
+        ? 'error'
+        : data.messageSuccess
+          ? 'success'
+          : 'neutral'}
+    clearQueryMessage
+  />
+</AdminHeader>
 
 <form
   id="page-edit-form"
   method="POST"
   action="?/update"
-  class="mt-6 grid gap-3 pb-32"
+  class="grid gap-3 pb-32"
 >
   <input type="hidden" name="id" value={page.id} />
   <input type="hidden" name="original_identifier" value={data.identifier} />

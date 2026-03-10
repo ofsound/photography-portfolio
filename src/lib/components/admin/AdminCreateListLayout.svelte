@@ -1,4 +1,5 @@
 <script lang="ts">
+  import AdminHeader from '$lib/components/admin/AdminHeader.svelte';
   import AdminHeading from '$lib/components/admin/AdminHeading.svelte';
   import AdminToastEmitter from '$lib/components/admin/AdminToastEmitter.svelte';
 
@@ -35,32 +36,34 @@
   }: Props = $props();
 </script>
 
-<div class="flex items-center gap-3">
-  {#if leading}
-    {@render leading()}
-  {/if}
-  <AdminHeading>{title}</AdminHeading>
-  {#if actions}
-    {@render actions()}
-  {/if}
-</div>
+<AdminHeader>
+  <div class="flex items-center gap-3">
+    {#if leading}
+      {@render leading()}
+    {/if}
+    <AdminHeading>{title}</AdminHeading>
+    {#if actions}
+      {@render actions()}
+    {/if}
+  </div>
 
-{#if subtitle}
-  <p class="mt-2 text-sm text-text-muted">{subtitle}</p>
-{/if}
+  {#if subtitle}
+    <p class="mt-2 text-sm text-text-muted">{subtitle}</p>
+  {/if}
 
-<AdminToastEmitter
-  message={formMessage}
-  type={formSuccess ? 'success' : 'error'}
-/>
-<AdminToastEmitter
-  message={dataMessage}
-  type={dataSuccess ? 'success' : 'neutral'}
-  clearQueryMessage={clearDataMessageQuery}
-/>
+  <AdminToastEmitter
+    message={formMessage}
+    type={formSuccess ? 'success' : 'error'}
+  />
+  <AdminToastEmitter
+    message={dataMessage}
+    type={dataSuccess ? 'success' : 'neutral'}
+    clearQueryMessage={clearDataMessageQuery}
+  />
+</AdminHeader>
 
 {#if overflow}
-  <section class="mt-6 flex min-h-0 flex-1 flex-col overflow-hidden">
+  <section class="flex min-h-0 flex-1 flex-col overflow-hidden">
     <div
       class="grid min-h-0 flex-1 grid-rows-[1fr] gap-8 lg:grid-cols-[24rem_1fr]"
     >
@@ -74,7 +77,7 @@
   </section>
 {:else}
   <section
-    class="mt-6 flex gap-8 {reverseColumnOrder
+    class="flex gap-8 {reverseColumnOrder
       ? 'flex-col-reverse lg:flex-row-reverse'
       : 'flex-col lg:flex-row'}"
   >

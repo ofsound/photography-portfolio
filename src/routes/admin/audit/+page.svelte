@@ -1,16 +1,19 @@
 <script lang="ts">
   import AdminCard from '$lib/components/admin/AdminCard.svelte';
+  import AdminHeader from '$lib/components/admin/AdminHeader.svelte';
   import AdminHeading from '$lib/components/admin/AdminHeading.svelte';
 
   const { data } = $props();
 </script>
 
-<AdminHeading>Audit Log</AdminHeading>
-<p class="mt-2 text-sm text-text-muted">
-  Most recent {data.logs.length} entries.
-</p>
+<AdminHeader>
+  <AdminHeading>Audit Log</AdminHeading>
+  <p class="mt-2 text-sm text-text-muted">
+    Most recent {data.logs.length} entries.
+  </p>
+</AdminHeader>
 
-<AdminCard class="mt-6 overflow-x-auto !bg-transparent">
+<AdminCard class="overflow-x-auto !bg-transparent">
   <table class="min-w-full border-collapse text-left text-xs">
     <thead
       class="border-b border-border bg-canvas/[0.03] tracking-widest uppercase"

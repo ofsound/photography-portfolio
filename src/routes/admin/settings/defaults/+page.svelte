@@ -1,4 +1,5 @@
 <script lang="ts">
+  import AdminHeader from '$lib/components/admin/AdminHeader.svelte';
   import AdminButton from '$lib/components/admin/AdminButton.svelte';
   import AdminHeading from '$lib/components/admin/AdminHeading.svelte';
   import AdminToastEmitter from '$lib/components/admin/AdminToastEmitter.svelte';
@@ -12,16 +13,18 @@
   const isAdmin = $derived(data.role === 'admin');
 </script>
 
-<AdminHeading>Default Gallery Settings</AdminHeading>
+<AdminHeader>
+  <AdminHeading>Default Gallery Settings</AdminHeading>
 
-{#if form?.message}
-  <AdminToastEmitter
-    message={form.message}
-    type={form && 'success' in form && form.success ? 'success' : 'error'}
-  />
-{/if}
+  {#if form?.message}
+    <AdminToastEmitter
+      message={form.message}
+      type={form && 'success' in form && form.success ? 'success' : 'error'}
+    />
+  {/if}
+</AdminHeader>
 
-<form method="POST" action="?/save" class="mt-6 grid gap-4">
+<form method="POST" action="?/save" class="grid gap-4">
   <GallerySettingsFormFields
     {settings}
     disableTransitionPreset={!isAdmin}

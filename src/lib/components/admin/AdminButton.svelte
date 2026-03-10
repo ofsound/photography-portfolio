@@ -44,7 +44,7 @@
       variantClasses[variant as Variant],
       variant === 'default' && selected === true ? 'bg-border' : '',
       variant === 'default' && selected === false ? 'opacity-40' : '',
-      disabled ? 'pointer-events-none opacity-40' : 'cursor-pointer',
+      disabled ? 'pointer-events-none opacity-50' : 'cursor-pointer',
       className,
     ]
       .filter(Boolean)

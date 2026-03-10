@@ -13,7 +13,9 @@
   };
 
   const { data, form } = $props();
-  const typedForm = $derived((form as FormState | null | undefined) ?? undefined);
+  const typedForm = $derived(
+    (form as FormState | null | undefined) ?? undefined,
+  );
 
   const fieldErrors = $derived(typedForm?.fieldErrors ?? {});
   const values = $derived(typedForm?.values ?? {});
@@ -39,7 +41,8 @@
       <FormInput
         id="public-font-import-url"
         name="public_font_import_url"
-        value={values.public_font_import_url ?? data.typography.public_font_import_url}
+        value={values.public_font_import_url ??
+          data.typography.public_font_import_url}
         readonly={!isAdmin}
       />
     </FormField>
@@ -66,7 +69,8 @@
       <FormInput
         id="admin-font-import-url"
         name="admin_font_import_url"
-        value={values.admin_font_import_url ?? data.typography.admin_font_import_url}
+        value={values.admin_font_import_url ??
+          data.typography.admin_font_import_url}
         readonly={!isAdmin}
       />
     </FormField>
@@ -89,6 +93,8 @@
   {#if isAdmin}
     <AdminButton type="submit" variant="submit">Save Typography</AdminButton>
   {:else}
-    <p class="text-sm text-text-muted">Only admins can edit typography settings.</p>
+    <p class="text-sm text-text-muted">
+      Only admins can edit typography settings.
+    </p>
   {/if}
 </form>

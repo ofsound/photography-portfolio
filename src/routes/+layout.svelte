@@ -407,12 +407,11 @@
 
 <svelte:head>
   <meta name="site-theme-default" content={siteThemeDefault} />
+  <meta name="site-font-public-family" content={publicFontFamily} />
+  <meta name="site-font-admin-family" content={adminFontFamily} />
   {#each fontImportUrls as fontImportUrl (fontImportUrl)}
     <link rel="stylesheet" href={fontImportUrl} />
   {/each}
-  <style>
-    {`:root { --font-sans-public: ${publicFontFamily} !important; --font-sans-admin: ${adminFontFamily} !important; }`}
-  </style>
 </svelte:head>
 
 <div class="min-h-screen bg-bg text-text">

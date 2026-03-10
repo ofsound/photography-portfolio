@@ -90,13 +90,11 @@ export const actions: Actions = {
     const fieldErrors: Record<string, string | undefined> = {};
 
     if (!isAllowedGoogleFontsImportUrl(values.public_font_import_url)) {
-      fieldErrors.public_font_import_url =
-        'Must be a Google Fonts css2 URL.';
+      fieldErrors.public_font_import_url = 'Must be a Google Fonts css2 URL.';
     }
 
     if (!isAllowedGoogleFontsImportUrl(values.admin_font_import_url)) {
-      fieldErrors.admin_font_import_url =
-        'Must be a Google Fonts css2 URL.';
+      fieldErrors.admin_font_import_url = 'Must be a Google Fonts css2 URL.';
     }
 
     if (!isSafeFontFamilyDefinition(values.public_font_family)) {

@@ -12,8 +12,20 @@
           var siteThemeMeta = document.querySelector(
             'meta[name="site-theme-default"]'
           );
+          var publicFontMeta = document.querySelector(
+            'meta[name="site-font-public-family"]'
+          );
+          var adminFontMeta = document.querySelector(
+            'meta[name="site-font-admin-family"]'
+          );
           var siteTheme = siteThemeMeta
             ? siteThemeMeta.getAttribute("content")
+            : null;
+          var publicFontFamily = publicFontMeta
+            ? publicFontMeta.getAttribute("content")
+            : null;
+          var adminFontFamily = adminFontMeta
+            ? adminFontMeta.getAttribute("content")
             : null;
           if (
             siteTheme !== "light" &&
@@ -42,6 +54,15 @@
           var activeTheme = isDark ? "dark" : "light";
           root.setAttribute("data-theme", activeTheme);
           root.style.colorScheme = activeTheme;
+          if (publicFontFamily && publicFontFamily.trim()) {
+            root.style.setProperty(
+              "--font-sans-public",
+              publicFontFamily.trim()
+            );
+          }
+          if (adminFontFamily && adminFontFamily.trim()) {
+            root.style.setProperty("--font-sans-admin", adminFontFamily.trim());
+          }
         } catch (e) {}
       })();
     </script>

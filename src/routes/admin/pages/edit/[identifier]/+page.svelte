@@ -159,12 +159,25 @@
   <AdminHeading>{page.title}: Edit</AdminHeading>
 </div>
 <AdminToastEmitter
-  message={form?.message}
-  type={form && 'success' in form && form.success ? 'success' : 'error'}
+  message={form?.message ?? data.message}
+  type={form?.success === true
+    ? 'success'
+    : form?.message
+      ? 'error'
+      : data.messageSuccess
+        ? 'success'
+        : 'neutral'}
+  clearQueryMessage
 />
 
-<form method="POST" action="?/update" class="mt-6 grid gap-3">
+<form
+  id="page-edit-form"
+  method="POST"
+  action="?/update"
+  class="mt-6 grid gap-3 pb-32"
+>
   <input type="hidden" name="id" value={page.id} />
+  <input type="hidden" name="original_identifier" value={data.identifier} />
   <input type="hidden" name="bg_image_id" value={formBgImageId ?? ''} />
 
   <div class="grid gap-3 sm:grid-cols-2">
@@ -353,17 +366,6 @@
     <input type="hidden" name="css_module" value="" />
   {/if}
 
-  <div class="flex flex-wrap items-center gap-3">
-    <AdminButton type="submit" variant="submit">Save</AdminButton>
-    <AdminButton
-      type="submit"
-      variant="danger"
-      formaction="?/delete"
-      formmethod="POST"
-      onclick={confirmDelete}>Delete</AdminButton
-    >
-  </div>
-
   <AdminRevisionsDrawer
     id="page-edit-revisions"
     {revisions}
@@ -371,6 +373,27 @@
     storageKey="admin-revisions:pages-edit"
   />
 </form>
+
+<div
+  class="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-surface/95 px-4 pt-3 backdrop-blur md:left-[220px] md:px-6"
+  style="padding-bottom: env(safe-area-inset-bottom)"
+>
+  <div class="w-full md:max-w-[1200px]">
+    <AdminCard class="flex flex-wrap items-center gap-3 p-3">
+      <AdminButton type="submit" variant="submit" form="page-edit-form"
+        >Save</AdminButton
+      >
+      <AdminButton
+        type="submit"
+        variant="danger"
+        form="page-edit-form"
+        formaction="?/delete"
+        formmethod="POST"
+        onclick={confirmDelete}>Delete</AdminButton
+      >
+    </AdminCard>
+  </div>
+</div>
 
 {#if showBgPicker}
   <BackgroundImagePickerModal

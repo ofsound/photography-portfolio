@@ -1,4 +1,4 @@
-import { fail, type Actions } from '@sveltejs/kit';
+import { fail, redirect, type Actions } from '@sveltejs/kit';
 import { asOptionalDate, asString, toSlug } from '$lib/server/admin-helpers';
 import {
   failForm,
@@ -17,7 +17,7 @@ const draftStatusMigrationHint =
 
 const normalizeDraftStatusErrorMessage = (message: string) =>
   message.includes('invalid input value for enum publish_status') &&
-  message.includes('"draft"')
+    message.includes('"draft"')
     ? draftStatusMigrationHint
     : message;
 
@@ -97,11 +97,11 @@ const upsertPhotoPayload = (
 ):
   | { ok: true; payload: PhotoPayload }
   | {
-      ok: false;
-      message: string;
-      fieldErrors?: FieldErrors;
-      values?: FormValues;
-    } => {
+    ok: false;
+    message: string;
+    fieldErrors?: FieldErrors;
+    values?: FormValues;
+  } => {
   const title = asString(form.get('title')).trim();
   const slugInput = asString(form.get('slug')).trim();
   const values: FormValues = {
@@ -175,7 +175,7 @@ export const photoCoreActions: Actions = {
     return { success: true, message: 'Draft created.' };
   },
 
-  update: async ({ locals, request }) => {
+  update: async ({ locals, params, request }) => {
     const form = await request.formData();
     const id = asString(form.get('id'));
     const galleryId = asString(form.get('gallery_id'));
@@ -187,9 +187,9 @@ export const photoCoreActions: Actions = {
         fieldErrors: result.fieldErrors,
         values: result.values
           ? {
-              ...result.values,
-              id,
-            }
+            ...result.values,
+            id,
+          }
           : { id },
       });
     }
@@ -202,10 +202,13 @@ export const photoCoreActions: Actions = {
     const { error } = await query;
 
     if (error) return fail(400, { message: error.message });
+    if (form.get('redirect_to_gallery') === '1' && params?.gallerySlug) {
+      throw redirect(303, `/admin/${params.gallerySlug}/photos`);
+    }
     return { success: true, message: 'Photo updated.' };
   },
 
-  archive: async ({ locals, request }) => {
+  archive: async ({ locals, params, request }) => {
     const form = await request.formData();
     const id = asString(form.get('id'));
     const galleryId = asString(form.get('gallery_id'));
@@ -217,6 +220,9 @@ export const photoCoreActions: Actions = {
     const { error } = await query;
 
     if (error) return fail(400, { message: error.message });
+    if (params?.gallerySlug) {
+      throw redirect(303, `/admin/${params.gallerySlug}/photos`);
+    }
     return { success: true, message: 'Photo archived.' };
   },
 

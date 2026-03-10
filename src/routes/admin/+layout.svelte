@@ -111,6 +111,12 @@
         page.url.pathname.startsWith('/admin/settings/')
       );
     }
+    if (href === '/admin/pages') {
+      return (
+        page.url.pathname === '/admin/pages' ||
+        page.url.pathname.startsWith('/admin/pages/')
+      );
+    }
     return page.url.pathname === href;
   };
 </script>

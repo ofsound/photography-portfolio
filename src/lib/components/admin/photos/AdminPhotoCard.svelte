@@ -218,6 +218,9 @@
             {#if !isDraft}
               <input type="hidden" name="id" value={photo.id} />
             {/if}
+            {#if photoStatus === 'published'}
+              <input type="hidden" name="redirect_to_gallery" value="1" />
+            {/if}
 
             {#snippet dimensionsField()}
               <FormField label="Dimensions" id="edit-dimensions-{photoFormId}">

@@ -11,6 +11,7 @@
   import AdminToastEmitter from '$lib/components/admin/AdminToastEmitter.svelte';
   import PhotoTaxonomyEditor from '$lib/components/admin/PhotoTaxonomyEditor.svelte';
   import AdminPhotoCard from '$lib/components/admin/photos/AdminPhotoCard.svelte';
+  import AdminPhotoCardCompact from '$lib/components/admin/photos/AdminPhotoCardCompact.svelte';
   import AdminPhotosBulkPanel from '$lib/components/admin/photos/AdminPhotosBulkPanel.svelte';
   import AdminPhotosFilterForm from '$lib/components/admin/photos/AdminPhotosFilterForm.svelte';
   import {
@@ -28,7 +29,6 @@
     getAdminPhotosPrefs,
     setAdminPhotosPrefs,
   } from '$lib/stores/admin-photos-prefs';
-  import { photoPublicUrl } from '$lib/utils/storage-url';
   import type {
     AdminCategory,
     AdminPhoto,
@@ -526,43 +526,21 @@
             {#snippet children(source)}
               {@const photo = photoById.get(String(source.id))}
               {#if photo}
-                {@const lead =
-                  imagesForPhoto(photo.id).find(
-                    (image: AdminPhotoImage) => image.kind === 'lead',
-                  ) ?? null}
-                <div
-                  class="relative flex aspect-square flex-col overflow-hidden rounded border-2 border-brand bg-surface shadow-xl"
-                  style="width: {overlayCellSize ?? 160}px;"
-                  role="presentation"
-                >
-                  <div class="flex-1 overflow-hidden">
-                    {#if lead?.delivery_storage_path}
-                      <img
-                        src={photoPublicUrl(lead.delivery_storage_path, 400)}
-                        alt={lead.alt_text ?? photo.title}
-                        class="h-full w-full object-cover"
-                      />
-                    {:else}
-                      <div
-                        class="grid h-full w-full place-items-center rounded bg-surface-muted text-xs text-text-muted uppercase"
-                        class:animate-pulse={Boolean(lead)}
-                      >
-                        {lead ? 'pending' : 'no lead'}
-                      </div>
-                    {/if}
-                  </div>
-                  <div
-                    class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent px-2 pt-6 pb-2"
-                  >
-                    <p
-                      class="truncate text-xs font-medium tracking-wider text-white"
-                    >
-                      {photo.title}
-                    </p>
-                    <p class="truncate text-xs text-white/80">
-                      /{photo.gallery_slug}/photo/{photo.slug}
-                    </p>
-                  </div>
+                <div style="width: {overlayCellSize ?? 160}px;">
+                  <AdminPhotoCardCompact
+                    {photo}
+                    images={imagesForPhoto(photo.id)}
+                    selectedPhotoIds={[]}
+                    onTogglePhotoSelected={() => {}}
+                    isPublic={photo.status === 'published'}
+                    photoStatus={photo.deleted_at
+                      ? 'archived'
+                      : photo.status === 'published'
+                        ? 'published'
+                        : 'draft'}
+                    isDraggingPhoto={false}
+                    preview={true}
+                  />
                 </div>
               {/if}
             {/snippet}

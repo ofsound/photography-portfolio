@@ -15,6 +15,7 @@
     photoStatus,
     isDraggingPhoto,
     editHref,
+    preview = false,
   } = $props<{
     photo: AdminPhoto | (Omit<AdminPhoto, 'id'> & { id: null });
     images: AdminPhotoImage[];
@@ -24,6 +25,7 @@
     photoStatus: 'draft' | 'published' | 'archived';
     isDraggingPhoto: boolean;
     editHref?: string;
+    preview?: boolean;
   }>();
 
   const lead = $derived(
@@ -33,41 +35,33 @@
   const statusLabel = $derived(
     photoStatus === 'archived' ? 'Archived' : 'Private draft',
   );
+
+  const cardClass = $derived([
+    'group relative flex aspect-square flex-col overflow-hidden rounded border bg-surface transition-colors',
+    preview
+      ? 'border-2 border-brand shadow-xl'
+      : isPrivateDraft
+        ? 'border-2 border-warning ring-1 ring-warning/25'
+        : 'border-border',
+  ]);
 </script>
 
-<div
-  class={[
-    'group relative flex aspect-square flex-col overflow-hidden rounded border bg-surface transition-colors',
-    isPrivateDraft
-      ? 'border-2 border-warning ring-1 ring-warning/25'
-      : 'border-border',
-  ]}
-  class:opacity-50={isDraggingPhoto}
-  role="button"
-  tabindex="0"
-  onclick={(e) => {
-    if (
-      (e.target as HTMLElement).closest('input[type="checkbox"]') ||
-      (e.target as HTMLElement).closest('a')
-    )
-      return;
-    if (editHref) goto(resolve(editHref));
-  }}
-  onkeydown={(e) => e.key === 'Enter' && editHref && goto(resolve(editHref))}
->
-  <div class="absolute top-2 left-2 z-10 flex items-center gap-1">
-    <input
-      type="checkbox"
-      class="size-5 rounded border-border-strong"
-      checked={selectedPhotoIds.includes(photo.id)}
-      onchange={(event) =>
-        onTogglePhotoSelected(
-          photo.id,
-          (event.currentTarget as HTMLInputElement).checked,
-        )}
-      onclick={(e) => e.stopPropagation()}
-    />
-  </div>
+{#snippet cardContent()}
+  {#if !preview}
+    <div class="absolute top-2 left-2 z-10 flex items-center gap-1">
+      <input
+        type="checkbox"
+        class="size-5 rounded border-border-strong"
+        checked={selectedPhotoIds.includes(photo.id)}
+        onchange={(event) =>
+          onTogglePhotoSelected(
+            photo.id,
+            (event.currentTarget as HTMLInputElement).checked,
+          )}
+        onclick={(e) => e.stopPropagation()}
+      />
+    </div>
+  {/if}
   {#if isPrivateDraft}
     <div
       class="pointer-events-none absolute top-2 right-2 z-20 inline-flex items-center gap-1 rounded-sm border border-warning/50 bg-warning-soft px-2 py-1 text-[10px] font-semibold tracking-widest text-warning uppercase shadow-sm"
@@ -148,4 +142,28 @@
       </span>
     {/if}
   </div>
-</div>
+{/snippet}
+
+{#if preview}
+  <div class={cardClass} role="presentation">
+    {@render cardContent()}
+  </div>
+{:else}
+  <div
+    class={cardClass}
+    class:opacity-50={isDraggingPhoto}
+    role="button"
+    tabindex="0"
+    onclick={(e) => {
+      if (
+        (e.target as HTMLElement).closest('input[type="checkbox"]') ||
+        (e.target as HTMLElement).closest('a')
+      )
+        return;
+      if (editHref) goto(resolve(editHref));
+    }}
+    onkeydown={(e) => e.key === 'Enter' && editHref && goto(resolve(editHref))}
+  >
+    {@render cardContent()}
+  </div>
+{/if}

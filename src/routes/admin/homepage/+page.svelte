@@ -8,6 +8,7 @@
   import AdminButton from '$lib/components/admin/AdminButton.svelte';
   import AdminHeading from '$lib/components/admin/AdminHeading.svelte';
   import AdminCreateListLayout from '$lib/components/admin/AdminCreateListLayout.svelte';
+  import AdminRevisionsDrawer from '$lib/components/admin/AdminRevisionsDrawer.svelte';
   import AdminSeoSocialDrawer from '$lib/components/admin/AdminSeoSocialDrawer.svelte';
   import AdminSegmentedToggle from '$lib/components/admin/AdminSegmentedToggle.svelte';
   import AdminToastEmitter from '$lib/components/admin/AdminToastEmitter.svelte';
@@ -461,35 +462,12 @@
         <AdminButton type="submit" variant="submit">Save Hero</AdminButton>
       </div>
 
-      {#if revisions.length}
-        <AdminCard class="p-3">
-          <p class="mb-2 text-xs tracking-widest uppercase">Recent Revisions</p>
-          <div class="grid gap-2">
-            {#each revisions.slice(0, 10) as rev (rev.id)}
-              <div
-                class="flex flex-wrap items-center justify-between gap-2 text-xs"
-              >
-                <span
-                  >v{rev.version_no} - {new Date(
-                    rev.changed_at,
-                  ).toLocaleString()}</span
-                >
-                <AdminButton
-                  variant="submit"
-                  type="submit"
-                  name="revision_id"
-                  value={rev.id}
-                  formaction="?/rollbackHero&section=hero"
-                  formmethod="POST"
-                  size="sm"
-                >
-                  Rollback
-                </AdminButton>
-              </div>
-            {/each}
-          </div>
-        </AdminCard>
-      {/if}
+      <AdminRevisionsDrawer
+        id="homepage-hero-revisions"
+        {revisions}
+        rollbackFormAction="?/rollbackHero&section=hero"
+        storageKey="admin-revisions:homepage-hero"
+      />
     </form>
   {:else}
     <p class="mt-6 text-sm text-text-muted">

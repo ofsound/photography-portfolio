@@ -7,6 +7,7 @@
   import AdminCard from '$lib/components/admin/AdminCard.svelte';
   import AdminButton from '$lib/components/admin/AdminButton.svelte';
   import AdminHeading from '$lib/components/admin/AdminHeading.svelte';
+  import AdminRevisionsDrawer from '$lib/components/admin/AdminRevisionsDrawer.svelte';
   import AdminSeoSocialDrawer from '$lib/components/admin/AdminSeoSocialDrawer.svelte';
   import AdminToastEmitter from '$lib/components/admin/AdminToastEmitter.svelte';
   import FormField from '$lib/components/FormField.svelte';
@@ -363,35 +364,12 @@
     >
   </div>
 
-  {#if revisions.length}
-    <AdminCard class="p-3">
-      <p class="mb-2 text-xs tracking-widest uppercase">Recent Revisions</p>
-      <div class="grid gap-2">
-        {#each revisions.slice(0, 10) as rev (rev.id)}
-          <div
-            class="flex flex-wrap items-center justify-between gap-2 text-xs"
-          >
-            <span
-              >v{rev.version_no} - {new Date(
-                rev.changed_at,
-              ).toLocaleString()}</span
-            >
-            <AdminButton
-              variant="submit"
-              type="submit"
-              name="revision_id"
-              value={rev.id}
-              formaction="?/rollback"
-              formmethod="POST"
-              size="sm"
-            >
-              Rollback
-            </AdminButton>
-          </div>
-        {/each}
-      </div>
-    </AdminCard>
-  {/if}
+  <AdminRevisionsDrawer
+    id="page-edit-revisions"
+    {revisions}
+    rollbackFormAction="?/rollback"
+    storageKey="admin-revisions:pages-edit"
+  />
 </form>
 
 {#if showBgPicker}

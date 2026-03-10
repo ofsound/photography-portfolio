@@ -28,6 +28,7 @@
     items,
     form,
     reverseColumnOrder,
+    showCreateStatus = true,
   }: {
     title: string;
     singularLabel: string;
@@ -35,6 +36,7 @@
     items: TaxonomyItem[];
     form?: FormState | null | undefined;
     reverseColumnOrder?: boolean;
+    showCreateStatus?: boolean;
   } = $props();
 
   const typedForm = $derived(form ?? undefined);
@@ -121,17 +123,21 @@
           : (typedForm?.values?.description ?? '')}
       />
     </FormField>
-    <FormField label="Status" id={`${idPrefix}-create-is-active`}>
-      <label class="flex items-center gap-2 text-sm">
-        <input
-          id={`${idPrefix}-create-is-active`}
-          name="is_active"
-          type="checkbox"
-          checked
-        />
-        Active
-      </label>
-    </FormField>
+    {#if showCreateStatus}
+      <FormField label="Status" id={`${idPrefix}-create-is-active`}>
+        <label class="flex items-center gap-2 text-sm">
+          <input
+            id={`${idPrefix}-create-is-active`}
+            name="is_active"
+            type="checkbox"
+            checked
+          />
+          Active
+        </label>
+      </FormField>
+    {:else}
+      <input type="hidden" name="is_active" value="true" />
+    {/if}
     <AdminButton type="submit" variant="submit" class="mt-4">
       Create {singularLabel}
     </AdminButton>

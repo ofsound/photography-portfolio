@@ -31,7 +31,9 @@ export const actions: Actions = {
     const name = asString(form.get('name')).trim();
     const slugInput = asString(form.get('slug')).trim();
     const description = asString(form.get('description')).trim() || null;
-    const isActive = asBoolean(form.get('is_active'));
+    const isActive = form.has('is_active')
+      ? asBoolean(form.get('is_active'))
+      : true;
 
     const titleError = assertTitle(name);
     if (titleError) {

@@ -10,5 +10,6 @@
   idPrefix="tag"
   items={data.tags}
   reverseColumnOrder
+  showCreateStatus={false}
   {form}
 />

@@ -10,5 +10,6 @@
   idPrefix="cat"
   items={data.categories}
   reverseColumnOrder
+  showCreateStatus={false}
   {form}
 />

@@ -179,7 +179,13 @@ export type Database = {
           id: string;
           max_content_width_px: number | null;
           nav_order: number;
+          photograph_info_mode: Database['public']['Enums']['photograph_info_mode'];
           scope: Database['public']['Enums']['gallery_settings_scope'];
+          show_photo_info_capture_date: boolean;
+          show_photo_info_description: boolean;
+          show_photo_info_dimensions: boolean;
+          show_photo_info_license_text: boolean;
+          show_photo_info_title: boolean;
           show_photograph_info: boolean;
           show_in_nav: boolean;
           show_thumbnail_zoom_hover: boolean;
@@ -200,7 +206,13 @@ export type Database = {
           id?: string;
           max_content_width_px?: number | null;
           nav_order?: number;
+          photograph_info_mode?: Database['public']['Enums']['photograph_info_mode'];
           scope: Database['public']['Enums']['gallery_settings_scope'];
+          show_photo_info_capture_date?: boolean;
+          show_photo_info_description?: boolean;
+          show_photo_info_dimensions?: boolean;
+          show_photo_info_license_text?: boolean;
+          show_photo_info_title?: boolean;
           show_photograph_info?: boolean;
           show_in_nav?: boolean;
           show_thumbnail_zoom_hover?: boolean;
@@ -221,7 +233,13 @@ export type Database = {
           id?: string;
           max_content_width_px?: number | null;
           nav_order?: number;
+          photograph_info_mode?: Database['public']['Enums']['photograph_info_mode'];
           scope?: Database['public']['Enums']['gallery_settings_scope'];
+          show_photo_info_capture_date?: boolean;
+          show_photo_info_description?: boolean;
+          show_photo_info_dimensions?: boolean;
+          show_photo_info_license_text?: boolean;
+          show_photo_info_title?: boolean;
           show_photograph_info?: boolean;
           show_in_nav?: boolean;
           show_thumbnail_zoom_hover?: boolean;
@@ -722,8 +740,14 @@ export type Database = {
           homepage_slide_duration_ms: number;
           homepage_transition_duration_ms: number;
           max_content_width_px: number | null;
+          photograph_info_mode: Database['public']['Enums']['photograph_info_mode'];
           public_font_family: string;
           public_font_import_url: string;
+          show_photo_info_capture_date: boolean;
+          show_photo_info_description: boolean;
+          show_photo_info_dimensions: boolean;
+          show_photo_info_license_text: boolean;
+          show_photo_info_title: boolean;
           show_photograph_info: boolean;
           show_search_link_in_nav: boolean;
           show_thumbnail_zoom_hover: boolean;
@@ -751,8 +775,14 @@ export type Database = {
           homepage_slide_duration_ms?: number;
           homepage_transition_duration_ms?: number;
           max_content_width_px?: number | null;
+          photograph_info_mode?: Database['public']['Enums']['photograph_info_mode'];
           public_font_family?: string;
           public_font_import_url?: string;
+          show_photo_info_capture_date?: boolean;
+          show_photo_info_description?: boolean;
+          show_photo_info_dimensions?: boolean;
+          show_photo_info_license_text?: boolean;
+          show_photo_info_title?: boolean;
           show_photograph_info?: boolean;
           show_search_link_in_nav?: boolean;
           show_thumbnail_zoom_hover?: boolean;
@@ -780,8 +810,14 @@ export type Database = {
           homepage_slide_duration_ms?: number;
           homepage_transition_duration_ms?: number;
           max_content_width_px?: number | null;
+          photograph_info_mode?: Database['public']['Enums']['photograph_info_mode'];
           public_font_family?: string;
           public_font_import_url?: string;
+          show_photo_info_capture_date?: boolean;
+          show_photo_info_description?: boolean;
+          show_photo_info_dimensions?: boolean;
+          show_photo_info_license_text?: boolean;
+          show_photo_info_title?: boolean;
           show_photograph_info?: boolean;
           show_search_link_in_nav?: boolean;
           show_thumbnail_zoom_hover?: boolean;
@@ -899,6 +935,7 @@ export type Database = {
     Enums: {
       app_role: 'admin' | 'editor';
       asset_kind: 'lead' | 'additional';
+      photograph_info_mode: 'hidden' | 'floating' | 'bottom_dock';
       gallery_settings_scope: 'gallery' | 'all';
       gallery_visibility_status: 'public' | 'unlisted' | 'archived';
       layout_mode: 'uniform' | 'masonry' | 'coverage' | 'rows' | 'columns';
@@ -1040,6 +1077,7 @@ export const Constants = {
     Enums: {
       app_role: ['admin', 'editor'],
       asset_kind: ['lead', 'additional'],
+      photograph_info_mode: ['hidden', 'floating', 'bottom_dock'],
       gallery_settings_scope: ['gallery', 'all'],
       gallery_visibility_status: ['public', 'unlisted', 'archived'],
       layout_mode: ['uniform', 'masonry', 'coverage', 'rows', 'columns'],

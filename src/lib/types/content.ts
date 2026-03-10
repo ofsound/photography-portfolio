@@ -93,6 +93,8 @@ export type GalleryPhoto = {
   og_description: string | null;
   og_image_path: string | null;
   capture_date: string | null;
+  dimensions: string | null;
+  license_text: string | null;
   thumb: string | null;
   thumbAlt: string;
   leadImage: {

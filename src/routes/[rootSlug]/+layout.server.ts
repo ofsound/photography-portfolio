@@ -211,6 +211,14 @@ const loadGalleryModeData = async ({
     baseQueryString: buildBaseQueryString(q),
     active,
     gallerySettings: {
+      photograph_info_mode: settings.photograph_info_mode ?? 'floating',
+      show_photo_info_title: settings.show_photo_info_title ?? true,
+      show_photo_info_description: settings.show_photo_info_description ?? true,
+      show_photo_info_capture_date:
+        settings.show_photo_info_capture_date ?? false,
+      show_photo_info_dimensions: settings.show_photo_info_dimensions ?? false,
+      show_photo_info_license_text:
+        settings.show_photo_info_license_text ?? false,
       show_photograph_info: settings.show_photograph_info ?? true,
       show_thumbnail_zoom_hover: settings.show_thumbnail_zoom_hover ?? true,
     },
@@ -320,6 +328,12 @@ export const load: LayoutServerLoad = async ({ locals, params, url }) => {
     baseQueryString: '',
     active: null,
     gallerySettings: {
+      photograph_info_mode: 'floating',
+      show_photo_info_title: true,
+      show_photo_info_description: true,
+      show_photo_info_capture_date: false,
+      show_photo_info_dimensions: false,
+      show_photo_info_license_text: false,
       show_photograph_info: true,
       show_thumbnail_zoom_hover: true,
     },

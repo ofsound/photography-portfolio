@@ -8,6 +8,7 @@ export type GalleryLayoutMode =
   | 'columns';
 
 export type GalleryWidthMode = 'full' | 'constrained';
+export type PhotographInfoMode = 'hidden' | 'floating' | 'bottom_dock';
 
 export type ActiveRoute = {
   photoSlug: string;
@@ -35,6 +36,12 @@ export type ViewerData = {
   baseQueryString: string;
   active: ActiveRoute | null;
   gallerySettings?: {
+    photograph_info_mode?: PhotographInfoMode | null;
+    show_photo_info_title?: boolean | null;
+    show_photo_info_description?: boolean | null;
+    show_photo_info_capture_date?: boolean | null;
+    show_photo_info_dimensions?: boolean | null;
+    show_photo_info_license_text?: boolean | null;
     show_photograph_info?: boolean | null;
     show_thumbnail_zoom_hover?: boolean | null;
   } | null;

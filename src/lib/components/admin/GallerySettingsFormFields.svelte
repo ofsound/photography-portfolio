@@ -1,4 +1,5 @@
 <script lang="ts">
+  import AdminCard from '$lib/components/admin/AdminCard.svelte';
   import FormField from '$lib/components/FormField.svelte';
   import FormInput from '$lib/components/FormInput.svelte';
   import FormSelect from '$lib/components/FormSelect.svelte';
@@ -152,19 +153,79 @@
 
   <FormField
     label="Show Photograph Info"
-    id={p('show_photograph_info')}
+    id={p('photograph_info_mode')}
+    class="w-fit"
+  >
+    <FormSelect
+      name="photograph_info_mode"
+      id={p('photograph_info_mode')}
+      value={settings.photograph_info_mode}
+      disabled={readonly}
+      class="w-auto"
+    >
+      <option value="hidden">hidden</option>
+      <option value="floating">floating</option>
+      <option value="bottom_dock">bottom dock</option>
+    </FormSelect>
+  </FormField>
+
+  <FormField
+    label="Photograph Info Fields"
+    id={p('show_photo_info_title')}
     labelSrOnly
   >
-    <label class="flex items-center gap-2 text-sm">
-      <input
-        id={p('show_photograph_info')}
-        type="checkbox"
-        name="show_photograph_info"
-        checked={settings.show_photograph_info}
-        disabled={readonly}
-      />
-      Show metadata in viewer
-    </label>
+    <AdminCard class="grid gap-2 p-3">
+      <label class="flex items-center gap-2 text-sm">
+        <input
+          id={p('show_photo_info_title')}
+          type="checkbox"
+          name="show_photo_info_title"
+          checked={settings.show_photo_info_title}
+          disabled={readonly}
+        />
+        Show title
+      </label>
+      <label class="flex items-center gap-2 text-sm">
+        <input
+          id={p('show_photo_info_description')}
+          type="checkbox"
+          name="show_photo_info_description"
+          checked={settings.show_photo_info_description}
+          disabled={readonly}
+        />
+        Show description
+      </label>
+      <label class="flex items-center gap-2 text-sm">
+        <input
+          id={p('show_photo_info_capture_date')}
+          type="checkbox"
+          name="show_photo_info_capture_date"
+          checked={settings.show_photo_info_capture_date}
+          disabled={readonly}
+        />
+        Show capture date
+      </label>
+      <label class="flex items-center gap-2 text-sm">
+        <input
+          id={p('show_photo_info_dimensions')}
+          type="checkbox"
+          name="show_photo_info_dimensions"
+          checked={settings.show_photo_info_dimensions}
+          disabled={readonly}
+        />
+        Show dimensions
+      </label>
+      <label class="flex items-center gap-2 text-sm">
+        <input
+          id={p('show_photo_info_license_text')}
+          type="checkbox"
+          name="show_photo_info_license_text"
+          checked={settings.show_photo_info_license_text}
+          disabled={readonly}
+        />
+        Show license
+      </label>
+    </AdminCard>
   </FormField>
 
   <FormField

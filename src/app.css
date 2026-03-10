@@ -35,9 +35,9 @@ body {
   top: 0 !important;
   left: 0 !important;
   right: 0 !important;
-  bottom: 0 !important;
+  bottom: var(--detail-bottom-inset, 0px) !important;
   width: 100vw !important;
-  height: 100vh !important;
+  height: calc(100vh - var(--detail-bottom-inset, 0px)) !important;
   max-width: none !important;
   display: flex !important;
   align-items: center !important;

@@ -9,6 +9,7 @@
   } from '$lib/utils/storage-url';
 
   import type { GalleryPhoto } from '$lib/types/content';
+  import type { PhotographInfoMode } from './gallery-scene.types';
 
   type PortalAction = (node: HTMLElement) => { destroy: () => void };
 
@@ -18,7 +19,12 @@
     promoted,
     transitionPhase,
     overlayChromeHidden,
-    showPhotographInfo,
+    photographInfoMode,
+    showPhotoInfoTitle,
+    showPhotoInfoDescription,
+    showPhotoInfoCaptureDate,
+    showPhotoInfoDimensions,
+    showPhotoInfoLicenseText,
     isTransitioning,
     canCycleGallery,
     prevGalleryHref,
@@ -30,6 +36,7 @@
     onNavigateNeighbor,
     onSelectAdditionalImage,
     onResizePromoted,
+    onBottomDockInsetChange,
     portal,
     scaleMaskMs,
     closingChromeMs,
@@ -39,7 +46,12 @@
     promoted: boolean;
     transitionPhase: string;
     overlayChromeHidden: boolean;
-    showPhotographInfo: boolean;
+    photographInfoMode: PhotographInfoMode;
+    showPhotoInfoTitle: boolean;
+    showPhotoInfoDescription: boolean;
+    showPhotoInfoCaptureDate: boolean;
+    showPhotoInfoDimensions: boolean;
+    showPhotoInfoLicenseText: boolean;
     isTransitioning: boolean;
     canCycleGallery: boolean;
     prevGalleryHref: string | null;
@@ -51,12 +63,56 @@
     onNavigateNeighbor: (direction: 'prev' | 'next') => void;
     onSelectAdditionalImage: (imageId: string) => void;
     onResizePromoted: () => void;
+    onBottomDockInsetChange: (insetPx: number) => void;
     portal: PortalAction;
     scaleMaskMs: number;
     closingChromeMs: number;
   }>();
 
   let controlsVisible = $state(true);
+  let bottomDockNode = $state<HTMLElement | null>(null);
+  let bottomDockInsetPx = $state(0);
+
+  const hasText = (value: string | null | undefined) =>
+    Boolean(value && value.trim().length > 0);
+
+  const titleText = $derived(activePhoto.title.trim());
+  const descriptionText = $derived((activePhoto.description ?? '').trim());
+  const captureDateText = $derived((activePhoto.capture_date ?? '').trim());
+  const dimensionsText = $derived((activePhoto.dimensions ?? '').trim());
+  const licenseText = $derived((activePhoto.license_text ?? '').trim());
+
+  const showTitle = $derived(showPhotoInfoTitle && hasText(titleText));
+  const showDescription = $derived(
+    showPhotoInfoDescription && hasText(descriptionText),
+  );
+  const showCaptureDate = $derived(
+    showPhotoInfoCaptureDate && hasText(captureDateText),
+  );
+  const showDimensions = $derived(
+    showPhotoInfoDimensions && hasText(dimensionsText),
+  );
+  const showLicense = $derived(
+    showPhotoInfoLicenseText && hasText(licenseText),
+  );
+  const showAnyText = $derived(
+    showTitle ||
+      showDescription ||
+      showCaptureDate ||
+      showDimensions ||
+      showLicense,
+  );
+  const showAdditionalStrip = $derived(activePhoto.additionalImages.length > 0);
+  const isBottomDock = $derived(photographInfoMode === 'bottom_dock');
+  const showInfoShell = $derived(
+    photographInfoMode !== 'hidden' && (showAnyText || showAdditionalStrip),
+  );
+
+  const detailViewportStyle = $derived(
+    isBottomDock && showInfoShell
+      ? `--detail-bottom-inset: ${bottomDockInsetPx}px;`
+      : '--detail-bottom-inset: 0px;',
+  );
 
   const revealControls = () => {
     controlsVisible = true;
@@ -111,6 +167,40 @@
     onResizePromoted();
   };
 
+  const updateBottomDockInset = (value: number) => {
+    const next = Math.max(0, Math.round(value));
+    if (next === bottomDockInsetPx) return;
+    bottomDockInsetPx = next;
+    onBottomDockInsetChange(next);
+  };
+
+  $effect(() => {
+    if (!showInfoShell || !isBottomDock) {
+      updateBottomDockInset(0);
+      return;
+    }
+
+    const node = bottomDockNode;
+    if (!node) {
+      updateBottomDockInset(0);
+      return;
+    }
+
+    const emitInset = () => {
+      updateBottomDockInset(node.getBoundingClientRect().height);
+    };
+
+    emitInset();
+
+    if (typeof ResizeObserver === 'undefined') return;
+    const observer = new ResizeObserver(() => emitInset());
+    observer.observe(node);
+    return () => {
+      observer.disconnect();
+      updateBottomDockInset(0);
+    };
+  });
+
   $effect(() => {
     if (typeof window === 'undefined') return;
     const vv = window.visualViewport;
@@ -159,6 +249,7 @@
     use:portal
     data-full-viewport
     class="pointer-events-none z-[65] m-0 p-0"
+    style={detailViewportStyle}
     aria-hidden="true"
   >
     <img
@@ -212,28 +303,57 @@
   </div>
 {/if}
 
-{#if showPhotographInfo}
+{#if showInfoShell && photographInfoMode === 'floating'}
   <aside
     use:portal
-    class="chrome-panel fixed bottom-[5%] left-[5%] z-[80] w-fit max-w-[90vw] rounded px-4 py-3 transition-opacity ease-out sm:max-w-prose"
+    class="chrome-panel fixed bottom-4 left-4 z-[80] w-[min(92vw,40rem)] rounded-xl border border-border-strong px-4 py-4 shadow-xl transition-opacity ease-out sm:bottom-6 sm:left-6"
     class:opacity-0={overlayChromeHidden}
     style="transition-duration: {closingChromeMs}ms"
   >
-    <div class="flex flex-wrap items-center justify-between gap-3">
-      <div>
-        <h1 class="text-sm tracking-widest uppercase">
-          {activePhoto.title}
-        </h1>
-        {#if activePhoto.description}
-          <p class="mt-2 max-w-prose text-sm text-canvas-text/80">
-            {activePhoto.description}
+    {#if showAnyText}
+      <div class="grid gap-2">
+        {#if showTitle}
+          <h1 class="text-sm font-semibold tracking-widest uppercase">
+            {titleText}
+          </h1>
+        {/if}
+        {#if showDescription}
+          <p class="text-sm leading-relaxed text-canvas-text/85">
+            {descriptionText}
+          </p>
+        {/if}
+        {#if showCaptureDate}
+          <p class="text-sm text-canvas-text/90">
+            <span
+              class="mr-2 text-xs tracking-wide text-canvas-text/65 uppercase"
+              >Date</span
+            >
+            {captureDateText}
+          </p>
+        {/if}
+        {#if showDimensions}
+          <p class="text-sm text-canvas-text/90">
+            <span
+              class="mr-2 text-xs tracking-wide text-canvas-text/65 uppercase"
+              >Dimensions</span
+            >
+            {dimensionsText}
+          </p>
+        {/if}
+        {#if showLicense}
+          <p class="text-sm text-canvas-text/90">
+            <span
+              class="mr-2 text-xs tracking-wide text-canvas-text/65 uppercase"
+              >License</span
+            >
+            {licenseText}
           </p>
         {/if}
       </div>
-    </div>
+    {/if}
 
-    {#if activePhoto.additionalImages.length > 0}
-      <div class="flex gap-2 overflow-x-auto px-4 pb-3" data-swipe-ignore>
+    {#if showAdditionalStrip}
+      <div class="mt-3 flex gap-2 overflow-x-auto pb-1" data-swipe-ignore>
         {#each activePhoto.additionalImages as image (image.id)}
           <a
             href={resolve(
@@ -255,5 +375,83 @@
         {/each}
       </div>
     {/if}
+  </aside>
+{:else if showInfoShell && photographInfoMode === 'bottom_dock'}
+  <aside
+    use:portal
+    bind:this={bottomDockNode}
+    class="chrome-panel fixed right-0 bottom-0 left-0 z-[80] border-t border-border-strong px-4 pt-3 pb-4 transition-opacity ease-out"
+    class:opacity-0={overlayChromeHidden}
+    style="transition-duration: {closingChromeMs}ms"
+  >
+    <div
+      class="mx-auto grid max-h-[38vh] w-full max-w-6xl gap-3 overflow-y-auto sm:max-h-[34vh]"
+    >
+      {#if showAnyText}
+        <div class="grid gap-2">
+          {#if showTitle}
+            <h1 class="text-sm font-semibold tracking-widest uppercase">
+              {titleText}
+            </h1>
+          {/if}
+          {#if showDescription}
+            <p class="text-sm leading-relaxed text-canvas-text/85">
+              {descriptionText}
+            </p>
+          {/if}
+          {#if showCaptureDate}
+            <p class="text-sm text-canvas-text/90">
+              <span
+                class="mr-2 text-xs tracking-wide text-canvas-text/65 uppercase"
+                >Date</span
+              >
+              {captureDateText}
+            </p>
+          {/if}
+          {#if showDimensions}
+            <p class="text-sm text-canvas-text/90">
+              <span
+                class="mr-2 text-xs tracking-wide text-canvas-text/65 uppercase"
+                >Dimensions</span
+              >
+              {dimensionsText}
+            </p>
+          {/if}
+          {#if showLicense}
+            <p class="text-sm text-canvas-text/90">
+              <span
+                class="mr-2 text-xs tracking-wide text-canvas-text/65 uppercase"
+                >License</span
+              >
+              {licenseText}
+            </p>
+          {/if}
+        </div>
+      {/if}
+
+      {#if showAdditionalStrip}
+        <div class="flex gap-2 overflow-x-auto pb-1" data-swipe-ignore>
+          {#each activePhoto.additionalImages as image (image.id)}
+            <a
+              href={resolve(
+                withCurrentSearch(
+                  photoPath(activePhoto.slug, image.id),
+                ) as `/${string}`,
+              )}
+              onclick={(event: MouseEvent) =>
+                onAdditionalImageClick(event, image.id)}
+              class="block shrink-0 overflow-hidden rounded border border-border-strong"
+            >
+              <img
+                src={photoPublicUrl(image.delivery_storage_path, 180)}
+                alt={image.alt_text ?? activePhoto.title}
+                class="h-14 w-20 object-cover"
+                loading="lazy"
+              />
+            </a>
+          {/each}
+        </div>
+      {/if}
+    </div>
   </aside>
 {/if}

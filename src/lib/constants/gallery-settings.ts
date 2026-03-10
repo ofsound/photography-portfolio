@@ -11,6 +11,12 @@ export type GallerySettingsDefaults = Pick<
   | 'uniform_thumb_ratio'
   | 'transition_preset'
   | 'allow_transition_toggle'
+  | 'photograph_info_mode'
+  | 'show_photo_info_title'
+  | 'show_photo_info_description'
+  | 'show_photo_info_capture_date'
+  | 'show_photo_info_dimensions'
+  | 'show_photo_info_license_text'
   | 'show_photograph_info'
   | 'show_thumbnail_zoom_hover'
 >;
@@ -25,6 +31,12 @@ export const GALLERY_SETTINGS_DEFAULTS: GallerySettingsDefaults = {
   uniform_thumb_ratio: 1,
   transition_preset: 'cinematic',
   allow_transition_toggle: true,
+  photograph_info_mode: 'floating',
+  show_photo_info_title: true,
+  show_photo_info_description: true,
+  show_photo_info_capture_date: false,
+  show_photo_info_dimensions: false,
+  show_photo_info_license_text: false,
   show_photograph_info: true,
   show_thumbnail_zoom_hover: true,
 };

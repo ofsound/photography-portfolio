@@ -46,6 +46,8 @@ type PhotoListRow = {
   slug: string;
   title: string;
   description: string | null;
+  dimensions: string | null;
+  license_text: string | null;
   seo_title: string | null;
   seo_description: string | null;
   og_title: string | null;
@@ -92,6 +94,12 @@ type SettingsFields = Pick<
   | 'uniform_thumb_ratio'
   | 'transition_preset'
   | 'allow_transition_toggle'
+  | 'photograph_info_mode'
+  | 'show_photo_info_title'
+  | 'show_photo_info_description'
+  | 'show_photo_info_capture_date'
+  | 'show_photo_info_dimensions'
+  | 'show_photo_info_license_text'
   | 'show_photograph_info'
   | 'show_thumbnail_zoom_hover'
 >;
@@ -149,12 +157,18 @@ const gallerySettingsSelect = [
   'uniform_thumb_ratio',
   'transition_preset',
   'allow_transition_toggle',
+  'photograph_info_mode',
+  'show_photo_info_title',
+  'show_photo_info_description',
+  'show_photo_info_capture_date',
+  'show_photo_info_dimensions',
+  'show_photo_info_license_text',
   'show_photograph_info',
   'show_thumbnail_zoom_hover',
 ].join(', ');
 
 const photoListSelect =
-  'id, gallery_id, slug, title, description, seo_title, seo_description, og_title, og_description, og_image_path, capture_date, galleries(slug, visibility_status), photo_images(id, kind, position, delivery_storage_path, alt_text, dimensions, thumb_crop_x, thumb_crop_y, thumb_crop_zoom)';
+  'id, gallery_id, slug, title, description, dimensions, license_text, seo_title, seo_description, og_title, og_description, og_image_path, capture_date, galleries(slug, visibility_status), photo_images(id, kind, position, delivery_storage_path, alt_text, dimensions, thumb_crop_x, thumb_crop_y, thumb_crop_zoom)';
 
 const readGalleryRelation = (
   value: GalleryRelation | GalleryRelation[] | null | undefined,
@@ -200,6 +214,8 @@ const mapPhotoRows = (rows: PhotoListRow[], fallbackGallerySlug: string) =>
       slug: photo.slug,
       title: photo.title,
       description: photo.description,
+      dimensions: photo.dimensions,
+      license_text: photo.license_text,
       seo_title: photo.seo_title,
       seo_description: photo.seo_description,
       og_title: photo.og_title,

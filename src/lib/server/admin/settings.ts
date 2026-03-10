@@ -13,7 +13,7 @@ type SettingsScope =
   | { kind: 'gallery'; galleryId: string };
 
 const settingsFieldSelect =
-  'theme_default, grid_desktop_default, grid_mobile_default, max_content_width_px, gallery_layout_mode, gallery_gap_px, uniform_thumb_ratio, transition_preset, allow_transition_toggle, show_photograph_info, show_thumbnail_zoom_hover';
+  'theme_default, grid_desktop_default, grid_mobile_default, max_content_width_px, gallery_layout_mode, gallery_gap_px, uniform_thumb_ratio, transition_preset, allow_transition_toggle, photograph_info_mode, show_photo_info_title, show_photo_info_description, show_photo_info_capture_date, show_photo_info_dimensions, show_photo_info_license_text, show_photograph_info, show_thumbnail_zoom_hover';
 
 const asThemeMode = (value: FormDataEntryValue | null) => {
   const mode = asString(value, 'system');
@@ -42,10 +42,20 @@ const asTransitionPreset = (value: FormDataEntryValue | null) => {
     : 'cinematic';
 };
 
+const asPhotographInfoMode = (value: FormDataEntryValue | null) => {
+  const mode = asString(value, 'floating');
+  return mode === 'hidden' || mode === 'floating' || mode === 'bottom_dock'
+    ? mode
+    : 'floating';
+};
+
 const readPayload = (
   form: FormData,
   role: 'admin' | 'editor',
 ): Record<string, unknown> => {
+  const photographInfoMode = asPhotographInfoMode(
+    form.get('photograph_info_mode'),
+  );
   const payload: Record<string, unknown> = {
     theme_default: asThemeMode(form.get('theme_default')),
     grid_desktop_default:
@@ -71,7 +81,21 @@ const readPayload = (
       ),
     ),
     allow_transition_toggle: asBoolean(form.get('allow_transition_toggle')),
-    show_photograph_info: asBoolean(form.get('show_photograph_info')),
+    photograph_info_mode: photographInfoMode,
+    show_photo_info_title: asBoolean(form.get('show_photo_info_title')),
+    show_photo_info_description: asBoolean(
+      form.get('show_photo_info_description'),
+    ),
+    show_photo_info_capture_date: asBoolean(
+      form.get('show_photo_info_capture_date'),
+    ),
+    show_photo_info_dimensions: asBoolean(
+      form.get('show_photo_info_dimensions'),
+    ),
+    show_photo_info_license_text: asBoolean(
+      form.get('show_photo_info_license_text'),
+    ),
+    show_photograph_info: photographInfoMode !== 'hidden',
     show_thumbnail_zoom_hover: asBoolean(form.get('show_thumbnail_zoom_hover')),
   };
 

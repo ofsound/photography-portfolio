@@ -36,6 +36,7 @@
   import type {
     ActiveRoute,
     GalleryImage,
+    PhotographInfoMode,
     ViewerData,
   } from './scene/gallery-scene.types';
 
@@ -43,6 +44,7 @@
   const readInitialData = () => data;
 
   const state = createGallerySceneState(readInitialData());
+  let detailBottomInsetPx = 0;
   const layoutMode = $derived(layoutModeStore.value);
 
   const routeScopeSlug = $derived(
@@ -138,11 +140,29 @@
     return naturalAspectRatio(photo);
   };
 
+  const photographInfoMode = $derived.by<PhotographInfoMode>(() => {
+    const configuredMode = data.gallerySettings?.photograph_info_mode;
+    if (
+      configuredMode === 'hidden' ||
+      configuredMode === 'floating' ||
+      configuredMode === 'bottom_dock'
+    ) {
+      return configuredMode;
+    }
+    return data.gallerySettings?.show_photograph_info === false
+      ? 'hidden'
+      : 'floating';
+  });
+
   const tileAnimator = createGalleryTileAnimator({
     state,
     getLayoutMode: () => layoutMode,
     getUniformRatio: () => uniformRatio,
     getContainerAspect: getContainerAspectForPhoto,
+    getDetailBottomInset: () =>
+      state.activeSlug && photographInfoMode === 'bottom_dock'
+        ? detailBottomInsetPx
+        : 0,
     reducedMotion,
     setPhase,
     scaleMaskMs: SCALE_MASK_MS,
@@ -369,6 +389,13 @@
     });
   };
 
+  const onBottomDockInsetChange = (nextInsetPx: number) => {
+    const normalized = Math.max(0, Math.round(nextInsetPx));
+    if (normalized === detailBottomInsetPx) return;
+    detailBottomInsetPx = normalized;
+    onResizePromoted();
+  };
+
   const preloadImages = async () => {
     const toPreload = state.photos
       .filter((photo) => photo.leadImage)
@@ -590,7 +617,16 @@
     promoted={Boolean(tileAnimator.promoted)}
     {transitionPhase}
     {overlayChromeHidden}
-    showPhotographInfo={data.gallerySettings?.show_photograph_info ?? true}
+    {photographInfoMode}
+    showPhotoInfoTitle={data.gallerySettings?.show_photo_info_title ?? true}
+    showPhotoInfoDescription={data.gallerySettings
+      ?.show_photo_info_description ?? true}
+    showPhotoInfoCaptureDate={data.gallerySettings
+      ?.show_photo_info_capture_date ?? false}
+    showPhotoInfoDimensions={data.gallerySettings?.show_photo_info_dimensions ??
+      false}
+    showPhotoInfoLicenseText={data.gallerySettings
+      ?.show_photo_info_license_text ?? false}
     {isTransitioning}
     {canCycleGallery}
     prevGalleryHref={state.prevGalleryHref}
@@ -602,6 +638,7 @@
     onNavigateNeighbor={navigation.onNeighborNavigate}
     {onSelectAdditionalImage}
     {onResizePromoted}
+    {onBottomDockInsetChange}
     {portal}
     scaleMaskMs={SCALE_MASK_MS}
     closingChromeMs={CLOSING_CHROME_MS}

@@ -22,6 +22,7 @@ type GalleryTileAnimatorOptions = {
   getLayoutMode: () => GalleryLayoutMode;
   getUniformRatio: () => number;
   getContainerAspect: (photo: GalleryPhoto) => number;
+  getDetailBottomInset: () => number;
   reducedMotion: () => boolean;
   setPhase: (phase: GalleryTransitionPhase) => void;
   scaleMaskMs: number;
@@ -54,6 +55,7 @@ export const createGalleryTileAnimator = ({
   getLayoutMode,
   getUniformRatio,
   getContainerAspect,
+  getDetailBottomInset,
   reducedMotion,
   setPhase,
   scaleMaskMs,
@@ -185,7 +187,7 @@ export const createGalleryTileAnimator = ({
       imgWidth,
       imgHeight,
       0,
-      0,
+      Math.max(0, getDetailBottomInset()),
       0,
       0,
     );

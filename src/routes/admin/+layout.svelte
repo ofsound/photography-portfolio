@@ -3,6 +3,7 @@
   import { page } from '$app/state';
 
   import AdminThemeToggle from '$lib/components/admin/AdminThemeToggle.svelte';
+  import AdminToastViewport from '$lib/components/admin/AdminToastViewport.svelte';
   import MobileDropdownMenu from '$lib/components/navigation/MobileDropdownMenu.svelte';
 
   const { data, children } = $props();
@@ -458,6 +459,7 @@
     style="view-transition-name: admin-content"
   >
     <div class="w-full md:max-w-[1200px]">
+      <AdminToastViewport />
       {@render children()}
     </div>
   </section>

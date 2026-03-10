@@ -29,6 +29,7 @@ export const load: PageServerLoad = async ({ locals, params, url }) => {
     ...editorData,
     gallery,
     message: url.searchParams.get('message'),
+    messageSuccess: url.searchParams.get('success') === '1',
   };
 };
 

@@ -1,10 +1,10 @@
 <script lang="ts">
-  /* eslint-disable svelte/no-navigation-without-resolve -- derived route href */
+  /* eslint-disable svelte/no-navigation-without-resolve -- href is resolved in a derived value */
   import { resolve } from '$app/paths';
   import { invalidateAll } from '$app/navigation';
 
   import AdminHeading from '$lib/components/admin/AdminHeading.svelte';
-  import AdminStatusMessage from '$lib/components/admin/AdminStatusMessage.svelte';
+  import AdminToastEmitter from '$lib/components/admin/AdminToastEmitter.svelte';
   import AdminSinglePhotoEditor from '$lib/components/admin/photos/AdminSinglePhotoEditor.svelte';
 
   const { data, form } = $props();
@@ -58,19 +58,15 @@
   <AdminHeading>Edit Photo</AdminHeading>
 </div>
 
-{#if form?.message}
-  <AdminStatusMessage
-    type={form && 'success' in form && form.success ? 'success' : 'error'}
-    class="mt-3"
-  >
-    {form.message}
-  </AdminStatusMessage>
-{/if}
-{#if data.message}
-  <AdminStatusMessage type="neutral" class="mt-3">
-    {data.message}
-  </AdminStatusMessage>
-{/if}
+<AdminToastEmitter
+  message={form?.message}
+  type={form && 'success' in form && form.success ? 'success' : 'error'}
+/>
+<AdminToastEmitter
+  message={data.message}
+  type={data.messageSuccess ? 'success' : 'neutral'}
+  clearQueryMessage
+/>
 {#if hasPendingConversions}
   <p class="mt-2 text-xs text-text-muted">
     Auto-refreshing while image processing completes...

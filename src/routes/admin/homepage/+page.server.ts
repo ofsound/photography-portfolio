@@ -208,7 +208,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
         image && typeof image === 'object' && 'photos' in image
           ? Array.isArray((image as { photos: unknown }).photos)
             ? (image as { photos: Array<{ title?: string; slug?: string }> })
-                .photos[0]
+              .photos[0]
             : (image as { photos: { title?: string; slug?: string } }).photos
           : undefined;
 
@@ -235,8 +235,8 @@ export const load: PageServerLoad = async ({ locals, url }) => {
       position: number;
       delivery_storage_path: string | null;
       photos?:
-        | { title?: string; slug?: string }
-        | Array<{ title?: string; slug?: string }>;
+      | { title?: string; slug?: string }
+      | Array<{ title?: string; slug?: string }>;
     }) => {
       const photo = Array.isArray(row.photos) ? row.photos[0] : row.photos;
       return {
@@ -259,7 +259,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
     slideDurationMs,
     clampInt(
       settingsQuery.data?.homepage_transition_duration_ms ??
-        DEFAULT_TRANSITION_DURATION_MS,
+      DEFAULT_TRANSITION_DURATION_MS,
       TRANSITION_DURATION_MIN_MS,
       TRANSITION_DURATION_MAX_MS,
     ),
@@ -321,7 +321,7 @@ export const actions: Actions = {
 
     const slideDurationMs = clampInt(
       asOptionalNumber(form.get('slide_duration_ms')) ??
-        DEFAULT_SLIDE_DURATION_MS,
+      DEFAULT_SLIDE_DURATION_MS,
       SLIDE_DURATION_MIN_MS,
       SLIDE_DURATION_MAX_MS,
     );
@@ -329,7 +329,7 @@ export const actions: Actions = {
       slideDurationMs,
       clampInt(
         asOptionalNumber(form.get('transition_duration_ms')) ??
-          DEFAULT_TRANSITION_DURATION_MS,
+        DEFAULT_TRANSITION_DURATION_MS,
         TRANSITION_DURATION_MIN_MS,
         TRANSITION_DURATION_MAX_MS,
       ),

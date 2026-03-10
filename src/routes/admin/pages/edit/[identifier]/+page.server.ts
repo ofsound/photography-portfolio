@@ -27,7 +27,10 @@ const UUID_REGEX =
 type PageRow = Database['public']['Tables']['pages']['Row'];
 
 const redirectToList = (message: string) => {
-  throw redirect(303, `/admin/pages?message=${encodeURIComponent(message)}`);
+  throw redirect(
+    303,
+    `/admin/pages?message=${encodeURIComponent(message)}&success=1`,
+  );
 };
 
 export const load: PageServerLoad = async ({ locals, params }) => {
@@ -97,20 +100,20 @@ export const load: PageServerLoad = async ({ locals, params }) => {
         position: number;
         delivery_storage_path: string | null;
         photos?:
-          | {
-              title?: string;
-              slug?: string;
-              galleries?:
-                | { visibility_status?: string }
-                | Array<{ visibility_status?: string }>;
-            }
-          | Array<{
-              title?: string;
-              slug?: string;
-              galleries?:
-                | { visibility_status?: string }
-                | Array<{ visibility_status?: string }>;
-            }>;
+        | {
+          title?: string;
+          slug?: string;
+          galleries?:
+          | { visibility_status?: string }
+          | Array<{ visibility_status?: string }>;
+        }
+        | Array<{
+          title?: string;
+          slug?: string;
+          galleries?:
+          | { visibility_status?: string }
+          | Array<{ visibility_status?: string }>;
+        }>;
       }) => {
         const photo = Array.isArray(row.photos) ? row.photos[0] : row.photos;
         const gallery = Array.isArray(photo?.galleries)
@@ -237,8 +240,8 @@ export const actions: Actions = {
     }
     const visibilityStatus = (
       visibilityRaw === 'public' ||
-      visibilityRaw === 'unlisted' ||
-      visibilityRaw === 'draft'
+        visibilityRaw === 'unlisted' ||
+        visibilityRaw === 'draft'
         ? visibilityRaw
         : null
     ) as PageVisibilityStatus | null;
@@ -296,7 +299,7 @@ export const actions: Actions = {
         : null,
       bg_image_id:
         typeof snapshot.bg_image_id === 'string' &&
-        UUID_REGEX.test(snapshot.bg_image_id)
+          UUID_REGEX.test(snapshot.bg_image_id)
           ? snapshot.bg_image_id
           : null,
       visibility_status: visibilityStatus,

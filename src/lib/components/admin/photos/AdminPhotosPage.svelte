@@ -8,7 +8,7 @@
   import AdminButton from '$lib/components/admin/AdminButton.svelte';
   import AdminGalleryNav from '$lib/components/admin/AdminGalleryNav.svelte';
   import AdminHeading from '$lib/components/admin/AdminHeading.svelte';
-  import AdminStatusMessage from '$lib/components/admin/AdminStatusMessage.svelte';
+  import AdminToastEmitter from '$lib/components/admin/AdminToastEmitter.svelte';
   import PhotoTaxonomyEditor from '$lib/components/admin/PhotoTaxonomyEditor.svelte';
   import AdminPhotoCard from '$lib/components/admin/photos/AdminPhotoCard.svelte';
   import AdminPhotosBulkPanel from '$lib/components/admin/photos/AdminPhotosBulkPanel.svelte';
@@ -414,11 +414,10 @@
   </div>
 {/if}
 
-{#if form?.message}
-  <AdminStatusMessage type={form.success ? 'success' : 'error'} class="mt-3">
-    {form.message}
-  </AdminStatusMessage>
-{/if}
+<AdminToastEmitter
+  message={form?.message}
+  type={form?.success ? 'success' : 'error'}
+/>
 
 {#if hasVisiblePendingConversions}
   <p class="mt-2 text-xs text-text-muted">

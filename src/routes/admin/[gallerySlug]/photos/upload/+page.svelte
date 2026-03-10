@@ -258,11 +258,8 @@
     if (isSingleUpload) {
       const singleItem = uploadQueue[0];
       if (singleItem?.status === 'success' && singleItem.photoId) {
-        await goto(
-          resolve(
-            `${basePhotosPath}/edit/${singleItem.photoId}` as `/${string}`,
-          ),
-        );
+        const editUrl = `${basePhotosPath}/edit/${singleItem.photoId}?message=${encodeURIComponent('Image uploaded.')}&success=1`;
+        await goto(resolve(editUrl as `/${string}`));
         return;
       }
       if (singleItem?.status === 'error') {

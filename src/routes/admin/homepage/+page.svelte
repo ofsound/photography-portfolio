@@ -9,7 +9,7 @@
   import AdminHeading from '$lib/components/admin/AdminHeading.svelte';
   import AdminCreateListLayout from '$lib/components/admin/AdminCreateListLayout.svelte';
   import AdminSegmentedToggle from '$lib/components/admin/AdminSegmentedToggle.svelte';
-  import AdminStatusMessage from '$lib/components/admin/AdminStatusMessage.svelte';
+  import AdminToastEmitter from '$lib/components/admin/AdminToastEmitter.svelte';
   import FormField from '$lib/components/FormField.svelte';
   import FormInput from '$lib/components/FormInput.svelte';
   import FormSelect from '$lib/components/FormSelect.svelte';
@@ -285,14 +285,10 @@
     list={availableImagesList}
   />
 {:else}
-  {#if form?.message}
-    <AdminStatusMessage
-      type={form && 'success' in form && form.success ? 'success' : 'error'}
-      class="mt-3"
-    >
-      {form.message}
-    </AdminStatusMessage>
-  {/if}
+  <AdminToastEmitter
+    message={form?.message}
+    type={form && 'success' in form && form.success ? 'success' : 'error'}
+  />
 
   {#if homePage}
     <form

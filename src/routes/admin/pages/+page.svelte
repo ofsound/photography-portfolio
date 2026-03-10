@@ -152,6 +152,9 @@
   formMessage={form?.message}
   formSuccess={form?.success}
   dataMessage={data.message}
+  dataSuccess={data.messageSuccess}
+  clearDataMessageQuery
+  reverseOnMobile
   create={createForm}
   list={pageList}
 />

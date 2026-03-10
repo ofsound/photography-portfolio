@@ -7,7 +7,7 @@
   import AdminCard from '$lib/components/admin/AdminCard.svelte';
   import AdminButton from '$lib/components/admin/AdminButton.svelte';
   import AdminHeading from '$lib/components/admin/AdminHeading.svelte';
-  import AdminStatusMessage from '$lib/components/admin/AdminStatusMessage.svelte';
+  import AdminToastEmitter from '$lib/components/admin/AdminToastEmitter.svelte';
   import FormField from '$lib/components/FormField.svelte';
   import FormInput from '$lib/components/FormInput.svelte';
   import FormSelect from '$lib/components/FormSelect.svelte';
@@ -141,14 +141,10 @@
   </a>
   <AdminHeading>{page.title}: Edit</AdminHeading>
 </div>
-{#if form?.message}
-  <AdminStatusMessage
-    type={form && 'success' in form && form.success ? 'success' : 'error'}
-    class="mt-3"
-  >
-    {form.message}
-  </AdminStatusMessage>
-{/if}
+<AdminToastEmitter
+  message={form?.message}
+  type={form && 'success' in form && form.success ? 'success' : 'error'}
+/>
 
 <form method="POST" action="?/update" class="mt-6 grid gap-3">
   <input type="hidden" name="id" value={page.id} />

@@ -9,5 +9,6 @@
   singularLabel="Tag"
   idPrefix="tag"
   items={data.tags}
+  reverseOnMobile
   {form}
 />

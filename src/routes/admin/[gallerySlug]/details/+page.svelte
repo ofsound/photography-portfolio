@@ -2,7 +2,7 @@
   import AdminButton from '$lib/components/admin/AdminButton.svelte';
   import AdminGalleryNav from '$lib/components/admin/AdminGalleryNav.svelte';
   import AdminHeading from '$lib/components/admin/AdminHeading.svelte';
-  import AdminStatusMessage from '$lib/components/admin/AdminStatusMessage.svelte';
+  import AdminToastEmitter from '$lib/components/admin/AdminToastEmitter.svelte';
   import GallerySettingsFormFields from '$lib/components/admin/GallerySettingsFormFields.svelte';
   import FormField from '$lib/components/FormField.svelte';
   import FormInput from '$lib/components/FormInput.svelte';
@@ -28,9 +28,7 @@
 
   const settings = $derived(data.settings ?? GALLERY_SETTINGS_DEFAULTS);
   const isAdmin = $derived(data.role === 'admin');
-  let visibilityStatus = $state<GalleryVisibilityStatus>(
-    data.gallery.visibility_status,
-  );
+  let visibilityStatus = $state<GalleryVisibilityStatus>('public');
   const fieldErrors = $derived(typedForm?.fieldErrors ?? {});
   const values = $derived(typedForm?.values ?? {});
 
@@ -51,12 +49,10 @@
 />
 
 {#if form?.message}
-  <AdminStatusMessage
+  <AdminToastEmitter
+    message={form.message}
     type={form && 'success' in form && form.success ? 'success' : 'error'}
-    class="mt-3"
-  >
-    {form.message}
-  </AdminStatusMessage>
+  />
 {/if}
 
 <form method="POST" action="?/save" class="grid gap-2">

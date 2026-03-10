@@ -1,6 +1,6 @@
 <script lang="ts">
   import AdminHeading from '$lib/components/admin/AdminHeading.svelte';
-  import AdminStatusMessage from '$lib/components/admin/AdminStatusMessage.svelte';
+  import AdminToastEmitter from '$lib/components/admin/AdminToastEmitter.svelte';
 
   interface Props {
     title?: string;
@@ -8,7 +8,10 @@
     formMessage?: string | null;
     formSuccess?: boolean;
     dataMessage?: string | null;
+    dataSuccess?: boolean;
+    clearDataMessageQuery?: boolean;
     overflow?: boolean;
+    reverseOnMobile?: boolean;
     create: import('svelte').Snippet;
     list: import('svelte').Snippet;
     leading?: import('svelte').Snippet;
@@ -21,7 +24,10 @@
     formMessage,
     formSuccess = false,
     dataMessage,
+    dataSuccess = false,
+    clearDataMessageQuery = false,
     overflow = false,
+    reverseOnMobile = false,
     create,
     list,
     leading,
@@ -43,16 +49,15 @@
   <p class="mt-2 text-sm text-text-muted">{subtitle}</p>
 {/if}
 
-{#if formMessage}
-  <AdminStatusMessage type={formSuccess ? 'success' : 'error'} class="mt-3">
-    {formMessage}
-  </AdminStatusMessage>
-{/if}
-{#if dataMessage}
-  <AdminStatusMessage type="neutral" class="mt-3">
-    {dataMessage}
-  </AdminStatusMessage>
-{/if}
+<AdminToastEmitter
+  message={formMessage}
+  type={formSuccess ? 'success' : 'error'}
+/>
+<AdminToastEmitter
+  message={dataMessage}
+  type={dataSuccess ? 'success' : 'neutral'}
+  clearQueryMessage={clearDataMessageQuery}
+/>
 
 {#if overflow}
   <section class="mt-6 flex min-h-0 flex-1 flex-col overflow-hidden">
@@ -68,7 +73,11 @@
     </div>
   </section>
 {:else}
-  <section class="mt-6 flex flex-col gap-8 lg:flex-row">
+  <section
+    class="mt-6 flex gap-8 lg:flex-row {reverseOnMobile
+      ? 'flex-col-reverse'
+      : 'flex-col'}"
+  >
     <div class="min-w-0 lg:w-96 lg:shrink-0">
       {@render create()}
     </div>

@@ -1,6 +1,7 @@
 <script lang="ts">
   import AdminButton from '$lib/components/admin/AdminButton.svelte';
-  import AdminStatusMessage from '$lib/components/admin/AdminStatusMessage.svelte';
+  import AdminToastEmitter from '$lib/components/admin/AdminToastEmitter.svelte';
+  import AdminToastViewport from '$lib/components/admin/AdminToastViewport.svelte';
   import FormField from '$lib/components/FormField.svelte';
   import FormInput from '$lib/components/FormInput.svelte';
 
@@ -10,15 +11,14 @@
 </script>
 
 <section class="mx-auto grid w-full max-w-lg gap-4 px-5 py-14">
-  <h1 class="text-2xl tracking-widest uppercase">CMS Auth</h1>
+  <AdminToastViewport />
+  <AdminToastEmitter
+    message={form?.message}
+    type={form && 'success' in form && form.success ? 'success' : 'error'}
+    source="auth:status-message"
+  />
 
-  {#if form?.message}
-    <AdminStatusMessage
-      type={form && 'success' in form && form.success ? 'success' : 'error'}
-    >
-      {form.message}
-    </AdminStatusMessage>
-  {/if}
+  <h1 class="text-2xl tracking-widest uppercase">CMS Auth</h1>
 
   {#if data.session}
     <div class="grid gap-3 rounded border border-border p-4 text-sm">

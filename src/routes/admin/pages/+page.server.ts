@@ -52,6 +52,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
   return {
     pages: pagesWithSvedit.data ?? [],
     message: url.searchParams.get('message'),
+    messageSuccess: url.searchParams.get('success') === '1',
   };
 };
 

@@ -1,6 +1,6 @@
 import { fail, type Actions } from '@sveltejs/kit';
 
-import { asString, getCmsRole } from '$lib/server/admin-helpers';
+import { asBoolean, asString, getCmsRole } from '$lib/server/admin-helpers';
 import { throwLoaderError } from '$lib/server/load-error';
 import {
   DEFAULT_ADMIN_FONT_FAMILY,
@@ -16,13 +16,14 @@ import {
 import type { PageServerLoad } from './$types';
 
 const typographySelect =
-  'public_font_import_url, public_font_family, admin_font_import_url, admin_font_family';
+  'public_font_import_url, public_font_family, admin_font_import_url, admin_font_family, show_search_link_in_nav';
 
 type TypographyValues = {
   public_font_import_url: string;
   public_font_family: string;
   admin_font_import_url: string;
   admin_font_family: string;
+  show_search_link_in_nav: boolean;
 };
 
 const normalizeTypographyValues = (values: Partial<TypographyValues>) => ({
@@ -42,6 +43,7 @@ const normalizeTypographyValues = (values: Partial<TypographyValues>) => ({
     values.admin_font_family,
     DEFAULT_ADMIN_FONT_FAMILY,
   ),
+  show_search_link_in_nav: values.show_search_link_in_nav ?? true,
 });
 
 const readTypographyFormValues = (form: FormData): TypographyValues => ({
@@ -49,6 +51,7 @@ const readTypographyFormValues = (form: FormData): TypographyValues => ({
   public_font_family: asString(form.get('public_font_family')).trim(),
   admin_font_import_url: asString(form.get('admin_font_import_url')).trim(),
   admin_font_family: asString(form.get('admin_font_family')).trim(),
+  show_search_link_in_nav: asBoolean(form.get('show_search_link_in_nav')),
 });
 
 export const load: PageServerLoad = async ({ locals }) => {

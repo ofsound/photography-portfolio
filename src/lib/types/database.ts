@@ -696,6 +696,7 @@ export type Database = {
           public_font_family: string;
           public_font_import_url: string;
           show_photograph_info: boolean;
+          show_search_link_in_nav: boolean;
           show_thumbnail_zoom_hover: boolean;
           singleton_id: number;
           theme_default: Database['public']['Enums']['theme_mode'];
@@ -719,6 +720,7 @@ export type Database = {
           public_font_family?: string;
           public_font_import_url?: string;
           show_photograph_info?: boolean;
+          show_search_link_in_nav?: boolean;
           show_thumbnail_zoom_hover?: boolean;
           singleton_id?: number;
           theme_default?: Database['public']['Enums']['theme_mode'];
@@ -742,6 +744,7 @@ export type Database = {
           public_font_family?: string;
           public_font_import_url?: string;
           show_photograph_info?: boolean;
+          show_search_link_in_nav?: boolean;
           show_thumbnail_zoom_hover?: boolean;
           singleton_id?: number;
           theme_default?: Database['public']['Enums']['theme_mode'];

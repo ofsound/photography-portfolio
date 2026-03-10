@@ -9,7 +9,13 @@
     message?: string;
     success?: boolean;
     fieldErrors?: Record<string, string | undefined>;
-    values?: Record<string, string | undefined>;
+    values?: {
+      public_font_import_url?: string;
+      public_font_family?: string;
+      admin_font_import_url?: string;
+      admin_font_family?: string;
+      show_search_link_in_nav?: boolean;
+    };
   };
 
   const { data, form } = $props();
@@ -22,7 +28,7 @@
   const isAdmin = $derived(data.role === 'admin');
 </script>
 
-<AdminHeading>Typography Settings</AdminHeading>
+<AdminHeading>Site Settings</AdminHeading>
 
 {#if form?.message}
   <AdminToastEmitter
@@ -88,10 +94,30 @@
         readonly={!isAdmin}
       />
     </FormField>
+
+    <FormField
+      label="Show Search Link in Nav"
+      id="show-search-link-in-nav"
+      labelSrOnly
+    >
+      <label class="flex items-center gap-2 text-sm">
+        <input
+          id="show-search-link-in-nav"
+          type="checkbox"
+          name="show_search_link_in_nav"
+          checked={Boolean(
+            values.show_search_link_in_nav ??
+            data.typography.show_search_link_in_nav,
+          )}
+          disabled={!isAdmin}
+        />
+        Show Search Link in Nav
+      </label>
+    </FormField>
   </div>
 
   {#if isAdmin}
-    <AdminButton type="submit" variant="submit">Save Typography</AdminButton>
+    <AdminButton type="submit" variant="submit">Save Settings</AdminButton>
   {:else}
     <p class="text-sm text-text-muted">
       Only admins can edit typography settings.

@@ -107,6 +107,9 @@
         }
       : globalSiteSettings,
   );
+  const showSearchLinkInNav = $derived(
+    siteSettings?.show_search_link_in_nav ?? true,
+  );
   const publicFontImportUrl = $derived(
     normalizeFontImportUrl(
       siteSettings?.public_font_import_url,
@@ -458,9 +461,12 @@
               class="border-t border-border px-4 py-3">{navPage.title}</a
             >
           {/each}
-          <a href={resolve('/search')} class="border-t border-border px-4 py-3"
-            >Search</a
-          >
+          {#if showSearchLinkInNav}
+            <a
+              href={resolve('/search')}
+              class="border-t border-border px-4 py-3">Search</a
+            >
+          {/if}
           {#if hasSession}
             <a
               href={resolve('/admin/galleries')}
@@ -554,7 +560,9 @@
         {#each navPages as navPage (navPage.id)}
           <a href={resolve(`/${navPage.slug}`)}>{navPage.title}</a>
         {/each}
-        <a href={resolve('/search')}>Search</a>
+        {#if showSearchLinkInNav}
+          <a href={resolve('/search')}>Search</a>
+        {/if}
         {#if hasSession}
           <a href={resolve('/admin/galleries')}>Admin</a>
         {/if}

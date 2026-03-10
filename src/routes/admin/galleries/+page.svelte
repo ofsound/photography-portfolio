@@ -145,7 +145,7 @@
   title="Galleries"
   formMessage={form?.message}
   formSuccess={form?.success}
-  reverseOnMobile
+  reverseColumnOrder
   create={createForm}
   list={galleryList}
   actions={headerActions}

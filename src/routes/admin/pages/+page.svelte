@@ -158,7 +158,7 @@
   dataMessage={data.message}
   dataSuccess={data.messageSuccess}
   clearDataMessageQuery
-  reverseOnMobile
+  reverseColumnOrder
   create={createForm}
   list={pageList}
 />

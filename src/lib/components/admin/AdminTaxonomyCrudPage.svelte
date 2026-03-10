@@ -27,14 +27,14 @@
     idPrefix,
     items,
     form,
-    reverseOnMobile,
+    reverseColumnOrder,
   }: {
     title: string;
     singularLabel: string;
     idPrefix: string;
     items: TaxonomyItem[];
     form?: FormState | null | undefined;
-    reverseOnMobile?: boolean;
+    reverseColumnOrder?: boolean;
   } = $props();
 
   const typedForm = $derived(form ?? undefined);
@@ -78,7 +78,7 @@
   {title}
   formMessage={typedForm?.message}
   formSuccess={typedForm?.success}
-  {reverseOnMobile}
+  {reverseColumnOrder}
   create={createForm}
   list={itemList}
 />

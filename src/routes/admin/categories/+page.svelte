@@ -9,6 +9,6 @@
   singularLabel="Category"
   idPrefix="cat"
   items={data.categories}
-  reverseOnMobile
+  reverseColumnOrder
   {form}
 />

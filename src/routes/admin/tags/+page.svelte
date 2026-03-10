@@ -9,6 +9,6 @@
   singularLabel="Tag"
   idPrefix="tag"
   items={data.tags}
-  reverseOnMobile
+  reverseColumnOrder
   {form}
 />

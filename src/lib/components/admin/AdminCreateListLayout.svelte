@@ -11,7 +11,7 @@
     dataSuccess?: boolean;
     clearDataMessageQuery?: boolean;
     overflow?: boolean;
-    reverseOnMobile?: boolean;
+    reverseColumnOrder?: boolean;
     create: import('svelte').Snippet;
     list: import('svelte').Snippet;
     leading?: import('svelte').Snippet;
@@ -27,7 +27,7 @@
     dataSuccess = false,
     clearDataMessageQuery = false,
     overflow = false,
-    reverseOnMobile = false,
+    reverseColumnOrder = false,
     create,
     list,
     leading,
@@ -74,7 +74,7 @@
   </section>
 {:else}
   <section
-    class="mt-6 flex gap-8 {reverseOnMobile
+    class="mt-6 flex gap-8 {reverseColumnOrder
       ? 'flex-col-reverse lg:flex-row-reverse'
       : 'flex-col lg:flex-row'}"
   >

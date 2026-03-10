@@ -15,7 +15,6 @@
   import { photoPublicUrl } from '$lib/utils/storage-url';
   import {
     PAGE_VISIBILITY_OPTIONS,
-    PAGE_VISIBILITY_LABELS,
     type PageVisibilityStatus,
   } from '$lib/constants/page-visibility';
   import type { ContentRevision, HomepageImage } from '$lib/types/content';
@@ -165,7 +164,7 @@
   </div>
 
   <div class="grid gap-3 sm:grid-cols-2">
-    <div class="grid gap-3 sm:grid-cols-2">
+    <div class="">
       <FormField label="Visibility" id="page-edit-visibility_status">
         <FormSelect
           name="visibility_status"
@@ -177,9 +176,6 @@
           {/each}
         </FormSelect>
       </FormField>
-      <p class="pt-2 text-xs text-text-subtle uppercase">
-        Current status: {PAGE_VISIBILITY_LABELS[page.visibility_status]}
-      </p>
     </div>
     <FormField label="Editor mode" id="page-edit-editor_mode">
       <FormSelect

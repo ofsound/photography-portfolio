@@ -42,12 +42,7 @@
       oninput={onTitleInput}
     />
   </FormField>
-  <FormField
-    label="Slug"
-    id="edit-slug-{photoFormId}"
-    hint="Leave blank to auto-generate."
-    error={fieldErrors.slug}
-  >
+  <FormField label="Slug" id="edit-slug-{photoFormId}" error={fieldErrors.slug}>
     <FormInput
       id="edit-slug-{photoFormId}"
       name="slug"

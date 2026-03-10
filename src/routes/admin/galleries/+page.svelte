@@ -175,7 +175,6 @@
     <FormField
       label="Slug"
       id="gallery-create-slug"
-      hint="Leave blank to auto-generate."
       error={createFieldErrors.slug}
     >
       <FormInput

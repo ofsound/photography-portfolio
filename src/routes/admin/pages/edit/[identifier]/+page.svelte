@@ -159,12 +159,7 @@
     >
       <FormInput id="page-edit-title" name="title" bind:value={formTitle} />
     </FormField>
-    <FormField
-      label="Slug"
-      id="page-edit-slug"
-      hint="Leave blank to auto-generate."
-      error={fieldErrors.slug}
-    >
+    <FormField label="Slug" id="page-edit-slug" error={fieldErrors.slug}>
       <FormInput id="page-edit-slug" name="slug" bind:value={formSlug} />
     </FormField>
   </div>

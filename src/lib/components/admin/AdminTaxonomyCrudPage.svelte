@@ -102,7 +102,6 @@
       <FormField
         label="Slug"
         id={`${idPrefix}-create-slug`}
-        hint="Leave blank to auto-generate."
         error={createFieldErrors.slug}
       >
         <FormInput
@@ -169,7 +168,6 @@
         <FormField
           label="Slug"
           id={`${idPrefix}-edit-slug-${item.id}`}
-          hint="Leave blank to auto-generate."
           error={activeEditId === item.id
             ? typedForm?.fieldErrors?.slug
             : undefined}

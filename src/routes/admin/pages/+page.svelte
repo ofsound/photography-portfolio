@@ -177,7 +177,6 @@
     <FormField
       label="Slug"
       id="page-create-slug"
-      hint="Leave blank to auto-generate."
       error={createFieldErrors.slug}
     >
       <FormInput

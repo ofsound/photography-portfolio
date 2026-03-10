@@ -73,12 +73,7 @@
           readonly={!isAdmin}
         />
       </FormField>
-      <FormField
-        label="Slug"
-        id="details-slug"
-        hint="Leave blank to auto-generate."
-        error={fieldErrors.slug}
-      >
+      <FormField label="Slug" id="details-slug" error={fieldErrors.slug}>
         <FormInput
           id="details-slug"
           name="slug"

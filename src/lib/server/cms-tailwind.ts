@@ -1,4 +1,3 @@
-import { compile } from '@tailwindcss/node';
 import process from 'node:process';
 
 import tailwindThemeCss from '$lib/styles/tailwind-theme.css?raw';
@@ -10,7 +9,8 @@ const CMS_TAILWIND_SOURCE = `@import "tailwindcss/theme";
 ${tailwindThemeCss}
 `;
 
-type CmsTailwindCompiler = Awaited<ReturnType<typeof compile>>;
+type TailwindCompile = (typeof import('@tailwindcss/node'))['compile'];
+type CmsTailwindCompiler = Awaited<ReturnType<TailwindCompile>>;
 
 let compilerPromise: Promise<CmsTailwindCompiler> | null = null;
 
@@ -20,10 +20,13 @@ const stripTailwindLicenseBanner = (css: string) => {
 
 const getCompiler = async () => {
   if (!compilerPromise) {
-    compilerPromise = compile(CMS_TAILWIND_SOURCE, {
-      base: process.cwd(),
-      onDependency: () => {},
-    }).catch((error: unknown) => {
+    compilerPromise = (async () => {
+      const { compile } = await import('@tailwindcss/node');
+      return compile(CMS_TAILWIND_SOURCE, {
+        base: process.cwd(),
+        onDependency: () => {},
+      });
+    })().catch((error: unknown) => {
       compilerPromise = null;
       throw error;
     });

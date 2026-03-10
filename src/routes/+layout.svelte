@@ -391,9 +391,6 @@
             href={resolve('/')}
             class="border-t border-border px-4 py-3 first:border-t-0">Home</a
           >
-          <a href={resolve('/search')} class="border-t border-border px-4 py-3"
-            >Search</a
-          >
           {#each navGalleries as navGallery (navGallery.id)}
             <a
               href={resolve(buildGalleryPath(navGallery.slug) as `/${string}`)}
@@ -408,6 +405,9 @@
               class="border-t border-border px-4 py-3">{navPage.title}</a
             >
           {/each}
+          <a href={resolve('/search')} class="border-t border-border px-4 py-3"
+            >Search</a
+          >
           {#if hasSession}
             <a
               href={resolve('/admin/galleries')}
@@ -492,7 +492,7 @@
         class="flex items-center gap-6 py-3 text-sm tracking-widest uppercase"
       >
         <a href={resolve('/')}>Home</a>
-        <a href={resolve('/search')}>Search</a>
+
         {#each navGalleries as navGallery (navGallery.id)}
           <a href={resolve(buildGalleryPath(navGallery.slug) as `/${string}`)}
             >{navGallery.name}</a
@@ -501,6 +501,7 @@
         {#each navPages as navPage (navPage.id)}
           <a href={resolve(`/${navPage.slug}`)}>{navPage.title}</a>
         {/each}
+        <a href={resolve('/search')}>Search</a>
         {#if hasSession}
           <a href={resolve('/admin/galleries')}>Admin</a>
         {/if}

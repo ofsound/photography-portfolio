@@ -390,7 +390,7 @@
               name="html_content"
               bind:value={heroHtmlContent}
               lang="html"
-              height="32rem"
+              lines={15}
             />
           </FormField>
           <FormField label="Scoped CSS" id="homepage-hero-css_module">

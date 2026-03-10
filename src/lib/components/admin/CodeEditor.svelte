@@ -12,6 +12,7 @@
     placeholder?: string;
     readonly?: boolean;
     height?: string;
+    lines?: number;
   };
 
   let {
@@ -21,7 +22,12 @@
     placeholder,
     readonly = false,
     height = '300px',
+    lines,
   }: Props = $props();
+
+  const effectiveHeight = $derived(
+    lines != null ? `calc(1.5rem * ${lines})` : height,
+  );
 
   const readIsDarkMode = () =>
     typeof document !== 'undefined' &&
@@ -63,7 +69,7 @@
 
 <div
   class="relative overflow-hidden rounded border border-border-strong bg-surface text-sm"
-  style:height
+  style:height={effectiveHeight}
 >
   <CodeMirror
     bind:value

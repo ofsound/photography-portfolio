@@ -288,7 +288,7 @@
         name="html_content"
         bind:value={formHtmlContent}
         lang="html"
-        height="32rem"
+        lines={15}
       />
     </FormField>
     <FormField label="Scoped CSS" id="page-edit-css_module">

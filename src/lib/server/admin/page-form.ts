@@ -1,5 +1,5 @@
 import type { Database } from '$lib/types/database';
-import { asString, toSlug } from '$lib/server/admin-helpers';
+import { asOptionalNumber, asString, toSlug } from '$lib/server/admin-helpers';
 import { sanitizeCmsCssRaw, sanitizeCmsHtml } from '$lib/server/cms-sanitize';
 import {
   compileCmsTailwindCss,
@@ -33,6 +33,7 @@ type PagePayload = {
   seo_description: string | null;
   og_image_path: string | null;
   bg_image_id: string | null;
+  max_width_override_px: number | null;
   deleted_at: string | null;
 };
 
@@ -71,6 +72,12 @@ export const pagePayloadFromForm = async (
   const ogImagePath = asString(form.get('og_image_path')).trim() || null;
   const bgImageIdRaw = asString(form.get('bg_image_id')).trim();
   const bgImageId = bgImageIdRaw ? bgImageIdRaw : null;
+  const maxWidthOverrideRaw = asString(
+    form.get('max_width_override_px'),
+  ).trim();
+  const maxWidthOverridePx = asOptionalNumber(
+    form.get('max_width_override_px'),
+  );
   const rawHtml = asString(form.get('html_content'));
   const rawCss = asString(form.get('css_module'));
   const rawSveditDoc = asString(form.get('svedit_doc'));
@@ -85,6 +92,7 @@ export const pagePayloadFromForm = async (
     seo_description: seoDescription ?? '',
     og_image_path: ogImagePath ?? '',
     bg_image_id: bgImageIdRaw,
+    max_width_override_px: maxWidthOverrideRaw,
     editor_mode: editorMode,
     html_content: rawHtml,
     css_module: rawCss,
@@ -96,6 +104,22 @@ export const pagePayloadFromForm = async (
       ok: false,
       message: 'Background image selection is invalid.',
       fieldErrors: { bg_image_id: 'Background image selection is invalid.' },
+      values,
+    };
+  }
+
+  if (
+    maxWidthOverrideRaw &&
+    (maxWidthOverridePx == null ||
+      !Number.isInteger(maxWidthOverridePx) ||
+      maxWidthOverridePx <= 0)
+  ) {
+    return {
+      ok: false,
+      message: 'Max width override must be a positive whole number.',
+      fieldErrors: {
+        max_width_override_px: 'Must be a positive whole number.',
+      },
       values,
     };
   }
@@ -181,6 +205,7 @@ export const pagePayloadFromForm = async (
       seo_description: seoDescription,
       og_image_path: ogImagePath,
       bg_image_id: bgImageId,
+      max_width_override_px: maxWidthOverridePx,
       deleted_at: null,
     },
   };

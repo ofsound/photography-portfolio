@@ -21,10 +21,16 @@ import type { HomepageImage } from '$lib/types/content';
 import type { PageServerLoad } from './$types';
 
 const PAGE_SELECT =
-  'id, slug, title, kind, html_content, css_module, tailwind_css, editor_mode, svedit_doc, svedit_schema_version, seo_title, seo_description, og_image_path, bg_image_id, visibility_status, nav_order, deleted_at, updated_at';
+  'id, slug, title, kind, html_content, css_module, tailwind_css, editor_mode, svedit_doc, svedit_schema_version, seo_title, seo_description, og_image_path, bg_image_id, max_width_override_px, visibility_status, nav_order, deleted_at, updated_at';
 const UUID_REGEX =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 type PageRow = Database['public']['Tables']['pages']['Row'];
+
+const toPositiveIntegerOrNull = (value: unknown) => {
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed) || parsed <= 0) return null;
+  return parsed;
+};
 
 const redirectToList = (message: string) => {
   throw redirect(
@@ -166,6 +172,9 @@ export const actions: Actions = {
           seo_description: asString(form.get('seo_description')).trim(),
           og_image_path: asString(form.get('og_image_path')).trim(),
           bg_image_id: asString(form.get('bg_image_id')).trim(),
+          max_width_override_px: asString(
+            form.get('max_width_override_px'),
+          ).trim(),
           html_content: asString(form.get('html_content')),
           css_module: asString(form.get('css_module')),
           svedit_doc: asString(form.get('svedit_doc')),
@@ -302,6 +311,9 @@ export const actions: Actions = {
         UUID_REGEX.test(snapshot.bg_image_id)
           ? snapshot.bg_image_id
           : null,
+      max_width_override_px: toPositiveIntegerOrNull(
+        snapshot.max_width_override_px,
+      ),
       visibility_status: visibilityStatus,
       nav_order: Number(snapshot.nav_order ?? 0),
       deleted_at: null,

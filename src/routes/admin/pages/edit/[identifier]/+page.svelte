@@ -53,6 +53,11 @@
   );
   let formSeoDescription = $state(initialPage().seo_description ?? '');
   let formOgImagePath = $state(initialPage().og_image_path ?? '');
+  let formMaxWidthOverride = $state(
+    initialPage().max_width_override_px != null
+      ? String(initialPage().max_width_override_px)
+      : '',
+  );
   let formBgImageId = $state<string | null>(initialPage().bg_image_id ?? null);
   let showBgPicker = $state(false);
   let showRawSveditJson = $state(false);
@@ -76,6 +81,9 @@
     }
     if (typeof values.og_image_path === 'string') {
       formOgImagePath = values.og_image_path;
+    }
+    if (typeof values.max_width_override_px === 'string') {
+      formMaxWidthOverride = values.max_width_override_px;
     }
     if (typeof values.bg_image_id === 'string') {
       formBgImageId = values.bg_image_id.trim() || null;
@@ -211,6 +219,21 @@
       id="page-edit-og_image_path"
       name="og_image_path"
       bind:value={formOgImagePath}
+    />
+  </FormField>
+  <FormField
+    label="Max Width Override (px)"
+    id="page-edit-max_width_override_px"
+    helper="Optional. Leave blank to use the site default."
+    error={fieldErrors.max_width_override_px}
+  >
+    <FormInput
+      id="page-edit-max_width_override_px"
+      name="max_width_override_px"
+      type="number"
+      min={1}
+      step={1}
+      bind:value={formMaxWidthOverride}
     />
   </FormField>
 

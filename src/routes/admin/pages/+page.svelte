@@ -68,6 +68,7 @@
   let hasManualSlugEdit = $state(false);
   let createEditorMode = $state<'code' | 'svedit'>('code');
   let createVisibilityStatus = $state<PageVisibilityStatus>('draft');
+  let createMaxWidthOverride = $state('');
   const createFieldErrors = $derived(typedForm?.fieldErrors ?? {});
 
   const onCreateTitleInput = () => {
@@ -97,6 +98,9 @@
       nextVisibility === 'unlisted'
     ) {
       createVisibilityStatus = nextVisibility;
+    }
+    if (typeof typedForm?.values?.max_width_override_px === 'string') {
+      createMaxWidthOverride = typedForm.values.max_width_override_px;
     }
     if (nextEditorMode === 'code' || nextEditorMode === 'svedit') {
       createEditorMode = nextEditorMode;
@@ -197,6 +201,21 @@
           <option value={option.value}>{option.label}</option>
         {/each}
       </FormSelect>
+    </FormField>
+    <FormField
+      label="Max Width Override (px)"
+      id="page-create-max_width_override_px"
+      helper="Optional. Leave blank to use the site default."
+      error={createFieldErrors.max_width_override_px}
+    >
+      <FormInput
+        id="page-create-max_width_override_px"
+        name="max_width_override_px"
+        type="number"
+        min={1}
+        step={1}
+        bind:value={createMaxWidthOverride}
+      />
     </FormField>
     <FormField label="Editor mode" id="page-create-editor_mode">
       <FormSelect

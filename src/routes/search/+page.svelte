@@ -5,6 +5,21 @@
   import { onDestroy, onMount } from 'svelte';
 
   const { data }: import('./$types').PageProps = $props();
+  const DEFAULT_PAGE_MAX_WIDTH_PX = 1280;
+
+  const toPositiveInteger = (value: unknown) => {
+    const parsed = Math.round(Number(value));
+    if (!Number.isFinite(parsed) || parsed <= 0) return null;
+    return parsed;
+  };
+
+  const effectiveSearchWidthPx = $derived(
+    toPositiveInteger(data.siteSettings?.default_page_max_width_px) ??
+      DEFAULT_PAGE_MAX_WIDTH_PX,
+  );
+  const searchSectionStyle = $derived(
+    `max-width: min(100%, ${effectiveSearchWidthPx}px);`,
+  );
 
   type FilterState = {
     q: string;
@@ -363,7 +378,8 @@
 <svelte:window onkeydown={onViewerKeydown} />
 
 <section
-  class="mx-auto flex w-full max-w-7xl flex-col gap-8 px-5 py-8 sm:px-6 lg:px-8"
+  class="mx-auto flex w-full flex-col gap-8 px-5 py-8 sm:px-6 lg:px-8"
+  style={searchSectionStyle}
 >
   <section
     class="grid gap-4 rounded-sm border border-border bg-surface/70 p-5 backdrop-blur sm:grid-cols-2 sm:p-6 xl:grid-cols-[minmax(0,1.5fr)_repeat(3,minmax(0,0.75fr))]"

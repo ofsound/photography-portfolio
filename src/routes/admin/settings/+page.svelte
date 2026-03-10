@@ -23,6 +23,7 @@
       admin_font_import_url?: string;
       admin_font_family?: string;
       show_search_link_in_nav?: boolean;
+      default_page_max_width_px?: number | null;
       brand_light_hex?: string;
       brand_dark_hex?: string;
       brand_contrast_light_hex?: string;
@@ -172,6 +173,25 @@
         id="admin-font-family"
         name="admin_font_family"
         value={values.admin_font_family ?? data.typography.admin_font_family}
+        readonly={!isAdmin}
+      />
+    </FormField>
+
+    <FormField
+      label="Default Max Width (px)"
+      id="default-page-max-width-px"
+      helper="Default/fallback max width for /search and custom pages."
+      error={fieldErrors.default_page_max_width_px}
+    >
+      <FormInput
+        id="default-page-max-width-px"
+        name="default_page_max_width_px"
+        type="number"
+        min={1}
+        step={1}
+        value={values.default_page_max_width_px != null
+          ? String(values.default_page_max_width_px)
+          : String(data.typography.default_page_max_width_px)}
         readonly={!isAdmin}
       />
     </FormField>

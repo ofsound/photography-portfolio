@@ -317,6 +317,7 @@ export type Database = {
           html_content: string;
           id: string;
           kind: Database['public']['Enums']['page_kind'];
+          max_width_override_px: number | null;
           nav_order: number;
           og_image_path: string | null;
           seo_description: string | null;
@@ -341,6 +342,7 @@ export type Database = {
           html_content?: string;
           id?: string;
           kind: Database['public']['Enums']['page_kind'];
+          max_width_override_px?: number | null;
           nav_order?: number;
           og_image_path?: string | null;
           seo_description?: string | null;
@@ -365,6 +367,7 @@ export type Database = {
           html_content?: string;
           id?: string;
           kind?: Database['public']['Enums']['page_kind'];
+          max_width_override_px?: number | null;
           nav_order?: number;
           og_image_path?: string | null;
           seo_description?: string | null;
@@ -690,6 +693,7 @@ export type Database = {
           brand_dark_hex: string;
           brand_light_hex: string;
           created_at: string;
+          default_page_max_width_px: number;
           gallery_gap_px: number;
           gallery_layout_mode: Database['public']['Enums']['layout_mode'];
           grid_desktop_default: number;
@@ -718,6 +722,7 @@ export type Database = {
           brand_dark_hex?: string;
           brand_light_hex?: string;
           created_at?: string;
+          default_page_max_width_px?: number;
           gallery_gap_px?: number;
           gallery_layout_mode?: Database['public']['Enums']['layout_mode'];
           grid_desktop_default?: number;
@@ -746,6 +751,7 @@ export type Database = {
           brand_dark_hex?: string;
           brand_light_hex?: string;
           created_at?: string;
+          default_page_max_width_px?: number;
           gallery_gap_px?: number;
           gallery_layout_mode?: Database['public']['Enums']['layout_mode'];
           grid_desktop_default?: number;

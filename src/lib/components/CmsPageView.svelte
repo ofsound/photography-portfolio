@@ -12,6 +12,7 @@
   type CmsPageData = {
     title: string;
     slug: string;
+    max_width_override_px?: number | null;
     html_content: string;
     css_module: string;
     tailwind_css?: string;
@@ -23,10 +24,12 @@
     page,
     editable = false,
     layout,
+    maxWidthPx = 1280,
   } = $props<{
     page: CmsPageData;
     editable?: boolean;
     layout?: 'page' | 'homepage-overlay';
+    maxWidthPx?: number;
   }>();
 
   const scopeKey = $derived(createCmsScopeKey(page.slug));
@@ -36,10 +39,20 @@
   const isEditableSvedit = $derived(
     !isCodeMode && editable && Boolean(page.editor_mode === 'svedit'),
   );
+  const resolvedMaxWidthPx = $derived.by(() => {
+    const normalized = Math.round(Number(maxWidthPx));
+    if (Number.isFinite(normalized) && normalized > 0) return normalized;
+    return 1280;
+  });
+  const pageSectionStyle = $derived(
+    layoutVariant === 'homepage-overlay'
+      ? undefined
+      : `max-width: min(100%, ${resolvedMaxWidthPx}px);`,
+  );
   const codeSectionClass = $derived(
     layoutVariant === 'homepage-overlay'
       ? 'w-full'
-      : 'mx-auto max-w-5xl px-5 py-14',
+      : 'mx-auto w-full px-5 py-14',
   );
   const codeArticleClass = $derived(
     layoutVariant === 'homepage-overlay'
@@ -49,7 +62,7 @@
   const editableSveditSectionClass = $derived(
     layoutVariant === 'homepage-overlay'
       ? 'w-full'
-      : 'mx-auto max-w-6xl px-5 py-8',
+      : 'mx-auto w-full px-5 py-8',
   );
   const sveditRendererSectionClass = $derived(
     layoutVariant === 'homepage-overlay' ? 'w-full' : undefined,
@@ -76,13 +89,17 @@
 </svelte:head>
 
 {#if isCodeMode}
-  <section class={codeSectionClass} data-cms-scope={scopeKey}>
+  <section
+    class={codeSectionClass}
+    style={pageSectionStyle}
+    data-cms-scope={scopeKey}
+  >
     <article class={codeArticleClass}>
       {@html page.html_content}
     </article>
   </section>
 {:else if isEditableSvedit}
-  <section class={editableSveditSectionClass}>
+  <section class={editableSveditSectionClass} style={pageSectionStyle}>
     <form
       id="public-svedit-form"
       method="POST"
@@ -110,5 +127,9 @@
     </form>
   </section>
 {:else}
-  <SveditPageRenderer {page} sectionClass={sveditRendererSectionClass} />
+  <SveditPageRenderer
+    {page}
+    sectionClass={sveditRendererSectionClass}
+    sectionStyle={pageSectionStyle}
+  />
 {/if}

@@ -1,6 +1,11 @@
 import { fail, type Actions } from '@sveltejs/kit';
 
-import { asBoolean, asString, getCmsRole } from '$lib/server/admin-helpers';
+import {
+  asBoolean,
+  asOptionalNumber,
+  asString,
+  getCmsRole,
+} from '$lib/server/admin-helpers';
 import { throwLoaderError } from '$lib/server/load-error';
 import {
   isValidHexColor,
@@ -19,8 +24,10 @@ import {
 
 import type { PageServerLoad } from './$types';
 
+const DEFAULT_PAGE_MAX_WIDTH_PX = 1280;
+
 const typographySelect =
-  'public_font_import_url, public_font_family, admin_font_import_url, admin_font_family, show_search_link_in_nav, brand_light_hex, brand_dark_hex, brand_contrast_light_hex, brand_contrast_dark_hex';
+  'public_font_import_url, public_font_family, admin_font_import_url, admin_font_family, show_search_link_in_nav, default_page_max_width_px, brand_light_hex, brand_dark_hex, brand_contrast_light_hex, brand_contrast_dark_hex';
 
 type TypographyValues = {
   public_font_import_url: string;
@@ -28,13 +35,30 @@ type TypographyValues = {
   admin_font_import_url: string;
   admin_font_family: string;
   show_search_link_in_nav: boolean;
+  default_page_max_width_px: number;
   brand_light_hex: string;
   brand_dark_hex: string;
   brand_contrast_light_hex: string;
   brand_contrast_dark_hex: string;
 };
 
-const normalizeTypographyValues = (values: Partial<TypographyValues>) => ({
+type TypographyFormValues = Omit<
+  TypographyValues,
+  'default_page_max_width_px'
+> & {
+  default_page_max_width_px: number | null;
+};
+
+const normalizeDefaultPageMaxWidthPx = (value: number | null | undefined) => {
+  if (Number.isInteger(value) && Number(value) > 0) {
+    return Number(value);
+  }
+  return DEFAULT_PAGE_MAX_WIDTH_PX;
+};
+
+const normalizeTypographyValues = (
+  values: Partial<TypographyFormValues>,
+): TypographyValues => ({
   public_font_import_url: normalizeFontImportUrl(
     values.public_font_import_url,
     DEFAULT_PUBLIC_FONT_IMPORT_URL,
@@ -52,15 +76,21 @@ const normalizeTypographyValues = (values: Partial<TypographyValues>) => ({
     DEFAULT_ADMIN_FONT_FAMILY,
   ),
   show_search_link_in_nav: values.show_search_link_in_nav ?? true,
+  default_page_max_width_px: normalizeDefaultPageMaxWidthPx(
+    values.default_page_max_width_px,
+  ),
   ...normalizeBrandColorValues(values),
 });
 
-const readTypographyFormValues = (form: FormData): TypographyValues => ({
+const readTypographyFormValues = (form: FormData): TypographyFormValues => ({
   public_font_import_url: asString(form.get('public_font_import_url')).trim(),
   public_font_family: asString(form.get('public_font_family')).trim(),
   admin_font_import_url: asString(form.get('admin_font_import_url')).trim(),
   admin_font_family: asString(form.get('admin_font_family')).trim(),
   show_search_link_in_nav: asBoolean(form.get('show_search_link_in_nav')),
+  default_page_max_width_px: asOptionalNumber(
+    form.get('default_page_max_width_px'),
+  ),
   brand_light_hex: asString(form.get('brand_light_hex')).trim(),
   brand_dark_hex: asString(form.get('brand_dark_hex')).trim(),
   brand_contrast_light_hex: asString(
@@ -125,6 +155,15 @@ export const actions: Actions = {
         'Invalid font-family value. Avoid CSS control characters.';
     }
 
+    if (
+      values.default_page_max_width_px == null ||
+      !Number.isInteger(values.default_page_max_width_px) ||
+      values.default_page_max_width_px <= 0
+    ) {
+      fieldErrors.default_page_max_width_px =
+        'Must be a positive whole number.';
+    }
+
     if (!isValidHexColor(values.brand_light_hex)) {
       fieldErrors.brand_light_hex = 'Must be a valid hex color (#RRGGBB).';
     }
@@ -148,6 +187,7 @@ export const actions: Actions = {
       fieldErrors.admin_font_import_url ||
       fieldErrors.public_font_family ||
       fieldErrors.admin_font_family ||
+      fieldErrors.default_page_max_width_px ||
       fieldErrors.brand_light_hex ||
       fieldErrors.brand_dark_hex ||
       fieldErrors.brand_contrast_light_hex ||

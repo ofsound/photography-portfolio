@@ -5,9 +5,27 @@
   import CmsPageView from '$lib/components/CmsPageView.svelte';
 
   const { data, form } = $props();
+  const DEFAULT_PAGE_MAX_WIDTH_PX = 1280;
+
+  const toPositiveInteger = (value: unknown) => {
+    const parsed = Math.round(Number(value));
+    if (!Number.isFinite(parsed) || parsed <= 0) return null;
+    return parsed;
+  };
 
   const isSveditPage = $derived(data.customPage?.editor_mode === 'svedit');
   const canEditPublicly = $derived(Boolean(data.canEditPublicPages));
+  const defaultPageMaxWidthPx = $derived(
+    toPositiveInteger(data.siteSettings?.default_page_max_width_px) ??
+      DEFAULT_PAGE_MAX_WIDTH_PX,
+  );
+  const customPageMaxWidthPx = $derived(
+    toPositiveInteger(data.customPage?.max_width_override_px) ??
+      defaultPageMaxWidthPx,
+  );
+  const customPageContainerStyle = $derived(
+    `max-width: min(100%, ${customPageMaxWidthPx}px);`,
+  );
   const isEditMode = $derived(
     canEditPublicly &&
       isSveditPage &&
@@ -74,7 +92,12 @@
 <svelte:window onkeydown={onKeydown} />
 
 {#if form?.message}
-  <p class="mx-auto mt-4 max-w-5xl px-5 text-sm text-red-600">{form.message}</p>
+  <p
+    class="mx-auto mt-4 w-full px-5 text-sm text-red-600"
+    style={customPageContainerStyle}
+  >
+    {form.message}
+  </p>
 {/if}
 
 {#if data.viewerMode === 'page' && data.customPage}
@@ -88,7 +111,10 @@
       />
       <div class="relative z-10">
         {#if isSveditPage && canEditPublicly}
-          <div class="mx-auto max-w-5xl px-5 py-4">
+          <div
+            class="mx-auto w-full px-5 py-4"
+            style={customPageContainerStyle}
+          >
             {#if isEditMode}
               <button
                 type="button"
@@ -109,12 +135,16 @@
           </div>
         {/if}
 
-        <CmsPageView page={data.customPage} editable={isEditMode} />
+        <CmsPageView
+          page={data.customPage}
+          editable={isEditMode}
+          maxWidthPx={customPageMaxWidthPx}
+        />
       </div>
     </div>
   {:else}
     {#if isSveditPage && canEditPublicly}
-      <div class="mx-auto max-w-5xl px-5 py-4">
+      <div class="mx-auto w-full px-5 py-4" style={customPageContainerStyle}>
         {#if isEditMode}
           <button
             type="button"
@@ -135,6 +165,10 @@
       </div>
     {/if}
 
-    <CmsPageView page={data.customPage} editable={isEditMode} />
+    <CmsPageView
+      page={data.customPage}
+      editable={isEditMode}
+      maxWidthPx={customPageMaxWidthPx}
+    />
   {/if}
 {/if}

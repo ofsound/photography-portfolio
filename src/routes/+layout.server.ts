@@ -14,7 +14,7 @@ export const load: LayoutServerLoad = async ({ locals }) => {
     locals.supabase
       .from('site_settings')
       .select(
-        'theme_default, transition_preset, allow_transition_toggle, show_photograph_info, show_search_link_in_nav, public_font_import_url, public_font_family, admin_font_import_url, admin_font_family, brand_light_hex, brand_dark_hex, brand_contrast_light_hex, brand_contrast_dark_hex',
+        'theme_default, transition_preset, allow_transition_toggle, show_photograph_info, show_search_link_in_nav, default_page_max_width_px, public_font_import_url, public_font_family, admin_font_import_url, admin_font_family, brand_light_hex, brand_dark_hex, brand_contrast_light_hex, brand_contrast_dark_hex',
       )
       .eq('singleton_id', 1)
       .maybeSingle(),

@@ -24,6 +24,7 @@ declare global {
         allow_transition_toggle: boolean;
         show_photograph_info: boolean;
         show_search_link_in_nav: boolean;
+        default_page_max_width_px: number;
       } | null;
     }
   }

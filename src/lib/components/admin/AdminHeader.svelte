@@ -5,7 +5,7 @@
   }>();
 
   const headerClass = $derived(
-    className ? `pt-0 pb-6 ${className}` : 'pt-0 pb-6',
+    className ? `pt-0 mb-7 ${className}` : 'pt-0 mb-7',
   );
 </script>
 

@@ -78,7 +78,11 @@
       ? 'flex-col-reverse lg:flex-row-reverse'
       : 'flex-col lg:flex-row'}"
   >
-    <div class="min-w-0 lg:w-96 lg:shrink-0">
+    <div
+      class="min-w-0 lg:w-96 lg:shrink-0 {reverseColumnOrder
+        ? '[&_form_button[type=submit]]:ml-auto'
+        : ''}"
+    >
       {@render create()}
     </div>
     <div class="flex min-w-0 flex-1 flex-col gap-3">

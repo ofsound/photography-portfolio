@@ -73,10 +73,6 @@ export const actions: Actions = {
         values: {
           title: asString(form.get('title')).trim(),
           slug: asString(form.get('slug')).trim(),
-          visibility_status: asString(form.get('visibility_status')).trim(),
-          max_width_override_px: asString(
-            form.get('max_width_override_px'),
-          ).trim(),
           editor_mode: asString(form.get('editor_mode')).trim(),
         },
       });

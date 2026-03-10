@@ -37,14 +37,21 @@
 
   const isLabel = $derived(as === 'label');
   const isLink = $derived(Boolean(href) || as === 'a');
+  const isSelectedTab = $derived(isLink && selected === true);
 
   const classes = $derived(
     [
       variant === 'link' ? '' : sizeClasses[size as Size],
       variantClasses[variant as Variant],
-      variant === 'default' && selected === true ? 'bg-border' : '',
+      variant === 'default' && selected === true
+        ? 'bg-border hover:border-admin-btn-border hover:bg-border active:border-admin-btn-border active:bg-border'
+        : '',
       variant === 'default' && selected === false ? 'opacity-40' : '',
-      disabled ? 'pointer-events-none opacity-50' : 'cursor-pointer',
+      disabled
+        ? 'pointer-events-none opacity-50'
+        : isSelectedTab
+          ? 'cursor-default'
+          : 'cursor-pointer',
       className,
     ]
       .filter(Boolean)
@@ -57,6 +64,10 @@
 {#if isLabel}
   <label {...commonAttrs} aria-disabled={disabled} {onclick} {...restProps}
     >{@render children?.()}</label
+  >
+{:else if isSelectedTab}
+  <span role="tab" aria-selected="true" {...commonAttrs} {...restProps}
+    >{@render children?.()}</span
   >
 {:else if isLink}
   <a

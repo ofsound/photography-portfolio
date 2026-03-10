@@ -131,12 +131,12 @@ export const load: PageServerLoad = async ({ locals, url }) => {
       locals.supabase
         .from('photo_images')
         .select(
-          'id, kind, position, delivery_storage_path, photo_id, photos:photo_id(title, slug)',
+          'id, kind, position, delivery_storage_path, photo_id, photos:photo_id(title, slug, status, deleted_at, galleries:gallery_id(visibility_status))',
         )
         .eq('is_active', true)
         .not('delivery_storage_path', 'is', null)
         .order('created_at', { ascending: false })
-        .limit(300),
+        .limit(500),
       locals.supabase
         .from('photo_images')
         .select('id', { count: 'exact', head: true })
@@ -228,27 +228,57 @@ export const load: PageServerLoad = async ({ locals, url }) => {
     },
   );
 
-  const images = (imagesRaw ?? []).map(
-    (row: {
-      id: string;
-      kind: string;
-      position: number;
-      delivery_storage_path: string | null;
-      photos?:
-      | { title?: string; slug?: string }
-      | Array<{ title?: string; slug?: string }>;
-    }) => {
-      const photo = Array.isArray(row.photos) ? row.photos[0] : row.photos;
-      return {
-        id: row.id,
-        kind: row.kind,
-        position: row.position,
-        delivery_storage_path: row.delivery_storage_path,
-        photo_title: photo?.title ?? 'Untitled',
-        photo_slug: photo?.slug ?? null,
-      };
-    },
-  );
+  const images = (imagesRaw ?? [])
+    .filter(
+      (row: {
+        photos?:
+        | {
+          status?: string;
+          deleted_at?: string | null;
+          galleries?:
+          | { visibility_status?: string }
+          | Array<{ visibility_status?: string }>;
+        }
+        | Array<{
+          status?: string;
+          deleted_at?: string | null;
+          galleries?:
+          | { visibility_status?: string }
+          | Array<{ visibility_status?: string }>;
+        }>;
+      }) => {
+        const photo = Array.isArray(row.photos) ? row.photos[0] : row.photos;
+        if (!photo) return false;
+        if (photo.status !== 'published' || photo.deleted_at != null)
+          return false;
+        const gallery = Array.isArray(photo.galleries)
+          ? photo.galleries[0]
+          : photo.galleries;
+        if (gallery?.visibility_status === 'archived') return false;
+        return true;
+      },
+    )
+    .map(
+      (row: {
+        id: string;
+        kind: string;
+        position: number;
+        delivery_storage_path: string | null;
+        photos?:
+        | { title?: string; slug?: string }
+        | Array<{ title?: string; slug?: string }>;
+      }) => {
+        const photo = Array.isArray(row.photos) ? row.photos[0] : row.photos;
+        return {
+          id: row.id,
+          kind: row.kind,
+          position: row.position,
+          delivery_storage_path: row.delivery_storage_path,
+          photo_title: photo?.title ?? 'Untitled',
+          photo_slug: photo?.slug ?? null,
+        };
+      },
+    );
 
   const slideDurationMs = clampInt(
     settingsQuery.data?.homepage_slide_duration_ms ?? DEFAULT_SLIDE_DURATION_MS,

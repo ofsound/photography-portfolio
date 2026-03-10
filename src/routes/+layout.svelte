@@ -159,9 +159,6 @@
       DEFAULT_BRAND_CONTRAST_DARK_HEX,
     ),
   );
-  const brandThemeInlineStyle = $derived(
-    `--color-brand-light:${brandLightHex};--color-brand-dark:${brandDarkHex};--color-brand-contrast-light:${brandContrastLightHex};--color-brand-contrast-dark:${brandContrastDarkHex};`,
-  );
   const fontImportUrls = $derived.by(() => {
     const unique = new Set([publicFontImportUrl, adminFontImportUrl]);
     return [...unique];
@@ -199,6 +196,22 @@
     document.documentElement.style.setProperty(
       '--font-sans-admin',
       adminFontFamily,
+    );
+    document.documentElement.style.setProperty(
+      '--color-brand-light',
+      brandLightHex,
+    );
+    document.documentElement.style.setProperty(
+      '--color-brand-dark',
+      brandDarkHex,
+    );
+    document.documentElement.style.setProperty(
+      '--color-brand-contrast-light',
+      brandContrastLightHex,
+    );
+    document.documentElement.style.setProperty(
+      '--color-brand-contrast-dark',
+      brandContrastDarkHex,
     );
   });
 
@@ -437,6 +450,35 @@
 </script>
 
 <svelte:head>
+  <script
+    data-brand-light={brandLightHex}
+    data-brand-dark={brandDarkHex}
+    data-brand-contrast-light={brandContrastLightHex}
+    data-brand-contrast-dark={brandContrastDarkHex}
+  >
+    {
+      const script = document.currentScript;
+      if (script instanceof HTMLScriptElement) {
+        const root = document.documentElement;
+        root.style.setProperty(
+          '--color-brand-light',
+          script.dataset.brandLight ?? '#4f46e5',
+        );
+        root.style.setProperty(
+          '--color-brand-dark',
+          script.dataset.brandDark ?? '#a5b4fc',
+        );
+        root.style.setProperty(
+          '--color-brand-contrast-light',
+          script.dataset.brandContrastLight ?? '#eef2ff',
+        );
+        root.style.setProperty(
+          '--color-brand-contrast-dark',
+          script.dataset.brandContrastDark ?? '#1e1b4b',
+        );
+      }
+    }
+  </script>
   <meta name="site-theme-default" content={siteThemeDefault} />
   <meta name="site-font-public-family" content={publicFontFamily} />
   <meta name="site-font-admin-family" content={adminFontFamily} />
@@ -445,7 +487,7 @@
   {/each}
 </svelte:head>
 
-<div class="min-h-screen bg-bg text-text" style={brandThemeInlineStyle}>
+<div class="min-h-screen bg-bg text-text">
   <header
     class="chrome-panel fixed inset-x-0 top-0 z-[60] border-b border-border px-4 pt-[env(safe-area-inset-top)] transition-opacity duration-(--duration-chrome) ease-out md:hidden"
     class:hidden={isAdminRoute}

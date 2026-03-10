@@ -9,6 +9,7 @@
     DEFAULT_BRAND_CONTRAST_LIGHT_HEX,
     DEFAULT_BRAND_DARK_HEX,
     DEFAULT_BRAND_LIGHT_HEX,
+    isValidHexColor,
     normalizeHexColor,
   } from '$lib/constants/theme-colors';
 
@@ -39,8 +40,13 @@
   const isAdmin = $derived(data.role === 'admin');
   const getValue = (value: string | boolean | undefined) =>
     typeof value === 'string' ? value : undefined;
-  const toColorInputValue = (value: string, fallback: string) =>
-    normalizeHexColor(value, fallback);
+  const toColorInputValue = (value: unknown, fallback: string) => {
+    const safeFallback = isValidHexColor(fallback)
+      ? fallback.toLowerCase()
+      : '#000000';
+    const normalized = normalizeHexColor(value, safeFallback);
+    return isValidHexColor(normalized) ? normalized : safeFallback;
+  };
   const brandLightHexSource = $derived(
     normalizeHexColor(
       getValue(values.brand_light_hex) ?? data.typography.brand_light_hex,
@@ -80,6 +86,26 @@
   );
   const brandContrastDarkHex = $derived(
     brandContrastDarkHexOverride ?? brandContrastDarkHexSource,
+  );
+  const brandLightPickerHex = $derived(
+    isValidHexColor(brandLightHexOverride ?? '')
+      ? brandLightHexOverride!.toLowerCase()
+      : brandLightHexSource,
+  );
+  const brandDarkPickerHex = $derived(
+    isValidHexColor(brandDarkHexOverride ?? '')
+      ? brandDarkHexOverride!.toLowerCase()
+      : brandDarkHexSource,
+  );
+  const brandContrastLightPickerHex = $derived(
+    isValidHexColor(brandContrastLightHexOverride ?? '')
+      ? brandContrastLightHexOverride!.toLowerCase()
+      : brandContrastLightHexSource,
+  );
+  const brandContrastDarkPickerHex = $derived(
+    isValidHexColor(brandContrastDarkHexOverride ?? '')
+      ? brandContrastDarkHexOverride!.toLowerCase()
+      : brandContrastDarkHexSource,
   );
 </script>
 
@@ -165,27 +191,34 @@
         <input
           id="brand-light-hex-picker"
           type="color"
-          value={toColorInputValue(brandLightHex, DEFAULT_BRAND_LIGHT_HEX)}
+          value={toColorInputValue(
+            brandLightPickerHex,
+            DEFAULT_BRAND_LIGHT_HEX,
+          )}
+          defaultValue={toColorInputValue(
+            brandLightPickerHex,
+            DEFAULT_BRAND_LIGHT_HEX,
+          )}
           aria-label="Brand color light theme picker"
           disabled={!isAdmin}
           class="h-10 w-14 rounded border border-border bg-surface p-1 disabled:cursor-not-allowed disabled:opacity-60"
           oninput={(event) => {
-            brandLightHexOverride = (event.currentTarget as HTMLInputElement)
-              .value;
+            const next = (event.currentTarget as HTMLInputElement).value;
+            brandLightHexOverride = next.toLowerCase();
           }}
         />
         <FormInput
           id="brand-light-hex"
+          name="brand_light_hex"
           value={brandLightHex}
           oninput={(event) => {
-            brandLightHexOverride = (event.currentTarget as HTMLInputElement)
-              .value;
+            const next = (event.currentTarget as HTMLInputElement).value;
+            brandLightHexOverride = next;
           }}
           placeholder={DEFAULT_BRAND_LIGHT_HEX}
           readonly={!isAdmin}
         />
       </div>
-      <input type="hidden" name="brand_light_hex" value={brandLightHex} />
     </FormField>
 
     <FormField
@@ -197,27 +230,31 @@
         <input
           id="brand-dark-hex-picker"
           type="color"
-          value={toColorInputValue(brandDarkHex, DEFAULT_BRAND_DARK_HEX)}
+          value={toColorInputValue(brandDarkPickerHex, DEFAULT_BRAND_DARK_HEX)}
+          defaultValue={toColorInputValue(
+            brandDarkPickerHex,
+            DEFAULT_BRAND_DARK_HEX,
+          )}
           aria-label="Brand color dark theme picker"
           disabled={!isAdmin}
           class="h-10 w-14 rounded border border-border bg-surface p-1 disabled:cursor-not-allowed disabled:opacity-60"
           oninput={(event) => {
-            brandDarkHexOverride = (event.currentTarget as HTMLInputElement)
-              .value;
+            const next = (event.currentTarget as HTMLInputElement).value;
+            brandDarkHexOverride = next.toLowerCase();
           }}
         />
         <FormInput
           id="brand-dark-hex"
+          name="brand_dark_hex"
           value={brandDarkHex}
           oninput={(event) => {
-            brandDarkHexOverride = (event.currentTarget as HTMLInputElement)
-              .value;
+            const next = (event.currentTarget as HTMLInputElement).value;
+            brandDarkHexOverride = next;
           }}
           placeholder={DEFAULT_BRAND_DARK_HEX}
           readonly={!isAdmin}
         />
       </div>
-      <input type="hidden" name="brand_dark_hex" value={brandDarkHex} />
     </FormField>
 
     <FormField
@@ -230,35 +267,33 @@
           id="brand-contrast-light-hex-picker"
           type="color"
           value={toColorInputValue(
-            brandContrastLightHex,
+            brandContrastLightPickerHex,
+            DEFAULT_BRAND_CONTRAST_LIGHT_HEX,
+          )}
+          defaultValue={toColorInputValue(
+            brandContrastLightPickerHex,
             DEFAULT_BRAND_CONTRAST_LIGHT_HEX,
           )}
           aria-label="Brand contrast light theme picker"
           disabled={!isAdmin}
           class="h-10 w-14 rounded border border-border bg-surface p-1 disabled:cursor-not-allowed disabled:opacity-60"
           oninput={(event) => {
-            brandContrastLightHexOverride = (
-              event.currentTarget as HTMLInputElement
-            ).value;
+            const next = (event.currentTarget as HTMLInputElement).value;
+            brandContrastLightHexOverride = next.toLowerCase();
           }}
         />
         <FormInput
           id="brand-contrast-light-hex"
+          name="brand_contrast_light_hex"
           value={brandContrastLightHex}
           oninput={(event) => {
-            brandContrastLightHexOverride = (
-              event.currentTarget as HTMLInputElement
-            ).value;
+            const next = (event.currentTarget as HTMLInputElement).value;
+            brandContrastLightHexOverride = next;
           }}
           placeholder={DEFAULT_BRAND_CONTRAST_LIGHT_HEX}
           readonly={!isAdmin}
         />
       </div>
-      <input
-        type="hidden"
-        name="brand_contrast_light_hex"
-        value={brandContrastLightHex}
-      />
     </FormField>
 
     <FormField
@@ -271,35 +306,33 @@
           id="brand-contrast-dark-hex-picker"
           type="color"
           value={toColorInputValue(
-            brandContrastDarkHex,
+            brandContrastDarkPickerHex,
+            DEFAULT_BRAND_CONTRAST_DARK_HEX,
+          )}
+          defaultValue={toColorInputValue(
+            brandContrastDarkPickerHex,
             DEFAULT_BRAND_CONTRAST_DARK_HEX,
           )}
           aria-label="Brand contrast dark theme picker"
           disabled={!isAdmin}
           class="h-10 w-14 rounded border border-border bg-surface p-1 disabled:cursor-not-allowed disabled:opacity-60"
           oninput={(event) => {
-            brandContrastDarkHexOverride = (
-              event.currentTarget as HTMLInputElement
-            ).value;
+            const next = (event.currentTarget as HTMLInputElement).value;
+            brandContrastDarkHexOverride = next.toLowerCase();
           }}
         />
         <FormInput
           id="brand-contrast-dark-hex"
+          name="brand_contrast_dark_hex"
           value={brandContrastDarkHex}
           oninput={(event) => {
-            brandContrastDarkHexOverride = (
-              event.currentTarget as HTMLInputElement
-            ).value;
+            const next = (event.currentTarget as HTMLInputElement).value;
+            brandContrastDarkHexOverride = next;
           }}
           placeholder={DEFAULT_BRAND_CONTRAST_DARK_HEX}
           readonly={!isAdmin}
         />
       </div>
-      <input
-        type="hidden"
-        name="brand_contrast_dark_hex"
-        value={brandContrastDarkHex}
-      />
     </FormField>
 
     <FormField

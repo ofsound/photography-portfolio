@@ -31,17 +31,12 @@
   }>();
 
   const initial = parseSveditPageDocument(value);
-  let loadError = $state<string | null>(null);
 
   const session = $state(
     createPageSveditSession(
       initial.ok ? initial.document : createDefaultSveditPageDocument(),
     ),
   );
-
-  if (!initial.ok && value.trim()) {
-    loadError = initial.message;
-  }
 
   if (!value) {
     value = serializeSveditPageDocument(
@@ -71,28 +66,31 @@
 
   const canvasShellClass = $derived.by(() =>
     isInline
-      ? 'rounded-xl border border-border-subtle bg-transparent p-0'
+      ? undefined
       : 'overflow-auto rounded border border-border-strong bg-surface p-4',
   );
 
   const canvasClass = $derived.by(() =>
     isInline
-      ? 'text-text-main grid gap-8 px-2 py-4 sm:px-4'
+      ? 'text-text-main grid gap-8 sm:gap-10'
       : 'text-text-main grid gap-6',
   );
 
-  $effect(() => {
+  const validationResult = $derived.by(() => {
     void session.doc;
-    const result = validateSveditPageDocument(session.to_json());
-    if (!result.ok) {
-      loadError = result.message;
-      return;
-    }
+    return validateSveditPageDocument(session.to_json());
+  });
+  const loadError = $derived(
+    validationResult.ok ? null : validationResult.message,
+  );
+  const serializedDocument = $derived.by(() => {
+    if (!validationResult.ok) return null;
+    return serializeSveditPageDocument(validationResult.document);
+  });
 
-    loadError = null;
-    const serialized = serializeSveditPageDocument(result.document);
-    if (serialized !== value) {
-      value = serialized;
+  $effect(() => {
+    if (serializedDocument && serializedDocument !== value) {
+      value = serializedDocument;
     }
   });
 
@@ -107,7 +105,7 @@
 <svelte:window onkeydown={(event) => keyMapper.handle_keydown(event)} />
 
 <div class={isInline ? 'grid gap-4' : 'grid gap-3'}>
-  <div class={toolbarClass}>
+  {#snippet toolbarButtons()}
     <button
       type="button"
       class="rounded border border-border-strong px-2 py-1 text-xs"
@@ -200,7 +198,25 @@
       disabled={commands.insert_divider?.disabled}
       onclick={() => run('insert_divider')}>Divider</button
     >
-  </div>
+  {/snippet}
+
+  {#if isInline}
+    <div
+      class="pointer-events-none fixed inset-x-0 bottom-[calc(env(safe-area-inset-bottom)+0.5rem)] z-50 flex justify-center px-2"
+    >
+      <div
+        class="pointer-events-auto w-fit max-w-full overflow-x-auto rounded-lg border border-border-strong bg-surface/95 backdrop-blur"
+      >
+        <div class="flex w-max flex-nowrap gap-2 p-2">
+          {@render toolbarButtons()}
+        </div>
+      </div>
+    </div>
+  {:else}
+    <div class={toolbarClass}>
+      {@render toolbarButtons()}
+    </div>
+  {/if}
 
   <div class={canvasShellClass} style:height={isInline ? undefined : height}>
     <Svedit

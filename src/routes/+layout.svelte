@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { invalidateAll, onNavigate } from '$app/navigation';
+  import { goto, invalidateAll, onNavigate } from '$app/navigation';
   import { resolve } from '$app/paths';
   import { page } from '$app/state';
 
@@ -22,6 +22,7 @@
   } from '$lib/stores/gallery-prefs.svelte';
   import {
     buildGalleryPath,
+    buildGalleryPhotoPath,
     isGalleryDetailPath,
   } from '$lib/utils/gallery-routes';
   import {
@@ -177,6 +178,135 @@
 
   const isViewer = $derived(isViewerRoute(page.url.pathname));
   const isAdminRoute = $derived(page.url.pathname.startsWith('/admin/'));
+  const cmsRole = $derived(
+    ((data as Record<string, unknown> | null)?.cmsRole ?? null) as
+      | 'admin'
+      | 'editor'
+      | null,
+  );
+  const canAccessPublicEditor = $derived(
+    cmsRole === 'admin' || cmsRole === 'editor',
+  );
+  const currentRouteData = $derived(
+    (page.data as Record<string, unknown> | null) ?? null,
+  );
+  const canEditPublicPages = $derived(
+    Boolean(currentRouteData?.canEditPublicPages),
+  );
+  const publicSveditEditable = $derived.by(() => {
+    if (!canEditPublicPages || isAdminRoute) return false;
+
+    const heroPage =
+      (currentRouteData?.heroPage as { editor_mode?: string } | null) ?? null;
+    if (heroPage?.editor_mode === 'svedit') return true;
+
+    const customPage =
+      (currentRouteData?.customPage as { editor_mode?: string } | null) ?? null;
+    return (
+      currentRouteData?.viewerMode === 'page' &&
+      customPage?.editor_mode === 'svedit'
+    );
+  });
+  const publicEditModeEnabled = $derived(
+    publicSveditEditable && page.url.searchParams.get('edit') === '1',
+  );
+  const encodePathSegment = (segment: string) => {
+    try {
+      return encodeURIComponent(decodeURIComponent(segment));
+    } catch {
+      return encodeURIComponent(segment);
+    }
+  };
+  const adminEditorPath = $derived.by(() => {
+    if (!canAccessPublicEditor) return null;
+
+    const pathname = page.url.pathname;
+    if (pathname.startsWith('/admin/') || pathname.startsWith('/auth/')) {
+      return null;
+    }
+    if (pathname === '/auth' || pathname === '/search') return null;
+
+    const segments = pathname.split('/').filter(Boolean);
+    if (segments.length === 0) return '/admin/homepage';
+
+    const rootSlug = segments[0];
+    const rootSlugEncoded = encodePathSegment(rootSlug);
+
+    if (segments.length === 1) {
+      if (allGallerySlugs.has(rootSlug)) {
+        return `/admin/${rootSlugEncoded}/details`;
+      }
+      return `/admin/pages/edit/${rootSlugEncoded}`;
+    }
+
+    if (
+      segments[1] === 'photo' &&
+      segments[2] &&
+      allGallerySlugs.has(rootSlug)
+    ) {
+      return `/admin/${rootSlugEncoded}/photos/edit/${encodePathSegment(segments[2])}`;
+    }
+
+    if (segments[1] === 'feed' && allGallerySlugs.has(rootSlug)) {
+      return `/admin/${rootSlugEncoded}/details`;
+    }
+
+    return null;
+  });
+  const adminPublicPath = $derived.by(() => {
+    if (!isAdminRoute) return null;
+
+    const pathname = page.url.pathname;
+    const segments = pathname.split('/').filter(Boolean);
+    if (segments[0] !== 'admin') return null;
+
+    if (segments.length === 2 && segments[1] === 'homepage') {
+      return '/';
+    }
+
+    const typedData = (page.data as Record<string, unknown> | null) ?? null;
+    const pageData = (typedData?.page as { slug?: string } | null) ?? null;
+    const galleryData =
+      (typedData?.gallery as { slug?: string } | null) ?? null;
+    const photoData = (typedData?.photo as { slug?: string } | null) ?? null;
+
+    if (
+      segments.length === 4 &&
+      segments[1] === 'pages' &&
+      segments[2] === 'edit' &&
+      pageData?.slug
+    ) {
+      return `/${encodePathSegment(pageData.slug)}`;
+    }
+
+    if (
+      segments.length === 3 &&
+      segments[2] === 'details' &&
+      galleryData?.slug
+    ) {
+      return buildGalleryPath(galleryData.slug);
+    }
+
+    if (
+      segments.length === 3 &&
+      segments[2] === 'photos' &&
+      galleryData?.slug
+    ) {
+      return buildGalleryPath(galleryData.slug);
+    }
+
+    if (
+      segments.length === 5 &&
+      segments[2] === 'photos' &&
+      segments[3] === 'edit' &&
+      galleryData?.slug &&
+      photoData?.slug
+    ) {
+      return buildGalleryPhotoPath(galleryData.slug, photoData.slug);
+    }
+
+    return null;
+  });
 
   $effect(() => {
     if (typeof window === 'undefined' || !isViewer) return;
@@ -229,6 +359,20 @@
     mode: 'uniform' | 'masonry' | 'coverage' | 'rows' | 'columns',
   ) => {
     setGalleryPrefs({ layoutMode: mode }, maxDensity);
+  };
+  const setPublicEditMode = (next: boolean) => {
+    if (!publicSveditEditable) return;
+
+    const nextUrl = new URL(page.url);
+    if (next) {
+      nextUrl.searchParams.set('edit', '1');
+    } else {
+      nextUrl.searchParams.delete('edit');
+    }
+
+    const search = nextUrl.search;
+    const target = `${nextUrl.pathname}${search}`;
+    goto(resolve(target as `/${string}`), { replaceState: true });
   };
 
   const applyTransitionPreset = () => {
@@ -504,109 +648,197 @@
         Home
       </a>
 
-      <MobileDropdownMenu
-        id="public-mobile-nav"
-        label="Toggle site navigation"
-        bind:open={publicMobileMenuOpen}
-      >
-        <nav
-          aria-label="Site mobile navigation"
-          class="text-md flex flex-col border-y border-border font-medium"
-        >
-          <a
-            href={resolve('/')}
-            class="border-t border-border px-4 py-3 first:border-t-0">Home</a
+      <div class="flex items-center justify-end gap-2">
+        {#if publicSveditEditable}
+          <button
+            type="button"
+            class="inline-flex min-h-11 min-w-11 items-center justify-center rounded-md border border-border bg-surface text-text transition-colors hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+            aria-label={publicEditModeEnabled
+              ? 'Exit public edit mode'
+              : 'Enter public edit mode'}
+            title={publicEditModeEnabled
+              ? 'Exit public edit mode'
+              : 'Enter public edit mode'}
+            onclick={() => setPublicEditMode(!publicEditModeEnabled)}
           >
-          {#each navGalleries as navGallery (navGallery.id)}
-            <a
-              href={resolve(buildGalleryPath(navGallery.slug) as `/${string}`)}
-              class="border-t border-border px-4 py-3"
+            <svg
+              class="size-4.5"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              aria-hidden="true"
             >
-              {navGallery.name}
-            </a>
-          {/each}
-          {#each navPages as navPage (navPage.id)}
-            <a
-              href={resolve(`/${navPage.slug}`)}
-              class="border-t border-border px-4 py-3">{navPage.title}</a
+              {#if publicEditModeEnabled}
+                <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6z" />
+                <circle cx="12" cy="12" r="3" />
+              {:else}
+                <path d="M12 20h9" />
+                <path d="M16.5 3.5a2.12 2.12 0 113 3L7 19l-4 1 1-4z" />
+              {/if}
+            </svg>
+          </button>
+          {#if publicEditModeEnabled}
+            <button
+              type="submit"
+              form="public-svedit-form"
+              class="inline-flex min-h-11 min-w-11 items-center justify-center rounded-md border border-border bg-surface text-text transition-colors hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+              aria-label="Save public page changes"
+              title="Save public page changes"
             >
-          {/each}
-          {#if showSearchLinkInNav}
-            <a
-              href={resolve('/search')}
-              class="border-t border-border px-4 py-3">Search</a
-            >
+              <svg
+                class="size-4.5"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                aria-hidden="true"
+              >
+                <path
+                  d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"
+                />
+                <path d="M17 21v-8H7v8" />
+                <path d="M7 3v5h8" />
+              </svg>
+            </button>
           {/if}
-          {#if hasSession}
-            <a
-              href={resolve('/admin/galleries')}
-              class="border-t border-border px-4 py-3"
-            >
-              Admin
-            </a>
+          {#if adminEditorPath}
+            <span class="h-6 w-px bg-border" aria-hidden="true"></span>
           {/if}
-        </nav>
-
-        {#if isViewer}
-          <div class="grid gap-3 border-t border-border pt-3">
-            <label
-              for="header-layout-mobile"
-              class="text-xs tracking-widest uppercase"
-            >
-              Layout
-            </label>
-            <select
-              id="header-layout-mobile"
-              class="h-10 rounded border border-border-strong bg-transparent px-3 text-sm tracking-wider uppercase"
-              aria-label="Gallery layout"
-              value={layoutModeStore.value}
-              onchange={(e) =>
-                updateHeaderLayoutMode(
-                  (e.currentTarget as HTMLSelectElement).value as
-                    | 'uniform'
-                    | 'masonry'
-                    | 'coverage'
-                    | 'rows'
-                    | 'columns',
-                )}
-            >
-              <option value="uniform">Uniform</option>
-              <option value="masonry">Masonry</option>
-              <option value="coverage">Coverage</option>
-              <option value="rows">Rows</option>
-              <option value="columns">Columns</option>
-            </select>
-            <ZoomControl
-              label="Zoom"
-              min={1}
-              max={maxDensity}
-              value={toUiZoomValue(galleryDensityStore.value)}
-              onUpdate={updateHeaderDensity}
-            />
-          </div>
-        {:else if siteSettings?.allow_transition_toggle}
-          <div class="grid gap-2 border-t border-border pt-3">
-            <label
-              for="transition-mobile"
-              class="text-xs tracking-widest uppercase">Motion</label
-            >
-            <select
-              id="transition-mobile"
-              class="h-10 rounded border border-border-strong bg-transparent px-3 text-sm"
-              bind:value={transitionPreset}
-              onchange={(event) =>
-                updateTransitionPreset(
-                  (event.currentTarget as HTMLSelectElement)
-                    .value as typeof transitionPreset,
-                )}
-            >
-              <option value="cinematic">Cinematic</option>
-              <option value="snappy">Snappy</option>
-              <option value="experimental">Experimental</option>
-            </select>
-          </div>
         {/if}
-      </MobileDropdownMenu>
+        {#if adminEditorPath}
+          <a
+            href={resolve(adminEditorPath as `/${string}`)}
+            class="inline-flex min-h-11 min-w-11 items-center justify-center rounded-md border border-border bg-surface text-text transition-colors hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+            aria-label="Edit current page in admin"
+            title="Edit current page in admin"
+          >
+            <svg
+              class="size-4.5"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              aria-hidden="true"
+            >
+              <path d="M12 20h9" />
+              <path d="M16.5 3.5a2.12 2.12 0 113 3L7 19l-4 1 1-4z" />
+            </svg>
+          </a>
+        {/if}
+
+        <MobileDropdownMenu
+          id="public-mobile-nav"
+          label="Toggle site navigation"
+          bind:open={publicMobileMenuOpen}
+        >
+          <nav
+            aria-label="Site mobile navigation"
+            class="text-md flex flex-col border-y border-border font-medium"
+          >
+            <a
+              href={resolve('/')}
+              class="border-t border-border px-4 py-3 first:border-t-0">Home</a
+            >
+            {#each navGalleries as navGallery (navGallery.id)}
+              <a
+                href={resolve(
+                  buildGalleryPath(navGallery.slug) as `/${string}`,
+                )}
+                class="border-t border-border px-4 py-3"
+              >
+                {navGallery.name}
+              </a>
+            {/each}
+            {#each navPages as navPage (navPage.id)}
+              <a
+                href={resolve(`/${navPage.slug}`)}
+                class="border-t border-border px-4 py-3">{navPage.title}</a
+              >
+            {/each}
+            {#if showSearchLinkInNav}
+              <a
+                href={resolve('/search')}
+                class="border-t border-border px-4 py-3">Search</a
+              >
+            {/if}
+            {#if hasSession}
+              <a
+                href={resolve('/admin/galleries')}
+                class="border-t border-border px-4 py-3"
+              >
+                Admin
+              </a>
+            {/if}
+          </nav>
+
+          {#if isViewer}
+            <div class="grid gap-3 border-t border-border pt-3">
+              <label
+                for="header-layout-mobile"
+                class="text-xs tracking-widest uppercase"
+              >
+                Layout
+              </label>
+              <select
+                id="header-layout-mobile"
+                class="h-10 rounded border border-border-strong bg-transparent px-3 text-sm tracking-wider uppercase"
+                aria-label="Gallery layout"
+                value={layoutModeStore.value}
+                onchange={(e) =>
+                  updateHeaderLayoutMode(
+                    (e.currentTarget as HTMLSelectElement).value as
+                      | 'uniform'
+                      | 'masonry'
+                      | 'coverage'
+                      | 'rows'
+                      | 'columns',
+                  )}
+              >
+                <option value="uniform">Uniform</option>
+                <option value="masonry">Masonry</option>
+                <option value="coverage">Coverage</option>
+                <option value="rows">Rows</option>
+                <option value="columns">Columns</option>
+              </select>
+              <ZoomControl
+                label="Zoom"
+                min={1}
+                max={maxDensity}
+                value={toUiZoomValue(galleryDensityStore.value)}
+                onUpdate={updateHeaderDensity}
+              />
+            </div>
+          {:else if siteSettings?.allow_transition_toggle}
+            <div class="grid gap-2 border-t border-border pt-3">
+              <label
+                for="transition-mobile"
+                class="text-xs tracking-widest uppercase">Motion</label
+              >
+              <select
+                id="transition-mobile"
+                class="h-10 rounded border border-border-strong bg-transparent px-3 text-sm"
+                bind:value={transitionPreset}
+                onchange={(event) =>
+                  updateTransitionPreset(
+                    (event.currentTarget as HTMLSelectElement)
+                      .value as typeof transitionPreset,
+                  )}
+              >
+                <option value="cinematic">Cinematic</option>
+                <option value="snappy">Snappy</option>
+                <option value="experimental">Experimental</option>
+              </select>
+            </div>
+          {/if}
+        </MobileDropdownMenu>
+      </div>
     </div>
   </header>
 
@@ -669,6 +901,29 @@
             value={toUiZoomValue(galleryDensityStore.value)}
             onUpdate={updateHeaderDensity}
           />
+          {#if adminEditorPath}
+            <span class="h-6 w-px bg-border" aria-hidden="true"></span>
+            <a
+              href={resolve(adminEditorPath as `/${string}`)}
+              class="inline-flex h-6 w-6 items-center justify-center rounded border border-transparent transition-colors hover:border-border hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+              aria-label="Edit current page in admin"
+              title="Edit current page in admin"
+            >
+              <svg
+                class="size-3.5"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                aria-hidden="true"
+              >
+                <path d="M12 20h9" />
+                <path d="M16.5 3.5a2.12 2.12 0 113 3L7 19l-4 1 1-4z" />
+              </svg>
+            </a>
+          {/if}
         </div>
       {:else}
         <div class="flex items-center justify-end gap-2">
@@ -690,6 +945,118 @@
               <option value="snappy">Snappy</option>
               <option value="experimental">Experimental</option>
             </select>
+          {/if}
+          {#if publicSveditEditable}
+            <button
+              type="button"
+              class="inline-flex h-6 w-6 items-center justify-center rounded border border-transparent transition-colors hover:border-border hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+              aria-label={publicEditModeEnabled
+                ? 'Exit public edit mode'
+                : 'Enter public edit mode'}
+              title={publicEditModeEnabled
+                ? 'Exit public edit mode'
+                : 'Enter public edit mode'}
+              onclick={() => setPublicEditMode(!publicEditModeEnabled)}
+            >
+              <svg
+                class="size-3.5"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                aria-hidden="true"
+              >
+                {#if publicEditModeEnabled}
+                  <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6z" />
+                  <circle cx="12" cy="12" r="3" />
+                {:else}
+                  <path d="M12 20h9" />
+                  <path d="M16.5 3.5a2.12 2.12 0 113 3L7 19l-4 1 1-4z" />
+                {/if}
+              </svg>
+            </button>
+            {#if publicEditModeEnabled}
+              <button
+                type="submit"
+                form="public-svedit-form"
+                class="inline-flex h-6 w-6 items-center justify-center rounded border border-transparent transition-colors hover:border-border hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+                aria-label="Save public page changes"
+                title="Save public page changes"
+              >
+                <svg
+                  class="size-3.5"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"
+                  />
+                  <path d="M17 21v-8H7v8" />
+                  <path d="M7 3v5h8" />
+                </svg>
+              </button>
+            {/if}
+          {/if}
+          {#if adminPublicPath}
+            {#if siteSettings?.allow_transition_toggle}
+              <span class="h-6 w-px bg-border" aria-hidden="true"></span>
+            {/if}
+            <a
+              href={resolve(adminPublicPath as `/${string}`)}
+              class="inline-flex h-6 w-6 items-center justify-center rounded border border-transparent transition-colors hover:border-border hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+              aria-label="View public page"
+              title="View public page"
+            >
+              <svg
+                class="size-3.5"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                aria-hidden="true"
+              >
+                <path
+                  d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
+                />
+                <path d="M14 2v6h6" />
+                <path d="M8 13h8" />
+                <path d="M8 17h8" />
+              </svg>
+            </a>
+          {/if}
+          {#if adminEditorPath}
+            {#if siteSettings?.allow_transition_toggle || publicSveditEditable}
+              <span class="h-6 w-px bg-border" aria-hidden="true"></span>
+            {/if}
+            <a
+              href={resolve(adminEditorPath as `/${string}`)}
+              class="inline-flex h-6 w-6 items-center justify-center rounded border border-transparent transition-colors hover:border-border hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+              aria-label="Edit current page in admin"
+              title="Edit current page in admin"
+            >
+              <svg
+                class="size-3.5"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                aria-hidden="true"
+              >
+                <path d="M12 20h9" />
+                <path d="M16.5 3.5a2.12 2.12 0 113 3L7 19l-4 1 1-4z" />
+              </svg>
+            </a>
           {/if}
         </div>
       {/if}

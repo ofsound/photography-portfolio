@@ -62,7 +62,7 @@
   const editableSveditSectionClass = $derived(
     layoutVariant === 'homepage-overlay'
       ? 'w-full'
-      : 'mx-auto w-full px-5 py-8',
+      : 'mx-auto w-full px-5 py-10',
   );
   const sveditRendererSectionClass = $derived(
     layoutVariant === 'homepage-overlay' ? 'w-full' : undefined,
@@ -100,25 +100,7 @@
   </section>
 {:else if isEditableSvedit}
   <section class={editableSveditSectionClass} style={pageSectionStyle}>
-    <form
-      id="public-svedit-form"
-      method="POST"
-      action="?/save"
-      class="grid gap-4"
-    >
-      <div
-        class="sticky top-4 z-20 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border-strong bg-surface/95 px-3 py-2 backdrop-blur"
-      >
-        <p class="text-xs tracking-widest uppercase">
-          Live edit mode • Cmd/Ctrl+S to save
-        </p>
-        <button
-          class="rounded border border-border-strong px-3 py-2 text-xs tracking-widest uppercase"
-          type="submit"
-        >
-          Save changes
-        </button>
-      </div>
+    <form id="public-svedit-form" method="POST" action="?/save">
       <SveditEditor
         name="svedit_doc"
         value={serializedSveditDoc}

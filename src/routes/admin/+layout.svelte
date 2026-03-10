@@ -5,9 +5,73 @@
   import AdminThemeToggle from '$lib/components/admin/AdminThemeToggle.svelte';
   import AdminToastViewport from '$lib/components/admin/AdminToastViewport.svelte';
   import MobileDropdownMenu from '$lib/components/navigation/MobileDropdownMenu.svelte';
+  import {
+    buildGalleryPath,
+    buildGalleryPhotoPath,
+  } from '$lib/utils/gallery-routes';
 
   const { data, children } = $props();
   let adminMobileMenuOpen = $state(false);
+
+  const encodePathSegment = (segment: string) => {
+    try {
+      return encodeURIComponent(decodeURIComponent(segment));
+    } catch {
+      return encodeURIComponent(segment);
+    }
+  };
+  const adminPublicPath = $derived.by(() => {
+    const pathname = page.url.pathname;
+    const segments = pathname.split('/').filter(Boolean);
+    if (segments[0] !== 'admin') return null;
+
+    if (segments.length === 2 && segments[1] === 'homepage') {
+      return '/';
+    }
+
+    const typedData = (page.data as Record<string, unknown> | null) ?? null;
+    const pageData = (typedData?.page as { slug?: string } | null) ?? null;
+    const galleryData =
+      (typedData?.gallery as { slug?: string } | null) ?? null;
+    const photoData = (typedData?.photo as { slug?: string } | null) ?? null;
+
+    if (
+      segments.length === 4 &&
+      segments[1] === 'pages' &&
+      segments[2] === 'edit' &&
+      pageData?.slug
+    ) {
+      return `/${encodePathSegment(pageData.slug)}`;
+    }
+
+    if (
+      segments.length === 3 &&
+      segments[2] === 'details' &&
+      galleryData?.slug
+    ) {
+      return buildGalleryPath(galleryData.slug);
+    }
+
+    if (
+      segments.length === 3 &&
+      segments[2] === 'photos' &&
+      galleryData?.slug
+    ) {
+      return buildGalleryPath(galleryData.slug);
+    }
+
+    if (
+      segments.length === 5 &&
+      segments[2] === 'photos' &&
+      segments[3] === 'edit' &&
+      galleryData?.slug &&
+      photoData?.slug
+    ) {
+      return buildGalleryPhotoPath(galleryData.slug, photoData.slug);
+    }
+
+    return null;
+  });
 
   const links = $derived.by(() => {
     const list = [
@@ -62,34 +126,64 @@
       class="flex h-[var(--size-mobile-header)] items-center justify-between gap-3"
     >
       <p class="text-base font-bold tracking-[0.28em] uppercase">CMS</p>
-      <MobileDropdownMenu
-        id="admin-mobile-nav"
-        label="Toggle admin navigation"
-        inertSelector="[data-admin-mobile-menu-root]"
-        bind:open={adminMobileMenuOpen}
-      >
-        <nav
-          aria-label="Admin mobile navigation"
-          class="text-md flex flex-col border-y border-border font-medium"
-        >
-          {#each links as link, i (link.href)}
-            <a
-              href={resolve(link.href as `/${string}`)}
-              class="border-t border-border px-4 py-3 transition-shadow duration-300 first:border-t-0"
-              class:bg-surface-subtle={!isActiveLink(link.href) && i % 2 === 1}
-              class:bg-surface-strong={isActiveLink(link.href)}
-              style="box-shadow: {isActiveLink(link.href)
-                ? 'inset 3px 0 0 var(--color-brand), inset 0 2px 8px rgba(0,0,0,0.14)'
-                : 'inset 3px 0 0 transparent, inset 0 2px 8px transparent'}"
+      <div class="flex items-center gap-2">
+        {#if adminPublicPath}
+          <a
+            href={resolve(adminPublicPath as `/${string}`)}
+            class="inline-flex min-h-11 min-w-11 items-center justify-center rounded-md border border-border bg-surface text-text transition-colors hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+            aria-label="View public page"
+            title="View public page"
+          >
+            <svg
+              class="size-4.5"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              aria-hidden="true"
             >
-              {link.label}
-            </a>
-          {/each}
-        </nav>
-        <div class="pt-3">
-          <AdminThemeToggle />
-        </div>
-      </MobileDropdownMenu>
+              <path
+                d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
+              />
+              <path d="M14 2v6h6" />
+              <path d="M8 13h8" />
+              <path d="M8 17h8" />
+            </svg>
+          </a>
+        {/if}
+
+        <MobileDropdownMenu
+          id="admin-mobile-nav"
+          label="Toggle admin navigation"
+          inertSelector="[data-admin-mobile-menu-root]"
+          bind:open={adminMobileMenuOpen}
+        >
+          <nav
+            aria-label="Admin mobile navigation"
+            class="text-md flex flex-col border-y border-border font-medium"
+          >
+            {#each links as link, i (link.href)}
+              <a
+                href={resolve(link.href as `/${string}`)}
+                class="border-t border-border px-4 py-3 transition-shadow duration-300 first:border-t-0"
+                class:bg-surface-subtle={!isActiveLink(link.href) &&
+                  i % 2 === 1}
+                class:bg-surface-strong={isActiveLink(link.href)}
+                style="box-shadow: {isActiveLink(link.href)
+                  ? 'inset 3px 0 0 var(--color-brand), inset 0 2px 8px rgba(0,0,0,0.14)'
+                  : 'inset 3px 0 0 transparent, inset 0 2px 8px transparent'}"
+              >
+                {link.label}
+              </a>
+            {/each}
+          </nav>
+          <div class="pt-3">
+            <AdminThemeToggle />
+          </div>
+        </MobileDropdownMenu>
+      </div>
     </div>
   </header>
 

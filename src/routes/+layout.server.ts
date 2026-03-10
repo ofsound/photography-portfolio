@@ -4,7 +4,7 @@ import type { LayoutServerLoad } from './$types';
 
 export const load: LayoutServerLoad = async ({ locals }) => {
   const [
-    { session },
+    { session, user },
     settingsResult,
     navPagesResult,
     navGalleries,
@@ -32,6 +32,29 @@ export const load: LayoutServerLoad = async ({ locals }) => {
       .select('slug')
       .neq('visibility_status', 'archived'),
   ]);
+
+  let cmsRole: 'admin' | 'editor' | null = null;
+  if (user) {
+    const profileResult = await locals.supabase
+      .from('profiles')
+      .select('role')
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    if (profileResult.error) {
+      throwLoaderError(
+        { route: '/+layout', operation: 'load cms role' },
+        profileResult.error,
+      );
+    }
+
+    if (
+      profileResult.data?.role === 'admin' ||
+      profileResult.data?.role === 'editor'
+    ) {
+      cmsRole = profileResult.data.role;
+    }
+  }
 
   if (settingsResult.error) {
     throwLoaderError(
@@ -71,6 +94,7 @@ export const load: LayoutServerLoad = async ({ locals }) => {
 
   return {
     session,
+    cmsRole,
     siteSettings: settingsResult.data ?? null,
     navPages: navPagesResult.data ?? [],
     navGalleries,

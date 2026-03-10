@@ -1089,7 +1089,7 @@ export const createDefaultSveditPageDocument = (): SveditPageDocument => {
         type: 'callout',
         title: createDefaultAnnotatedText('Ready to publish?'),
         content: createDefaultAnnotatedText(
-          'Use Cmd/Ctrl+S while editing to save changes without leaving the page.',
+          'Use the header save control while editing to publish changes.',
         ),
         button_label: createDefaultAnnotatedText('Contact us'),
         button_href: createDefaultAnnotatedText('/contact'),

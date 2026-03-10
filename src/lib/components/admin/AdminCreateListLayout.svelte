@@ -3,7 +3,7 @@
   import AdminStatusMessage from '$lib/components/admin/AdminStatusMessage.svelte';
 
   interface Props {
-    title: string;
+    title?: string;
     subtitle?: string;
     formMessage?: string | null;
     formSuccess?: boolean;

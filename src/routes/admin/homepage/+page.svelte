@@ -278,7 +278,6 @@
 
 {#if section === 'slides'}
   <AdminCreateListLayout
-    title="Slides"
     formMessage={form?.message}
     formSuccess={form?.success}
     overflow
@@ -299,7 +298,7 @@
     <form
       method="POST"
       action="?/saveHero&section=hero"
-      class="mt-6 grid max-w-5xl gap-3"
+      class="mt-6 grid gap-3"
     >
       <input type="hidden" name="id" value={homePage.id} />
       <input type="hidden" name="slug" value="home" />
@@ -645,9 +644,11 @@
 {/snippet}
 
 {#snippet availableImagesList()}
-  <ul class="flex min-h-0 flex-1 flex-wrap content-start gap-2 overflow-auto">
+  <ul
+    class="grid min-h-0 flex-1 grid-cols-2 content-start gap-2 overflow-auto sm:grid-cols-3 xl:grid-cols-5"
+  >
     {#each availableImages as image (image.id)}
-      <li class="w-40">
+      <li class="w-full">
         <AdminCard
           variant="gradient"
           class="group flex cursor-pointer flex-col gap-2 p-2"

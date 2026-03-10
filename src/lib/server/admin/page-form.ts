@@ -31,6 +31,8 @@ type PagePayload = {
   visibility_status: PageVisibilityStatus;
   seo_title: string | null;
   seo_description: string | null;
+  og_title: string | null;
+  og_description: string | null;
   og_image_path: string | null;
   bg_image_id: string | null;
   max_width_override_px: number | null;
@@ -69,6 +71,8 @@ export const pagePayloadFromForm = async (
       : 'draft';
   const seoTitle = asString(form.get('seo_title')).trim() || null;
   const seoDescription = asString(form.get('seo_description')).trim() || null;
+  const ogTitle = asString(form.get('og_title')).trim() || null;
+  const ogDescription = asString(form.get('og_description')).trim() || null;
   const ogImagePath = asString(form.get('og_image_path')).trim() || null;
   const bgImageIdRaw = asString(form.get('bg_image_id')).trim();
   const bgImageId = bgImageIdRaw ? bgImageIdRaw : null;
@@ -90,6 +94,8 @@ export const pagePayloadFromForm = async (
     visibility_status: visibilityRaw,
     seo_title: seoTitle ?? '',
     seo_description: seoDescription ?? '',
+    og_title: ogTitle ?? '',
+    og_description: ogDescription ?? '',
     og_image_path: ogImagePath ?? '',
     bg_image_id: bgImageIdRaw,
     max_width_override_px: maxWidthOverrideRaw,
@@ -203,6 +209,8 @@ export const pagePayloadFromForm = async (
       visibility_status: visibilityStatus,
       seo_title: seoTitle,
       seo_description: seoDescription,
+      og_title: ogTitle,
+      og_description: ogDescription,
       og_image_path: ogImagePath,
       bg_image_id: bgImageId,
       max_width_override_px: maxWidthOverridePx,

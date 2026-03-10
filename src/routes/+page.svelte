@@ -5,6 +5,7 @@
 
   import CmsPageView from '$lib/components/CmsPageView.svelte';
   import HomeSlideshow from '$lib/components/HomeSlideshow.svelte';
+  import { resolveSeoOgMeta } from '$lib/utils/seo-meta';
 
   const { data, form } = $props();
 
@@ -17,6 +18,19 @@
     return Math.min(100, Math.max(0, Math.round(value)));
   });
   const isSveditHero = $derived(heroPage?.editor_mode === 'svedit');
+  const heroMeta = $derived.by(() => {
+    if (!showHero || !heroPage) return null;
+
+    return resolveSeoOgMeta({
+      entityTitle: heroPage.title,
+      seoTitle: heroPage.seo_title,
+      seoDescription: heroPage.seo_description,
+      ogTitle: heroPage.og_title,
+      ogDescription: heroPage.og_description,
+      ogImagePath: heroPage.og_image_path,
+      fallbackOgImagePath: heroPage.bg_image_url,
+    });
+  });
   const isEditMode = $derived(
     showHero &&
       canEditPublicly &&
@@ -74,18 +88,17 @@
 </script>
 
 <svelte:head>
-  {#if showHero && heroPage}
-    <title>{heroPage.seo_title?.trim() || heroPage.title}</title>
-    <meta
-      property="og:title"
-      content={heroPage.seo_title?.trim() || heroPage.title}
-    />
-    {#if heroPage.seo_description?.trim()}
-      <meta name="description" content={heroPage.seo_description} />
-      <meta property="og:description" content={heroPage.seo_description} />
+  {#if heroMeta}
+    <title>{heroMeta.title}</title>
+    <meta property="og:title" content={heroMeta.ogTitle} />
+    {#if heroMeta.description}
+      <meta name="description" content={heroMeta.description} />
     {/if}
-    {#if heroPage.og_image_path?.trim()}
-      <meta property="og:image" content={heroPage.og_image_path} />
+    {#if heroMeta.ogDescription}
+      <meta property="og:description" content={heroMeta.ogDescription} />
+    {/if}
+    {#if heroMeta.ogImage}
+      <meta property="og:image" content={heroMeta.ogImage} />
     {/if}
   {:else}
     <title>Home</title>

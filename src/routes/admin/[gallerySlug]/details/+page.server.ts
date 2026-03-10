@@ -67,6 +67,9 @@ export const actions: Actions = {
             seo_title: asNullableString(form.get('seo_title')) ?? '',
             seo_description:
               asNullableString(form.get('seo_description')) ?? '',
+            og_title: asNullableString(form.get('og_title')) ?? '',
+            og_description: asNullableString(form.get('og_description')) ?? '',
+            og_image_path: asNullableString(form.get('og_image_path')) ?? '',
           },
         });
       }
@@ -83,6 +86,9 @@ export const actions: Actions = {
             seo_title: asNullableString(form.get('seo_title')) ?? '',
             seo_description:
               asNullableString(form.get('seo_description')) ?? '',
+            og_title: asNullableString(form.get('og_title')) ?? '',
+            og_description: asNullableString(form.get('og_description')) ?? '',
+            og_image_path: asNullableString(form.get('og_image_path')) ?? '',
           },
         });
       }
@@ -115,6 +121,9 @@ export const actions: Actions = {
         description: asNullableString(form.get('description')),
         seoTitle: asNullableString(form.get('seo_title')),
         seoDescription: asNullableString(form.get('seo_description')),
+        ogTitle: asNullableString(form.get('og_title')),
+        ogDescription: asNullableString(form.get('og_description')),
+        ogImagePath: asNullableString(form.get('og_image_path')),
         navOrder: gallery.nav_order,
         visibilityStatus: parseGalleryVisibilityStatus(
           form.get('visibility_status'),

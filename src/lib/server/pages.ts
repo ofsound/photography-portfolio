@@ -14,6 +14,8 @@ type CmsPage = {
   hero_vertical_alignment_pct: number;
   seo_title: string | null;
   seo_description: string | null;
+  og_title: string | null;
+  og_description: string | null;
   og_image_path: string | null;
   bg_image_url: string | null;
   html_content: string;
@@ -34,6 +36,8 @@ const toCmsPage = (data: {
   hero_vertical_alignment_pct: number | null;
   seo_title: string | null;
   seo_description: string | null;
+  og_title: string | null;
+  og_description: string | null;
   og_image_path: string | null;
   bg_image_id: string | null;
   html_content: string | null;
@@ -64,6 +68,8 @@ const toCmsPage = (data: {
     max_width_override_px: data.max_width_override_px,
     seo_title: data.seo_title,
     seo_description: data.seo_description,
+    og_title: data.og_title,
+    og_description: data.og_description,
     og_image_path: data.og_image_path,
     kind: data.kind,
     visibility_status: data.visibility_status,
@@ -92,7 +98,7 @@ export const loadPageBySlug = async (locals: App.Locals, slug: string) => {
   const pageWithSvedit = await locals.supabase
     .from('pages')
     .select(
-      'id, slug, title, max_width_override_px, hero_vertical_alignment_pct, seo_title, seo_description, og_image_path, bg_image_id, html_content, css_module, tailwind_css, editor_mode, svedit_doc, svedit_schema_version, kind, visibility_status, background_image:bg_image_id(delivery_storage_path)',
+      'id, slug, title, max_width_override_px, hero_vertical_alignment_pct, seo_title, seo_description, og_title, og_description, og_image_path, bg_image_id, html_content, css_module, tailwind_css, editor_mode, svedit_doc, svedit_schema_version, kind, visibility_status, background_image:bg_image_id(delivery_storage_path)',
     )
     .eq('slug', slug)
     .is('deleted_at', null)
@@ -126,7 +132,7 @@ export const loadHomePage = async (locals: App.Locals) => {
   const homeResult = await locals.supabase
     .from('pages')
     .select(
-      'id, slug, title, max_width_override_px, hero_vertical_alignment_pct, seo_title, seo_description, og_image_path, bg_image_id, html_content, css_module, tailwind_css, editor_mode, svedit_doc, svedit_schema_version, kind, visibility_status, background_image:bg_image_id(delivery_storage_path)',
+      'id, slug, title, max_width_override_px, hero_vertical_alignment_pct, seo_title, seo_description, og_title, og_description, og_image_path, bg_image_id, html_content, css_module, tailwind_css, editor_mode, svedit_doc, svedit_schema_version, kind, visibility_status, background_image:bg_image_id(delivery_storage_path)',
     )
     .eq('kind', 'home')
     .is('deleted_at', null)

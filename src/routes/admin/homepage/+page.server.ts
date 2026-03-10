@@ -30,7 +30,7 @@ import type { Database } from '$lib/types/database';
 import type { PageServerLoad } from './$types';
 
 const PAGE_SELECT =
-  'id, slug, title, kind, html_content, css_module, tailwind_css, editor_mode, svedit_doc, svedit_schema_version, hero_vertical_alignment_pct, seo_title, seo_description, og_image_path, visibility_status, nav_order, deleted_at, updated_at';
+  'id, slug, title, kind, html_content, css_module, tailwind_css, editor_mode, svedit_doc, svedit_schema_version, hero_vertical_alignment_pct, seo_title, seo_description, og_title, og_description, og_image_path, visibility_status, nav_order, deleted_at, updated_at';
 const HOME_PAGE_SLUG = 'home';
 const DEFAULT_HOME_PAGE_TITLE = 'Homepage Hero';
 const HERO_VERTICAL_ALIGNMENT_MIN_PCT = 0;
@@ -88,6 +88,8 @@ const ensureHomePageRecord = async (locals: App.Locals) => {
       hero_vertical_alignment_pct: HERO_VERTICAL_ALIGNMENT_DEFAULT_PCT,
       seo_title: null,
       seo_description: null,
+      og_title: null,
+      og_description: null,
       og_image_path: null,
       visibility_status: 'draft',
       nav_order: 0,
@@ -521,6 +523,10 @@ export const actions: Actions = {
         seo_title: snapshot.seo_title ? String(snapshot.seo_title) : null,
         seo_description: snapshot.seo_description
           ? String(snapshot.seo_description)
+          : null,
+        og_title: snapshot.og_title ? String(snapshot.og_title) : null,
+        og_description: snapshot.og_description
+          ? String(snapshot.og_description)
           : null,
         og_image_path: snapshot.og_image_path
           ? String(snapshot.og_image_path)

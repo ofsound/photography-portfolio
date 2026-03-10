@@ -6,6 +6,7 @@
 
   import AdminButton from '$lib/components/admin/AdminButton.svelte';
   import AdminHeading from '$lib/components/admin/AdminHeading.svelte';
+  import AdminSeoSocialDrawer from '$lib/components/admin/AdminSeoSocialDrawer.svelte';
   import AdminPhotoCardCompact from '$lib/components/admin/photos/AdminPhotoCardCompact.svelte';
   import AdminPhotoImageManager from '$lib/components/admin/photos/AdminPhotoImageManager.svelte';
   import AdminPhotoMetadataForm from '$lib/components/admin/photos/AdminPhotoMetadataForm.svelte';
@@ -81,6 +82,8 @@
         captureDate: p.capture_date ?? '',
         dimensions: p.dimensions ?? '',
         licenseText: p.license_text ?? '',
+        seoTitle: p.seo_title ?? '',
+        seoDescription: p.seo_description ?? '',
         ogTitle: p.og_title ?? '',
         ogDescription: p.og_description ?? '',
         ogImagePath: p.og_image_path ?? '',
@@ -143,6 +146,12 @@
     }
     if (typeof activeValues.license_text === 'string') {
       form.licenseText = activeValues.license_text;
+    }
+    if (typeof activeValues.seo_title === 'string') {
+      form.seoTitle = activeValues.seo_title;
+    }
+    if (typeof activeValues.seo_description === 'string') {
+      form.seoDescription = activeValues.seo_description;
     }
     if (typeof activeValues.og_title === 'string') {
       form.ogTitle = activeValues.og_title;
@@ -328,37 +337,17 @@
                     form="photo-update-form-{photoFormId}"
                   />
                 </FormField>
-                <FormField label="OG title" id="edit-og_title-{photoFormId}">
-                  <FormInput
-                    id="edit-og_title-{photoFormId}"
-                    name="og_title"
-                    bind:value={form.ogTitle}
-                    form="photo-update-form-{photoFormId}"
-                  />
-                </FormField>
-                <FormField
-                  label="OG description"
-                  id="edit-og_description-{photoFormId}"
-                >
-                  <FormTextarea
-                    id="edit-og_description-{photoFormId}"
-                    name="og_description"
-                    bind:value={form.ogDescription}
-                    rows={2}
-                    form="photo-update-form-{photoFormId}"
-                  />
-                </FormField>
-                <FormField
-                  label="OG image path"
-                  id="edit-og_image_path-{photoFormId}"
-                >
-                  <FormInput
-                    id="edit-og_image_path-{photoFormId}"
-                    name="og_image_path"
-                    bind:value={form.ogImagePath}
-                    form="photo-update-form-{photoFormId}"
-                  />
-                </FormField>
+                <AdminSeoSocialDrawer
+                  idPrefix="photo-{photoFormId}"
+                  storageKey="admin-seo-social:photo-editor"
+                  fieldErrors={activeFieldErrors}
+                  form="photo-update-form-{photoFormId}"
+                  bind:seoTitle={form.seoTitle}
+                  bind:seoDescription={form.seoDescription}
+                  bind:ogTitle={form.ogTitle}
+                  bind:ogDescription={form.ogDescription}
+                  bind:ogImagePath={form.ogImagePath}
+                />
               </div>
             </div>
           </div>

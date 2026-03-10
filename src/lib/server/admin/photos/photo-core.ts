@@ -50,6 +50,8 @@ export async function createMinimalDraftPhoto(
         description: null,
         dimensions: null,
         license_text: null,
+        seo_title: null,
+        seo_description: null,
         og_title: null,
         og_description: null,
         og_image_path: null,
@@ -83,6 +85,8 @@ type PhotoPayload = {
   description: string | null;
   dimensions: string | null;
   license_text: string | null;
+  seo_title: string | null;
+  seo_description: string | null;
   og_title: string | null;
   og_description: string | null;
   og_image_path: string | null;
@@ -107,6 +111,8 @@ const upsertPhotoPayload = (
     description: asString(form.get('description')).trim(),
     dimensions: asString(form.get('dimensions')).trim(),
     license_text: asString(form.get('license_text')).trim(),
+    seo_title: asString(form.get('seo_title')).trim(),
+    seo_description: asString(form.get('seo_description')).trim(),
     og_title: asString(form.get('og_title')).trim(),
     og_description: asString(form.get('og_description')).trim(),
     og_image_path: asString(form.get('og_image_path')).trim(),
@@ -130,6 +136,8 @@ const upsertPhotoPayload = (
       description: asString(form.get('description')).trim() || null,
       dimensions: asString(form.get('dimensions')).trim() || null,
       license_text: asString(form.get('license_text')).trim() || null,
+      seo_title: asString(form.get('seo_title')).trim() || null,
+      seo_description: asString(form.get('seo_description')).trim() || null,
       og_title: asString(form.get('og_title')).trim() || null,
       og_description: asString(form.get('og_description')).trim() || null,
       og_image_path: asString(form.get('og_image_path')).trim() || null,

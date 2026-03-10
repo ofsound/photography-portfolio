@@ -121,6 +121,9 @@ export type Database = {
           id: string;
           name: string;
           nav_order: number;
+          og_description: string | null;
+          og_image_path: string | null;
+          og_title: string | null;
           seo_description: string | null;
           seo_title: string | null;
           slug: string;
@@ -135,6 +138,9 @@ export type Database = {
           id?: string;
           name: string;
           nav_order?: number;
+          og_description?: string | null;
+          og_image_path?: string | null;
+          og_title?: string | null;
           seo_description?: string | null;
           seo_title?: string | null;
           slug: string;
@@ -149,6 +155,9 @@ export type Database = {
           id?: string;
           name?: string;
           nav_order?: number;
+          og_description?: string | null;
+          og_image_path?: string | null;
+          og_title?: string | null;
           seo_description?: string | null;
           seo_title?: string | null;
           slug?: string;
@@ -319,7 +328,9 @@ export type Database = {
           kind: Database['public']['Enums']['page_kind'];
           max_width_override_px: number | null;
           nav_order: number;
+          og_description: string | null;
           og_image_path: string | null;
+          og_title: string | null;
           seo_description: string | null;
           seo_title: string | null;
           slug: string;
@@ -344,7 +355,9 @@ export type Database = {
           kind: Database['public']['Enums']['page_kind'];
           max_width_override_px?: number | null;
           nav_order?: number;
+          og_description?: string | null;
           og_image_path?: string | null;
+          og_title?: string | null;
           seo_description?: string | null;
           seo_title?: string | null;
           slug: string;
@@ -369,7 +382,9 @@ export type Database = {
           kind?: Database['public']['Enums']['page_kind'];
           max_width_override_px?: number | null;
           nav_order?: number;
+          og_description?: string | null;
           og_image_path?: string | null;
+          og_title?: string | null;
           seo_description?: string | null;
           seo_title?: string | null;
           slug?: string;
@@ -558,6 +573,8 @@ export type Database = {
           og_description: string | null;
           og_image_path: string | null;
           og_title: string | null;
+          seo_description: string | null;
+          seo_title: string | null;
           search_document: string;
           search_tsv: unknown;
           slug: string;
@@ -580,6 +597,8 @@ export type Database = {
           og_description?: string | null;
           og_image_path?: string | null;
           og_title?: string | null;
+          seo_description?: string | null;
+          seo_title?: string | null;
           search_document?: string;
           search_tsv?: unknown;
           slug: string;
@@ -602,6 +621,8 @@ export type Database = {
           og_description?: string | null;
           og_image_path?: string | null;
           og_title?: string | null;
+          seo_description?: string | null;
+          seo_title?: string | null;
           search_document?: string;
           search_tsv?: unknown;
           slug?: string;

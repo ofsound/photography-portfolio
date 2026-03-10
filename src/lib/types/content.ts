@@ -40,6 +40,8 @@ export type AdminPhoto = {
   description: string | null;
   dimensions: string | null;
   license_text: string | null;
+  seo_title: string | null;
+  seo_description: string | null;
   og_title: string | null;
   og_description: string | null;
   og_image_path: string | null;
@@ -85,6 +87,11 @@ export type GalleryPhoto = {
   slug: string;
   title: string;
   description: string | null;
+  seo_title: string | null;
+  seo_description: string | null;
+  og_title: string | null;
+  og_description: string | null;
+  og_image_path: string | null;
   capture_date: string | null;
   thumb: string | null;
   thumbAlt: string;

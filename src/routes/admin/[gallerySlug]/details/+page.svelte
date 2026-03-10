@@ -2,6 +2,7 @@
   import AdminButton from '$lib/components/admin/AdminButton.svelte';
   import AdminGalleryNav from '$lib/components/admin/AdminGalleryNav.svelte';
   import AdminHeading from '$lib/components/admin/AdminHeading.svelte';
+  import AdminSeoSocialDrawer from '$lib/components/admin/AdminSeoSocialDrawer.svelte';
   import AdminToastEmitter from '$lib/components/admin/AdminToastEmitter.svelte';
   import GallerySettingsFormFields from '$lib/components/admin/GallerySettingsFormFields.svelte';
   import FormField from '$lib/components/FormField.svelte';
@@ -28,18 +29,30 @@
 
   const settings = $derived(data.settings ?? GALLERY_SETTINGS_DEFAULTS);
   const isAdmin = $derived(data.role === 'admin');
-  let visibilityStatus = $state<GalleryVisibilityStatus>('public');
   const fieldErrors = $derived(typedForm?.fieldErrors ?? {});
   const values = $derived(typedForm?.values ?? {});
-
-  $effect(() => {
+  const isGalleryVisibilityStatus = (
+    value: unknown,
+  ): value is GalleryVisibilityStatus =>
+    value === 'public' || value === 'unlisted' || value === 'archived';
+  const selectedVisibilityStatus = $derived.by(() => {
     const next = values.visibility_status;
-    if (next === 'public' || next === 'unlisted' || next === 'archived') {
-      visibilityStatus = next;
-      return;
-    }
-    visibilityStatus = data.gallery.visibility_status;
+    if (isGalleryVisibilityStatus(next)) return next;
+    return data.gallery.visibility_status;
   });
+  const seoTitleValue = $derived(
+    values.seo_title ?? data.gallery.seo_title ?? '',
+  );
+  const seoDescriptionValue = $derived(
+    values.seo_description ?? data.gallery.seo_description ?? '',
+  );
+  const ogTitleValue = $derived(values.og_title ?? data.gallery.og_title ?? '');
+  const ogDescriptionValue = $derived(
+    values.og_description ?? data.gallery.og_description ?? '',
+  );
+  const ogImagePathValue = $derived(
+    values.og_image_path ?? data.gallery.og_image_path ?? '',
+  );
 </script>
 
 <AdminGalleryNav
@@ -90,23 +103,18 @@
           readonly={!isAdmin}
         />
       </FormField>
-      <FormField label="SEO Title" id="details-seo-title">
-        <FormInput
-          id="details-seo-title"
-          name="seo_title"
-          value={values.seo_title ?? data.gallery.seo_title ?? ''}
-          readonly={!isAdmin}
-        />
-      </FormField>
-      <FormField label="SEO Description" id="details-seo-description">
-        <FormTextarea
-          id="details-seo-description"
-          name="seo_description"
-          rows={2}
-          value={values.seo_description ?? data.gallery.seo_description ?? ''}
-          readonly={!isAdmin}
-        />
-      </FormField>
+
+      <AdminSeoSocialDrawer
+        idPrefix="details"
+        storageKey="admin-seo-social:gallery-details"
+        {fieldErrors}
+        readonly={!isAdmin}
+        seoTitle={seoTitleValue}
+        seoDescription={seoDescriptionValue}
+        ogTitle={ogTitleValue}
+        ogDescription={ogDescriptionValue}
+        ogImagePath={ogImagePathValue}
+      />
     </div>
 
     <div class="grid min-w-0 gap-2 sm:flex-1">
@@ -119,8 +127,8 @@
               <input
                 type="radio"
                 name="visibility_status"
-                bind:group={visibilityStatus}
                 value={option.value}
+                checked={selectedVisibilityStatus === option.value}
                 disabled={!isAdmin}
                 class="mt-1"
               />

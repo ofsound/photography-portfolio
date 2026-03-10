@@ -52,7 +52,7 @@ export const loadAdminPhotosPage = async ({
   let photoQuery = locals.supabase
     .from('photos')
     .select(
-      'id, gallery_id, slug, title, capture_date, description, dimensions, license_text, og_title, og_description, og_image_path, status, deleted_at, updated_at, gallery_sort_order, galleries!inner(slug, name)',
+      'id, gallery_id, slug, title, capture_date, description, dimensions, license_text, seo_title, seo_description, og_title, og_description, og_image_path, status, deleted_at, updated_at, gallery_sort_order, galleries!inner(slug, name)',
     )
     .limit(160);
 

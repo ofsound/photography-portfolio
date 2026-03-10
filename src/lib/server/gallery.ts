@@ -46,6 +46,11 @@ type PhotoListRow = {
   slug: string;
   title: string;
   description: string | null;
+  seo_title: string | null;
+  seo_description: string | null;
+  og_title: string | null;
+  og_description: string | null;
+  og_image_path: string | null;
   capture_date: string | null;
   photo_images: ImageRow[] | null;
   galleries: GalleryRelation | GalleryRelation[] | null;
@@ -102,6 +107,12 @@ type ResolvedGalleryScope =
   | (BaseScope & {
       kind: 'gallery';
       id: string;
+      description: string | null;
+      seoTitle: string | null;
+      seoDescription: string | null;
+      ogTitle: string | null;
+      ogDescription: string | null;
+      ogImagePath: string | null;
       navOrder: number;
       visibilityStatus: GalleryVisibilityStatus;
     })
@@ -143,7 +154,7 @@ const gallerySettingsSelect = [
 ].join(', ');
 
 const photoListSelect =
-  'id, gallery_id, slug, title, description, capture_date, galleries(slug, visibility_status), photo_images(id, kind, position, delivery_storage_path, alt_text, dimensions, thumb_crop_x, thumb_crop_y, thumb_crop_zoom)';
+  'id, gallery_id, slug, title, description, seo_title, seo_description, og_title, og_description, og_image_path, capture_date, galleries(slug, visibility_status), photo_images(id, kind, position, delivery_storage_path, alt_text, dimensions, thumb_crop_x, thumb_crop_y, thumb_crop_zoom)';
 
 const readGalleryRelation = (
   value: GalleryRelation | GalleryRelation[] | null | undefined,
@@ -189,6 +200,11 @@ const mapPhotoRows = (rows: PhotoListRow[], fallbackGallerySlug: string) =>
       slug: photo.slug,
       title: photo.title,
       description: photo.description,
+      seo_title: photo.seo_title,
+      seo_description: photo.seo_description,
+      og_title: photo.og_title,
+      og_description: photo.og_description,
+      og_image_path: photo.og_image_path,
       capture_date: photo.capture_date,
       thumb: lead?.delivery_storage_path
         ? photoPublicUrl(
@@ -227,7 +243,9 @@ export const resolveGalleryScope = async (
 
   const galleryQuery = await locals.supabase
     .from('galleries')
-    .select('id, slug, name, nav_order, visibility_status')
+    .select(
+      'id, slug, name, description, seo_title, seo_description, og_title, og_description, og_image_path, nav_order, visibility_status',
+    )
     .eq('slug', slug)
     .maybeSingle();
 
@@ -245,7 +263,17 @@ export const resolveGalleryScope = async (
   if (galleryQuery.data) {
     const gallery = galleryQuery.data as Pick<
       GalleryRow,
-      'id' | 'slug' | 'name' | 'nav_order' | 'visibility_status'
+      | 'id'
+      | 'slug'
+      | 'name'
+      | 'description'
+      | 'seo_title'
+      | 'seo_description'
+      | 'og_title'
+      | 'og_description'
+      | 'og_image_path'
+      | 'nav_order'
+      | 'visibility_status'
     >;
     if (gallery.visibility_status === 'archived') {
       return { kind: 'none' };
@@ -257,6 +285,12 @@ export const resolveGalleryScope = async (
         id: gallery.id,
         slug: gallery.slug,
         name: gallery.name,
+        description: gallery.description,
+        seoTitle: gallery.seo_title,
+        seoDescription: gallery.seo_description,
+        ogTitle: gallery.og_title,
+        ogDescription: gallery.og_description,
+        ogImagePath: gallery.og_image_path,
         navOrder: gallery.nav_order,
         visibilityStatus: gallery.visibility_status,
       },

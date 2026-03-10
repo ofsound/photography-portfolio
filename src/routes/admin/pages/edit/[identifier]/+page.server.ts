@@ -21,7 +21,7 @@ import type { HomepageImage } from '$lib/types/content';
 import type { PageServerLoad } from './$types';
 
 const PAGE_SELECT =
-  'id, slug, title, kind, html_content, css_module, tailwind_css, editor_mode, svedit_doc, svedit_schema_version, seo_title, seo_description, og_image_path, bg_image_id, max_width_override_px, visibility_status, nav_order, deleted_at, updated_at';
+  'id, slug, title, kind, html_content, css_module, tailwind_css, editor_mode, svedit_doc, svedit_schema_version, seo_title, seo_description, og_title, og_description, og_image_path, bg_image_id, max_width_override_px, visibility_status, nav_order, deleted_at, updated_at';
 const UUID_REGEX =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 type PageRow = Database['public']['Tables']['pages']['Row'];
@@ -170,6 +170,8 @@ export const actions: Actions = {
           editor_mode: asString(form.get('editor_mode')).trim(),
           seo_title: asString(form.get('seo_title')).trim(),
           seo_description: asString(form.get('seo_description')).trim(),
+          og_title: asString(form.get('og_title')).trim(),
+          og_description: asString(form.get('og_description')).trim(),
           og_image_path: asString(form.get('og_image_path')).trim(),
           bg_image_id: asString(form.get('bg_image_id')).trim(),
           max_width_override_px: asString(
@@ -302,6 +304,10 @@ export const actions: Actions = {
       seo_title: snapshot.seo_title ? String(snapshot.seo_title) : null,
       seo_description: snapshot.seo_description
         ? String(snapshot.seo_description)
+        : null,
+      og_title: snapshot.og_title ? String(snapshot.og_title) : null,
+      og_description: snapshot.og_description
+        ? String(snapshot.og_description)
         : null,
       og_image_path: snapshot.og_image_path
         ? String(snapshot.og_image_path)

@@ -13,12 +13,15 @@ type GalleryRow = {
   description: string | null;
   seo_title: string | null;
   seo_description: string | null;
+  og_title: string | null;
+  og_description: string | null;
+  og_image_path: string | null;
   nav_order: number;
   visibility_status: GalleryVisibilityStatus;
 };
 
 const GALLERY_SELECT =
-  'id, slug, name, description, seo_title, seo_description, nav_order, visibility_status';
+  'id, slug, name, description, seo_title, seo_description, og_title, og_description, og_image_path, nav_order, visibility_status';
 
 const isGalleryVisibilityStatus = (
   value: string,
@@ -209,6 +212,9 @@ export const createGalleryWithAutoSlug = async (
     description?: string | null;
     seoTitle?: string | null;
     seoDescription?: string | null;
+    ogTitle?: string | null;
+    ogDescription?: string | null;
+    ogImagePath?: string | null;
     navOrder?: number;
     visibilityStatus?: GalleryVisibilityStatus;
   },
@@ -225,6 +231,9 @@ export const createGalleryWithAutoSlug = async (
       description: payload.description ?? null,
       seo_title: payload.seoTitle ?? null,
       seo_description: payload.seoDescription ?? null,
+      og_title: payload.ogTitle ?? null,
+      og_description: payload.ogDescription ?? null,
+      og_image_path: payload.ogImagePath ?? null,
       nav_order: payload.navOrder ?? 0,
       visibility_status: payload.visibilityStatus ?? 'public',
     })
@@ -251,6 +260,9 @@ export const updateGalleryWithAutoSlug = async (
     description?: string | null;
     seoTitle?: string | null;
     seoDescription?: string | null;
+    ogTitle?: string | null;
+    ogDescription?: string | null;
+    ogImagePath?: string | null;
     navOrder?: number;
     visibilityStatus?: GalleryVisibilityStatus;
   },
@@ -270,6 +282,9 @@ export const updateGalleryWithAutoSlug = async (
       description: payload.description ?? null,
       seo_title: payload.seoTitle ?? null,
       seo_description: payload.seoDescription ?? null,
+      og_title: payload.ogTitle ?? null,
+      og_description: payload.ogDescription ?? null,
+      og_image_path: payload.ogImagePath ?? null,
       nav_order: payload.navOrder ?? 0,
       visibility_status: payload.visibilityStatus ?? 'public',
     })

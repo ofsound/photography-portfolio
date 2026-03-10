@@ -8,6 +8,7 @@
   import AdminButton from '$lib/components/admin/AdminButton.svelte';
   import AdminHeading from '$lib/components/admin/AdminHeading.svelte';
   import AdminCreateListLayout from '$lib/components/admin/AdminCreateListLayout.svelte';
+  import AdminSeoSocialDrawer from '$lib/components/admin/AdminSeoSocialDrawer.svelte';
   import AdminSegmentedToggle from '$lib/components/admin/AdminSegmentedToggle.svelte';
   import AdminToastEmitter from '$lib/components/admin/AdminToastEmitter.svelte';
   import FormField from '$lib/components/FormField.svelte';
@@ -41,6 +42,8 @@
     hero_vertical_alignment_pct: number;
     seo_title: string | null;
     seo_description: string | null;
+    og_title: string | null;
+    og_description: string | null;
     og_image_path: string | null;
     visibility_status: 'public' | 'unlisted' | 'draft';
   };
@@ -88,6 +91,8 @@
   let heroVerticalAlignmentPct = $state(50);
   let heroSeoTitle = $state('');
   let heroSeoDescription = $state('');
+  let heroOgTitle = $state('');
+  let heroOgDescription = $state('');
   let heroOgImagePath = $state('');
   let heroEditorSeed = $state(0);
   let heroLoadedStateKey = $state<string | null>(null);
@@ -147,6 +152,8 @@
     );
     heroSeoTitle = currentHomePage.seo_title ?? '';
     heroSeoDescription = currentHomePage.seo_description ?? '';
+    heroOgTitle = currentHomePage.og_title ?? '';
+    heroOgDescription = currentHomePage.og_description ?? '';
     heroOgImagePath = currentHomePage.og_image_path ?? '';
     showRawSveditJson = false;
     rawSveditJsonError = null;
@@ -181,6 +188,12 @@
     if (typeof values.seo_title === 'string') heroSeoTitle = values.seo_title;
     if (typeof values.seo_description === 'string') {
       heroSeoDescription = values.seo_description;
+    }
+    if (typeof values.og_title === 'string') {
+      heroOgTitle = values.og_title;
+    }
+    if (typeof values.og_description === 'string') {
+      heroOgDescription = values.og_description;
     }
     if (typeof values.og_image_path === 'string') {
       heroOgImagePath = values.og_image_path;
@@ -354,31 +367,16 @@
         </div>
       </FormField>
 
-      <div class="grid gap-3 sm:grid-cols-2">
-        <FormField label="SEO title" id="homepage-hero-seo_title">
-          <FormInput
-            id="homepage-hero-seo_title"
-            name="seo_title"
-            bind:value={heroSeoTitle}
-          />
-        </FormField>
-        <FormField label="SEO description" id="homepage-hero-seo_description">
-          <FormTextarea
-            id="homepage-hero-seo_description"
-            name="seo_description"
-            bind:value={heroSeoDescription}
-            rows={2}
-          />
-        </FormField>
-      </div>
-
-      <FormField label="OG image path" id="homepage-hero-og_image_path">
-        <FormInput
-          id="homepage-hero-og_image_path"
-          name="og_image_path"
-          bind:value={heroOgImagePath}
-        />
-      </FormField>
+      <AdminSeoSocialDrawer
+        idPrefix="homepage-hero"
+        storageKey="admin-seo-social:homepage-hero"
+        fieldErrors={heroFieldErrors}
+        bind:seoTitle={heroSeoTitle}
+        bind:seoDescription={heroSeoDescription}
+        bind:ogTitle={heroOgTitle}
+        bind:ogDescription={heroOgDescription}
+        bind:ogImagePath={heroOgImagePath}
+      />
 
       {#if heroEditorMode === 'code'}
         {#key heroEditorSeed}

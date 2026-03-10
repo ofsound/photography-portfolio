@@ -7,6 +7,7 @@
   import AdminCard from '$lib/components/admin/AdminCard.svelte';
   import AdminButton from '$lib/components/admin/AdminButton.svelte';
   import AdminHeading from '$lib/components/admin/AdminHeading.svelte';
+  import AdminSeoSocialDrawer from '$lib/components/admin/AdminSeoSocialDrawer.svelte';
   import AdminToastEmitter from '$lib/components/admin/AdminToastEmitter.svelte';
   import FormField from '$lib/components/FormField.svelte';
   import FormInput from '$lib/components/FormInput.svelte';
@@ -52,6 +53,8 @@
       : '',
   );
   let formSeoDescription = $state(initialPage().seo_description ?? '');
+  let formOgTitle = $state(initialPage().og_title ?? '');
+  let formOgDescription = $state(initialPage().og_description ?? '');
   let formOgImagePath = $state(initialPage().og_image_path ?? '');
   let formMaxWidthOverride = $state(
     initialPage().max_width_override_px != null
@@ -78,6 +81,12 @@
     if (typeof values.seo_title === 'string') formSeoTitle = values.seo_title;
     if (typeof values.seo_description === 'string') {
       formSeoDescription = values.seo_description;
+    }
+    if (typeof values.og_title === 'string') {
+      formOgTitle = values.og_title;
+    }
+    if (typeof values.og_description === 'string') {
+      formOgDescription = values.og_description;
     }
     if (typeof values.og_image_path === 'string') {
       formOgImagePath = values.og_image_path;
@@ -197,30 +206,16 @@
     </FormField>
   </div>
 
-  <div class="grid gap-3 sm:grid-cols-2">
-    <FormField label="SEO title" id="page-edit-seo_title">
-      <FormInput
-        id="page-edit-seo_title"
-        name="seo_title"
-        bind:value={formSeoTitle}
-      />
-    </FormField>
-    <FormField label="SEO description" id="page-edit-seo_description">
-      <FormTextarea
-        id="page-edit-seo_description"
-        name="seo_description"
-        bind:value={formSeoDescription}
-        rows={2}
-      />
-    </FormField>
-  </div>
-  <FormField label="OG image path" id="page-edit-og_image_path">
-    <FormInput
-      id="page-edit-og_image_path"
-      name="og_image_path"
-      bind:value={formOgImagePath}
-    />
-  </FormField>
+  <AdminSeoSocialDrawer
+    idPrefix="page-edit"
+    storageKey="admin-seo-social:pages-edit"
+    {fieldErrors}
+    bind:seoTitle={formSeoTitle}
+    bind:seoDescription={formSeoDescription}
+    bind:ogTitle={formOgTitle}
+    bind:ogDescription={formOgDescription}
+    bind:ogImagePath={formOgImagePath}
+  />
   <FormField
     label="Max Width Override (px)"
     id="page-edit-max_width_override_px"

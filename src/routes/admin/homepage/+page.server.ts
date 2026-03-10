@@ -38,6 +38,15 @@ const HERO_VERTICAL_ALIGNMENT_MAX_PCT = 100;
 const HERO_VERTICAL_ALIGNMENT_DEFAULT_PCT = 50;
 
 type HomePageRow = Database['public']['Tables']['pages']['Row'];
+type ContentRevisionSummary = Pick<
+  Database['public']['Tables']['content_revisions']['Row'],
+  | 'id'
+  | 'entity_type'
+  | 'entity_pk'
+  | 'version_no'
+  | 'changed_at'
+  | 'changed_by'
+>;
 
 type HomepageSection = 'slides' | 'hero';
 
@@ -303,16 +312,12 @@ export const load: PageServerLoad = async ({ locals, url }) => {
     homePage = await ensureHomePageRecord(locals);
   }
 
-  let revisions: Array<
-    Database['public']['Tables']['content_revisions']['Row']
-  > = [];
+  let revisions: ContentRevisionSummary[] = [];
 
   if (homePage) {
     const revisionsQuery = await locals.supabase
       .from('content_revisions')
-      .select(
-        'id, entity_type, entity_pk, version_no, changed_at, changed_by, snapshot, reason',
-      )
+      .select('id, entity_type, entity_pk, version_no, changed_at, changed_by')
       .eq('entity_type', 'page')
       .eq('entity_pk', String(homePage.id))
       .order('changed_at', { ascending: false })

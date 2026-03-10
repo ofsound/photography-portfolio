@@ -77,7 +77,7 @@ export type ContentRevision = {
   version_no: number;
   changed_at: string;
   changed_by: string | null;
-  snapshot: Record<string, unknown>;
+  snapshot?: Record<string, unknown>;
 };
 
 export type GalleryPhoto = {

@@ -81,9 +81,7 @@ export const load: PageServerLoad = async ({ locals, params, url }) => {
   const [revisionsQuery, imagesQuery] = await Promise.all([
     locals.supabase
       .from('content_revisions')
-      .select(
-        'id, entity_type, entity_pk, version_no, changed_at, changed_by, snapshot',
-      )
+      .select('id, entity_type, entity_pk, version_no, changed_at, changed_by')
       .eq('entity_type', 'page')
       .eq('entity_pk', String(page.id))
       .order('changed_at', { ascending: false })

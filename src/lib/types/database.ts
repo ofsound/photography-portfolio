@@ -682,6 +682,8 @@ export type Database = {
       };
       site_settings: {
         Row: {
+          admin_font_family: string;
+          admin_font_import_url: string;
           allow_transition_toggle: boolean;
           created_at: string;
           gallery_gap_px: number;
@@ -691,6 +693,8 @@ export type Database = {
           homepage_slide_duration_ms: number;
           homepage_transition_duration_ms: number;
           max_content_width_px: number | null;
+          public_font_family: string;
+          public_font_import_url: string;
           show_photograph_info: boolean;
           show_thumbnail_zoom_hover: boolean;
           singleton_id: number;
@@ -701,6 +705,8 @@ export type Database = {
           updated_by: string | null;
         };
         Insert: {
+          admin_font_family?: string;
+          admin_font_import_url?: string;
           allow_transition_toggle?: boolean;
           created_at?: string;
           gallery_gap_px?: number;
@@ -710,6 +716,8 @@ export type Database = {
           homepage_slide_duration_ms?: number;
           homepage_transition_duration_ms?: number;
           max_content_width_px?: number | null;
+          public_font_family?: string;
+          public_font_import_url?: string;
           show_photograph_info?: boolean;
           show_thumbnail_zoom_hover?: boolean;
           singleton_id?: number;
@@ -720,6 +728,8 @@ export type Database = {
           updated_by?: string | null;
         };
         Update: {
+          admin_font_family?: string;
+          admin_font_import_url?: string;
           allow_transition_toggle?: boolean;
           created_at?: string;
           gallery_gap_px?: number;
@@ -729,6 +739,8 @@ export type Database = {
           homepage_slide_duration_ms?: number;
           homepage_transition_duration_ms?: number;
           max_content_width_px?: number | null;
+          public_font_family?: string;
+          public_font_import_url?: string;
           show_photograph_info?: boolean;
           show_thumbnail_zoom_hover?: boolean;
           singleton_id?: number;

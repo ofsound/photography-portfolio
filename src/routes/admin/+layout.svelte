@@ -17,6 +17,7 @@
       { href: '/admin/homepage', label: 'Homepage' },
       { href: '/admin/pages', label: 'Pages' },
       { href: '/admin/audit', label: 'Audit' },
+      { href: '/admin/settings', label: 'Settings' },
     ];
 
     if (data.role === 'admin') {
@@ -39,6 +40,12 @@
         /^\/admin\/(?!library\/?$|library\/)([^/]+)\/(?:photos(?:\/.*)?|details(?:\/.*)?)$/.test(
           page.url.pathname,
         )
+      );
+    }
+    if (href === '/admin/settings') {
+      return (
+        page.url.pathname === '/admin/settings' ||
+        page.url.pathname.startsWith('/admin/settings/')
       );
     }
     return page.url.pathname === href;

@@ -24,6 +24,14 @@
     buildGalleryPath,
     isGalleryDetailPath,
   } from '$lib/utils/gallery-routes';
+  import {
+    DEFAULT_ADMIN_FONT_FAMILY,
+    DEFAULT_ADMIN_FONT_IMPORT_URL,
+    DEFAULT_PUBLIC_FONT_FAMILY,
+    DEFAULT_PUBLIC_FONT_IMPORT_URL,
+    normalizeFontFamilyDefinition,
+    normalizeFontImportUrl,
+  } from '$lib/constants/typography-settings';
 
   import type { LayoutData } from './$types';
 
@@ -99,6 +107,34 @@
         }
       : globalSiteSettings,
   );
+  const publicFontImportUrl = $derived(
+    normalizeFontImportUrl(
+      siteSettings?.public_font_import_url,
+      DEFAULT_PUBLIC_FONT_IMPORT_URL,
+    ),
+  );
+  const adminFontImportUrl = $derived(
+    normalizeFontImportUrl(
+      siteSettings?.admin_font_import_url,
+      DEFAULT_ADMIN_FONT_IMPORT_URL,
+    ),
+  );
+  const publicFontFamily = $derived(
+    normalizeFontFamilyDefinition(
+      siteSettings?.public_font_family,
+      DEFAULT_PUBLIC_FONT_FAMILY,
+    ),
+  );
+  const adminFontFamily = $derived(
+    normalizeFontFamilyDefinition(
+      siteSettings?.admin_font_family,
+      DEFAULT_ADMIN_FONT_FAMILY,
+    ),
+  );
+  const fontImportUrls = $derived.by(() => {
+    const unique = new Set([publicFontImportUrl, adminFontImportUrl]);
+    return [...unique];
+  });
   const hasSession = $derived(Boolean(data?.session));
   const pendingConversionCount = $derived(
     (data?.pendingConversionCount as number) ?? 0,
@@ -121,6 +157,18 @@
       galleryDensityStore.set(prefs.density);
       if (prefs.layoutMode) layoutModeStore.set(prefs.layoutMode);
     }
+  });
+
+  $effect(() => {
+    if (typeof document === 'undefined') return;
+    document.documentElement.style.setProperty(
+      '--font-sans-public',
+      publicFontFamily,
+    );
+    document.documentElement.style.setProperty(
+      '--font-sans-admin',
+      adminFontFamily,
+    );
   });
 
   const toUiZoomValue = (density: number) =>
@@ -359,6 +407,12 @@
 
 <svelte:head>
   <meta name="site-theme-default" content={siteThemeDefault} />
+  {#each fontImportUrls as fontImportUrl (fontImportUrl)}
+    <link rel="stylesheet" href={fontImportUrl} />
+  {/each}
+  <style>
+    {`:root { --font-sans-public: ${publicFontFamily} !important; --font-sans-admin: ${adminFontFamily} !important; }`}
+  </style>
 </svelte:head>
 
 <div class="min-h-screen bg-bg text-text">

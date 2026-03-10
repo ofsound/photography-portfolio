@@ -14,6 +14,7 @@
     onTitleInput,
     onSlugInput,
     trailingField,
+    afterDescription,
     fieldErrors = {},
   } = $props<{
     photoFormId: string;
@@ -24,6 +25,7 @@
     onTitleInput?: (event: Event) => void;
     onSlugInput: (event: Event) => void;
     trailingField?: Snippet;
+    afterDescription?: Snippet;
     fieldErrors?: Record<string, string | undefined>;
   }>();
 </script>
@@ -60,6 +62,10 @@
     rows={2}
   />
 </FormField>
+
+{#if afterDescription}
+  {@render afterDescription()}
+{/if}
 
 <div class="grid gap-3 sm:grid-cols-2">
   <FormField label="Date" id="edit-capture_date-{photoFormId}">

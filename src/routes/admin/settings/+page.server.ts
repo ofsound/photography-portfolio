@@ -3,6 +3,10 @@ import { fail, type Actions } from '@sveltejs/kit';
 import { asBoolean, asString, getCmsRole } from '$lib/server/admin-helpers';
 import { throwLoaderError } from '$lib/server/load-error';
 import {
+  isValidHexColor,
+  normalizeBrandColorValues,
+} from '$lib/constants/theme-colors';
+import {
   DEFAULT_ADMIN_FONT_FAMILY,
   DEFAULT_ADMIN_FONT_IMPORT_URL,
   DEFAULT_PUBLIC_FONT_FAMILY,
@@ -16,7 +20,7 @@ import {
 import type { PageServerLoad } from './$types';
 
 const typographySelect =
-  'public_font_import_url, public_font_family, admin_font_import_url, admin_font_family, show_search_link_in_nav';
+  'public_font_import_url, public_font_family, admin_font_import_url, admin_font_family, show_search_link_in_nav, brand_light_hex, brand_dark_hex, brand_contrast_light_hex, brand_contrast_dark_hex';
 
 type TypographyValues = {
   public_font_import_url: string;
@@ -24,6 +28,10 @@ type TypographyValues = {
   admin_font_import_url: string;
   admin_font_family: string;
   show_search_link_in_nav: boolean;
+  brand_light_hex: string;
+  brand_dark_hex: string;
+  brand_contrast_light_hex: string;
+  brand_contrast_dark_hex: string;
 };
 
 const normalizeTypographyValues = (values: Partial<TypographyValues>) => ({
@@ -44,6 +52,7 @@ const normalizeTypographyValues = (values: Partial<TypographyValues>) => ({
     DEFAULT_ADMIN_FONT_FAMILY,
   ),
   show_search_link_in_nav: values.show_search_link_in_nav ?? true,
+  ...normalizeBrandColorValues(values),
 });
 
 const readTypographyFormValues = (form: FormData): TypographyValues => ({
@@ -52,6 +61,12 @@ const readTypographyFormValues = (form: FormData): TypographyValues => ({
   admin_font_import_url: asString(form.get('admin_font_import_url')).trim(),
   admin_font_family: asString(form.get('admin_font_family')).trim(),
   show_search_link_in_nav: asBoolean(form.get('show_search_link_in_nav')),
+  brand_light_hex: asString(form.get('brand_light_hex')).trim(),
+  brand_dark_hex: asString(form.get('brand_dark_hex')).trim(),
+  brand_contrast_light_hex: asString(
+    form.get('brand_contrast_light_hex'),
+  ).trim(),
+  brand_contrast_dark_hex: asString(form.get('brand_contrast_dark_hex')).trim(),
 });
 
 export const load: PageServerLoad = async ({ locals }) => {
@@ -110,22 +125,46 @@ export const actions: Actions = {
         'Invalid font-family value. Avoid CSS control characters.';
     }
 
+    if (!isValidHexColor(values.brand_light_hex)) {
+      fieldErrors.brand_light_hex = 'Must be a valid hex color (#RRGGBB).';
+    }
+
+    if (!isValidHexColor(values.brand_dark_hex)) {
+      fieldErrors.brand_dark_hex = 'Must be a valid hex color (#RRGGBB).';
+    }
+
+    if (!isValidHexColor(values.brand_contrast_light_hex)) {
+      fieldErrors.brand_contrast_light_hex =
+        'Must be a valid hex color (#RRGGBB).';
+    }
+
+    if (!isValidHexColor(values.brand_contrast_dark_hex)) {
+      fieldErrors.brand_contrast_dark_hex =
+        'Must be a valid hex color (#RRGGBB).';
+    }
+
     if (
       fieldErrors.public_font_import_url ||
       fieldErrors.admin_font_import_url ||
       fieldErrors.public_font_family ||
-      fieldErrors.admin_font_family
+      fieldErrors.admin_font_family ||
+      fieldErrors.brand_light_hex ||
+      fieldErrors.brand_dark_hex ||
+      fieldErrors.brand_contrast_light_hex ||
+      fieldErrors.brand_contrast_dark_hex
     ) {
       return fail(400, {
-        message: 'Please fix the highlighted typography fields.',
+        message: 'Please fix the highlighted settings fields.',
         fieldErrors,
         values,
       });
     }
 
+    const updateValues = normalizeTypographyValues(values);
+
     const update = await locals.supabase
       .from('site_settings')
-      .update(values)
+      .update(updateValues)
       .eq('singleton_id', 1);
 
     if (update.error) {

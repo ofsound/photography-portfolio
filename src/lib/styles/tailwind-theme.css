@@ -65,10 +65,14 @@
     color-mix(in srgb, var(--color-text-subtle) 5%, transparent),
     color-mix(in srgb, var(--color-text-subtle) 5%, transparent)
   );
-  --color-brand: light-dark(theme(colors.indigo.600), theme(colors.indigo.300));
+  --color-brand-light: theme(colors.indigo.600);
+  --color-brand-dark: theme(colors.indigo.300);
+  --color-brand-contrast-light: theme(colors.indigo.50);
+  --color-brand-contrast-dark: theme(colors.indigo.950);
+  --color-brand: light-dark(var(--color-brand-light), var(--color-brand-dark));
   --color-brand-contrast: light-dark(
-    theme(colors.indigo.50),
-    theme(colors.indigo.950)
+    var(--color-brand-contrast-light),
+    var(--color-brand-contrast-dark)
   );
   --color-success: light-dark(theme(colors.green.600), theme(colors.green.400));
   --color-success-soft: light-dark(

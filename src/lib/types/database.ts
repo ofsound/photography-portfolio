@@ -685,6 +685,10 @@ export type Database = {
           admin_font_family: string;
           admin_font_import_url: string;
           allow_transition_toggle: boolean;
+          brand_contrast_dark_hex: string;
+          brand_contrast_light_hex: string;
+          brand_dark_hex: string;
+          brand_light_hex: string;
           created_at: string;
           gallery_gap_px: number;
           gallery_layout_mode: Database['public']['Enums']['layout_mode'];
@@ -709,6 +713,10 @@ export type Database = {
           admin_font_family?: string;
           admin_font_import_url?: string;
           allow_transition_toggle?: boolean;
+          brand_contrast_dark_hex?: string;
+          brand_contrast_light_hex?: string;
+          brand_dark_hex?: string;
+          brand_light_hex?: string;
           created_at?: string;
           gallery_gap_px?: number;
           gallery_layout_mode?: Database['public']['Enums']['layout_mode'];
@@ -733,6 +741,10 @@ export type Database = {
           admin_font_family?: string;
           admin_font_import_url?: string;
           allow_transition_toggle?: boolean;
+          brand_contrast_dark_hex?: string;
+          brand_contrast_light_hex?: string;
+          brand_dark_hex?: string;
+          brand_light_hex?: string;
           created_at?: string;
           gallery_gap_px?: number;
           gallery_layout_mode?: Database['public']['Enums']['layout_mode'];

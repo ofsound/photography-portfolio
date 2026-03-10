@@ -25,6 +25,13 @@
     isGalleryDetailPath,
   } from '$lib/utils/gallery-routes';
   import {
+    DEFAULT_BRAND_CONTRAST_DARK_HEX,
+    DEFAULT_BRAND_CONTRAST_LIGHT_HEX,
+    DEFAULT_BRAND_DARK_HEX,
+    DEFAULT_BRAND_LIGHT_HEX,
+    normalizeHexColor,
+  } from '$lib/constants/theme-colors';
+  import {
     DEFAULT_ADMIN_FONT_FAMILY,
     DEFAULT_ADMIN_FONT_IMPORT_URL,
     DEFAULT_PUBLIC_FONT_FAMILY,
@@ -133,6 +140,27 @@
       siteSettings?.admin_font_family,
       DEFAULT_ADMIN_FONT_FAMILY,
     ),
+  );
+  const brandLightHex = $derived(
+    normalizeHexColor(siteSettings?.brand_light_hex, DEFAULT_BRAND_LIGHT_HEX),
+  );
+  const brandDarkHex = $derived(
+    normalizeHexColor(siteSettings?.brand_dark_hex, DEFAULT_BRAND_DARK_HEX),
+  );
+  const brandContrastLightHex = $derived(
+    normalizeHexColor(
+      siteSettings?.brand_contrast_light_hex,
+      DEFAULT_BRAND_CONTRAST_LIGHT_HEX,
+    ),
+  );
+  const brandContrastDarkHex = $derived(
+    normalizeHexColor(
+      siteSettings?.brand_contrast_dark_hex,
+      DEFAULT_BRAND_CONTRAST_DARK_HEX,
+    ),
+  );
+  const brandThemeInlineStyle = $derived(
+    `--color-brand-light:${brandLightHex};--color-brand-dark:${brandDarkHex};--color-brand-contrast-light:${brandContrastLightHex};--color-brand-contrast-dark:${brandContrastDarkHex};`,
   );
   const fontImportUrls = $derived.by(() => {
     const unique = new Set([publicFontImportUrl, adminFontImportUrl]);
@@ -417,7 +445,7 @@
   {/each}
 </svelte:head>
 
-<div class="min-h-screen bg-bg text-text">
+<div class="min-h-screen bg-bg text-text" style={brandThemeInlineStyle}>
   <header
     class="chrome-panel fixed inset-x-0 top-0 z-[60] border-b border-border px-4 pt-[env(safe-area-inset-top)] transition-opacity duration-(--duration-chrome) ease-out md:hidden"
     class:hidden={isAdminRoute}

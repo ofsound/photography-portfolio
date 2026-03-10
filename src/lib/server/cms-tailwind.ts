@@ -1,15 +1,16 @@
 import process from 'node:process';
 
+import tailwindCoreThemeCss from 'tailwindcss/theme.css?raw';
 import tailwindThemeCss from '$lib/styles/tailwind-theme.css?raw';
 
 const CLASS_ATTR_PATTERN = /\bclass\s*=\s*(?:"([^"]*)"|'([^']*)')/gi;
 const TAILWIND_LICENSE_BANNER_PATTERN = /^\/\*![\s\S]*?\*\/\s*/;
-const CMS_TAILWIND_SOURCE = `@import "tailwindcss/theme";
-@import "tailwindcss/utilities";
+const CMS_TAILWIND_SOURCE = `${tailwindCoreThemeCss}
+@tailwind utilities;
 ${tailwindThemeCss}
 `;
 
-type TailwindCompile = (typeof import('@tailwindcss/node'))['compile'];
+type TailwindCompile = (typeof import('tailwindcss'))['compile'];
 type CmsTailwindCompiler = Awaited<ReturnType<TailwindCompile>>;
 
 let compilerPromise: Promise<CmsTailwindCompiler> | null = null;
@@ -21,11 +22,8 @@ const stripTailwindLicenseBanner = (css: string) => {
 const getCompiler = async () => {
   if (!compilerPromise) {
     compilerPromise = (async () => {
-      const { compile } = await import('@tailwindcss/node');
-      return compile(CMS_TAILWIND_SOURCE, {
-        base: process.cwd(),
-        onDependency: () => {},
-      });
+      const { compile } = await import('tailwindcss');
+      return compile(CMS_TAILWIND_SOURCE, { base: process.cwd() });
     })().catch((error: unknown) => {
       compilerPromise = null;
       throw error;

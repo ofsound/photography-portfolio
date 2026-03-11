@@ -50,6 +50,7 @@
   const routeScopeSlug = $derived(
     readInitialData().galleryScope?.slug ?? 'all',
   );
+  let initializedScopeSlug: string | null = null;
 
   const router = createGalleryRouter({
     getRouteScopeSlug: () => routeScopeSlug,
@@ -95,6 +96,10 @@
   const reducedMotion = () =>
     typeof window !== 'undefined'
       ? window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      : false;
+  const isMobileViewport = () =>
+    typeof window !== 'undefined'
+      ? window.matchMedia('(max-width: 767px)').matches
       : false;
 
   const colCount = $derived(
@@ -205,6 +210,32 @@
 
   const wait = (ms: number) =>
     new Promise<void>((resolvePromise) => setTimeout(resolvePromise, ms));
+
+  const clampDensity = (value: number) =>
+    Math.max(1, Math.min(data.maxDensity ?? 20, Math.round(value)));
+
+  const defaultDensityForViewport = () => {
+    const desktopDefault = clampDensity(
+      data.desktopDensityDefault ?? data.density,
+    );
+    const mobileDefault = clampDensity(
+      data.mobileDensityDefault ?? desktopDefault,
+    );
+    return isMobileViewport() ? mobileDefault : desktopDefault;
+  };
+
+  const applyScopeViewerDefaults = () => {
+    const prefs = getGalleryPrefs(data.maxDensity ?? 20);
+    if (prefs) {
+      galleryDensityStore.set(prefs.density);
+      state.pageSize = prefs.pageSize;
+    } else {
+      galleryDensityStore.set(defaultDensityForViewport());
+      state.pageSize = data.pageSize;
+    }
+
+    layoutModeStore.set(data.layoutMode);
+  };
 
   const gotoPhotoRoute = async (slug: string, imageId?: string | null) => {
     const resolvedImageId = imageId ?? null;
@@ -508,14 +539,15 @@
       document.body.style.overflow = 'hidden';
     }
 
-    const prefs = getGalleryPrefs(data.maxDensity ?? 20);
-    if (prefs) {
-      galleryDensityStore.set(prefs.density);
-      state.pageSize = prefs.pageSize;
-      layoutModeStore.set(prefs.layoutMode ?? data.layoutMode);
-    } else {
-      layoutModeStore.set(data.layoutMode);
-    }
+    initializedScopeSlug = routeScopeSlug;
+    applyScopeViewerDefaults();
+  });
+
+  $effect(() => {
+    if (!state.mounted) return;
+    if (routeScopeSlug === initializedScopeSlug) return;
+    initializedScopeSlug = routeScopeSlug;
+    applyScopeViewerDefaults();
   });
 
   $effect(() => {

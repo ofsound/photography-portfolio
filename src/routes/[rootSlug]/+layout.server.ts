@@ -84,11 +84,12 @@ const loadGalleryModeData = async ({
 }) => {
   const settings = await loadGallerySettings(locals, scope);
 
-  const defaultDensity = settings.grid_desktop_default ?? 6;
+  const desktopDensityDefault = settings.grid_desktop_default ?? 6;
+  const mobileDensityDefault = settings.grid_mobile_default ?? 3;
   const maxDensity = 10;
   const startPage = asPositiveInt(url.searchParams.get('page'), 1);
   const pageSize = normalizePageSize(60);
-  const density = defaultDensity;
+  const density = desktopDensityDefault;
   const gap = settings.gallery_gap_px ?? 8;
   const q = url.searchParams.get('q')?.trim() ?? '';
   const layoutMode = (settings.gallery_layout_mode ??
@@ -201,6 +202,8 @@ const loadGalleryModeData = async ({
     page,
     pageSize,
     density,
+    desktopDensityDefault,
+    mobileDensityDefault,
     gap,
     q,
     layoutMode,
@@ -211,6 +214,9 @@ const loadGalleryModeData = async ({
     baseQueryString: buildBaseQueryString(q),
     active,
     gallerySettings: {
+      theme_default: settings.theme_default ?? 'system',
+      transition_preset: settings.transition_preset ?? 'cinematic',
+      allow_transition_toggle: settings.allow_transition_toggle ?? true,
       photograph_info_mode: settings.photograph_info_mode ?? 'floating',
       show_photo_info_title: settings.show_photo_info_title ?? true,
       show_photo_info_description: settings.show_photo_info_description ?? true,
@@ -318,6 +324,8 @@ export const load: LayoutServerLoad = async ({ locals, params, url }) => {
     page: 1,
     pageSize: 60,
     density: 6,
+    desktopDensityDefault: 6,
+    mobileDensityDefault: 3,
     gap: 8,
     q: '',
     layoutMode: 'uniform' as const,
@@ -328,6 +336,9 @@ export const load: LayoutServerLoad = async ({ locals, params, url }) => {
     baseQueryString: '',
     active: null,
     gallerySettings: {
+      theme_default: 'system',
+      transition_preset: 'cinematic',
+      allow_transition_toggle: true,
       photograph_info_mode: 'floating',
       show_photo_info_title: true,
       show_photo_info_description: true,

@@ -26,6 +26,8 @@ export type ViewerData = {
   page: number;
   pageSize: number;
   density: number;
+  desktopDensityDefault: number;
+  mobileDensityDefault: number;
   gap: number;
   q: string;
   layoutMode: GalleryLayoutMode;
@@ -36,6 +38,9 @@ export type ViewerData = {
   baseQueryString: string;
   active: ActiveRoute | null;
   gallerySettings?: {
+    theme_default?: 'light' | 'dark' | 'system' | null;
+    transition_preset?: 'cinematic' | 'snappy' | 'experimental' | null;
+    allow_transition_toggle?: boolean | null;
     photograph_info_mode?: PhotographInfoMode | null;
     show_photo_info_title?: boolean | null;
     show_photo_info_description?: boolean | null;

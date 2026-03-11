@@ -100,18 +100,19 @@
     );
   };
   const globalSiteSettings = $derived(data?.siteSettings ?? null);
-  const gallerySettings = $derived(
-    ((data as Record<string, unknown> | null)?.gallerySettings ?? null) as {
+  const viewerGallerySettings = $derived(
+    ((page.data as Record<string, unknown> | null)?.gallerySettings ??
+      null) as {
       theme_default?: 'light' | 'dark' | 'system' | null;
       transition_preset?: 'cinematic' | 'snappy' | 'experimental' | null;
       allow_transition_toggle?: boolean | null;
     } | null,
   );
   const siteSettings = $derived(
-    isViewerRoute(page.url.pathname) && gallerySettings
+    isViewerRoute(page.url.pathname) && viewerGallerySettings
       ? {
           ...globalSiteSettings,
-          ...gallerySettings,
+          ...viewerGallerySettings,
         }
       : globalSiteSettings,
   );
@@ -313,7 +314,6 @@
     const prefs = getGalleryPrefs(maxDensity);
     if (prefs) {
       galleryDensityStore.set(prefs.density);
-      if (prefs.layoutMode) layoutModeStore.set(prefs.layoutMode);
     }
   });
 

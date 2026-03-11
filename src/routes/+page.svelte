@@ -61,6 +61,8 @@
     slides={data.slides}
     slideDurationMs={data.slideDurationMs}
     transitionDurationMs={data.transitionDurationMs}
+    zoomStrengthPct={data.zoomStrengthPct}
+    panStrengthPct={data.panStrengthPct}
   />
 
   {#if showHero && heroPage}

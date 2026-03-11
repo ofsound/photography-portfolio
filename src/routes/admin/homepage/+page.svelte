@@ -80,6 +80,8 @@
   let selectedIds = $state<string[]>([]);
   let slideDurationMs = $state<number>(4000);
   let transitionDurationMs = $state<number>(2000);
+  let zoomStrengthPct = $state<number>(5);
+  let panStrengthPct = $state<number>(80);
   let undoStack = $state<string[][]>([]);
   let redoStack = $state<string[][]>([]);
   const historyLimit = 100;
@@ -128,6 +130,8 @@
     selectedIds = slides.map((slide) => slide.photo_image_id);
     slideDurationMs = data.slideDurationMs;
     transitionDurationMs = data.transitionDurationMs;
+    zoomStrengthPct = data.zoomStrengthPct;
+    panStrengthPct = data.panStrengthPct;
     undoStack = [];
     redoStack = [];
   });
@@ -602,6 +606,36 @@
             type="text"
             name="transition_duration_ms"
             value={String(transitionDurationMs)}
+            oninput={sanitizeNumericInput}
+          />
+        </FormField>
+        <FormField
+          label="Zoom Strength (%)"
+          id="homepage-zoom-strength-pct"
+          hint="0-20. Higher values increase zoom amount."
+          class="w-fit"
+        >
+          <FormInput
+            id="homepage-zoom-strength-pct"
+            class="max-w-[80px] bg-transparent tracking-normal normal-case"
+            type="text"
+            name="zoom_strength_pct"
+            value={String(zoomStrengthPct)}
+            oninput={sanitizeNumericInput}
+          />
+        </FormField>
+        <FormField
+          label="Pan Strength (%)"
+          id="homepage-pan-strength-pct"
+          hint="0-100. Higher values increase drift."
+          class="w-fit"
+        >
+          <FormInput
+            id="homepage-pan-strength-pct"
+            class="max-w-[80px] bg-transparent tracking-normal normal-case"
+            type="text"
+            name="pan_strength_pct"
+            value={String(panStrengthPct)}
             oninput={sanitizeNumericInput}
           />
         </FormField>

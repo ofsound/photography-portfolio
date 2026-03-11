@@ -14,12 +14,18 @@ import {
 import { failForm } from '$lib/server/form-errors';
 import { throwLoaderError } from '$lib/server/load-error';
 import {
+  DEFAULT_PAN_STRENGTH_PCT,
   DEFAULT_SLIDE_DURATION_MS,
   DEFAULT_TRANSITION_DURATION_MS,
+  DEFAULT_ZOOM_STRENGTH_PCT,
+  PAN_STRENGTH_MAX_PCT,
+  PAN_STRENGTH_MIN_PCT,
   SLIDE_DURATION_MIN_MS,
   SLIDE_DURATION_MAX_MS,
   TRANSITION_DURATION_MIN_MS,
   TRANSITION_DURATION_MAX_MS,
+  ZOOM_STRENGTH_MAX_PCT,
+  ZOOM_STRENGTH_MIN_PCT,
   clampInt,
 } from '$lib/server/slideshow-constants';
 import {
@@ -155,7 +161,9 @@ export const load: PageServerLoad = async ({ locals, url }) => {
         .is('delivery_storage_path', null),
       locals.supabase
         .from('site_settings')
-        .select('homepage_slide_duration_ms, homepage_transition_duration_ms')
+        .select(
+          'homepage_slide_duration_ms, homepage_transition_duration_ms, homepage_zoom_strength_pct, homepage_pan_strength_pct',
+        )
         .eq('singleton_id', 1)
         .maybeSingle(),
       locals.supabase
@@ -305,6 +313,16 @@ export const load: PageServerLoad = async ({ locals, url }) => {
       TRANSITION_DURATION_MAX_MS,
     ),
   );
+  const zoomStrengthPct = clampInt(
+    settingsQuery.data?.homepage_zoom_strength_pct ?? DEFAULT_ZOOM_STRENGTH_PCT,
+    ZOOM_STRENGTH_MIN_PCT,
+    ZOOM_STRENGTH_MAX_PCT,
+  );
+  const panStrengthPct = clampInt(
+    settingsQuery.data?.homepage_pan_strength_pct ?? DEFAULT_PAN_STRENGTH_PCT,
+    PAN_STRENGTH_MIN_PCT,
+    PAN_STRENGTH_MAX_PCT,
+  );
 
   let homePage = (homeQuery.data as HomePageRow | null) ?? null;
 
@@ -340,6 +358,8 @@ export const load: PageServerLoad = async ({ locals, url }) => {
     pendingConversionCount: pendingQuery.count ?? 0,
     slideDurationMs,
     transitionDurationMs,
+    zoomStrengthPct,
+    panStrengthPct,
     homePage,
     revisions,
   };
@@ -371,6 +391,18 @@ export const actions: Actions = {
         TRANSITION_DURATION_MAX_MS,
       ),
     );
+    const zoomStrengthPct = clampInt(
+      asOptionalNumber(form.get('zoom_strength_pct')) ??
+        DEFAULT_ZOOM_STRENGTH_PCT,
+      ZOOM_STRENGTH_MIN_PCT,
+      ZOOM_STRENGTH_MAX_PCT,
+    );
+    const panStrengthPct = clampInt(
+      asOptionalNumber(form.get('pan_strength_pct')) ??
+        DEFAULT_PAN_STRENGTH_PCT,
+      PAN_STRENGTH_MIN_PCT,
+      PAN_STRENGTH_MAX_PCT,
+    );
 
     const [slidesResult, settingsResult] = await Promise.all([
       locals.supabase.rpc('save_homepage_slides', {
@@ -381,6 +413,8 @@ export const actions: Actions = {
         .update({
           homepage_slide_duration_ms: slideDurationMs,
           homepage_transition_duration_ms: transitionDurationMs,
+          homepage_zoom_strength_pct: zoomStrengthPct,
+          homepage_pan_strength_pct: panStrengthPct,
         })
         .eq('singleton_id', 1),
     ]);

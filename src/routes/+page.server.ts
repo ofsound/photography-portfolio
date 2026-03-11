@@ -4,12 +4,18 @@ import { getCmsRole } from '$lib/server/admin-helpers';
 import { throwLoaderError } from '$lib/server/load-error';
 import { loadHomePage } from '$lib/server/pages';
 import {
+  DEFAULT_PAN_STRENGTH_PCT,
   DEFAULT_SLIDE_DURATION_MS,
   DEFAULT_TRANSITION_DURATION_MS,
+  DEFAULT_ZOOM_STRENGTH_PCT,
+  PAN_STRENGTH_MAX_PCT,
+  PAN_STRENGTH_MIN_PCT,
   SLIDE_DURATION_MIN_MS,
   SLIDE_DURATION_MAX_MS,
   TRANSITION_DURATION_MIN_MS,
   TRANSITION_DURATION_MAX_MS,
+  ZOOM_STRENGTH_MAX_PCT,
+  ZOOM_STRENGTH_MIN_PCT,
   clampInt,
 } from '$lib/server/slideshow-constants';
 import {
@@ -36,7 +42,9 @@ export const load: PageServerLoad = async ({ locals, url }) => {
       .order('position', { ascending: true }),
     locals.supabase
       .from('site_settings')
-      .select('homepage_slide_duration_ms, homepage_transition_duration_ms')
+      .select(
+        'homepage_slide_duration_ms, homepage_transition_duration_ms, homepage_zoom_strength_pct, homepage_pan_strength_pct',
+      )
       .eq('singleton_id', 1)
       .maybeSingle(),
     loadHomePage(locals),
@@ -63,6 +71,16 @@ export const load: PageServerLoad = async ({ locals, url }) => {
       TRANSITION_DURATION_MIN_MS,
       TRANSITION_DURATION_MAX_MS,
     ),
+  );
+  const zoomStrengthPct = clampInt(
+    settingsQuery.data?.homepage_zoom_strength_pct ?? DEFAULT_ZOOM_STRENGTH_PCT,
+    ZOOM_STRENGTH_MIN_PCT,
+    ZOOM_STRENGTH_MAX_PCT,
+  );
+  const panStrengthPct = clampInt(
+    settingsQuery.data?.homepage_pan_strength_pct ?? DEFAULT_PAN_STRENGTH_PCT,
+    PAN_STRENGTH_MIN_PCT,
+    PAN_STRENGTH_MAX_PCT,
   );
 
   if (slidesQuery.error) {
@@ -101,6 +119,8 @@ export const load: PageServerLoad = async ({ locals, url }) => {
     slides,
     slideDurationMs,
     transitionDurationMs,
+    zoomStrengthPct,
+    panStrengthPct,
     heroPage,
     canEditPublicPages: canEdit,
     initialPublicEditMode:

@@ -16,19 +16,29 @@
 
   const DEFAULT_SLIDE_DURATION_MS = 4000;
   const DEFAULT_TRANSITION_DURATION_MS = 2000;
+  const DEFAULT_ZOOM_STRENGTH_PCT = 5;
+  const DEFAULT_PAN_STRENGTH_PCT = 80;
   const SLIDE_DURATION_MIN_MS = 1000;
   const SLIDE_DURATION_MAX_MS = 30000;
   const TRANSITION_DURATION_MIN_MS = 200;
   const TRANSITION_DURATION_MAX_MS = 10000;
+  const ZOOM_STRENGTH_MIN_PCT = 0;
+  const ZOOM_STRENGTH_MAX_PCT = 20;
+  const PAN_STRENGTH_MIN_PCT = 0;
+  const PAN_STRENGTH_MAX_PCT = 100;
 
   const {
     slides,
     slideDurationMs = DEFAULT_SLIDE_DURATION_MS,
     transitionDurationMs = DEFAULT_TRANSITION_DURATION_MS,
+    zoomStrengthPct = DEFAULT_ZOOM_STRENGTH_PCT,
+    panStrengthPct = DEFAULT_PAN_STRENGTH_PCT,
   } = $props<{
     slides: Slide[];
     slideDurationMs?: number;
     transitionDurationMs?: number;
+    zoomStrengthPct?: number;
+    panStrengthPct?: number;
   }>();
 
   let slotA = $state<Slot | null>(null);
@@ -59,6 +69,13 @@
       ),
     ),
   );
+  const safeZoomStrengthPct = $derived(
+    clampInt(zoomStrengthPct, ZOOM_STRENGTH_MIN_PCT, ZOOM_STRENGTH_MAX_PCT),
+  );
+  const safePanStrengthPct = $derived(
+    clampInt(panStrengthPct, PAN_STRENGTH_MIN_PCT, PAN_STRENGTH_MAX_PCT),
+  );
+  const zoomEndScale = $derived(1 + safeZoomStrengthPct / 100);
   const zoomDurationMs = $derived(
     safeSlideDurationMs + safeTransitionDurationMs,
   );
@@ -73,10 +90,12 @@
   }
 
   function originForSlide(slide: Slide) {
-    const hash = hashId(slide.id);
-    const x = 10 + (hash % 81);
-    const y = 10 + (Math.floor(hash / 97) % 81);
-    return `${x}% ${y}%`;
+    const amplitude = safePanStrengthPct / 2;
+    const offsetX = (hashId(`${slide.id}:x`) % 2001) / 1000 - 1;
+    const offsetY = (hashId(`${slide.id}:y`) % 2001) / 1000 - 1;
+    const x = Math.min(100, Math.max(0, 50 + offsetX * amplitude));
+    const y = Math.min(100, Math.max(0, 50 + offsetY * amplitude));
+    return `${x.toFixed(2)}% ${y.toFixed(2)}%`;
   }
 
   function clearTimers() {
@@ -161,7 +180,11 @@
   });
 
   $effect(() => {
-    void (slides.length, safeSlideDurationMs, safeTransitionDurationMs);
+    void (slides.length,
+    safeSlideDurationMs,
+    safeTransitionDurationMs,
+    safeZoomStrengthPct,
+    safePanStrengthPct);
 
     clearTimers();
     slotA = null;
@@ -211,7 +234,7 @@
           {#key `slot-a-${slotA.version}`}
             <img
               class={`h-full w-full object-cover ${zoomClass(slotA.index)}`}
-              style={`transform-origin: ${slotA.origin}; animation-duration: ${zoomDurationMs}ms;`}
+              style={`transform-origin: ${slotA.origin}; animation-duration: ${zoomDurationMs}ms; --kenburns-end-scale: ${zoomEndScale};`}
               src={slides[slotA.index].imagePath}
               alt={slides[slotA.index].altText}
               loading={slotA.index === 0 ? 'eager' : 'lazy'}
@@ -228,7 +251,7 @@
           {#key `slot-b-${slotB.version}`}
             <img
               class={`h-full w-full object-cover ${zoomClass(slotB.index)}`}
-              style={`transform-origin: ${slotB.origin}; animation-duration: ${zoomDurationMs}ms;`}
+              style={`transform-origin: ${slotB.origin}; animation-duration: ${zoomDurationMs}ms; --kenburns-end-scale: ${zoomEndScale};`}
               src={slides[slotB.index].imagePath}
               alt={slides[slotB.index].altText}
               loading="lazy"
@@ -247,13 +270,13 @@
     }
 
     100% {
-      transform: scale(1.05);
+      transform: scale(var(--kenburns-end-scale, 1.05));
     }
   }
 
   @keyframes kenburns-out {
     0% {
-      transform: scale(1.05);
+      transform: scale(var(--kenburns-end-scale, 1.05));
     }
 
     100% {

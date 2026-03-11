@@ -738,6 +738,8 @@ export type Database = {
           grid_desktop_default: number;
           grid_mobile_default: number;
           homepage_slide_duration_ms: number;
+          homepage_zoom_strength_pct: number;
+          homepage_pan_strength_pct: number;
           homepage_transition_duration_ms: number;
           max_content_width_px: number | null;
           photograph_info_mode: Database['public']['Enums']['photograph_info_mode'];
@@ -773,6 +775,8 @@ export type Database = {
           grid_desktop_default?: number;
           grid_mobile_default?: number;
           homepage_slide_duration_ms?: number;
+          homepage_zoom_strength_pct?: number;
+          homepage_pan_strength_pct?: number;
           homepage_transition_duration_ms?: number;
           max_content_width_px?: number | null;
           photograph_info_mode?: Database['public']['Enums']['photograph_info_mode'];
@@ -808,6 +812,8 @@ export type Database = {
           grid_desktop_default?: number;
           grid_mobile_default?: number;
           homepage_slide_duration_ms?: number;
+          homepage_zoom_strength_pct?: number;
+          homepage_pan_strength_pct?: number;
           homepage_transition_duration_ms?: number;
           max_content_width_px?: number | null;
           photograph_info_mode?: Database['public']['Enums']['photograph_info_mode'];

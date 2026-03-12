@@ -103,18 +103,6 @@
           readonly={!isAdmin}
         />
       </FormField>
-
-      <AdminSeoSocialDrawer
-        idPrefix="details"
-        storageKey="admin-seo-social:gallery-details"
-        {fieldErrors}
-        readonly={!isAdmin}
-        seoTitle={seoTitleValue}
-        seoDescription={seoDescriptionValue}
-        ogTitle={ogTitleValue}
-        ogDescription={ogDescriptionValue}
-        ogImagePath={ogImagePathValue}
-      />
     </div>
 
     <div class="grid min-w-0 gap-2 sm:flex-1">
@@ -144,6 +132,18 @@
       </FormField>
     </div>
   </div>
+
+  <AdminSeoSocialDrawer
+    idPrefix="details"
+    storageKey="admin-seo-social:gallery-details"
+    {fieldErrors}
+    readonly={!isAdmin}
+    seoTitle={seoTitleValue}
+    seoDescription={seoDescriptionValue}
+    ogTitle={ogTitleValue}
+    ogDescription={ogDescriptionValue}
+    ogImagePath={ogImagePathValue}
+  />
 
   <hr class="my-8 border-border" />
   <AdminHeading class="mb-4" level={2}>Gallery Settings</AdminHeading>

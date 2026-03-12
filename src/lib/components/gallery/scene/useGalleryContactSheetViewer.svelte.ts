@@ -35,6 +35,9 @@ type ContactSheetSession = {
   frame: HTMLElement;
   sheet: HTMLElement;
   sourceRoot: HTMLElement;
+  placeholder: HTMLElement;
+  originalParent: Node;
+  renderScale: number;
   rootRect: RootRect;
   tiles: SvelteMap<string, TileMetric>;
   currentTransform: string;
@@ -52,6 +55,7 @@ type CreateGalleryContactSheetViewerOptions = {
 
 const OPEN_EASING = 'cubic-bezier(0.16, 1, 0.3, 1)';
 const NAV_EASING = 'cubic-bezier(0.22, 1, 0.36, 1)';
+const CONTACT_SHEET_FRAME_ATTR = 'data-contact-sheet-frame';
 
 const waitForFrame = () =>
   new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
@@ -105,12 +109,44 @@ export const createGalleryContactSheetViewer = ({
     session.frame.remove();
 
     if (restoreRoot) {
-      session.sourceRoot.style.removeProperty('visibility');
+      session.sourceRoot.style.removeProperty('position');
+      session.sourceRoot.style.removeProperty('top');
+      session.sourceRoot.style.removeProperty('left');
+      session.sourceRoot.style.removeProperty('width');
+      session.sourceRoot.style.removeProperty('height');
+      session.sourceRoot.style.removeProperty('margin');
       session.sourceRoot.style.removeProperty('pointer-events');
+      session.sourceRoot.style.removeProperty('transform-origin');
+      session.sourceRoot.style.removeProperty('transform');
+      session.sourceRoot.style.removeProperty('transform-style');
+      session.sourceRoot.style.removeProperty('backface-visibility');
+      session.sourceRoot.removeAttribute('data-contact-sheet-promoted');
+
+      if (session.placeholder.isConnected) {
+        session.placeholder.replaceWith(session.sourceRoot);
+      } else if (session.originalParent instanceof Element) {
+        session.originalParent.appendChild(session.sourceRoot);
+      }
+
+      session.placeholder.remove();
     }
 
     session = null;
     isAnimating = false;
+  };
+
+  const cleanupOrphanFrames = () => {
+    if (typeof document === 'undefined') return;
+
+    const frames = document.querySelectorAll<HTMLElement>(
+      `[${CONTACT_SHEET_FRAME_ATTR}="true"]`,
+    );
+    for (const frame of frames) {
+      if (session && frame === session.frame) continue;
+      if (frame.childElementCount === 0) {
+        frame.remove();
+      }
+    }
   };
 
   const measureGeometry = (): SheetGeometry | null => {
@@ -146,31 +182,39 @@ export const createGalleryContactSheetViewer = ({
     if (!metric) return null;
 
     const settings = effectiveSettings();
+    const renderScale = nextSession.renderScale;
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
     const viewportShortEdge = Math.max(
       1,
       Math.min(viewportWidth, viewportHeight),
     );
-    const tileShortEdge = Math.max(1, Math.min(metric.width, metric.height));
+    const scaledCenterX = metric.centerX * renderScale;
+    const scaledCenterY = metric.centerY * renderScale;
+    const scaledTileWidth = metric.width * renderScale;
+    const scaledTileHeight = metric.height * renderScale;
+    const tileShortEdge = Math.max(
+      1,
+      Math.min(scaledTileWidth, scaledTileHeight),
+    );
     const scale = clamp(
       (viewportShortEdge * settings.targetFillPct) / tileShortEdge,
-      1,
+      0.25,
       24,
     );
 
-    const tx = viewportWidth / 2 - (nextSession.rootRect.left + metric.centerX);
-    const ty = viewportHeight / 2 - (nextSession.rootRect.top + metric.centerY);
+    const tx = viewportWidth / 2 - (nextSession.rootRect.left + scaledCenterX);
+    const ty = viewportHeight / 2 - (nextSession.rootRect.top + scaledCenterY);
 
     const offsetX = clamp(
-      (metric.centerX - nextSession.rootRect.width / 2) /
-        Math.max(1, nextSession.rootRect.width / 2),
+      (scaledCenterX - (nextSession.rootRect.width * renderScale) / 2) /
+        Math.max(1, (nextSession.rootRect.width * renderScale) / 2),
       -1,
       1,
     );
     const offsetY = clamp(
-      (metric.centerY - nextSession.rootRect.height / 2) /
-        Math.max(1, nextSession.rootRect.height / 2),
+      (scaledCenterY - (nextSession.rootRect.height * renderScale) / 2) /
+        Math.max(1, (nextSession.rootRect.height * renderScale) / 2),
       -1,
       1,
     );
@@ -178,7 +222,7 @@ export const createGalleryContactSheetViewer = ({
     const rotateX = settings.rotateXDeg * offsetY;
     const rotateY = settings.rotateYDeg * -offsetX;
     const travelZ = settings.travelZPx * (0.65 + distance * 0.35);
-    const origin = `${metric.centerX}px ${metric.centerY}px`;
+    const origin = `${scaledCenterX}px ${scaledCenterY}px`;
     const transform = `translate3d(${tx}px, ${ty}px, ${travelZ}px) scale(${scale}) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
 
     return { origin, transform };
@@ -202,6 +246,7 @@ export const createGalleryContactSheetViewer = ({
     const fromOrigin = session.currentOrigin;
 
     isAnimating = true;
+    session.sheet.style.willChange = 'transform';
 
     try {
       if (
@@ -245,6 +290,7 @@ export const createGalleryContactSheetViewer = ({
       state.activeSlug = slug;
       return true;
     } finally {
+      session.sheet.style.removeProperty('will-change');
       isAnimating = false;
     }
   };
@@ -252,6 +298,7 @@ export const createGalleryContactSheetViewer = ({
   const createSession = async (activeSlug: string) => {
     if (!gridRoot) return null;
 
+    cleanupOrphanFrames();
     await waitForFrame();
     await waitForFrame();
 
@@ -259,30 +306,56 @@ export const createGalleryContactSheetViewer = ({
     if (!geometry || !geometry.tiles.has(activeSlug)) return null;
 
     const sourceRoot = gridRoot;
-    sourceRoot.style.visibility = 'hidden';
-    sourceRoot.style.pointerEvents = 'none';
+    const originalParent = sourceRoot.parentNode;
+    if (!originalParent) return null;
+    const renderScale = clamp(
+      (window.devicePixelRatio || 1) * (isMobileViewport() ? 1.1 : 1.5),
+      1,
+      3,
+    );
 
     const frame = document.createElement('div');
+    frame.setAttribute(CONTACT_SHEET_FRAME_ATTR, 'true');
     frame.style.position = 'fixed';
     frame.style.inset = '0';
     frame.style.zIndex = '70';
     frame.style.overflow = 'hidden';
     frame.style.pointerEvents = 'none';
 
-    const sheet = sourceRoot.cloneNode(true) as HTMLElement;
-    sheet.setAttribute('aria-hidden', 'true');
+    const placeholder = document.createElement('div');
+    placeholder.setAttribute('aria-hidden', 'true');
+    placeholder.style.display = 'block';
+    placeholder.style.width = `${geometry.rootRect.width}px`;
+    placeholder.style.height = `${geometry.rootRect.height}px`;
+    placeholder.style.pointerEvents = 'none';
+
+    originalParent.insertBefore(placeholder, sourceRoot);
+
+    const sheet = document.createElement('div');
     sheet.style.position = 'absolute';
     sheet.style.top = `${geometry.rootRect.top}px`;
     sheet.style.left = `${geometry.rootRect.left}px`;
-    sheet.style.width = `${geometry.rootRect.width}px`;
-    sheet.style.height = `${geometry.rootRect.height}px`;
+    sheet.style.width = `${geometry.rootRect.width * renderScale}px`;
+    sheet.style.height = `${geometry.rootRect.height * renderScale}px`;
     sheet.style.margin = '0';
     sheet.style.pointerEvents = 'auto';
-    sheet.style.transformOrigin = 'center center';
-    sheet.style.transform =
-      'translate3d(0px, 0px, 0px) scale(1) rotateX(0deg) rotateY(0deg)';
-    sheet.style.willChange = 'transform';
-    sheet.style.contain = 'layout paint style';
+    sheet.style.transformOrigin = '0px 0px';
+    sheet.style.transform = `translate3d(0px, 0px, 0px) scale(${1 / renderScale}) rotateX(0deg) rotateY(0deg)`;
+    sheet.style.transformStyle = 'preserve-3d';
+    sheet.style.backfaceVisibility = 'hidden';
+
+    sourceRoot.style.position = 'absolute';
+    sourceRoot.style.top = '0';
+    sourceRoot.style.left = '0';
+    sourceRoot.style.width = `${geometry.rootRect.width}px`;
+    sourceRoot.style.height = `${geometry.rootRect.height}px`;
+    sourceRoot.style.margin = '0';
+    sourceRoot.style.pointerEvents = 'auto';
+    sourceRoot.style.transformOrigin = '0px 0px';
+    sourceRoot.style.transform = `scale(${renderScale})`;
+    sourceRoot.style.transformStyle = 'preserve-3d';
+    sourceRoot.style.backfaceVisibility = 'hidden';
+    sourceRoot.setAttribute('data-contact-sheet-promoted', 'true');
 
     const onClick = (event: MouseEvent) => {
       if (isAnimating) return;
@@ -302,6 +375,7 @@ export const createGalleryContactSheetViewer = ({
     };
 
     sheet.addEventListener('click', onClick);
+    sheet.appendChild(sourceRoot);
     frame.appendChild(sheet);
     document.body.appendChild(frame);
 
@@ -310,11 +384,13 @@ export const createGalleryContactSheetViewer = ({
       frame,
       sheet,
       sourceRoot,
+      placeholder,
+      originalParent,
+      renderScale,
       rootRect: geometry.rootRect,
       tiles: geometry.tiles,
-      currentTransform:
-        'translate3d(0px, 0px, 0px) scale(1) rotateX(0deg) rotateY(0deg)',
-      currentOrigin: 'center center',
+      currentTransform: `translate3d(0px, 0px, 0px) scale(${1 / renderScale}) rotateX(0deg) rotateY(0deg)`,
+      currentOrigin: '0px 0px',
       onClick,
     } satisfies ContactSheetSession;
   };
@@ -330,14 +406,9 @@ export const createGalleryContactSheetViewer = ({
   const reopenActive = async () => {
     if (!session) return;
     const activeSlug = session.activeSlug;
-    const previousRoot = session.sourceRoot;
-    releaseSession(false);
+    releaseSession(true);
     session = await createSession(activeSlug);
-    if (!session) {
-      previousRoot.style.removeProperty('visibility');
-      previousRoot.style.removeProperty('pointer-events');
-      return;
-    }
+    if (!session) return;
     await animateToSlug(activeSlug, 0, OPEN_EASING);
   };
 
@@ -431,9 +502,8 @@ export const createGalleryContactSheetViewer = ({
               transform: session.currentTransform,
             },
             {
-              transformOrigin: session.currentOrigin,
-              transform:
-                'translate3d(0px, 0px, 0px) scale(1) rotateX(0deg) rotateY(0deg)',
+              transformOrigin: '0px 0px',
+              transform: `translate3d(0px, 0px, 0px) scale(${1 / session.renderScale}) rotateX(0deg) rotateY(0deg)`,
             },
           ],
           {

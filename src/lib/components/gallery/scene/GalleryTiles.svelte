@@ -171,6 +171,18 @@
     object-fit: contain !important;
   }
 
+  :global([data-contact-sheet-promoted='true'] .thumb-entrance-fx),
+  :global([data-contact-sheet-promoted='true'] .thumb-entrance-fx *),
+  :global([data-contact-sheet-promoted='true'] [data-photo-slug]),
+  :global([data-contact-sheet-promoted='true'] [data-photo-slug] img) {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  :global([data-contact-sheet-promoted='true'] [data-photo-slug] img) {
+    transform: none !important;
+  }
+
   :global([data-promoted] .tile-img) {
     object-fit: contain;
     height: 100%;

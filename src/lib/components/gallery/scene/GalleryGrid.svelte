@@ -138,46 +138,50 @@
 </script>
 
 {#if model.layoutMode === 'coverage' || model.layoutMode === 'rows' || model.layoutMode === 'columns'}
-  <section
-    class="coverage-container w-full"
-    use:model.bindGridRoot
-    use:model.bindCoverageSection
-    use:resolveEntranceOrder={{
-      batchKey: model.entranceBatchKey,
-      presetId: model.thumbnailEntrancePreset,
-      onResolve: model.onResolveEntranceOrder,
-    }}
-  >
-    {#if model.photos.length === 0}
-      <p
-        class="flex h-full items-center justify-center text-sm tracking-widest text-text-muted uppercase"
-      >
-        No photos found.
-      </p>
-    {:else}
-      <GalleryTiles {model} />
-    {/if}
+  <section class="coverage-container w-full" use:model.bindCoverageSection>
+    <div
+      class="h-full w-full"
+      use:model.bindGridRoot
+      use:resolveEntranceOrder={{
+        batchKey: model.entranceBatchKey,
+        presetId: model.thumbnailEntrancePreset,
+        onResolve: model.onResolveEntranceOrder,
+      }}
+    >
+      {#if model.photos.length === 0}
+        <p
+          class="flex h-full items-center justify-center text-sm tracking-widest text-text-muted uppercase"
+        >
+          No photos found.
+        </p>
+      {:else}
+        <GalleryTiles {model} />
+      {/if}
+    </div>
   </section>
 {:else}
-  <section
-    class="mx-auto w-full px-4 py-5"
-    style={model.sectionMaxWidthStyle}
-    use:model.bindGridRoot
-    use:resolveEntranceOrder={{
-      batchKey: model.entranceBatchKey,
-      presetId: model.thumbnailEntrancePreset,
-      onResolve: model.onResolveEntranceOrder,
-    }}
-  >
-    {#if model.photos.length === 0}
-      <p
-        class="py-16 text-center text-sm tracking-widest text-text-muted uppercase"
-      >
-        No photos found.
-      </p>
-    {:else}
-      <GalleryTiles {model} />
+  <section class="mx-auto w-full px-4 py-5" style={model.sectionMaxWidthStyle}>
+    <div
+      class="w-full"
+      use:model.bindGridRoot
+      use:resolveEntranceOrder={{
+        batchKey: model.entranceBatchKey,
+        presetId: model.thumbnailEntrancePreset,
+        onResolve: model.onResolveEntranceOrder,
+      }}
+    >
+      {#if model.photos.length === 0}
+        <p
+          class="py-16 text-center text-sm tracking-widest text-text-muted uppercase"
+        >
+          No photos found.
+        </p>
+      {:else}
+        <GalleryTiles {model} />
+      {/if}
+    </div>
 
+    {#if model.photos.length > 0}
       {#if model.hasMore}
         <div
           class="h-10 w-full"

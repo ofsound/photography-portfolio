@@ -844,6 +844,7 @@
     void state.photos.length;
     void detailBottomInsetPx;
 
+    if (detailViewMode !== 'classic') return;
     if (!state.mounted || !state.activeSlug || !viewerController.isReady)
       return;
 

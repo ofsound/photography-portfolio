@@ -7,6 +7,7 @@
   import type { GallerySettingsDefaults } from '$lib/constants/gallery-settings';
   import { THUMBNAIL_ENTRANCE_PRESET_OPTIONS } from '$lib/constants/thumbnail-entrance';
   import { PRELOADER_PRESET_OPTIONS } from '$lib/constants/preloader-preset';
+  import { NAV_BUTTON_PRESET_OPTIONS } from '$lib/constants/nav-button-preset';
 
   type Props = {
     settings: GallerySettingsDefaults;
@@ -164,6 +165,23 @@
       class="w-auto"
     >
       {#each PRELOADER_PRESET_OPTIONS as option (option.id)}
+        <option value={option.id}>{option.label}</option>
+      {/each}
+    </FormSelect>
+  </FormField>
+  <FormField
+    label={'Nav Button Style' + (disableTransitionPreset ? ' (Admin)' : '')}
+    id={p('nav_button_preset')}
+    class="w-fit"
+  >
+    <FormSelect
+      name="nav_button_preset"
+      id={p('nav_button_preset')}
+      value={settings.nav_button_preset}
+      disabled={readonly || disableTransitionPreset}
+      class="w-auto"
+    >
+      {#each NAV_BUTTON_PRESET_OPTIONS as option (option.id)}
         <option value={option.id}>{option.label}</option>
       {/each}
     </FormSelect>

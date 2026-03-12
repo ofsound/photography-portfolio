@@ -33,6 +33,7 @@
   import { createGalleryTileAnimator } from './scene/useGalleryTileAnimator.svelte';
   import { normalizeThumbnailEntrancePreset } from '$lib/constants/thumbnail-entrance';
   import { normalizePreloaderPreset } from '$lib/constants/preloader-preset';
+  import { normalizeNavButtonPreset } from '$lib/constants/nav-button-preset';
   import { resolveThumbnailEntrancePresetRuntime } from './scene/thumbnail-entrance-presets';
 
   import type { GalleryPhoto } from '$lib/types/content';
@@ -812,6 +813,9 @@
       ?.show_photo_info_license_text ?? false}
     {isTransitioning}
     {canCycleGallery}
+    navButtonPreset={normalizeNavButtonPreset(
+      data.gallerySettings?.nav_button_preset,
+    )}
     prevGalleryHref={state.prevGalleryHref}
     nextGalleryHref={state.nextGalleryHref}
     withCurrentSearch={router.withCurrentSearch}

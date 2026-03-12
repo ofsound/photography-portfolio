@@ -129,3 +129,321 @@ body {
     transform: none;
   }
 }
+
+/* ══════════════════════════════════════════════════════════════
+   NAV BUTTON PRESETS — Detail view prev/next
+   (Global because portal teleports elements to <body>)
+   ══════════════════════════════════════════════════════════════ */
+
+/* ── Base ─────────────────────────────────────────────────── */
+.nav-btn {
+  position: fixed;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 80;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  color: var(--color-text);
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+.nav-btn--prev {
+  left: 0;
+}
+.nav-btn--next {
+  right: 0;
+}
+
+/* ── 1. WHISPER — Minimal editorial line ─────────────────── */
+.nav-btn--whisper {
+  padding: 20px 16px;
+  opacity: 0.4;
+  transition:
+    opacity 280ms ease-out,
+    transform 280ms ease-out;
+}
+.nav-btn--whisper .nav-btn__chevron {
+  width: 14px;
+  height: 28px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.nav-btn--whisper:hover {
+  opacity: 1;
+}
+.nav-btn--whisper.nav-btn--prev:hover {
+  transform: translateY(-50%) translateX(-2px);
+}
+.nav-btn--whisper.nav-btn--next:hover {
+  transform: translateY(-50%) translateX(2px);
+}
+.nav-btn--whisper:active {
+  opacity: 0.7;
+  transition-duration: 60ms;
+}
+@media (max-width: 640px) {
+  .nav-btn--whisper {
+    display: none;
+  }
+}
+
+/* ── 2. LENS — Aperture ring ─────────────────────────────── */
+.nav-btn--lens {
+  padding: 0 16px;
+}
+.nav-btn--lens .nav-btn__ring {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 1.5px solid color-mix(in srgb, var(--color-text) 30%, transparent);
+  backdrop-filter: blur(8px);
+  background: color-mix(in srgb, var(--color-surface) 40%, transparent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    transform 350ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    border-color 280ms ease-out,
+    background 280ms ease-out;
+}
+.nav-btn--lens .nav-btn__chevron {
+  width: 12px;
+  height: 24px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0.7;
+  transition: opacity 280ms ease-out;
+}
+.nav-btn--lens:hover .nav-btn__ring {
+  transform: scale(1.08);
+  border-color: color-mix(in srgb, var(--color-text) 80%, transparent);
+  background: color-mix(in srgb, var(--color-surface) 60%, transparent);
+}
+.nav-btn--lens:hover .nav-btn__chevron {
+  opacity: 1;
+}
+.nav-btn--lens:active .nav-btn__ring {
+  transform: scale(0.95);
+  transition-duration: 80ms;
+}
+@media (max-width: 640px) {
+  .nav-btn--lens .nav-btn__ring {
+    width: 40px;
+    height: 40px;
+  }
+  .nav-btn--lens {
+    padding: 0 8px;
+  }
+}
+
+/* ── 3. FILM STRIP — Perforated sprocket edge ────────────── */
+.nav-btn--filmStrip {
+  padding: 0;
+}
+.nav-btn--filmStrip .nav-btn__strip {
+  width: 36px;
+  height: 120px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  backdrop-filter: blur(16px);
+  background: color-mix(in srgb, var(--color-surface) 60%, transparent);
+  transition:
+    transform 240ms ease-out,
+    background 240ms ease-out;
+}
+.nav-btn--filmStrip.nav-btn--prev .nav-btn__strip {
+  border-radius: 0 4px 4px 0;
+}
+.nav-btn--filmStrip.nav-btn--next .nav-btn__strip {
+  border-radius: 4px 0 0 4px;
+}
+.nav-btn--filmStrip .nav-btn__sprocket {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  border: 1px solid color-mix(in srgb, var(--color-text) 25%, transparent);
+  background: transparent;
+  flex-shrink: 0;
+  transition:
+    box-shadow 240ms ease-out,
+    border-color 240ms ease-out;
+}
+.nav-btn--filmStrip .nav-btn__chevron {
+  width: 12px;
+  height: 24px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0.6;
+  transition: opacity 240ms ease-out;
+}
+.nav-btn--filmStrip.nav-btn--prev:hover .nav-btn__strip {
+  transform: translateX(4px);
+  background: color-mix(in srgb, var(--color-surface) 75%, transparent);
+}
+.nav-btn--filmStrip.nav-btn--next:hover .nav-btn__strip {
+  transform: translateX(-4px);
+  background: color-mix(in srgb, var(--color-surface) 75%, transparent);
+}
+.nav-btn--filmStrip:hover .nav-btn__sprocket {
+  border-color: color-mix(in srgb, var(--color-text) 50%, transparent);
+  box-shadow: 0 0 6px color-mix(in srgb, var(--color-text) 15%, transparent);
+}
+.nav-btn--filmStrip:hover .nav-btn__chevron {
+  opacity: 1;
+}
+.nav-btn--filmStrip:active .nav-btn__strip {
+  background: color-mix(in srgb, var(--color-surface) 90%, transparent);
+  transition-duration: 60ms;
+}
+@media (max-width: 640px) {
+  .nav-btn--filmStrip .nav-btn__strip {
+    height: 80px;
+    width: 30px;
+  }
+}
+
+/* ── 4. CINEMARK — Bold typographic arrow ────────────────── */
+.nav-btn--cinemark {
+  padding: 20px 32px;
+  opacity: 0.55;
+  transition:
+    opacity 200ms cubic-bezier(0.2, 0, 0.4, 1),
+    transform 200ms cubic-bezier(0.2, 0, 0.4, 1);
+}
+.nav-btn--cinemark .nav-btn__chevron {
+  width: 22px;
+  height: 34px;
+  filter: drop-shadow(0 0 0 transparent);
+  transition:
+    filter 200ms ease-out,
+    transform 200ms cubic-bezier(0.2, 0, 0.4, 1);
+}
+.nav-btn--cinemark:hover {
+  opacity: 0.95;
+}
+.nav-btn--cinemark.nav-btn--prev:hover .nav-btn__chevron {
+  transform: translateX(-6px) scaleX(1.3);
+  filter: drop-shadow(
+    0 0 20px color-mix(in srgb, currentColor 25%, transparent)
+  );
+}
+.nav-btn--cinemark.nav-btn--next:hover .nav-btn__chevron {
+  transform: translateX(6px) scaleX(1.3);
+  filter: drop-shadow(
+    0 0 20px color-mix(in srgb, currentColor 25%, transparent)
+  );
+}
+.nav-btn--cinemark:active {
+  opacity: 1;
+  filter: invert(1);
+  transition-duration: 0ms;
+}
+@media (max-width: 640px) {
+  .nav-btn--cinemark {
+    padding: 16px 20px;
+  }
+  .nav-btn--cinemark .nav-btn__chevron {
+    width: 18px;
+    height: 28px;
+  }
+}
+
+/* ── 5. GATE — Reveal curtain edge ───────────────────────── */
+.nav-btn--gate {
+  padding: 0;
+  top: 0;
+  bottom: 0;
+  height: 100vh;
+  transform: none;
+}
+.nav-btn--gate .nav-btn__curtain {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 100%;
+  transition:
+    width 300ms ease-out,
+    border-color 300ms ease-out;
+  border-color: transparent;
+}
+.nav-btn--gate.nav-btn--prev .nav-btn__curtain {
+  background: linear-gradient(
+    to right,
+    color-mix(in srgb, var(--color-surface) 50%, transparent),
+    transparent
+  );
+  border-right: 1px solid transparent;
+}
+.nav-btn--gate.nav-btn--next .nav-btn__curtain {
+  background: linear-gradient(
+    to left,
+    color-mix(in srgb, var(--color-surface) 50%, transparent),
+    transparent
+  );
+  border-left: 1px solid transparent;
+}
+.nav-btn--gate .nav-btn__chevron {
+  width: 14px;
+  height: 28px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0.4;
+  transition: opacity 300ms ease-out;
+}
+.nav-btn--gate:hover .nav-btn__curtain {
+  width: 56px;
+}
+.nav-btn--gate.nav-btn--prev:hover .nav-btn__curtain {
+  background: linear-gradient(
+    to right,
+    color-mix(in srgb, var(--color-surface) 75%, transparent),
+    transparent
+  );
+  border-right-color: color-mix(in srgb, var(--color-text) 10%, transparent);
+}
+.nav-btn--gate.nav-btn--next:hover .nav-btn__curtain {
+  background: linear-gradient(
+    to left,
+    color-mix(in srgb, var(--color-surface) 75%, transparent),
+    transparent
+  );
+  border-left-color: color-mix(in srgb, var(--color-text) 10%, transparent);
+}
+.nav-btn--gate:hover .nav-btn__chevron {
+  opacity: 0.9;
+}
+.nav-btn--gate:active .nav-btn__curtain {
+  width: 60px;
+  transition-duration: 80ms;
+}
+@media (max-width: 640px) {
+  .nav-btn--gate .nav-btn__curtain {
+    width: 32px;
+  }
+  .nav-btn--gate:hover .nav-btn__curtain {
+    width: 40px;
+  }
+}
+
+/* ── Nav button reduced motion ───────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .nav-btn,
+  .nav-btn .nav-btn__ring,
+  .nav-btn .nav-btn__strip,
+  .nav-btn .nav-btn__curtain,
+  .nav-btn .nav-btn__chevron {
+    transition-property: opacity !important;
+    transform: none !important;
+  }
+  .nav-btn--gate {
+    top: 50%;
+    height: auto;
+    transform: translateY(-50%);
+  }
+}

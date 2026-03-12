@@ -1,6 +1,7 @@
 import { GALLERY_SETTINGS_DEFAULTS } from '$lib/constants/gallery-settings';
 import { normalizeThumbnailEntrancePreset } from '$lib/constants/thumbnail-entrance';
 import { normalizePreloaderPreset } from '$lib/constants/preloader-preset';
+import { normalizeNavButtonPreset } from '$lib/constants/nav-button-preset';
 import {
   asBoolean,
   asOptionalNumber,
@@ -15,7 +16,7 @@ type SettingsScope =
   | { kind: 'gallery'; galleryId: string };
 
 const settingsFieldSelect =
-  'theme_default, grid_desktop_default, grid_mobile_default, max_content_width_px, gallery_layout_mode, gallery_gap_px, uniform_thumb_ratio, transition_preset, thumbnail_entrance_preset, preloader_preset, allow_transition_toggle, photograph_info_mode, show_photo_info_title, show_photo_info_description, show_photo_info_capture_date, show_photo_info_dimensions, show_photo_info_license_text, show_photograph_info, show_thumbnail_zoom_hover';
+  'theme_default, grid_desktop_default, grid_mobile_default, max_content_width_px, gallery_layout_mode, gallery_gap_px, uniform_thumb_ratio, transition_preset, thumbnail_entrance_preset, preloader_preset, nav_button_preset, allow_transition_toggle, photograph_info_mode, show_photo_info_title, show_photo_info_description, show_photo_info_capture_date, show_photo_info_dimensions, show_photo_info_license_text, show_photograph_info, show_thumbnail_zoom_hover';
 
 const asThemeMode = (value: FormDataEntryValue | null) => {
   const mode = asString(value, 'system');
@@ -49,6 +50,9 @@ const asThumbnailEntrancePreset = (value: FormDataEntryValue | null) =>
 
 const asPreloaderPreset = (value: FormDataEntryValue | null) =>
   normalizePreloaderPreset(asString(value, 'minimal'));
+
+const asNavButtonPreset = (value: FormDataEntryValue | null) =>
+  normalizeNavButtonPreset(asString(value, 'whisper'));
 
 const asPhotographInfoMode = (value: FormDataEntryValue | null) => {
   const mode = asString(value, 'floating');
@@ -116,6 +120,9 @@ const readPayload = (
     );
     payload.preloader_preset = asPreloaderPreset(
       form.get('preloader_preset'),
+    );
+    payload.nav_button_preset = asNavButtonPreset(
+      form.get('nav_button_preset'),
     );
   }
 

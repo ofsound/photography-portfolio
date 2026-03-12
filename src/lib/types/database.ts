@@ -191,6 +191,7 @@ export type Database = {
           show_thumbnail_zoom_hover: boolean;
           thumbnail_entrance_preset: string;
           preloader_preset: string;
+          nav_button_preset: string;
           theme_default: Database['public']['Enums']['theme_mode'];
           transition_preset: Database['public']['Enums']['transition_preset'];
           uniform_thumb_ratio: number;
@@ -220,6 +221,7 @@ export type Database = {
           show_thumbnail_zoom_hover?: boolean;
           thumbnail_entrance_preset?: string;
           preloader_preset?: string;
+          nav_button_preset?: string;
           theme_default?: Database['public']['Enums']['theme_mode'];
           transition_preset?: Database['public']['Enums']['transition_preset'];
           uniform_thumb_ratio?: number;
@@ -249,6 +251,7 @@ export type Database = {
           show_thumbnail_zoom_hover?: boolean;
           thumbnail_entrance_preset?: string;
           preloader_preset?: string;
+          nav_button_preset?: string;
           theme_default?: Database['public']['Enums']['theme_mode'];
           transition_preset?: Database['public']['Enums']['transition_preset'];
           uniform_thumb_ratio?: number;
@@ -762,6 +765,7 @@ export type Database = {
           singleton_id: number;
           thumbnail_entrance_preset: string;
           preloader_preset: string;
+          nav_button_preset: string;
           theme_default: Database['public']['Enums']['theme_mode'];
           transition_preset: Database['public']['Enums']['transition_preset'];
           uniform_thumb_ratio: number;
@@ -801,6 +805,7 @@ export type Database = {
           singleton_id?: number;
           thumbnail_entrance_preset?: string;
           preloader_preset?: string;
+          nav_button_preset?: string;
           theme_default?: Database['public']['Enums']['theme_mode'];
           transition_preset?: Database['public']['Enums']['transition_preset'];
           uniform_thumb_ratio?: number;
@@ -840,6 +845,7 @@ export type Database = {
           singleton_id?: number;
           thumbnail_entrance_preset?: string;
           preloader_preset?: string;
+          nav_button_preset?: string;
           theme_default?: Database['public']['Enums']['theme_mode'];
           transition_preset?: Database['public']['Enums']['transition_preset'];
           uniform_thumb_ratio?: number;

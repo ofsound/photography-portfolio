@@ -594,11 +594,13 @@
 
     await Promise.all(loadTasks.map((task) => task.promise));
 
-    await new Promise((resolveFade) =>
-      setTimeout(resolveFade, preloaderExitMs),
-    );
+    /* Signal the preloader to begin its exit animation immediately. */
     state.preloaderVisible = false;
 
+    /* Wait for the exit animation to finish, then reveal the gallery. */
+    await new Promise((resolveExit) =>
+      setTimeout(resolveExit, preloaderExitMs),
+    );
     await new Promise((resolveReveal) => setTimeout(resolveReveal, 80));
     state.galleryRevealed = true;
   };

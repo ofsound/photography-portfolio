@@ -1,6 +1,6 @@
 <script lang="ts">
   import { fade } from 'svelte/transition';
-  import { onMount } from 'svelte';
+  import { onMount, untrack } from 'svelte';
   import type { PreloaderPreset } from '$lib/constants/preloader-preset';
 
   type PreloaderPhase = 'entering' | 'loading' | 'exiting' | 'done';
@@ -32,30 +32,6 @@
     mounted = true;
   });
 
-  /* --- Phase state machine ---
-   * visible goes true  → enter → loading
-   * visible goes false → exit  → done
-   */
-  $effect(() => {
-    if (!mounted) return;
-    const p = preset as PreloaderPreset;
-    if (visible && enabled) {
-      phase = 'entering';
-      const entranceMs = ENTRANCE_MS[p];
-      const id = setTimeout(() => {
-        phase = 'loading';
-      }, entranceMs);
-      return () => clearTimeout(id);
-    } else if (phase === 'loading' || phase === 'entering') {
-      phase = 'exiting';
-      const exitMs = p === 'minimal' ? fadeMs : EXIT_MS[p];
-      const id = setTimeout(() => {
-        phase = 'done';
-      }, exitMs);
-      return () => clearTimeout(id);
-    }
-  });
-
   const ENTRANCE_MS: Record<PreloaderPreset, number> = {
     minimal: 0,
     curtain: 700,
@@ -73,6 +49,39 @@
     diagonal: 800,
     filmBurn: 600,
   };
+
+  /*
+   * Phase state machine.
+   *
+   * visible → true:  enter → loading
+   * visible → false: exit  → done
+   *
+   * The `phase` read in the exit branch is wrapped in `untrack` so it
+   * is NOT a dependency — this prevents the $effect from re-running
+   * (and killing the exit timer via cleanup) when phase changes.
+   */
+  $effect(() => {
+    if (!mounted) return;
+    const p = preset as PreloaderPreset;
+    if (visible && enabled) {
+      phase = 'entering';
+      const entranceMs = ENTRANCE_MS[p];
+      const id = setTimeout(() => {
+        phase = 'loading';
+      }, entranceMs);
+      return () => clearTimeout(id);
+    } else {
+      const currentPhase = untrack(() => phase);
+      if (currentPhase === 'loading' || currentPhase === 'entering') {
+        phase = 'exiting';
+        const exitMs = EXIT_MS[p];
+        const id = setTimeout(() => {
+          phase = 'done';
+        }, exitMs);
+        return () => clearTimeout(id);
+      }
+    }
+  });
 
   const active = $derived(phase !== 'done');
 </script>

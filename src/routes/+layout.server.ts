@@ -99,14 +99,14 @@ export const load: LayoutServerLoad = async ({ locals }) => {
     cmsRole,
     siteSettings: settingsResult.data
       ? {
-        ...settingsResult.data,
-        thumbnail_entrance_preset: normalizeThumbnailEntrancePreset(
-          settingsResult.data.thumbnail_entrance_preset,
-        ),
-        preloader_preset: normalizePreloaderPreset(
-          settingsResult.data.preloader_preset,
-        ),
-      }
+          ...settingsResult.data,
+          thumbnail_entrance_preset: normalizeThumbnailEntrancePreset(
+            settingsResult.data.thumbnail_entrance_preset,
+          ),
+          preloader_preset: normalizePreloaderPreset(
+            settingsResult.data.preloader_preset,
+          ),
+        }
       : null,
     navPages: navPagesResult.data ?? [],
     navGalleries,

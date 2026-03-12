@@ -19,6 +19,7 @@
     disableTransitionPreset?: boolean;
     idPrefix?: string;
   };
+  type NavPreviewVariant = 'prev' | 'close' | 'next';
 
   const {
     settings,
@@ -38,18 +39,32 @@
   );
 
   const navPreviewBaseClass =
-    'inline-flex h-9 min-w-14 items-center text-text transition-colors';
+    'inline-flex min-h-10 items-center justify-center text-text transition-colors';
   const navPreviewStyleClass: Record<NavButtonPreset, string> = {
     whisper: 'px-2 text-sm opacity-70',
-    lens: 'justify-center rounded-full border border-border-strong bg-surface px-3 text-sm',
-    filmStrip: 'justify-center border border-border-strong bg-surface px-2',
-    cinemark: 'px-2 text-base font-semibold tracking-wider uppercase',
-    gate: 'border-x border-border-strong bg-surface px-3 text-sm',
+    lens: 'size-10 rounded-full border border-border-strong bg-surface text-sm',
+    filmStrip: 'h-10 w-20 border border-border-strong bg-surface px-2',
+    cinemark: 'px-2 text-base font-semibold tracking-widest uppercase',
+    gate: 'min-h-12 bg-surface text-sm',
   };
-  const navPreviewButtonClass = (direction: 'prev' | 'next') =>
+  const navPreviewButtonClass = (variant: NavPreviewVariant) =>
     `${navPreviewBaseClass} ${navPreviewStyleClass[selectedNavButtonPreset]} ${
-      direction === 'prev' ? 'justify-start' : 'justify-end'
+      selectedNavButtonPreset === 'gate'
+        ? variant === 'close'
+          ? 'rounded-b-lg border-x border-b border-border-strong px-3'
+          : variant === 'prev'
+            ? 'justify-self-start rounded-r-lg border-r border-border-strong px-3'
+            : 'justify-self-end rounded-l-lg border-l border-border-strong px-3'
+        : variant === 'prev'
+          ? 'justify-self-start'
+          : variant === 'next'
+            ? 'justify-self-end'
+            : 'justify-self-center'
     }`;
+  const navPreviewRowClass = 'grid grid-cols-3 items-center gap-3';
+  const navPreviewVariants: NavPreviewVariant[] = ['prev', 'close', 'next'];
+  const navPreviewLabel = (variant: NavPreviewVariant) =>
+    variant === 'prev' ? '←' : variant === 'next' ? '→' : '×';
 </script>
 
 <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
@@ -226,9 +241,48 @@
   </div>
 
   <div class="grid gap-2 rounded border border-border bg-canvas p-2">
-    <div class="flex items-center justify-between gap-2">
-      <span class={navPreviewButtonClass('prev')} aria-hidden="true">←</span>
-      <span class={navPreviewButtonClass('next')} aria-hidden="true">→</span>
+    <div class={navPreviewRowClass}>
+      {#each navPreviewVariants as variant (variant)}
+        <span class={navPreviewButtonClass(variant)} aria-hidden="true">
+          {#if selectedNavButtonPreset === 'filmStrip'}
+            <span class="flex h-full w-full items-center justify-center gap-2">
+              <span class="size-1.5 rounded-full border border-border-strong"
+              ></span>
+              <span
+                class:text-xs={variant === 'close'}
+                class:text-base={variant !== 'close'}
+                class:font-semibold={variant === 'close'}
+                class:tracking-wide={variant === 'close'}
+                class:uppercase={variant === 'close'}
+              >
+                {navPreviewLabel(variant)}
+              </span>
+              <span class="size-1.5 rounded-full border border-border-strong"
+              ></span>
+            </span>
+          {:else if selectedNavButtonPreset === 'cinemark'}
+            <span
+              class:text-sm={variant === 'close'}
+              class:text-2xl={variant !== 'close'}
+            >
+              {variant === 'close' ? 'Close' : navPreviewLabel(variant)}
+            </span>
+          {:else if selectedNavButtonPreset === 'gate'}
+            <span class:font-medium={variant === 'close'}>
+              {variant === 'close' ? 'Close' : navPreviewLabel(variant)}
+            </span>
+          {:else}
+            <span
+              class:text-xs={variant === 'close'}
+              class:text-lg={variant !== 'close'}
+              class:tracking-wide={variant === 'close'}
+              class:uppercase={variant === 'close'}
+            >
+              {navPreviewLabel(variant)}
+            </span>
+          {/if}
+        </span>
+      {/each}
     </div>
   </div>
 

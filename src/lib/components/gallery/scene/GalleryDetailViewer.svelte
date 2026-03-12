@@ -1,7 +1,10 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
+  import { fromAction } from 'svelte/attachments';
   import { resolve } from '$app/paths';
   import { quartOut } from 'svelte/easing';
   import { fade } from 'svelte/transition';
+
   import { useSwipeGesture } from '$lib/actions/useSwipeGesture.svelte';
   import {
     GALLERY_DETAIL_SHARED_WIDTH,
@@ -73,7 +76,6 @@
   }>();
 
   let controlsVisible = $state(true);
-  let bottomDockNode = $state<HTMLElement | null>(null);
   let bottomDockInsetPx = $state(0);
 
   const hasText = (value: string | null | undefined) =>
@@ -166,60 +168,65 @@
     onSelectAdditionalImage(imageId);
   };
 
-  const onResize = () => {
-    onResizePromoted();
-  };
-
-  const updateBottomDockInset = (value: number) => {
+  const setBottomDockInset = (value: number) => {
     const next = Math.max(0, Math.round(value));
     if (next === bottomDockInsetPx) return;
     bottomDockInsetPx = next;
     onBottomDockInsetChange(next);
   };
 
-  $effect(() => {
-    if (!showInfoShell || !isBottomDock) {
-      updateBottomDockInset(0);
-      return;
-    }
+  const observeBottomDock = (node: HTMLElement, enabled: boolean) => {
+    let isEnabled = enabled;
+    let observer: ResizeObserver | null = null;
 
-    const node = bottomDockNode;
-    if (!node) {
-      updateBottomDockInset(0);
-      return;
-    }
+    const syncInset = () => {
+      if (!isEnabled) {
+        setBottomDockInset(0);
+        return;
+      }
 
-    const emitInset = () => {
-      updateBottomDockInset(node.getBoundingClientRect().height);
+      setBottomDockInset(node.getBoundingClientRect().height);
     };
 
-    emitInset();
+    const start = () => {
+      syncInset();
 
-    if (typeof ResizeObserver === 'undefined') return;
-    const observer = new ResizeObserver(() => emitInset());
-    observer.observe(node);
-    return () => {
-      observer.disconnect();
-      updateBottomDockInset(0);
+      if (!isEnabled || typeof ResizeObserver === 'undefined') return;
+      observer = new ResizeObserver(syncInset);
+      observer.observe(node);
     };
-  });
 
-  $effect(() => {
-    if (typeof window === 'undefined') return;
+    start();
+
+    return {
+      update(nextEnabled: boolean) {
+        isEnabled = nextEnabled;
+        observer?.disconnect();
+        observer = null;
+        start();
+      },
+      destroy() {
+        observer?.disconnect();
+        setBottomDockInset(0);
+      },
+    };
+  };
+
+  onMount(() => {
     const vv = window.visualViewport;
     if (!vv) return;
 
-    vv.addEventListener('resize', onResize);
-    vv.addEventListener('scroll', onResize);
+    vv.addEventListener('resize', onResizePromoted);
+    vv.addEventListener('scroll', onResizePromoted);
     return () => {
-      vv.removeEventListener('resize', onResize);
-      vv.removeEventListener('scroll', onResize);
+      vv.removeEventListener('resize', onResizePromoted);
+      vv.removeEventListener('scroll', onResizePromoted);
     };
   });
 </script>
 
 <svelte:window
-  onresize={onResize}
+  onresize={onResizePromoted}
   onmousemove={revealControls}
   onkeydown={onKeydown}
 />
@@ -277,11 +284,58 @@
     <a
       href={resolve(withCurrentSearch(galleryBasePath) as `/${string}`)}
       onclick={onClose}
-      class="chrome-panel pointer-events-auto fixed top-5 left-5 rounded px-3 py-2 text-xs tracking-wider uppercase"
+      class="nav-btn nav-btn--close nav-btn--{navButtonPreset} pointer-events-auto"
       class:pointer-events-none={isTransitioning}
       class:opacity-50={isTransitioning}
+      aria-label="Close photo detail"
     >
-      Close
+      {#if navButtonPreset === 'whisper'}
+        <svg
+          class="nav-btn__close-glyph"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.5"
+          aria-hidden="true"
+        >
+          <path d="M6 6L18 18" />
+          <path d="M18 6L6 18" />
+        </svg>
+      {:else if navButtonPreset === 'lens'}
+        <span class="nav-btn__ring" aria-hidden="true">
+          <svg
+            class="nav-btn__close-glyph"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.75"
+          >
+            <path d="M7 7L17 17" />
+            <path d="M17 7L7 17" />
+          </svg>
+        </span>
+      {:else if navButtonPreset === 'filmStrip'}
+        <span class="nav-btn__strip" aria-hidden="true">
+          <span class="nav-btn__sprocket"></span>
+          <svg
+            class="nav-btn__close-glyph"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.75"
+          >
+            <path d="M7 7L17 17" />
+            <path d="M17 7L7 17" />
+          </svg>
+          <span class="nav-btn__sprocket"></span>
+        </span>
+      {:else if navButtonPreset === 'cinemark'}
+        <span class="nav-btn__close-word" aria-hidden="true">Close</span>
+      {:else if navButtonPreset === 'gate'}
+        <span class="nav-btn__curtain" aria-hidden="true">
+          <span class="nav-btn__close-word">Close</span>
+        </span>
+      {/if}
     </a>
 
     {#if canCycleGallery}
@@ -472,7 +526,7 @@
 {:else if showInfoShell && photographInfoMode === 'bottom_dock'}
   <aside
     use:portal
-    bind:this={bottomDockNode}
+    {@attach fromAction(observeBottomDock, () => showInfoShell && isBottomDock)}
     class="chrome-panel fixed right-0 bottom-0 left-0 z-[80] border-t border-border-strong px-4 pt-3 pb-4 transition-opacity ease-out"
     class:opacity-0={overlayChromeHidden}
     style="transition-duration: {closingChromeMs}ms"

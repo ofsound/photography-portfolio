@@ -9,14 +9,16 @@ import {
   getCmsRole,
 } from '$lib/server/admin-helpers';
 import { ensureAllSettingsSeeded } from '$lib/server/admin/galleries';
+import {
+  GALLERY_SETTINGS_FIELD_SELECT,
+  normalizeGallerySettingsForRead,
+  type GallerySettingsRecord,
+} from '$lib/server/gallery-settings-contract';
 
 type SettingsScope =
   | { kind: 'defaults' }
   | { kind: 'all' }
   | { kind: 'gallery'; galleryId: string };
-
-const settingsFieldSelect =
-  'theme_default, grid_desktop_default, grid_mobile_default, max_content_width_px, gallery_layout_mode, gallery_gap_px, uniform_thumb_ratio, transition_preset, thumbnail_entrance_preset, preloader_preset, nav_button_preset, allow_transition_toggle, photograph_info_mode, show_photo_info_title, show_photo_info_description, show_photo_info_capture_date, show_photo_info_dimensions, show_photo_info_license_text, show_photograph_info, show_thumbnail_zoom_hover';
 
 const asThemeMode = (value: FormDataEntryValue | null) => {
   const mode = asString(value, 'system');
@@ -83,7 +85,7 @@ const readPayload = (
       Math.min(
         20,
         asOptionalNumber(form.get('gallery_gap_px')) ??
-        GALLERY_SETTINGS_DEFAULTS.gallery_gap_px,
+          GALLERY_SETTINGS_DEFAULTS.gallery_gap_px,
       ),
     ),
     uniform_thumb_ratio: Number(
@@ -118,9 +120,7 @@ const readPayload = (
     payload.thumbnail_entrance_preset = asThumbnailEntrancePreset(
       form.get('thumbnail_entrance_preset'),
     );
-    payload.preloader_preset = asPreloaderPreset(
-      form.get('preloader_preset'),
-    );
+    payload.preloader_preset = asPreloaderPreset(form.get('preloader_preset'));
     payload.nav_button_preset = asNavButtonPreset(
       form.get('nav_button_preset'),
     );
@@ -133,11 +133,14 @@ const loadScopeSettings = async (locals: App.Locals, scope: SettingsScope) => {
   if (scope.kind === 'defaults') {
     const defaults = await locals.supabase
       .from('site_settings')
-      .select(`singleton_id, ${settingsFieldSelect}`)
+      .select(`singleton_id, ${GALLERY_SETTINGS_FIELD_SELECT}`)
       .eq('singleton_id', 1)
       .maybeSingle();
     if (defaults.error) throw new Error(defaults.error.message);
-    return defaults.data;
+    return normalizeGallerySettingsForRead(
+      defaults.data as Partial<GallerySettingsRecord> | null,
+      'admin:defaults',
+    );
   }
 
   await ensureAllSettingsSeeded(locals);
@@ -145,39 +148,52 @@ const loadScopeSettings = async (locals: App.Locals, scope: SettingsScope) => {
   const query =
     scope.kind === 'all'
       ? await locals.supabase
-        .from('gallery_settings')
-        .select(`id, scope, gallery_id, ${settingsFieldSelect}`)
-        .eq('scope', 'all')
-        .maybeSingle()
+          .from('gallery_settings')
+          .select(`id, scope, gallery_id, ${GALLERY_SETTINGS_FIELD_SELECT}`)
+          .eq('scope', 'all')
+          .maybeSingle()
       : await locals.supabase
-        .from('gallery_settings')
-        .select(`id, scope, gallery_id, ${settingsFieldSelect}`)
-        .eq('scope', 'gallery')
-        .eq('gallery_id', scope.galleryId)
-        .maybeSingle();
+          .from('gallery_settings')
+          .select(`id, scope, gallery_id, ${GALLERY_SETTINGS_FIELD_SELECT}`)
+          .eq('scope', 'gallery')
+          .eq('gallery_id', scope.galleryId)
+          .maybeSingle();
 
   if (query.error) throw new Error(query.error.message);
-  if (query.data) return query.data;
+  if (query.data) {
+    return normalizeGallerySettingsForRead(
+      query.data as Partial<GallerySettingsRecord>,
+      `admin:${scope.kind}`,
+    );
+  }
 
   const defaults = await locals.supabase
     .from('site_settings')
-    .select(settingsFieldSelect)
+    .select(GALLERY_SETTINGS_FIELD_SELECT)
     .eq('singleton_id', 1)
     .maybeSingle();
   if (defaults.error) throw new Error(defaults.error.message);
   if (!defaults.data) return null;
+
+  const normalizedDefaults = normalizeGallerySettingsForRead(
+    defaults.data as Partial<GallerySettingsRecord>,
+    `admin:fallback:${scope.kind}`,
+  );
 
   const insert = await locals.supabase
     .from('gallery_settings')
     .insert({
       scope: scope.kind,
       gallery_id: scope.kind === 'gallery' ? scope.galleryId : null,
-      ...defaults.data,
+      ...normalizedDefaults,
     })
-    .select(`id, scope, gallery_id, ${settingsFieldSelect}`)
+    .select(`id, scope, gallery_id, ${GALLERY_SETTINGS_FIELD_SELECT}`)
     .single();
   if (insert.error) throw new Error(insert.error.message);
-  return insert.data;
+  return normalizeGallerySettingsForRead(
+    insert.data as Partial<GallerySettingsRecord>,
+    `admin:seeded:${scope.kind}`,
+  );
 };
 
 const saveScopeSettings = async (
@@ -197,14 +213,14 @@ const saveScopeSettings = async (
   const update =
     scope.kind === 'all'
       ? await locals.supabase
-        .from('gallery_settings')
-        .update(payload)
-        .eq('scope', 'all')
+          .from('gallery_settings')
+          .update(payload)
+          .eq('scope', 'all')
       : await locals.supabase
-        .from('gallery_settings')
-        .update(payload)
-        .eq('scope', 'gallery')
-        .eq('gallery_id', scope.galleryId);
+          .from('gallery_settings')
+          .update(payload)
+          .eq('scope', 'gallery')
+          .eq('gallery_id', scope.galleryId);
   if (update.error) throw new Error(update.error.message);
 };
 

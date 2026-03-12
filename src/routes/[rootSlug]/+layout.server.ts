@@ -1,5 +1,10 @@
 import { error, redirect } from '@sveltejs/kit';
 import {
+  DEFAULT_VIEWER_GALLERY_SETTINGS,
+  projectViewerGallerySettings,
+  type ViewerGallerySettings,
+} from '$lib/server/gallery-settings-contract';
+import {
   asPositiveInt,
   loadAllGalleryPhotos,
   loadGalleryPage,
@@ -101,11 +106,11 @@ const loadGalleryModeData = async ({
 
   const resolvedRoute = routePhoto
     ? await resolvePhotoRoute(
-      locals,
-      scope,
-      routePhoto.photoSlug,
-      routePhoto.imageId,
-    )
+        locals,
+        scope,
+        routePhoto.photoSlug,
+        routePhoto.imageId,
+      )
     : null;
 
   if (resolvedRoute?.kind === 'redirect') {
@@ -193,6 +198,11 @@ const loadGalleryModeData = async ({
     };
   }
 
+  const gallerySettings: ViewerGallerySettings = projectViewerGallerySettings(
+    settings,
+    `viewer:${scope.slug}`,
+  );
+
   return {
     viewerMode: 'gallery' as const,
     customPage: null,
@@ -213,24 +223,7 @@ const loadGalleryModeData = async ({
     maxDensity,
     baseQueryString: buildBaseQueryString(q),
     active,
-    gallerySettings: {
-      theme_default: settings.theme_default ?? 'system',
-      transition_preset: settings.transition_preset ?? 'cinematic',
-      thumbnail_entrance_preset:
-        settings.thumbnail_entrance_preset ?? 'cascade',
-      preloader_preset: settings.preloader_preset ?? 'minimal',
-      allow_transition_toggle: settings.allow_transition_toggle ?? true,
-      photograph_info_mode: settings.photograph_info_mode ?? 'floating',
-      show_photo_info_title: settings.show_photo_info_title ?? true,
-      show_photo_info_description: settings.show_photo_info_description ?? true,
-      show_photo_info_capture_date:
-        settings.show_photo_info_capture_date ?? false,
-      show_photo_info_dimensions: settings.show_photo_info_dimensions ?? false,
-      show_photo_info_license_text:
-        settings.show_photo_info_license_text ?? false,
-      show_photograph_info: settings.show_photograph_info ?? true,
-      show_thumbnail_zoom_hover: settings.show_thumbnail_zoom_hover ?? true,
-    },
+    gallerySettings,
   };
 };
 
@@ -318,6 +311,9 @@ export const load: LayoutServerLoad = async ({ locals, params, url }) => {
     throw error(404, 'Not found');
   }
 
+  const gallerySettings: ViewerGallerySettings =
+    DEFAULT_VIEWER_GALLERY_SETTINGS;
+
   return {
     viewerMode: 'page' as const,
     galleryScope: null,
@@ -338,20 +334,6 @@ export const load: LayoutServerLoad = async ({ locals, params, url }) => {
     maxDensity: 10,
     baseQueryString: '',
     active: null,
-    gallerySettings: {
-      theme_default: 'system',
-      transition_preset: 'cinematic',
-      thumbnail_entrance_preset: 'cascade',
-      preloader_preset: 'minimal',
-      allow_transition_toggle: true,
-      photograph_info_mode: 'floating',
-      show_photo_info_title: true,
-      show_photo_info_description: true,
-      show_photo_info_capture_date: false,
-      show_photo_info_dimensions: false,
-      show_photo_info_license_text: false,
-      show_photograph_info: true,
-      show_thumbnail_zoom_hover: true,
-    },
+    gallerySettings,
   };
 };

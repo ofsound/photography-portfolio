@@ -7,7 +7,11 @@
   import type { GallerySettingsDefaults } from '$lib/constants/gallery-settings';
   import { THUMBNAIL_ENTRANCE_PRESET_OPTIONS } from '$lib/constants/thumbnail-entrance';
   import { PRELOADER_PRESET_OPTIONS } from '$lib/constants/preloader-preset';
-  import { NAV_BUTTON_PRESET_OPTIONS } from '$lib/constants/nav-button-preset';
+  import {
+    NAV_BUTTON_PRESET_OPTIONS,
+    normalizeNavButtonPreset,
+    type NavButtonPreset,
+  } from '$lib/constants/nav-button-preset';
 
   type Props = {
     settings: GallerySettingsDefaults;
@@ -24,6 +28,28 @@
   }: Props = $props();
 
   const p = (name: string) => `${idPrefix}${name}`;
+  const selectedNavButtonPreset = $derived(
+    normalizeNavButtonPreset(settings.nav_button_preset),
+  );
+  const selectedNavButtonOption = $derived(
+    NAV_BUTTON_PRESET_OPTIONS.find(
+      (option) => option.id === selectedNavButtonPreset,
+    ) ?? NAV_BUTTON_PRESET_OPTIONS[0],
+  );
+
+  const navPreviewBaseClass =
+    'inline-flex h-9 min-w-14 items-center text-text transition-colors';
+  const navPreviewStyleClass: Record<NavButtonPreset, string> = {
+    whisper: 'px-2 text-sm opacity-70',
+    lens: 'justify-center rounded-full border border-border-strong bg-surface px-3 text-sm',
+    filmStrip: 'justify-center border border-border-strong bg-surface px-2',
+    cinemark: 'px-2 text-base font-semibold tracking-wider uppercase',
+    gate: 'border-x border-border-strong bg-surface px-3 text-sm',
+  };
+  const navPreviewButtonClass = (direction: 'prev' | 'next') =>
+    `${navPreviewBaseClass} ${navPreviewStyleClass[selectedNavButtonPreset]} ${
+      direction === 'prev' ? 'justify-start' : 'justify-end'
+    }`;
 </script>
 
 <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
@@ -172,12 +198,15 @@
   <FormField
     label={'Nav Button Style' + (disableTransitionPreset ? ' (Admin)' : '')}
     id={p('nav_button_preset')}
+    helper={disableTransitionPreset
+      ? 'Admin-only setting. Editors can view but cannot modify this preset.'
+      : selectedNavButtonOption.description}
     class="w-fit"
   >
     <FormSelect
       name="nav_button_preset"
       id={p('nav_button_preset')}
-      value={settings.nav_button_preset}
+      value={selectedNavButtonPreset}
       disabled={readonly || disableTransitionPreset}
       class="w-auto"
     >
@@ -187,6 +216,30 @@
     </FormSelect>
   </FormField>
 </div>
+
+<AdminCard class="grid gap-3 p-3">
+  <div class="flex flex-wrap items-start justify-between gap-2">
+    <p class="text-xs font-medium tracking-wide text-text uppercase">
+      Nav Button Style Preview
+    </p>
+    <p class="text-xs text-text-muted">{selectedNavButtonOption.label}</p>
+  </div>
+
+  <div class="grid gap-2 rounded border border-border bg-canvas p-2">
+    <div class="flex items-center justify-between gap-2">
+      <span class={navPreviewButtonClass('prev')} aria-hidden="true">←</span>
+      <span class={navPreviewButtonClass('next')} aria-hidden="true">→</span>
+    </div>
+  </div>
+
+  <div class="grid gap-1 text-xs text-text-muted">
+    {#each NAV_BUTTON_PRESET_OPTIONS as option (option.id)}
+      <p class:text-text={option.id === selectedNavButtonPreset}>
+        {option.label}: {option.description}
+      </p>
+    {/each}
+  </div>
+</AdminCard>
 
 <div class="mt-4 flex flex-col gap-3">
   <FormField

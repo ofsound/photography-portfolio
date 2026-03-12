@@ -1,6 +1,12 @@
 import type { GalleryVisibilityStatus } from '$lib/constants/gallery-visibility';
 import { toSlug } from '$lib/server/admin-helpers';
 import {
+  GALLERY_SETTINGS_FIELD_KEYS,
+  GALLERY_SETTINGS_FIELD_SELECT,
+  normalizeGallerySettingsForRead,
+  type GallerySettingsRecord,
+} from '$lib/server/gallery-settings-contract';
+import {
   isGallerySlugTaken,
   isPageSlugTaken,
   isReservedRootSlug,
@@ -146,9 +152,7 @@ export const resolveGalleryForAdmin = async (
 const readDefaultsTemplate = async (locals: App.Locals) => {
   const { data, error } = await locals.supabase
     .from('site_settings')
-    .select(
-      'theme_default, grid_desktop_default, grid_mobile_default, max_content_width_px, gallery_layout_mode, gallery_gap_px, uniform_thumb_ratio, transition_preset, thumbnail_entrance_preset, preloader_preset, allow_transition_toggle, photograph_info_mode, show_photo_info_title, show_photo_info_description, show_photo_info_capture_date, show_photo_info_dimensions, show_photo_info_license_text, show_photograph_info, show_thumbnail_zoom_hover',
-    )
+    .select(GALLERY_SETTINGS_FIELD_SELECT)
     .eq('singleton_id', 1)
     .maybeSingle();
 
@@ -157,10 +161,15 @@ const readDefaultsTemplate = async (locals: App.Locals) => {
   }
 
   if (!data) {
-    throw new Error('Defaults template is missing.');
+    throw new Error(
+      `Defaults template is missing (${GALLERY_SETTINGS_FIELD_KEYS.length} expected fields).`,
+    );
   }
 
-  return data;
+  return normalizeGallerySettingsForRead(
+    data as Partial<GallerySettingsRecord>,
+    'admin:seed-defaults',
+  );
 };
 
 const seedGallerySettingsFromDefaults = async (

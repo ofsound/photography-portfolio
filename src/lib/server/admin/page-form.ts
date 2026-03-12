@@ -35,6 +35,7 @@ type PagePayload = {
   og_description: string | null;
   og_image_path: string | null;
   bg_image_id: string | null;
+  bg_image_fixed: boolean;
   max_width_override_px: number | null;
   deleted_at: string | null;
 };
@@ -54,11 +55,11 @@ export const pagePayloadFromForm = async (
 ): Promise<
   | { ok: true; payload: PagePayload }
   | {
-      ok: false;
-      message: string;
-      fieldErrors?: FieldErrors;
-      values?: FormValues;
-    }
+    ok: false;
+    message: string;
+    fieldErrors?: FieldErrors;
+    values?: FormValues;
+  }
 > => {
   const kind: PageKind = 'custom';
   const title = asString(form.get('title')).trim();
@@ -76,6 +77,9 @@ export const pagePayloadFromForm = async (
   const ogImagePath = asString(form.get('og_image_path')).trim() || null;
   const bgImageIdRaw = asString(form.get('bg_image_id')).trim();
   const bgImageId = bgImageIdRaw ? bgImageIdRaw : null;
+  const bgImageFixed =
+    asString(form.get('bg_image_fixed')).toLowerCase() === 'on' ||
+    asString(form.get('bg_image_fixed')).toLowerCase() === 'true';
   const maxWidthOverrideRaw = asString(
     form.get('max_width_override_px'),
   ).trim();
@@ -98,6 +102,7 @@ export const pagePayloadFromForm = async (
     og_description: ogDescription ?? '',
     og_image_path: ogImagePath ?? '',
     bg_image_id: bgImageIdRaw,
+    bg_image_fixed: bgImageFixed ? 'on' : '',
     max_width_override_px: maxWidthOverrideRaw,
     editor_mode: editorMode,
     html_content: rawHtml,
@@ -161,8 +166,8 @@ export const pagePayloadFromForm = async (
   const sveditDocResult =
     editorMode === 'svedit'
       ? parseSveditPageDocument(
-          rawSveditDoc || createDefaultSveditPageDocument(),
-        )
+        rawSveditDoc || createDefaultSveditPageDocument(),
+      )
       : null;
 
   if (sveditDocResult && !sveditDocResult.ok) {
@@ -213,6 +218,7 @@ export const pagePayloadFromForm = async (
       og_description: ogDescription,
       og_image_path: ogImagePath,
       bg_image_id: bgImageId,
+      bg_image_fixed: bgImageFixed,
       max_width_override_px: maxWidthOverridePx,
       deleted_at: null,
     },

@@ -18,6 +18,7 @@ type CmsPage = {
   og_description: string | null;
   og_image_path: string | null;
   bg_image_url: string | null;
+  bg_image_fixed: boolean;
   html_content: string;
   css_module: string;
   tailwind_css: string;
@@ -40,6 +41,7 @@ const toCmsPage = (data: {
   og_description: string | null;
   og_image_path: string | null;
   bg_image_id: string | null;
+  bg_image_fixed?: boolean | null;
   html_content: string | null;
   css_module: string | null;
   tailwind_css: string | null;
@@ -49,9 +51,9 @@ const toCmsPage = (data: {
   kind: 'home' | 'custom';
   visibility_status: 'public' | 'unlisted' | 'draft';
   background_image?:
-    | { delivery_storage_path?: string | null }
-    | Array<{ delivery_storage_path?: string | null }>
-    | null;
+  | { delivery_storage_path?: string | null }
+  | Array<{ delivery_storage_path?: string | null }>
+  | null;
 }): CmsPage => {
   const heroVerticalAlignmentPct = Number(data.hero_vertical_alignment_pct);
   const editorMode = data.editor_mode === 'svedit' ? 'svedit' : 'code';
@@ -79,6 +81,7 @@ const toCmsPage = (data: {
     bg_image_url: backgroundStoragePath
       ? photoPublicUrl(backgroundStoragePath, 2200)
       : null,
+    bg_image_fixed: data.bg_image_fixed === true,
     editor_mode: editorMode,
     html_content:
       editorMode === 'code' ? sanitizeCmsHtml(data.html_content ?? '') : '',
@@ -98,7 +101,7 @@ export const loadPageBySlug = async (locals: App.Locals, slug: string) => {
   const pageWithSvedit = await locals.supabase
     .from('pages')
     .select(
-      'id, slug, title, max_width_override_px, hero_vertical_alignment_pct, seo_title, seo_description, og_title, og_description, og_image_path, bg_image_id, html_content, css_module, tailwind_css, editor_mode, svedit_doc, svedit_schema_version, kind, visibility_status, background_image:bg_image_id(delivery_storage_path)',
+      'id, slug, title, max_width_override_px, hero_vertical_alignment_pct, seo_title, seo_description, og_title, og_description, og_image_path, bg_image_id, bg_image_fixed, html_content, css_module, tailwind_css, editor_mode, svedit_doc, svedit_schema_version, kind, visibility_status, background_image:bg_image_id(delivery_storage_path)',
     )
     .eq('slug', slug)
     .is('deleted_at', null)
@@ -132,7 +135,7 @@ export const loadHomePage = async (locals: App.Locals) => {
   const homeResult = await locals.supabase
     .from('pages')
     .select(
-      'id, slug, title, max_width_override_px, hero_vertical_alignment_pct, seo_title, seo_description, og_title, og_description, og_image_path, bg_image_id, html_content, css_module, tailwind_css, editor_mode, svedit_doc, svedit_schema_version, kind, visibility_status, background_image:bg_image_id(delivery_storage_path)',
+      'id, slug, title, max_width_override_px, hero_vertical_alignment_pct, seo_title, seo_description, og_title, og_description, og_image_path, bg_image_id, bg_image_fixed, html_content, css_module, tailwind_css, editor_mode, svedit_doc, svedit_schema_version, kind, visibility_status, background_image:bg_image_id(delivery_storage_path)',
     )
     .eq('kind', 'home')
     .is('deleted_at', null)

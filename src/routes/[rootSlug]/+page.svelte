@@ -116,21 +116,39 @@
 
 {#if data.viewerMode === 'page' && data.customPage}
   {#if data.customPage.bg_image_url}
-    <div class="relative min-h-screen">
-      <img
-        src={data.customPage.bg_image_url}
-        alt=""
-        aria-hidden="true"
-        class="absolute inset-0 h-full w-full object-cover"
-      />
-      <div class="relative z-10">
-        <CmsPageView
-          page={data.customPage}
-          editable={isEditMode}
-          maxWidthPx={customPageMaxWidthPx}
+    {#if data.customPage.bg_image_fixed}
+      <div class="relative">
+        <img
+          src={data.customPage.bg_image_url}
+          alt=""
+          aria-hidden="true"
+          class="fixed inset-0 z-0 h-full w-full object-cover"
         />
+        <div class="relative z-10 min-h-screen">
+          <CmsPageView
+            page={data.customPage}
+            editable={isEditMode}
+            maxWidthPx={customPageMaxWidthPx}
+          />
+        </div>
       </div>
-    </div>
+    {:else}
+      <div class="relative min-h-screen">
+        <img
+          src={data.customPage.bg_image_url}
+          alt=""
+          aria-hidden="true"
+          class="absolute inset-0 h-full w-full object-cover"
+        />
+        <div class="relative z-10">
+          <CmsPageView
+            page={data.customPage}
+            editable={isEditMode}
+            maxWidthPx={customPageMaxWidthPx}
+          />
+        </div>
+      </div>
+    {/if}
   {:else}
     <CmsPageView
       page={data.customPage}

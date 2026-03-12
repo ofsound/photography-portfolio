@@ -21,7 +21,7 @@ import type { HomepageImage } from '$lib/types/content';
 import type { PageServerLoad } from './$types';
 
 const PAGE_SELECT =
-  'id, slug, title, kind, html_content, css_module, tailwind_css, editor_mode, svedit_doc, svedit_schema_version, seo_title, seo_description, og_title, og_description, og_image_path, bg_image_id, max_width_override_px, visibility_status, nav_order, deleted_at, updated_at';
+  'id, slug, title, kind, html_content, css_module, tailwind_css, editor_mode, svedit_doc, svedit_schema_version, seo_title, seo_description, og_title, og_description, og_image_path, bg_image_id, bg_image_fixed, max_width_override_px, visibility_status, nav_order, deleted_at, updated_at';
 const UUID_REGEX =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 type PageRow = Database['public']['Tables']['pages']['Row'];
@@ -111,20 +111,20 @@ export const load: PageServerLoad = async ({ locals, params, url }) => {
         position: number;
         delivery_storage_path: string | null;
         photos?:
-          | {
-              title?: string;
-              slug?: string;
-              galleries?:
-                | { visibility_status?: string }
-                | Array<{ visibility_status?: string }>;
-            }
-          | Array<{
-              title?: string;
-              slug?: string;
-              galleries?:
-                | { visibility_status?: string }
-                | Array<{ visibility_status?: string }>;
-            }>;
+        | {
+          title?: string;
+          slug?: string;
+          galleries?:
+          | { visibility_status?: string }
+          | Array<{ visibility_status?: string }>;
+        }
+        | Array<{
+          title?: string;
+          slug?: string;
+          galleries?:
+          | { visibility_status?: string }
+          | Array<{ visibility_status?: string }>;
+        }>;
       }) => {
         const photo = Array.isArray(row.photos) ? row.photos[0] : row.photos;
         const gallery = Array.isArray(photo?.galleries)
@@ -182,6 +182,7 @@ export const actions: Actions = {
           og_description: asString(form.get('og_description')).trim(),
           og_image_path: asString(form.get('og_image_path')).trim(),
           bg_image_id: asString(form.get('bg_image_id')).trim(),
+          bg_image_fixed: form.get('bg_image_fixed') === 'on' ? 'on' : '',
           max_width_override_px: asString(
             form.get('max_width_override_px'),
           ).trim(),
@@ -266,8 +267,8 @@ export const actions: Actions = {
     }
     const visibilityStatus = (
       visibilityRaw === 'public' ||
-      visibilityRaw === 'unlisted' ||
-      visibilityRaw === 'draft'
+        visibilityRaw === 'unlisted' ||
+        visibilityRaw === 'draft'
         ? visibilityRaw
         : null
     ) as PageVisibilityStatus | null;
@@ -329,9 +330,10 @@ export const actions: Actions = {
         : null,
       bg_image_id:
         typeof snapshot.bg_image_id === 'string' &&
-        UUID_REGEX.test(snapshot.bg_image_id)
+          UUID_REGEX.test(snapshot.bg_image_id)
           ? snapshot.bg_image_id
           : null,
+      bg_image_fixed: snapshot.bg_image_fixed === true,
       max_width_override_px: toPositiveIntegerOrNull(
         snapshot.max_width_override_px,
       ),

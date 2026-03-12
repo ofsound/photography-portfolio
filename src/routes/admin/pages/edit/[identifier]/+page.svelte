@@ -64,6 +64,7 @@
       : '',
   );
   let formBgImageId = $state<string | null>(initialPage().bg_image_id ?? null);
+  let formBgImageFixed = $state(initialPage().bg_image_fixed ?? false);
   let showBgPicker = $state(false);
   let showRawSveditJson = $state(false);
   let rawSveditJsonError = $state<string | null>(null);
@@ -98,6 +99,14 @@
     }
     if (typeof values.bg_image_id === 'string') {
       formBgImageId = values.bg_image_id.trim() || null;
+    }
+    if (values.bg_image_fixed === 'on' || values.bg_image_fixed === 'true') {
+      formBgImageFixed = true;
+    } else if (
+      values.bg_image_fixed === '' ||
+      values.bg_image_fixed === 'false'
+    ) {
+      formBgImageFixed = false;
     }
     if (typeof values.html_content === 'string')
       formHtmlContent = values.html_content;
@@ -182,6 +191,11 @@
   <input type="hidden" name="id" value={page.id} />
   <input type="hidden" name="original_identifier" value={data.identifier} />
   <input type="hidden" name="bg_image_id" value={formBgImageId ?? ''} />
+  <input
+    type="hidden"
+    name="bg_image_fixed"
+    value={formBgImageFixed ? 'on' : ''}
+  />
 
   <div class="grid gap-3 sm:grid-cols-2">
     <FormField
@@ -285,6 +299,17 @@
           class="h-20 w-28 rounded object-cover"
         />
         <p class="max-w-52 truncate">{selectedBgImage.photo_title}</p>
+      </div>
+      <div class="flex items-center gap-2">
+        <input
+          type="checkbox"
+          id="page-edit-bg_image_fixed"
+          bind:checked={formBgImageFixed}
+          class="size-4 accent-brand"
+        />
+        <label for="page-edit-bg_image_fixed" class="text-xs">
+          Fixed background — background stays fixed while content scrolls
+        </label>
       </div>
     {:else if formBgImageId}
       <p class="text-xs text-text-muted">

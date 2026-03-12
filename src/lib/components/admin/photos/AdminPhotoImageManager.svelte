@@ -74,20 +74,22 @@
           <div class="flex min-w-0 flex-col gap-2 text-xs">
             {#if lead.delivery_storage_path}
               <div class="mt-2">
-                <ThumbnailCropEditor
-                  imageId={lead.id}
-                  deliveryStoragePath={lead.delivery_storage_path}
-                  sourceStoragePath={lead.source_storage_path}
-                  altText={lead.alt_text ?? photo.title}
-                  dimensions={lead.dimensions}
-                  initialCrop={{
-                    thumb_crop_x: lead.thumb_crop_x,
-                    thumb_crop_y: lead.thumb_crop_y,
-                    thumb_crop_zoom: lead.thumb_crop_zoom,
-                  }}
-                  photoId={photo.id}
-                  galleryId={photo.gallery_id}
-                />
+                {#key `${lead.id}_${lead.thumb_crop_x ?? 'default'}_${lead.thumb_crop_y ?? 'default'}_${lead.thumb_crop_zoom ?? 'default'}`}
+                  <ThumbnailCropEditor
+                    imageId={lead.id}
+                    deliveryStoragePath={lead.delivery_storage_path}
+                    sourceStoragePath={lead.source_storage_path}
+                    altText={lead.alt_text ?? photo.title}
+                    dimensions={lead.dimensions}
+                    initialCrop={{
+                      thumb_crop_x: lead.thumb_crop_x,
+                      thumb_crop_y: lead.thumb_crop_y,
+                      thumb_crop_zoom: lead.thumb_crop_zoom,
+                    }}
+                    photoId={photo.id}
+                    galleryId={photo.gallery_id}
+                  />
+                {/key}
               </div>
             {:else}
               <div

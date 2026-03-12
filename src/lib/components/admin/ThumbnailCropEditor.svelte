@@ -31,7 +31,7 @@
 
   const parsedDims = $derived(parseDimensions(dimensions));
 
-  const EDITOR_SIZE = 360;
+  const EDITOR_MAX_SIZE = 360;
   const ZOOM_MIN = 1;
   const ZOOM_MAX = 4;
   const ZOOM_STEP = 0.1;
@@ -39,26 +39,17 @@
   const initialX = $derived(initialCrop?.thumb_crop_x ?? 0.5);
   const initialY = $derived(initialCrop?.thumb_crop_y ?? 0.5);
   const initialZoom = $derived(initialCrop?.thumb_crop_zoom ?? 1);
+  const getInitialX = () => initialX;
+  const getInitialY = () => initialY;
+  const getInitialZoom = () => initialZoom;
 
-  let cropX = $state(0.5);
-  let cropY = $state(0.5);
-  let cropZoom = $state(1);
-
-  let prevInitialKey = $state('');
-  $effect(() => {
-    const key = `${initialX}_${initialY}_${initialZoom}`;
-    if (key !== prevInitialKey) {
-      prevInitialKey = key;
-      cropX = initialX;
-      cropY = initialY;
-      cropZoom = initialZoom;
-    }
-  });
+  let cropX = $state(getInitialX());
+  let cropY = $state(getInitialY());
+  let cropZoom = $state(getInitialZoom());
 
   let imgNaturalWidth = $state<number | null>(null);
   let imgNaturalHeight = $state<number | null>(null);
-  let containerRef = $state<HTMLDivElement | null>(null);
-  let imgRef = $state<HTMLImageElement | null>(null);
+  let editorClientWidth = $state(EDITOR_MAX_SIZE);
   let isDragging = $state(false);
   let dragStartX = 0;
   let dragStartY = 0;
@@ -68,17 +59,21 @@
   const imgWidth = $derived(imgNaturalWidth ?? parsedDims?.width ?? 1);
   const imgHeight = $derived(imgNaturalHeight ?? parsedDims?.height ?? 1);
   const imgAspect = $derived(imgWidth / imgHeight);
+  const editorSize = $derived(
+    Math.min(EDITOR_MAX_SIZE, Math.max(editorClientWidth, 1)),
+  );
 
-  // Image display rect when contained in EDITOR_SIZE x EDITOR_SIZE
+  // Image display rect when contained in the rendered editor square
   const containedRect = $derived.by(() => {
+    const size = editorSize;
     if (imgAspect >= 1) {
-      const w = EDITOR_SIZE;
-      const h = EDITOR_SIZE / imgAspect;
-      return { left: 0, top: (EDITOR_SIZE - h) / 2, width: w, height: h };
+      const w = size;
+      const h = size / imgAspect;
+      return { left: 0, top: (size - h) / 2, width: w, height: h };
     }
-    const h = EDITOR_SIZE;
-    const w = EDITOR_SIZE * imgAspect;
-    return { left: (EDITOR_SIZE - w) / 2, top: 0, width: w, height: h };
+    const h = size;
+    const w = size * imgAspect;
+    return { left: (size - w) / 2, top: 0, width: w, height: h };
   });
 
   // Crop square side in image pixels: at zoom=1, it's min(W,H) (fit). At zoom=2, half.
@@ -129,6 +124,7 @@
     const dx = e.clientX - dragStartX;
     const dy = e.clientY - dragStartY;
     const r = containedRect;
+    if (r.width <= 0 || r.height <= 0) return;
     const normDx = dx / r.width;
     const normDy = dy / r.height;
     cropX = clamp(
@@ -141,6 +137,7 @@
       cropSideNormY / 2,
       1 - cropSideNormY / 2,
     );
+    scheduleSave();
   };
 
   const onPointerUp = (e: PointerEvent) => {
@@ -167,28 +164,27 @@
       cropZoom !== (initialCrop?.thumb_crop_zoom ?? 1),
   );
 
-  let saveFormRef = $state<HTMLFormElement | null>(null);
   let isSaving = $state(false);
+  let saveFormElement: HTMLFormElement | null = null;
 
-  const debouncedSave = (() => {
+  const attachSaveForm = (node: HTMLFormElement) => {
+    saveFormElement = node;
+    return () => {
+      saveFormElement = null;
+    };
+  };
+
+  const scheduleSave = (() => {
     let timeout: ReturnType<typeof setTimeout>;
     return () => {
       if (timeout) clearTimeout(timeout);
       timeout = setTimeout(() => {
-        if (saveFormRef && hasChanges) {
-          saveFormRef.requestSubmit();
+        if (saveFormElement && hasChanges) {
+          saveFormElement.requestSubmit();
         }
       }, 800);
     };
   })();
-
-  $effect(() => {
-    // Track dependencies
-    void cropX;
-    void cropY;
-    void cropZoom;
-    debouncedSave();
-  });
 </script>
 
 <div class="grid gap-3">
@@ -202,9 +198,8 @@
   {/if}
 
   <div
-    bind:this={containerRef}
-    class="relative overflow-hidden rounded border border-border-strong bg-surface-muted"
-    style="width: {EDITOR_SIZE}px; height: {EDITOR_SIZE}px"
+    bind:clientWidth={editorClientWidth}
+    class="relative aspect-square w-full max-w-[360px] overflow-hidden rounded border border-border-strong bg-surface-muted"
     role="img"
     aria-label="Thumbnail crop editor"
     onpointerdown={onPointerDown}
@@ -214,7 +209,6 @@
     onpointerleave={onPointerUp}
   >
     <img
-      bind:this={imgRef}
       src={photoPublicUrl(deliveryStoragePath, 800)}
       alt={altText ?? ''}
       class="absolute inset-0 h-full w-full object-contain"
@@ -242,6 +236,7 @@
         max={ZOOM_MAX}
         step={ZOOM_STEP}
         bind:value={cropZoom}
+        oninput={scheduleSave}
         class="w-24"
       />
       <span class="tabular-nums">{cropZoom.toFixed(1)}x</span>
@@ -277,10 +272,10 @@
   </div>
 
   <form
-    bind:this={saveFormRef}
     method="POST"
     action="?/saveThumbCrop"
     class="hidden"
+    {@attach attachSaveForm}
     use:enhance={() => {
       isSaving = true;
       return async ({ update }) => {

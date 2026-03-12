@@ -372,17 +372,6 @@
         </div>
       </FormField>
 
-      <AdminSeoSocialDrawer
-        idPrefix="homepage-hero"
-        storageKey="admin-seo-social:homepage-hero"
-        fieldErrors={heroFieldErrors}
-        bind:seoTitle={heroSeoTitle}
-        bind:seoDescription={heroSeoDescription}
-        bind:ogTitle={heroOgTitle}
-        bind:ogDescription={heroOgDescription}
-        bind:ogImagePath={heroOgImagePath}
-      />
-
       {#if heroEditorMode === 'code'}
         {#key heroEditorSeed}
           <FormField
@@ -461,6 +450,17 @@
         <input type="hidden" name="html_content" value="" />
         <input type="hidden" name="css_module" value="" />
       {/if}
+
+      <AdminSeoSocialDrawer
+        idPrefix="homepage-hero"
+        storageKey="admin-seo-social:homepage-hero"
+        fieldErrors={heroFieldErrors}
+        bind:seoTitle={heroSeoTitle}
+        bind:seoDescription={heroSeoDescription}
+        bind:ogTitle={heroOgTitle}
+        bind:ogDescription={heroOgDescription}
+        bind:ogImagePath={heroOgImagePath}
+      />
 
       <div class="flex flex-wrap items-center gap-3">
         <AdminButton type="submit" variant="submit">Save Hero</AdminButton>

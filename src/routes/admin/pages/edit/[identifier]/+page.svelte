@@ -237,16 +237,6 @@
     </FormField>
   </div>
 
-  <AdminSeoSocialDrawer
-    idPrefix="page-edit"
-    storageKey="admin-seo-social:pages-edit"
-    {fieldErrors}
-    bind:seoTitle={formSeoTitle}
-    bind:seoDescription={formSeoDescription}
-    bind:ogTitle={formOgTitle}
-    bind:ogDescription={formOgDescription}
-    bind:ogImagePath={formOgImagePath}
-  />
   <FormField
     label="Max Width Override (px)"
     id="page-edit-max_width_override_px"
@@ -399,6 +389,17 @@
     {revisions}
     rollbackFormAction="?/rollback"
     storageKey="admin-revisions:pages-edit"
+  />
+
+  <AdminSeoSocialDrawer
+    idPrefix="page-edit"
+    storageKey="admin-seo-social:pages-edit"
+    {fieldErrors}
+    bind:seoTitle={formSeoTitle}
+    bind:seoDescription={formSeoDescription}
+    bind:ogTitle={formOgTitle}
+    bind:ogDescription={formOgDescription}
+    bind:ogImagePath={formOgImagePath}
   />
 </form>
 

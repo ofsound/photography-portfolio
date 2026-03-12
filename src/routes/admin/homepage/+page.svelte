@@ -302,6 +302,7 @@
     formMessage={form?.message}
     formSuccess={form?.success}
     overflow
+    scrollListOnly={section === 'slides'}
     create={selectedSlidesPanel}
     list={availableImagesList}
   />

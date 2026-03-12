@@ -171,11 +171,26 @@
                     class:opacity-50={sortable.isDragging}
                   >
                     <AdminCard
-                      class="flex cursor-move flex-col gap-2 p-2 sm:flex-row sm:items-center"
+                      variant="gradient"
+                      class="grid cursor-move gap-2 p-2 sm:grid-cols-[auto_auto_1fr_auto] sm:items-center"
                     >
+                      <div
+                        aria-hidden="true"
+                        class="mx-2 hidden self-center text-text-muted sm:flex sm:items-center"
+                      >
+                        <div
+                          class="grid grid-cols-3 gap-0.5 rounded border border-border px-1 py-0.5"
+                        >
+                          {#each [0, 1, 2, 3, 4, 5] as dot (dot)}
+                            <span
+                              class="h-0.5 w-0.5 rounded-full bg-text-muted/80"
+                            ></span>
+                          {/each}
+                        </div>
+                      </div>
                       {#if image.delivery_storage_path}
                         <div
-                          class="flex h-24 w-32 shrink-0 items-center justify-center overflow-hidden rounded"
+                          class="flex h-12 w-16 shrink-0 items-center justify-center overflow-hidden rounded"
                         >
                           <img
                             src={photoPublicUrl(
@@ -183,23 +198,25 @@
                               320,
                             )}
                             alt={image.alt_text ?? photo.title}
-                            class="max-h-full max-w-full object-contain"
+                            class="h-12 w-16 rounded object-cover"
                           />
                         </div>
                       {:else}
                         <div
-                          class="grid h-24 w-32 shrink-0 animate-pulse place-items-center rounded border border-border-strong text-xs uppercase"
+                          class="grid h-12 w-16 shrink-0 animate-pulse place-items-center rounded border border-border-strong text-xs uppercase"
                         >
                           pending
                         </div>
                       {/if}
 
-                      <div
-                        class="ml-auto flex shrink-0 flex-wrap items-center gap-2"
-                      >
+                      <div class="text-xs">
+                        {image.alt_text ?? photo.title}
+                      </div>
+
+                      <div class="flex shrink-0 flex-wrap items-center gap-2">
                         {#if image.source_storage_path}
                           <AdminButton
-                            size="sm"
+                            size="xs"
                             href="/admin/download-original/{image.id}"
                             class="px-2!"
                             title="Download Original"
@@ -240,7 +257,7 @@
                             name="image_id"
                             value={image.id}
                           />
-                          <AdminButton size="sm" type="submit" variant="submit"
+                          <AdminButton size="xs" type="submit" variant="submit"
                             >Set Lead</AdminButton
                           >
                         </form>
@@ -268,7 +285,7 @@
                             name="gallery_id"
                             value={photo.gallery_id}
                           />
-                          <AdminButton variant="danger" size="sm" type="submit"
+                          <AdminButton variant="danger" size="xs" type="submit"
                             >Delete</AdminButton
                           >
                         </form>
@@ -283,13 +300,27 @@
               {#snippet children(source)}
                 {@const dragImage = imageById(String(source.id))}
                 {#if dragImage}
-                  <div
-                    class="grid w-44 gap-2 rounded border-2 border-brand bg-surface p-2 shadow-xl"
-                    role="presentation"
+                  <AdminCard
+                    variant="gradient"
+                    class="grid cursor-move gap-2 p-2 sm:grid-cols-[auto_auto_1fr_auto] sm:items-center"
                   >
+                    <div
+                      aria-hidden="true"
+                      class="mx-2 hidden self-center text-text-muted sm:flex sm:items-center"
+                    >
+                      <div
+                        class="grid grid-cols-3 gap-0.5 rounded border border-border px-1 py-0.5"
+                      >
+                        {#each [0, 1, 2, 3, 4, 5] as dot (dot)}
+                          <span
+                            class="h-0.5 w-0.5 rounded-full bg-text-muted/80"
+                          ></span>
+                        {/each}
+                      </div>
+                    </div>
                     {#if dragImage.delivery_storage_path}
                       <div
-                        class="flex h-24 w-full items-center justify-center overflow-hidden rounded bg-surface-muted"
+                        class="flex h-12 w-16 shrink-0 items-center justify-center overflow-hidden rounded"
                       >
                         <img
                           src={photoPublicUrl(
@@ -297,22 +328,95 @@
                             320,
                           )}
                           alt={dragImage.alt_text ?? photo.title}
-                          class="max-h-full max-w-full object-contain"
+                          class="h-12 w-16 rounded object-cover"
                         />
                       </div>
                     {:else}
                       <div
-                        class="grid h-24 w-full animate-pulse place-items-center rounded border border-border-strong text-xs uppercase"
+                        class="grid h-12 w-16 shrink-0 animate-pulse place-items-center rounded border border-border-strong text-xs uppercase"
                       >
                         pending
                       </div>
                     {/if}
-                    <p
-                      class="truncate text-xs tracking-widest text-text-muted uppercase"
-                    >
-                      Additional image
-                    </p>
-                  </div>
+
+                    <div class="text-xs">
+                      {dragImage.alt_text ?? photo.title}
+                    </div>
+
+                    <div class="flex shrink-0 flex-wrap items-center gap-2">
+                      {#if dragImage.source_storage_path}
+                        <AdminButton
+                          size="xs"
+                          href="/admin/download-original/{dragImage.id}"
+                          class="px-2!"
+                          title="Download Original"
+                          aria-label="Download Original"
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            class="h-4 w-4"
+                            aria-hidden="true"
+                          >
+                            <path
+                              d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
+                            />
+                            <polyline points="7 10 12 15 17 10" />
+                            <line x1="12" y1="15" x2="12" y2="3" />
+                          </svg>
+                        </AdminButton>
+                      {/if}
+                      <form method="POST" action="?/setLead" use:enhance>
+                        <input type="hidden" name="photo_id" value={photo.id} />
+                        <input
+                          type="hidden"
+                          name="gallery_id"
+                          value={photo.gallery_id}
+                        />
+                        <input
+                          type="hidden"
+                          name="image_id"
+                          value={dragImage.id}
+                        />
+                        <AdminButton size="xs" type="submit" variant="submit"
+                          >Set Lead</AdminButton
+                        >
+                      </form>
+
+                      <form
+                        method="POST"
+                        action="?/removeImage"
+                        use:enhance={({ cancel }) => {
+                          if (
+                            !window.confirm(
+                              'Are you sure you want to delete this additional image? This cannot be undone.',
+                            )
+                          ) {
+                            cancel();
+                          }
+                        }}
+                      >
+                        <input
+                          type="hidden"
+                          name="image_id"
+                          value={dragImage.id}
+                        />
+                        <input
+                          type="hidden"
+                          name="gallery_id"
+                          value={photo.gallery_id}
+                        />
+                        <AdminButton variant="danger" size="xs" type="submit"
+                          >Delete</AdminButton
+                        >
+                      </form>
+                    </div>
+                  </AdminCard>
                 {/if}
               {/snippet}
             </DragOverlay>

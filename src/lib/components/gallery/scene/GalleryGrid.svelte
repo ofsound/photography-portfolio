@@ -1,8 +1,91 @@
 <script lang="ts">
+  import {
+    buildThumbnailEntranceOrder,
+    type ThumbnailEntranceTileMetric,
+  } from './thumbnail-entrance-presets';
   import GalleryTiles from './GalleryTiles.svelte';
   import type { GalleryGridModel } from './gallery-grid-model';
 
   const { model } = $props<{ model: GalleryGridModel }>();
+
+  const collectEntranceTiles = (
+    root: HTMLElement,
+  ): ThumbnailEntranceTileMetric[] => {
+    const nodes = root.querySelectorAll<HTMLElement>('[data-entrance-slug]');
+    const tiles: ThumbnailEntranceTileMetric[] = [];
+    for (const node of nodes) {
+      const slug = node.dataset.entranceSlug;
+      if (!slug) continue;
+
+      const rect = node.getBoundingClientRect();
+      if (rect.width <= 0 || rect.height <= 0) continue;
+
+      tiles.push({
+        slug,
+        top: rect.top,
+        left: rect.left,
+        centerX: rect.left + rect.width / 2,
+        centerY: rect.top + rect.height / 2,
+      });
+    }
+    return tiles;
+  };
+
+  type ResolveEntranceOrderParams = {
+    batchKey: number;
+    presetId: GalleryGridModel['thumbnailEntrancePreset'];
+    onResolve: (batchKey: number, orderedSlugs: string[]) => void;
+  };
+
+  const resolveEntranceOrder = (
+    node: HTMLElement,
+    params: ResolveEntranceOrderParams,
+  ) => {
+    let current = params;
+    let resolvedBatchKey = -1;
+    let rafOuter = 0;
+    let rafInner = 0;
+
+    const cancelFrame = () => {
+      if (rafOuter) {
+        cancelAnimationFrame(rafOuter);
+        rafOuter = 0;
+      }
+      if (rafInner) {
+        cancelAnimationFrame(rafInner);
+        rafInner = 0;
+      }
+    };
+
+    const run = () => {
+      if (current.batchKey === resolvedBatchKey) return;
+      resolvedBatchKey = current.batchKey;
+      cancelFrame();
+
+      rafOuter = requestAnimationFrame(() => {
+        rafInner = requestAnimationFrame(() => {
+          const tiles = collectEntranceTiles(node);
+          const orderedSlugs = buildThumbnailEntranceOrder(
+            current.presetId,
+            tiles,
+          );
+          current.onResolve(current.batchKey, orderedSlugs);
+        });
+      });
+    };
+
+    run();
+
+    return {
+      update(next: ResolveEntranceOrderParams) {
+        current = next;
+        run();
+      },
+      destroy() {
+        cancelFrame();
+      },
+    };
+  };
 
   const observeLoadSentinel = (
     node: HTMLElement,
@@ -55,7 +138,15 @@
 </script>
 
 {#if model.layoutMode === 'coverage' || model.layoutMode === 'rows' || model.layoutMode === 'columns'}
-  <section class="coverage-container w-full" use:model.bindCoverageSection>
+  <section
+    class="coverage-container w-full"
+    use:model.bindCoverageSection
+    use:resolveEntranceOrder={{
+      batchKey: model.entranceBatchKey,
+      presetId: model.thumbnailEntrancePreset,
+      onResolve: model.onResolveEntranceOrder,
+    }}
+  >
     {#if model.photos.length === 0}
       <p
         class="flex h-full items-center justify-center text-sm tracking-widest text-text-muted uppercase"
@@ -67,7 +158,15 @@
     {/if}
   </section>
 {:else}
-  <section class="mx-auto w-full px-4 py-5" style={model.sectionMaxWidthStyle}>
+  <section
+    class="mx-auto w-full px-4 py-5"
+    style={model.sectionMaxWidthStyle}
+    use:resolveEntranceOrder={{
+      batchKey: model.entranceBatchKey,
+      presetId: model.thumbnailEntrancePreset,
+      onResolve: model.onResolveEntranceOrder,
+    }}
+  >
     {#if model.photos.length === 0}
       <p
         class="py-16 text-center text-sm tracking-widest text-text-muted uppercase"

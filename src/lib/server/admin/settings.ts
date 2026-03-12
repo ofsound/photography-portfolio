@@ -1,4 +1,5 @@
 import { GALLERY_SETTINGS_DEFAULTS } from '$lib/constants/gallery-settings';
+import { normalizeThumbnailEntrancePreset } from '$lib/constants/thumbnail-entrance';
 import {
   asBoolean,
   asOptionalNumber,
@@ -13,7 +14,7 @@ type SettingsScope =
   | { kind: 'gallery'; galleryId: string };
 
 const settingsFieldSelect =
-  'theme_default, grid_desktop_default, grid_mobile_default, max_content_width_px, gallery_layout_mode, gallery_gap_px, uniform_thumb_ratio, transition_preset, allow_transition_toggle, photograph_info_mode, show_photo_info_title, show_photo_info_description, show_photo_info_capture_date, show_photo_info_dimensions, show_photo_info_license_text, show_photograph_info, show_thumbnail_zoom_hover';
+  'theme_default, grid_desktop_default, grid_mobile_default, max_content_width_px, gallery_layout_mode, gallery_gap_px, uniform_thumb_ratio, transition_preset, thumbnail_entrance_preset, allow_transition_toggle, photograph_info_mode, show_photo_info_title, show_photo_info_description, show_photo_info_capture_date, show_photo_info_dimensions, show_photo_info_license_text, show_photograph_info, show_thumbnail_zoom_hover';
 
 const asThemeMode = (value: FormDataEntryValue | null) => {
   const mode = asString(value, 'system');
@@ -41,6 +42,9 @@ const asTransitionPreset = (value: FormDataEntryValue | null) => {
     ? preset
     : 'cinematic';
 };
+
+const asThumbnailEntrancePreset = (value: FormDataEntryValue | null) =>
+  normalizeThumbnailEntrancePreset(asString(value, 'cascade'));
 
 const asPhotographInfoMode = (value: FormDataEntryValue | null) => {
   const mode = asString(value, 'floating');
@@ -102,6 +106,9 @@ const readPayload = (
   if (role === 'admin') {
     payload.transition_preset = asTransitionPreset(
       form.get('transition_preset'),
+    );
+    payload.thumbnail_entrance_preset = asThumbnailEntrancePreset(
+      form.get('thumbnail_entrance_preset'),
     );
   }
 

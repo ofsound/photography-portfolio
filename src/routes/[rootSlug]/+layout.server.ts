@@ -216,6 +216,8 @@ const loadGalleryModeData = async ({
     gallerySettings: {
       theme_default: settings.theme_default ?? 'system',
       transition_preset: settings.transition_preset ?? 'cinematic',
+      thumbnail_entrance_preset:
+        settings.thumbnail_entrance_preset ?? 'cascade',
       allow_transition_toggle: settings.allow_transition_toggle ?? true,
       photograph_info_mode: settings.photograph_info_mode ?? 'floating',
       show_photo_info_title: settings.show_photo_info_title ?? true,
@@ -338,6 +340,7 @@ export const load: LayoutServerLoad = async ({ locals, params, url }) => {
     gallerySettings: {
       theme_default: 'system',
       transition_preset: 'cinematic',
+      thumbnail_entrance_preset: 'cascade',
       allow_transition_toggle: true,
       photograph_info_mode: 'floating',
       show_photo_info_title: true,

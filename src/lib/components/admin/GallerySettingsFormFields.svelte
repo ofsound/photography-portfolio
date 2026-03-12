@@ -5,6 +5,7 @@
   import FormSelect from '$lib/components/FormSelect.svelte';
 
   import type { GallerySettingsDefaults } from '$lib/constants/gallery-settings';
+  import { THUMBNAIL_ENTRANCE_PRESET_OPTIONS } from '$lib/constants/thumbnail-entrance';
 
   type Props = {
     settings: GallerySettingsDefaults;
@@ -129,6 +130,24 @@
       <option value="cinematic">cinematic</option>
       <option value="snappy">snappy</option>
       <option value="experimental">experimental</option>
+    </FormSelect>
+  </FormField>
+  <FormField
+    label={'Thumbnail Entrance Animation' +
+      (disableTransitionPreset ? ' (Admin)' : '')}
+    id={p('thumbnail_entrance_preset')}
+    class="w-fit"
+  >
+    <FormSelect
+      name="thumbnail_entrance_preset"
+      id={p('thumbnail_entrance_preset')}
+      value={settings.thumbnail_entrance_preset}
+      disabled={readonly || disableTransitionPreset}
+      class="w-auto"
+    >
+      {#each THUMBNAIL_ENTRANCE_PRESET_OPTIONS as option (option.id)}
+        <option value={option.id}>{option.id}</option>
+      {/each}
     </FormSelect>
   </FormField>
 </div>

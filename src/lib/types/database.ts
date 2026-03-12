@@ -189,6 +189,7 @@ export type Database = {
           show_photograph_info: boolean;
           show_in_nav: boolean;
           show_thumbnail_zoom_hover: boolean;
+          thumbnail_entrance_preset: string;
           theme_default: Database['public']['Enums']['theme_mode'];
           transition_preset: Database['public']['Enums']['transition_preset'];
           uniform_thumb_ratio: number;
@@ -216,6 +217,7 @@ export type Database = {
           show_photograph_info?: boolean;
           show_in_nav?: boolean;
           show_thumbnail_zoom_hover?: boolean;
+          thumbnail_entrance_preset?: string;
           theme_default?: Database['public']['Enums']['theme_mode'];
           transition_preset?: Database['public']['Enums']['transition_preset'];
           uniform_thumb_ratio?: number;
@@ -243,6 +245,7 @@ export type Database = {
           show_photograph_info?: boolean;
           show_in_nav?: boolean;
           show_thumbnail_zoom_hover?: boolean;
+          thumbnail_entrance_preset?: string;
           theme_default?: Database['public']['Enums']['theme_mode'];
           transition_preset?: Database['public']['Enums']['transition_preset'];
           uniform_thumb_ratio?: number;
@@ -754,6 +757,7 @@ export type Database = {
           show_search_link_in_nav: boolean;
           show_thumbnail_zoom_hover: boolean;
           singleton_id: number;
+          thumbnail_entrance_preset: string;
           theme_default: Database['public']['Enums']['theme_mode'];
           transition_preset: Database['public']['Enums']['transition_preset'];
           uniform_thumb_ratio: number;
@@ -791,6 +795,7 @@ export type Database = {
           show_search_link_in_nav?: boolean;
           show_thumbnail_zoom_hover?: boolean;
           singleton_id?: number;
+          thumbnail_entrance_preset?: string;
           theme_default?: Database['public']['Enums']['theme_mode'];
           transition_preset?: Database['public']['Enums']['transition_preset'];
           uniform_thumb_ratio?: number;
@@ -828,6 +833,7 @@ export type Database = {
           show_search_link_in_nav?: boolean;
           show_thumbnail_zoom_hover?: boolean;
           singleton_id?: number;
+          thumbnail_entrance_preset?: string;
           theme_default?: Database['public']['Enums']['theme_mode'];
           transition_preset?: Database['public']['Enums']['transition_preset'];
           uniform_thumb_ratio?: number;

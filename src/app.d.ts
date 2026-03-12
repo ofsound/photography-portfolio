@@ -1,5 +1,6 @@
 import type { SupabaseClient, Session, User } from '@supabase/supabase-js';
 import type { Database } from '$lib/types/database';
+import type { ThumbnailEntrancePreset } from '$lib/constants/thumbnail-entrance';
 
 declare global {
   namespace App {
@@ -21,6 +22,7 @@ declare global {
       siteSettings: {
         theme_default: 'light' | 'dark' | 'system';
         transition_preset: 'cinematic' | 'snappy' | 'experimental';
+        thumbnail_entrance_preset: ThumbnailEntrancePreset;
         allow_transition_toggle: boolean;
         show_photograph_info: boolean;
         show_search_link_in_nav: boolean;

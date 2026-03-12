@@ -93,6 +93,7 @@ type SettingsFields = Pick<
   | 'gallery_gap_px'
   | 'uniform_thumb_ratio'
   | 'transition_preset'
+  | 'thumbnail_entrance_preset'
   | 'allow_transition_toggle'
   | 'photograph_info_mode'
   | 'show_photo_info_title'
@@ -156,6 +157,7 @@ const gallerySettingsSelect = [
   'gallery_gap_px',
   'uniform_thumb_ratio',
   'transition_preset',
+  'thumbnail_entrance_preset',
   'allow_transition_toggle',
   'photograph_info_mode',
   'show_photo_info_title',

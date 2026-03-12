@@ -40,6 +40,10 @@ export const createGallerySceneState = (data: ViewerData) => {
     preloaderVisible: false,
     galleryRevealed: false,
     preloadKey: '',
+    entranceBatchKey: 0,
+    entranceOrderReady: false,
+    entranceOrderCount: 0,
+    entranceLocked: false,
   });
   return state;
 };

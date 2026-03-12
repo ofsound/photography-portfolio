@@ -2,6 +2,7 @@
   import { goto } from '$app/navigation';
   import { resolve } from '$app/paths';
   import { onDestroy, onMount } from 'svelte';
+  import { SvelteMap, SvelteSet } from 'svelte/reactivity';
   import GalleryDetailViewer from './scene/GalleryDetailViewer.svelte';
   import GalleryGrid from './scene/GalleryGrid.svelte';
   import GalleryPreloader from './scene/GalleryPreloader.svelte';
@@ -30,6 +31,8 @@
     routeKeyFor,
   } from './scene/useGalleryRouter.svelte';
   import { createGalleryTileAnimator } from './scene/useGalleryTileAnimator.svelte';
+  import { normalizeThumbnailEntrancePreset } from '$lib/constants/thumbnail-entrance';
+  import { resolveThumbnailEntrancePresetRuntime } from './scene/thumbnail-entrance-presets';
 
   import type { GalleryPhoto } from '$lib/types/content';
   import type { GalleryGridModel } from './scene/gallery-grid-model';
@@ -121,6 +124,91 @@
       return Math.max(0.2, parsed.width / parsed.height);
     }
     return uniformRatio;
+  };
+
+  const thumbnailEntrancePreset = $derived(
+    normalizeThumbnailEntrancePreset(
+      data.gallerySettings?.thumbnail_entrance_preset,
+    ),
+  );
+
+  const thumbnailEntranceRuntime = $derived(
+    resolveThumbnailEntrancePresetRuntime(thumbnailEntrancePreset),
+  );
+  const entranceEligibleSlugs = new SvelteSet<string>();
+  const entranceRanks = new SvelteMap<string, number>();
+  let resolvedEntranceBatchKey = -1;
+  let entranceUnlockTimer: ReturnType<typeof setTimeout> | null = null;
+
+  const clearEntranceLock = () => {
+    if (entranceUnlockTimer) {
+      clearTimeout(entranceUnlockTimer);
+      entranceUnlockTimer = null;
+    }
+  };
+
+  const startEntranceBatch = (photos: GalleryPhoto[]) => {
+    state.entranceBatchKey += 1;
+    state.entranceOrderReady = false;
+    state.entranceOrderCount = 0;
+    resolvedEntranceBatchKey = -1;
+
+    entranceEligibleSlugs.clear();
+    entranceRanks.clear();
+    for (const photo of photos) {
+      entranceEligibleSlugs.add(photo.slug);
+    }
+
+    clearEntranceLock();
+    state.entranceLocked = !reducedMotion() && photos.length > 0;
+  };
+
+  const onResolveEntranceOrder = (batchKey: number, orderedSlugs: string[]) => {
+    if (batchKey !== state.entranceBatchKey) return;
+    if (batchKey === resolvedEntranceBatchKey) return;
+
+    resolvedEntranceBatchKey = batchKey;
+    entranceRanks.clear();
+
+    let rank = 0;
+    for (const slug of orderedSlugs) {
+      if (!entranceEligibleSlugs.has(slug)) continue;
+      if (entranceRanks.has(slug)) continue;
+      entranceRanks.set(slug, rank);
+      rank += 1;
+    }
+
+    state.entranceOrderReady = true;
+    state.entranceOrderCount = rank;
+
+    if (rank === 0 || reducedMotion()) {
+      clearEntranceLock();
+      state.entranceLocked = false;
+    }
+  };
+
+  const entranceFx = (slug: string, fallbackRank: number) => {
+    const eligible = entranceEligibleSlugs.has(slug);
+    if (!eligible || reducedMotion()) {
+      return {
+        className: 'thumb-entrance-fx',
+        style: '',
+      };
+    }
+
+    if (!state.galleryRevealed || !state.entranceOrderReady) {
+      return {
+        className: 'thumb-entrance-fx thumb-entrance-fx--await',
+        style: '',
+      };
+    }
+
+    const rank = entranceRanks.get(slug) ?? fallbackRank;
+    const motion = thumbnailEntranceRuntime.buildMotion({ rank });
+    return {
+      className: `thumb-entrance-fx ${motion.className}`,
+      style: `--thumb-entrance-delay: ${motion.delayMs}ms; --thumb-entrance-duration: ${motion.durationMs}ms;`,
+    };
   };
 
   let layout!: ReturnType<typeof createGalleryLayout>;
@@ -327,6 +415,7 @@
 
   const onOpenPhoto = (event: MouseEvent, slug: string) => {
     event.preventDefault();
+    if (state.entranceLocked) return;
     state.isClosing = false;
 
     void (async () => {
@@ -531,6 +620,11 @@
     columnsResult: layout.columnsResult,
     showThumbnailZoomHover:
       data.gallerySettings?.show_thumbnail_zoom_hover ?? true,
+    thumbnailEntrancePreset,
+    entranceBatchKey: state.entranceBatchKey,
+    entranceLocked: state.entranceLocked,
+    entranceFx,
+    onResolveEntranceOrder,
   });
 
   onMount(() => {
@@ -570,6 +664,40 @@
 
   $effect(() => {
     if (!state.mounted) return;
+    if (!state.entranceLocked) {
+      clearEntranceLock();
+      return;
+    }
+    if (!state.galleryRevealed || !state.entranceOrderReady) return;
+
+    if (reducedMotion() || state.entranceOrderCount <= 0) {
+      clearEntranceLock();
+      state.entranceLocked = false;
+      return;
+    }
+
+    clearEntranceLock();
+
+    const batchKey = state.entranceBatchKey;
+    const unlockAfterMs =
+      thumbnailEntranceRuntime.durationMs +
+      Math.max(state.entranceOrderCount - 1, 0) *
+        thumbnailEntranceRuntime.staggerMs +
+      24;
+
+    entranceUnlockTimer = setTimeout(() => {
+      if (batchKey !== state.entranceBatchKey) return;
+      state.entranceLocked = false;
+      entranceUnlockTimer = null;
+    }, unlockAfterMs);
+
+    return () => {
+      clearEntranceLock();
+    };
+  });
+
+  $effect(() => {
+    if (!state.mounted) return;
 
     const nextQuerySignature = [routeScopeSlug, data.q, data.page].join('|');
 
@@ -580,6 +708,7 @@
       state.currentPage = data.page;
       state.hasMore = data.hasMore;
       state.loadError = null;
+      startEntranceBatch(state.photos);
     } else {
       const existing = new Set(state.photos.map((photo) => photo.id));
       const nextPhotos = data.photos.filter(
@@ -625,6 +754,7 @@
   });
 
   onDestroy(() => {
+    clearEntranceLock();
     if (typeof document !== 'undefined') {
       document.body.style.overflow = '';
     }

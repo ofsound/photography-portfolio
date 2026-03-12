@@ -9,7 +9,6 @@
   import type { GalleryGridModel } from '../gallery-grid-model';
 
   const { model } = $props<{ model: GalleryGridModel }>();
-  const CASCADE_STAGGER_MS = 42;
 
   const photosById = $derived.by<SvelteMap<string, GalleryPhoto>>(() => {
     const map = new SvelteMap<string, GalleryPhoto>();
@@ -27,18 +26,9 @@
         {#each row.photos as entry, entryIdx (`rows-${entry.id}`)}
           {@const photo = photosById.get(entry.id)}
           {#if photo}
-            {@const cascadeIdx =
-              rowIdx * (model.rowsResult.rows[0]?.photos.length ?? 1) +
-              entryIdx}
-            <div
-              class="tile-cascade min-w-0"
-              class:revealed={model.galleryRevealed}
-              class:no-motion={model.reducedMotion}
-              style="flex: {entry.displayAspect} 1 0%; animation-delay: {model.galleryRevealed &&
-              !model.reducedMotion
-                ? cascadeIdx * CASCADE_STAGGER_MS
-                : 0}ms"
-            >
+            {@const fallbackRank = rowIdx * 512 + entryIdx}
+            {@const entranceFx = model.entranceFx(photo.slug, fallbackRank)}
+            <div class="min-w-0" style="flex: {entry.displayAspect} 1 0%;">
               <a
                 href={resolve(
                   model.withCurrentSearch(
@@ -46,30 +36,41 @@
                   ) as `/${string}`,
                 )}
                 use:model.registerTile={photo.slug}
-                class="group relative block h-full w-full overflow-hidden"
+                data-entrance-slug={photo.slug}
+                aria-disabled={model.entranceLocked ? 'true' : undefined}
+                class="group relative block h-full w-full overflow-hidden {model.entranceLocked
+                  ? 'pointer-events-none'
+                  : ''}"
                 onclick={(event: MouseEvent) =>
                   model.onOpenPhoto(event, photo.slug)}
               >
                 {#if photo.leadImage}
-                  <img
-                    src={photoPublicUrl(
-                      photo.leadImage.delivery_storage_path,
-                      GALLERY_DETAIL_SHARED_WIDTH,
-                    )}
-                    alt={photo.leadImage.alt_text ?? photo.title}
-                    class="block h-full w-full object-cover transition-transform duration-500 ease-cinematic {model.hasThumbCrop(
-                      photo.leadImage,
-                    )
-                      ? 'tile-img-crop'
-                      : model.showThumbnailZoomHover
-                        ? 'group-hover:scale-[1.03]'
-                        : ''}"
-                    style={model.thumbCropStyle(
-                      photo.leadImage,
-                      entry.displayAspect,
-                    )}
-                    loading="eager"
-                  />
+                  {#key `${model.entranceBatchKey}:${photo.id}`}
+                    <div
+                      class={`h-full w-full ${entranceFx.className}`}
+                      style={entranceFx.style}
+                    >
+                      <img
+                        src={photoPublicUrl(
+                          photo.leadImage.delivery_storage_path,
+                          GALLERY_DETAIL_SHARED_WIDTH,
+                        )}
+                        alt={photo.leadImage.alt_text ?? photo.title}
+                        class="block h-full w-full object-cover transition-transform duration-500 ease-cinematic {model.hasThumbCrop(
+                          photo.leadImage,
+                        )
+                          ? 'tile-img-crop'
+                          : model.showThumbnailZoomHover
+                            ? 'group-hover:scale-[1.03]'
+                            : ''}"
+                        style={model.thumbCropStyle(
+                          photo.leadImage,
+                          entry.displayAspect,
+                        )}
+                        loading="eager"
+                      />
+                    </div>
+                  {/key}
                 {/if}
               </a>
             </div>
@@ -83,27 +84,5 @@
 <style>
   .tile-img-crop {
     object-fit: contain !important;
-  }
-
-  .tile-cascade {
-    opacity: 0;
-    transform: translateY(14px);
-  }
-
-  .tile-cascade.revealed {
-    animation: cascadeIn 520ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
-  }
-
-  .tile-cascade.no-motion.revealed {
-    animation: none;
-    opacity: 1;
-    transform: none;
-  }
-
-  @keyframes cascadeIn {
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
   }
 </style>

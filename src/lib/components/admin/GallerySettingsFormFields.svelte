@@ -96,6 +96,18 @@
       <option value="columns">columns</option>
     </FormSelect>
   </FormField>
+  <FormField label="Detail Viewer" id={p('detail_view_mode')} class="w-fit">
+    <FormSelect
+      name="detail_view_mode"
+      id={p('detail_view_mode')}
+      value={settings.detail_view_mode}
+      disabled={readonly}
+      class="w-auto"
+    >
+      <option value="classic">classic</option>
+      <option value="contact_sheet">contact sheet</option>
+    </FormSelect>
+  </FormField>
   <FormField label="Thumb Ratio" id={p('uniform_thumb_ratio')} class="w-28">
     <FormInput
       id={p('uniform_thumb_ratio')}
@@ -292,6 +304,113 @@
         {option.label}: {option.description}
       </p>
     {/each}
+  </div>
+</AdminCard>
+
+<AdminCard class="grid gap-3 p-3">
+  <div class="grid gap-1">
+    <p class="text-xs font-medium tracking-wide text-text uppercase">
+      Contact Sheet Viewer
+    </p>
+    <p class="text-xs text-text-muted">
+      Applied when Detail Viewer is set to contact sheet.
+    </p>
+  </div>
+
+  <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+    <FormField
+      label="Perspective (px)"
+      id={p('contact_sheet_perspective_px')}
+      class="w-full"
+    >
+      <FormInput
+        id={p('contact_sheet_perspective_px')}
+        name="contact_sheet_perspective_px"
+        type="number"
+        min="200"
+        max="4000"
+        value={String(settings.contact_sheet_perspective_px)}
+        {readonly}
+      />
+    </FormField>
+    <FormField
+      label="Rotate X (deg)"
+      id={p('contact_sheet_rotate_x_deg')}
+      class="w-full"
+    >
+      <FormInput
+        id={p('contact_sheet_rotate_x_deg')}
+        name="contact_sheet_rotate_x_deg"
+        type="number"
+        step="0.1"
+        min="0"
+        max="45"
+        value={String(settings.contact_sheet_rotate_x_deg)}
+        {readonly}
+      />
+    </FormField>
+    <FormField
+      label="Rotate Y (deg)"
+      id={p('contact_sheet_rotate_y_deg')}
+      class="w-full"
+    >
+      <FormInput
+        id={p('contact_sheet_rotate_y_deg')}
+        name="contact_sheet_rotate_y_deg"
+        type="number"
+        step="0.1"
+        min="0"
+        max="45"
+        value={String(settings.contact_sheet_rotate_y_deg)}
+        {readonly}
+      />
+    </FormField>
+    <FormField
+      label="Travel Z (px)"
+      id={p('contact_sheet_travel_z_px')}
+      class="w-full"
+    >
+      <FormInput
+        id={p('contact_sheet_travel_z_px')}
+        name="contact_sheet_travel_z_px"
+        type="number"
+        min="0"
+        max="1000"
+        value={String(settings.contact_sheet_travel_z_px)}
+        {readonly}
+      />
+    </FormField>
+    <FormField
+      label="Target Fill"
+      id={p('contact_sheet_target_fill_pct')}
+      class="w-full"
+    >
+      <FormInput
+        id={p('contact_sheet_target_fill_pct')}
+        name="contact_sheet_target_fill_pct"
+        type="number"
+        step="0.01"
+        min="0.1"
+        max="0.95"
+        value={String(settings.contact_sheet_target_fill_pct)}
+        {readonly}
+      />
+    </FormField>
+    <FormField
+      label="Mobile Intensity (%)"
+      id={p('contact_sheet_mobile_intensity_pct')}
+      class="w-full"
+    >
+      <FormInput
+        id={p('contact_sheet_mobile_intensity_pct')}
+        name="contact_sheet_mobile_intensity_pct"
+        type="number"
+        min="0"
+        max="100"
+        value={String(settings.contact_sheet_mobile_intensity_pct)}
+        {readonly}
+      />
+    </FormField>
   </div>
 </AdminCard>
 

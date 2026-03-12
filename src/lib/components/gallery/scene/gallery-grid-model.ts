@@ -2,11 +2,10 @@ import type { GalleryPhoto } from '$lib/types/content';
 import type { RowLayoutResult } from '$lib/utils/row-solver';
 import type { ThumbnailEntrancePreset } from '$lib/constants/thumbnail-entrance';
 import type { GalleryLayoutMode, GalleryImage } from './gallery-scene.types';
-
-export type RegisterTileAction = (
-  node: HTMLElement,
-  slug: string,
-) => { update?: (slug: string) => void; destroy?: () => void };
+import type {
+  BindGridRootAction,
+  RegisterTileAction,
+} from './gallery-viewer-controller';
 
 export type ThumbnailEntranceFx = {
   className: string;
@@ -26,6 +25,7 @@ export type GalleryGridModel = {
   withCurrentSearch: (href: string) => string;
   photoPath: (photoSlug: string) => string;
   onOpenPhoto: (event: MouseEvent, slug: string) => void;
+  bindGridRoot: BindGridRootAction;
   registerTile: RegisterTileAction;
   hasThumbCrop: (img: GalleryImage | null) => boolean;
   thumbCropStyle: (img: GalleryImage | null, containerAspect: number) => string;

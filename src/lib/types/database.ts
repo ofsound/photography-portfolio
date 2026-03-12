@@ -170,7 +170,14 @@ export type Database = {
       gallery_settings: {
         Row: {
           allow_transition_toggle: boolean;
+          contact_sheet_mobile_intensity_pct: number;
+          contact_sheet_perspective_px: number;
+          contact_sheet_rotate_x_deg: number;
+          contact_sheet_rotate_y_deg: number;
+          contact_sheet_target_fill_pct: number;
+          contact_sheet_travel_z_px: number;
           created_at: string;
+          detail_view_mode: Database['public']['Enums']['detail_view_mode'];
           gallery_gap_px: number;
           gallery_id: string | null;
           gallery_layout_mode: Database['public']['Enums']['layout_mode'];
@@ -200,7 +207,14 @@ export type Database = {
         };
         Insert: {
           allow_transition_toggle?: boolean;
+          contact_sheet_mobile_intensity_pct?: number;
+          contact_sheet_perspective_px?: number;
+          contact_sheet_rotate_x_deg?: number;
+          contact_sheet_rotate_y_deg?: number;
+          contact_sheet_target_fill_pct?: number;
+          contact_sheet_travel_z_px?: number;
           created_at?: string;
+          detail_view_mode?: Database['public']['Enums']['detail_view_mode'];
           gallery_gap_px?: number;
           gallery_id?: string | null;
           gallery_layout_mode?: Database['public']['Enums']['layout_mode'];
@@ -230,7 +244,14 @@ export type Database = {
         };
         Update: {
           allow_transition_toggle?: boolean;
+          contact_sheet_mobile_intensity_pct?: number;
+          contact_sheet_perspective_px?: number;
+          contact_sheet_rotate_x_deg?: number;
+          contact_sheet_rotate_y_deg?: number;
+          contact_sheet_target_fill_pct?: number;
+          contact_sheet_travel_z_px?: number;
           created_at?: string;
+          detail_view_mode?: Database['public']['Enums']['detail_view_mode'];
           gallery_gap_px?: number;
           gallery_id?: string | null;
           gallery_layout_mode?: Database['public']['Enums']['layout_mode'];
@@ -739,12 +760,19 @@ export type Database = {
           admin_font_family: string;
           admin_font_import_url: string;
           allow_transition_toggle: boolean;
+          contact_sheet_mobile_intensity_pct: number;
+          contact_sheet_perspective_px: number;
+          contact_sheet_rotate_x_deg: number;
+          contact_sheet_rotate_y_deg: number;
+          contact_sheet_target_fill_pct: number;
+          contact_sheet_travel_z_px: number;
           brand_contrast_dark_hex: string;
           brand_contrast_light_hex: string;
           brand_dark_hex: string;
           brand_light_hex: string;
           created_at: string;
           default_page_max_width_px: number;
+          detail_view_mode: Database['public']['Enums']['detail_view_mode'];
           gallery_gap_px: number;
           gallery_layout_mode: Database['public']['Enums']['layout_mode'];
           grid_desktop_default: number;
@@ -779,12 +807,19 @@ export type Database = {
           admin_font_family?: string;
           admin_font_import_url?: string;
           allow_transition_toggle?: boolean;
+          contact_sheet_mobile_intensity_pct?: number;
+          contact_sheet_perspective_px?: number;
+          contact_sheet_rotate_x_deg?: number;
+          contact_sheet_rotate_y_deg?: number;
+          contact_sheet_target_fill_pct?: number;
+          contact_sheet_travel_z_px?: number;
           brand_contrast_dark_hex?: string;
           brand_contrast_light_hex?: string;
           brand_dark_hex?: string;
           brand_light_hex?: string;
           created_at?: string;
           default_page_max_width_px?: number;
+          detail_view_mode?: Database['public']['Enums']['detail_view_mode'];
           gallery_gap_px?: number;
           gallery_layout_mode?: Database['public']['Enums']['layout_mode'];
           grid_desktop_default?: number;
@@ -819,12 +854,19 @@ export type Database = {
           admin_font_family?: string;
           admin_font_import_url?: string;
           allow_transition_toggle?: boolean;
+          contact_sheet_mobile_intensity_pct?: number;
+          contact_sheet_perspective_px?: number;
+          contact_sheet_rotate_x_deg?: number;
+          contact_sheet_rotate_y_deg?: number;
+          contact_sheet_target_fill_pct?: number;
+          contact_sheet_travel_z_px?: number;
           brand_contrast_dark_hex?: string;
           brand_contrast_light_hex?: string;
           brand_dark_hex?: string;
           brand_light_hex?: string;
           created_at?: string;
           default_page_max_width_px?: number;
+          detail_view_mode?: Database['public']['Enums']['detail_view_mode'];
           gallery_gap_px?: number;
           gallery_layout_mode?: Database['public']['Enums']['layout_mode'];
           grid_desktop_default?: number;
@@ -962,6 +1004,7 @@ export type Database = {
     Enums: {
       app_role: 'admin' | 'editor';
       asset_kind: 'lead' | 'additional';
+      detail_view_mode: 'classic' | 'contact_sheet';
       photograph_info_mode: 'hidden' | 'floating' | 'bottom_dock';
       gallery_settings_scope: 'gallery' | 'all';
       gallery_visibility_status: 'public' | 'unlisted' | 'archived';
@@ -988,122 +1031,123 @@ type DefaultSchema = DatabaseWithoutInternals[Extract<
 
 export type Tables<
   DefaultSchemaTableNameOrOptions extends
-  | keyof (DefaultSchema['Tables'] & DefaultSchema['Views'])
-  | { schema: keyof DatabaseWithoutInternals },
+    | keyof (DefaultSchema['Tables'] & DefaultSchema['Views'])
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals;
   }
-  ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
-    DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])
-  : never = never,
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])
+    : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals;
 }
   ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
-    DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])[TableName] extends {
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])[TableName] extends {
       Row: infer R;
     }
-  ? R
-  : never
+    ? R
+    : never
   : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema['Tables'] &
-    DefaultSchema['Views'])
-  ? (DefaultSchema['Tables'] &
-    DefaultSchema['Views'])[DefaultSchemaTableNameOrOptions] extends {
-      Row: infer R;
-    }
-  ? R
-  : never
-  : never;
+        DefaultSchema['Views'])
+    ? (DefaultSchema['Tables'] &
+        DefaultSchema['Views'])[DefaultSchemaTableNameOrOptions] extends {
+        Row: infer R;
+      }
+      ? R
+      : never
+    : never;
 
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
-  | keyof DefaultSchema['Tables']
-  | { schema: keyof DatabaseWithoutInternals },
+    | keyof DefaultSchema['Tables']
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals;
   }
-  ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
-  : never = never,
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
+    : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals;
 }
   ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
-    Insert: infer I;
-  }
-  ? I
-  : never
+      Insert: infer I;
+    }
+    ? I
+    : never
   : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema['Tables']
-  ? DefaultSchema['Tables'][DefaultSchemaTableNameOrOptions] extends {
-    Insert: infer I;
-  }
-  ? I
-  : never
-  : never;
+    ? DefaultSchema['Tables'][DefaultSchemaTableNameOrOptions] extends {
+        Insert: infer I;
+      }
+      ? I
+      : never
+    : never;
 
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
-  | keyof DefaultSchema['Tables']
-  | { schema: keyof DatabaseWithoutInternals },
+    | keyof DefaultSchema['Tables']
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals;
   }
-  ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
-  : never = never,
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
+    : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals;
 }
   ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
-    Update: infer U;
-  }
-  ? U
-  : never
+      Update: infer U;
+    }
+    ? U
+    : never
   : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema['Tables']
-  ? DefaultSchema['Tables'][DefaultSchemaTableNameOrOptions] extends {
-    Update: infer U;
-  }
-  ? U
-  : never
-  : never;
+    ? DefaultSchema['Tables'][DefaultSchemaTableNameOrOptions] extends {
+        Update: infer U;
+      }
+      ? U
+      : never
+    : never;
 
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
-  | keyof DefaultSchema['Enums']
-  | { schema: keyof DatabaseWithoutInternals },
+    | keyof DefaultSchema['Enums']
+    | { schema: keyof DatabaseWithoutInternals },
   EnumName extends DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals;
   }
-  ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums']
-  : never = never,
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums']
+    : never = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals;
 }
   ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums'][EnumName]
   : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema['Enums']
-  ? DefaultSchema['Enums'][DefaultSchemaEnumNameOrOptions]
-  : never;
+    ? DefaultSchema['Enums'][DefaultSchemaEnumNameOrOptions]
+    : never;
 
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
-  | keyof DefaultSchema['CompositeTypes']
-  | { schema: keyof DatabaseWithoutInternals },
+    | keyof DefaultSchema['CompositeTypes']
+    | { schema: keyof DatabaseWithoutInternals },
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals;
   }
-  ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes']
-  : never = never,
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes']
+    : never = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals;
 }
   ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes'][CompositeTypeName]
   : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema['CompositeTypes']
-  ? DefaultSchema['CompositeTypes'][PublicCompositeTypeNameOrOptions]
-  : never;
+    ? DefaultSchema['CompositeTypes'][PublicCompositeTypeNameOrOptions]
+    : never;
 
 export const Constants = {
   public: {
     Enums: {
       app_role: ['admin', 'editor'],
       asset_kind: ['lead', 'additional'],
+      detail_view_mode: ['classic', 'contact_sheet'],
       photograph_info_mode: ['hidden', 'floating', 'bottom_dock'],
       gallery_settings_scope: ['gallery', 'all'],
       gallery_visibility_status: ['public', 'unlisted', 'archived'],

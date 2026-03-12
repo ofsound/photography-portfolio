@@ -47,6 +47,21 @@ const asTransitionPreset = (value: FormDataEntryValue | null) => {
     : 'cinematic';
 };
 
+const asDetailViewMode = (value: FormDataEntryValue | null) => {
+  const mode = asString(value, 'classic');
+  return mode === 'contact_sheet' ? 'contact_sheet' : 'classic';
+};
+
+const clampNumber = (
+  value: number,
+  min: number,
+  max: number,
+  fallback: number = min,
+) => {
+  if (!Number.isFinite(value)) return fallback;
+  return Math.min(max, Math.max(min, value));
+};
+
 const asThumbnailEntrancePreset = (value: FormDataEntryValue | null) =>
   normalizeThumbnailEntrancePreset(asString(value, 'cascade'));
 
@@ -80,6 +95,7 @@ const readPayload = (
       GALLERY_SETTINGS_DEFAULTS.grid_mobile_default,
     max_content_width_px: asOptionalNumber(form.get('max_content_width_px')),
     gallery_layout_mode: asLayoutMode(form.get('gallery_layout_mode')),
+    detail_view_mode: asDetailViewMode(form.get('detail_view_mode')),
     gallery_gap_px: Math.max(
       0,
       Math.min(
@@ -87,6 +103,60 @@ const readPayload = (
         asOptionalNumber(form.get('gallery_gap_px')) ??
           GALLERY_SETTINGS_DEFAULTS.gallery_gap_px,
       ),
+    ),
+    contact_sheet_perspective_px: clampNumber(
+      asOptionalNumber(form.get('contact_sheet_perspective_px')) ??
+        GALLERY_SETTINGS_DEFAULTS.contact_sheet_perspective_px,
+      200,
+      4000,
+      GALLERY_SETTINGS_DEFAULTS.contact_sheet_perspective_px,
+    ),
+    contact_sheet_rotate_x_deg: clampNumber(
+      Number(
+        asString(
+          form.get('contact_sheet_rotate_x_deg'),
+          String(GALLERY_SETTINGS_DEFAULTS.contact_sheet_rotate_x_deg),
+        ),
+      ),
+      0,
+      45,
+      GALLERY_SETTINGS_DEFAULTS.contact_sheet_rotate_x_deg,
+    ),
+    contact_sheet_rotate_y_deg: clampNumber(
+      Number(
+        asString(
+          form.get('contact_sheet_rotate_y_deg'),
+          String(GALLERY_SETTINGS_DEFAULTS.contact_sheet_rotate_y_deg),
+        ),
+      ),
+      0,
+      45,
+      GALLERY_SETTINGS_DEFAULTS.contact_sheet_rotate_y_deg,
+    ),
+    contact_sheet_travel_z_px: clampNumber(
+      asOptionalNumber(form.get('contact_sheet_travel_z_px')) ??
+        GALLERY_SETTINGS_DEFAULTS.contact_sheet_travel_z_px,
+      0,
+      1000,
+      GALLERY_SETTINGS_DEFAULTS.contact_sheet_travel_z_px,
+    ),
+    contact_sheet_target_fill_pct: clampNumber(
+      Number(
+        asString(
+          form.get('contact_sheet_target_fill_pct'),
+          String(GALLERY_SETTINGS_DEFAULTS.contact_sheet_target_fill_pct),
+        ),
+      ),
+      0.1,
+      0.95,
+      GALLERY_SETTINGS_DEFAULTS.contact_sheet_target_fill_pct,
+    ),
+    contact_sheet_mobile_intensity_pct: clampNumber(
+      asOptionalNumber(form.get('contact_sheet_mobile_intensity_pct')) ??
+        GALLERY_SETTINGS_DEFAULTS.contact_sheet_mobile_intensity_pct,
+      0,
+      100,
+      GALLERY_SETTINGS_DEFAULTS.contact_sheet_mobile_intensity_pct,
     ),
     uniform_thumb_ratio: Number(
       asString(

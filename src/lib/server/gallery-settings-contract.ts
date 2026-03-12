@@ -23,12 +23,19 @@ export const GALLERY_SETTINGS_FIELD_KEYS = [
   'grid_mobile_default',
   'max_content_width_px',
   'gallery_layout_mode',
+  'detail_view_mode',
   'gallery_gap_px',
   'uniform_thumb_ratio',
   'transition_preset',
   'thumbnail_entrance_preset',
   'preloader_preset',
   'nav_button_preset',
+  'contact_sheet_perspective_px',
+  'contact_sheet_rotate_x_deg',
+  'contact_sheet_rotate_y_deg',
+  'contact_sheet_travel_z_px',
+  'contact_sheet_target_fill_pct',
+  'contact_sheet_mobile_intensity_pct',
   'allow_transition_toggle',
   'photograph_info_mode',
   'show_photo_info_title',
@@ -55,6 +62,20 @@ export type ViewerGallerySettings = {
 
 const hasText = (value: unknown): value is string =>
   typeof value === 'string' && value.trim().length > 0;
+
+const clampNumber = (
+  value: unknown,
+  fallback: number,
+  min: number,
+  max: number,
+) => {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) return fallback;
+  return Math.min(max, Math.max(min, parsed));
+};
+
+const normalizeDetailViewMode = (value: unknown) =>
+  value === 'contact_sheet' ? 'contact_sheet' : 'classic';
 
 const warnPresetCoercion = (
   field: 'thumbnail_entrance_preset' | 'preloader_preset' | 'nav_button_preset',
@@ -120,6 +141,9 @@ export const normalizeGallerySettingsForRead = (
     gallery_layout_mode:
       source.gallery_layout_mode ??
       GALLERY_SETTINGS_DEFAULTS.gallery_layout_mode,
+    detail_view_mode: normalizeDetailViewMode(
+      source.detail_view_mode ?? GALLERY_SETTINGS_DEFAULTS.detail_view_mode,
+    ),
     gallery_gap_px:
       source.gallery_gap_px ?? GALLERY_SETTINGS_DEFAULTS.gallery_gap_px,
     uniform_thumb_ratio:
@@ -130,6 +154,42 @@ export const normalizeGallerySettingsForRead = (
     thumbnail_entrance_preset: thumbnailEntrancePreset,
     preloader_preset: preloaderPreset,
     nav_button_preset: navButtonPreset,
+    contact_sheet_perspective_px: clampNumber(
+      source.contact_sheet_perspective_px,
+      GALLERY_SETTINGS_DEFAULTS.contact_sheet_perspective_px,
+      200,
+      4000,
+    ),
+    contact_sheet_rotate_x_deg: clampNumber(
+      source.contact_sheet_rotate_x_deg,
+      GALLERY_SETTINGS_DEFAULTS.contact_sheet_rotate_x_deg,
+      0,
+      45,
+    ),
+    contact_sheet_rotate_y_deg: clampNumber(
+      source.contact_sheet_rotate_y_deg,
+      GALLERY_SETTINGS_DEFAULTS.contact_sheet_rotate_y_deg,
+      0,
+      45,
+    ),
+    contact_sheet_travel_z_px: clampNumber(
+      source.contact_sheet_travel_z_px,
+      GALLERY_SETTINGS_DEFAULTS.contact_sheet_travel_z_px,
+      0,
+      1000,
+    ),
+    contact_sheet_target_fill_pct: clampNumber(
+      source.contact_sheet_target_fill_pct,
+      GALLERY_SETTINGS_DEFAULTS.contact_sheet_target_fill_pct,
+      0.1,
+      0.95,
+    ),
+    contact_sheet_mobile_intensity_pct: clampNumber(
+      source.contact_sheet_mobile_intensity_pct,
+      GALLERY_SETTINGS_DEFAULTS.contact_sheet_mobile_intensity_pct,
+      0,
+      100,
+    ),
     allow_transition_toggle:
       source.allow_transition_toggle ??
       GALLERY_SETTINGS_DEFAULTS.allow_transition_toggle,
@@ -170,12 +230,22 @@ const viewerGallerySettingProjectors: {
   grid_mobile_default: (settings) => settings.grid_mobile_default,
   max_content_width_px: (settings) => settings.max_content_width_px,
   gallery_layout_mode: (settings) => settings.gallery_layout_mode,
+  detail_view_mode: (settings) => settings.detail_view_mode,
   gallery_gap_px: (settings) => settings.gallery_gap_px,
   uniform_thumb_ratio: (settings) => settings.uniform_thumb_ratio,
   transition_preset: (settings) => settings.transition_preset,
   thumbnail_entrance_preset: (settings) => settings.thumbnail_entrance_preset,
   preloader_preset: (settings) => settings.preloader_preset,
   nav_button_preset: (settings) => settings.nav_button_preset,
+  contact_sheet_perspective_px: (settings) =>
+    settings.contact_sheet_perspective_px,
+  contact_sheet_rotate_x_deg: (settings) => settings.contact_sheet_rotate_x_deg,
+  contact_sheet_rotate_y_deg: (settings) => settings.contact_sheet_rotate_y_deg,
+  contact_sheet_travel_z_px: (settings) => settings.contact_sheet_travel_z_px,
+  contact_sheet_target_fill_pct: (settings) =>
+    settings.contact_sheet_target_fill_pct,
+  contact_sheet_mobile_intensity_pct: (settings) =>
+    settings.contact_sheet_mobile_intensity_pct,
   allow_transition_toggle: (settings) => settings.allow_transition_toggle,
   photograph_info_mode: (settings) => settings.photograph_info_mode,
   show_photo_info_title: (settings) => settings.show_photo_info_title,

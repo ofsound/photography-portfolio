@@ -7,12 +7,19 @@ export type GallerySettingsDefaults = Pick<
   | 'grid_mobile_default'
   | 'max_content_width_px'
   | 'gallery_layout_mode'
+  | 'detail_view_mode'
   | 'gallery_gap_px'
   | 'uniform_thumb_ratio'
   | 'transition_preset'
   | 'thumbnail_entrance_preset'
   | 'preloader_preset'
   | 'nav_button_preset'
+  | 'contact_sheet_perspective_px'
+  | 'contact_sheet_rotate_x_deg'
+  | 'contact_sheet_rotate_y_deg'
+  | 'contact_sheet_travel_z_px'
+  | 'contact_sheet_target_fill_pct'
+  | 'contact_sheet_mobile_intensity_pct'
   | 'allow_transition_toggle'
   | 'photograph_info_mode'
   | 'show_photo_info_title'
@@ -30,12 +37,19 @@ export const GALLERY_SETTINGS_DEFAULTS: GallerySettingsDefaults = {
   grid_mobile_default: 3,
   max_content_width_px: null,
   gallery_layout_mode: 'uniform',
+  detail_view_mode: 'classic',
   gallery_gap_px: 8,
   uniform_thumb_ratio: 1,
   transition_preset: 'cinematic',
   thumbnail_entrance_preset: 'cascade',
   preloader_preset: 'minimal',
   nav_button_preset: 'whisper',
+  contact_sheet_perspective_px: 1200,
+  contact_sheet_rotate_x_deg: 8,
+  contact_sheet_rotate_y_deg: 10,
+  contact_sheet_travel_z_px: 96,
+  contact_sheet_target_fill_pct: 0.38,
+  contact_sheet_mobile_intensity_pct: 55,
   allow_transition_toggle: true,
   photograph_info_mode: 'floating',
   show_photo_info_title: true,

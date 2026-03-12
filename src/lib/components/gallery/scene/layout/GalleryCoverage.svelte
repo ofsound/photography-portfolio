@@ -21,6 +21,7 @@
           model.withCurrentSearch(model.photoPath(photo.slug)) as `/${string}`,
         )}
         use:model.registerTile={photo.slug}
+        data-photo-slug={photo.slug}
         data-entrance-slug={photo.slug}
         aria-disabled={model.entranceLocked ? 'true' : undefined}
         class="group relative block h-full w-full overflow-hidden {model.entranceLocked

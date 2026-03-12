@@ -22,6 +22,8 @@
     createGallerySceneState,
     routeKeyFromActive,
   } from './scene/createGallerySceneState.svelte';
+  import { createGalleryClassicViewer } from './scene/useGalleryClassicViewer.svelte';
+  import { createGalleryContactSheetViewer } from './scene/useGalleryContactSheetViewer.svelte';
   import { createGalleryLayout } from './scene/useGalleryLayout.svelte';
   import { createGalleryNavigation } from './scene/useGalleryNavigation.svelte';
   import { createGalleryPagination } from './scene/useGalleryPagination.svelte';
@@ -38,8 +40,10 @@
 
   import type { GalleryPhoto } from '$lib/types/content';
   import type { GalleryGridModel } from './scene/gallery-grid-model';
+  import type { GalleryViewerController } from './scene/gallery-viewer-controller';
   import type {
     ActiveRoute,
+    DetailViewMode,
     GalleryImage,
     PhotographInfoMode,
     ViewerData,
@@ -252,6 +256,12 @@
     return naturalAspectRatio(photo);
   };
 
+  const detailViewMode = $derived.by<DetailViewMode>(() => {
+    return data.gallerySettings?.detail_view_mode === 'contact_sheet'
+      ? 'contact_sheet'
+      : 'classic';
+  });
+
   const photographInfoMode = $derived.by<PhotographInfoMode>(() => {
     const configuredMode = data.gallerySettings?.photograph_info_mode;
     if (
@@ -281,6 +291,33 @@
     closingChromeMs: CLOSING_CHROME_MS,
   });
 
+  const classicViewer = createGalleryClassicViewer({
+    tileAnimator,
+  });
+
+  const contactSheetViewer = createGalleryContactSheetViewer({
+    state,
+    reducedMotion,
+    isMobileViewport,
+    getSettings: () => ({
+      perspectivePx: data.gallerySettings?.contact_sheet_perspective_px ?? 1200,
+      rotateXDeg: data.gallerySettings?.contact_sheet_rotate_x_deg ?? 8,
+      rotateYDeg: data.gallerySettings?.contact_sheet_rotate_y_deg ?? 10,
+      travelZPx: data.gallerySettings?.contact_sheet_travel_z_px ?? 96,
+      targetFillPct:
+        data.gallerySettings?.contact_sheet_target_fill_pct ?? 0.38,
+      mobileIntensityPct:
+        data.gallerySettings?.contact_sheet_mobile_intensity_pct ?? 55,
+    }),
+    onRetargetRequest: (slug: string) => {
+      void onRetargetPhoto(slug);
+    },
+  });
+
+  const viewerController = $derived.by<GalleryViewerController>(() =>
+    detailViewMode === 'contact_sheet' ? contactSheetViewer : classicViewer,
+  );
+
   layout = createGalleryLayout({
     state,
     getLayoutMode: () => layoutMode,
@@ -307,12 +344,20 @@
 
   const currentImage = $derived.by<GalleryImage | null>(() => {
     if (!activePhoto || !activePhoto.leadImage) return null;
+    if (detailViewMode === 'contact_sheet') {
+      return activePhoto.leadImage;
+    }
     if (!state.activeImageId) return activePhoto.leadImage;
     return (
       activePhoto.additionalImages.find(
         (image) => image.id === state.activeImageId,
       ) ?? activePhoto.leadImage
     );
+  });
+
+  const activeIndex = $derived.by(() => {
+    if (!state.activeSlug) return -1;
+    return state.photos.findIndex((photo) => photo.slug === state.activeSlug);
   });
 
   const wait = (ms: number) =>
@@ -384,7 +429,8 @@
     canCycleGallery: () => canCycleGallery,
     localNeighborsFor: router.localNeighborsFor,
     parseSlugFromPhotoHref: router.parseSlugFromPhotoHref,
-    slideToNeighbor: tileAnimator.slideToNeighbor,
+    slideToNeighbor: (slug, direction) =>
+      viewerController.navigateNeighbor(slug, direction),
     gotoPhotoRoute,
   });
 
@@ -404,7 +450,7 @@
       if (typeof document !== 'undefined') {
         document.body.style.overflow = '';
       }
-      await tileAnimator.collapsePromotedTile(animate);
+      await viewerController.close(animate);
       state.prevGalleryHref = null;
       state.nextGalleryHref = null;
       return;
@@ -420,7 +466,7 @@
       state.activeSlug && state.activeSlug !== route.photoSlug,
     );
 
-    await tileAnimator.ensurePromotedTile(
+    await viewerController.open(
       route.photoSlug,
       route.imageId,
       animate && !switchingPhotos,
@@ -452,7 +498,7 @@
           if (typeof document !== 'undefined') {
             document.body.style.overflow = 'hidden';
           }
-          await tileAnimator.ensurePromotedTile(slug, null, true);
+          await viewerController.open(slug, null, true);
           setPhase('open');
           return;
         }
@@ -476,12 +522,26 @@
           });
         });
 
-        await tileAnimator.ensurePromotedTile(slug, null, true, SCALE_MASK_MS);
+        await viewerController.open(slug, null, true, SCALE_MASK_MS);
         setPhase('open');
       });
 
       await gotoPhotoRoute(slug);
     })();
+  };
+
+  const onRetargetPhoto = async (slug: string) => {
+    if (!state.activeSlug || slug === state.activeSlug) return;
+    state.isClosing = false;
+
+    await transitionQueue.enqueue(async () => {
+      const neighbors = router.localNeighborsFor(slug);
+      state.prevGalleryHref = neighbors.prevGalleryHref;
+      state.nextGalleryHref = neighbors.nextGalleryHref;
+      await viewerController.retarget(slug);
+    });
+
+    await gotoPhotoRoute(slug);
   };
 
   const closeToGallery = (event?: MouseEvent | KeyboardEvent) => {
@@ -491,8 +551,12 @@
 
     void (async () => {
       await transitionQueue.enqueue(async () => {
-        await tileAnimator.collapsePromotedTile(true);
+        await viewerController.close(true);
       });
+
+      if (typeof document !== 'undefined') {
+        document.body.style.overflow = '';
+      }
 
       await gotoGalleryRoute();
     })();
@@ -506,13 +570,11 @@
     void (async () => {
       await transitionQueue.enqueue(async () => {
         state.activeImageId = imageId;
-        if (tileAnimator.promoted) {
-          await tileAnimator.ensurePromotedTile(
-            activeSlug,
-            imageId,
-            false,
-            260,
-          );
+        if (
+          viewerController.supportsAdditionalImages &&
+          viewerController.isReady
+        ) {
+          await viewerController.open(activeSlug, imageId, false, 260);
         }
       });
 
@@ -521,10 +583,10 @@
   };
 
   const onResizePromoted = () => {
-    if (!state.activeSlug || !tileAnimator.promoted) return;
+    if (!state.activeSlug || !viewerController.isReady) return;
 
     void transitionQueue.enqueue(async () => {
-      await tileAnimator.resizePromotedNow();
+      await viewerController.resize();
     });
   };
 
@@ -623,7 +685,8 @@
     withCurrentSearch: router.withCurrentSearchResolved,
     photoPath: router.photoPath,
     onOpenPhoto,
-    registerTile: tileAnimator.registerTile,
+    bindGridRoot: viewerController.bindGridRoot,
+    registerTile: viewerController.registerTile,
     hasThumbCrop: tileAnimator.hasThumbCrop,
     thumbCropStyle: tileAnimator.thumbCropStyle,
     tileAspectRatio: tileAnimator.tileAspectRatio,
@@ -774,12 +837,28 @@
     });
   });
 
+  $effect(() => {
+    void layoutMode;
+    void colCount;
+    void state.gap;
+    void state.photos.length;
+    void detailBottomInsetPx;
+
+    if (!state.mounted || !state.activeSlug || !viewerController.isReady)
+      return;
+
+    void transitionQueue.enqueue(async () => {
+      await viewerController.resize();
+    });
+  });
+
   onDestroy(() => {
     clearEntranceLock();
     if (typeof document !== 'undefined') {
       document.body.style.overflow = '';
     }
-    tileAnimator.releaseAnyPromoted();
+    classicViewer.release();
+    contactSheetViewer.release();
   });
 </script>
 
@@ -798,7 +877,11 @@
   <GalleryDetailViewer
     {activePhoto}
     {currentImage}
-    promoted={Boolean(tileAnimator.promoted)}
+    promoted={viewerController.isReady}
+    {detailViewMode}
+    activePosition={activeIndex >= 0 ? activeIndex + 1 : 0}
+    totalPhotos={state.photos.length}
+    supportsAdditionalImages={viewerController.supportsAdditionalImages}
     {transitionPhase}
     {overlayChromeHidden}
     {photographInfoMode}

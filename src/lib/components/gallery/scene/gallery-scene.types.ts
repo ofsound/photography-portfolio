@@ -12,6 +12,7 @@ export type GalleryLayoutMode =
 
 export type GalleryWidthMode = 'full' | 'constrained';
 export type PhotographInfoMode = 'hidden' | 'floating' | 'bottom_dock';
+export type DetailViewMode = 'classic' | 'contact_sheet';
 
 export type ActiveRoute = {
   photoSlug: string;
@@ -43,9 +44,16 @@ export type ViewerData = {
   gallerySettings?: {
     theme_default?: 'light' | 'dark' | 'system' | null;
     transition_preset?: 'cinematic' | 'snappy' | 'experimental' | null;
+    detail_view_mode?: DetailViewMode | null;
     thumbnail_entrance_preset?: ThumbnailEntrancePreset | null;
     preloader_preset?: PreloaderPreset | null;
     nav_button_preset?: NavButtonPreset | null;
+    contact_sheet_perspective_px?: number | null;
+    contact_sheet_rotate_x_deg?: number | null;
+    contact_sheet_rotate_y_deg?: number | null;
+    contact_sheet_travel_z_px?: number | null;
+    contact_sheet_target_fill_pct?: number | null;
+    contact_sheet_mobile_intensity_pct?: number | null;
     allow_transition_toggle?: boolean | null;
     photograph_info_mode?: PhotographInfoMode | null;
     show_photo_info_title?: boolean | null;

@@ -26,6 +26,7 @@ type GalleryLayoutMode =
   | 'rows'
   | 'columns';
 type GalleryWidthMode = 'full' | 'constrained';
+type DetailViewMode = 'classic' | 'contact_sheet';
 
 type ActivePhotoRoute = {
   photoSlug: string;
@@ -99,6 +100,8 @@ const loadGalleryModeData = async ({
   const q = url.searchParams.get('q')?.trim() ?? '';
   const layoutMode = (settings.gallery_layout_mode ??
     'uniform') as GalleryLayoutMode;
+  const detailViewMode = (settings.detail_view_mode ??
+    'classic') as DetailViewMode;
   const widthMode = (
     settings.max_content_width_px ? 'constrained' : 'full'
   ) as GalleryWidthMode;
@@ -131,6 +134,7 @@ const loadGalleryModeData = async ({
   const photos: Awaited<ReturnType<typeof loadGalleryPage>>['photos'] = [];
 
   if (
+    detailViewMode === 'contact_sheet' ||
     layoutMode === 'coverage' ||
     layoutMode === 'rows' ||
     layoutMode === 'columns'

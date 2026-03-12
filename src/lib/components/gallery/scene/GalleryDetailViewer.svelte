@@ -13,7 +13,10 @@
 
   import type { NavButtonPreset } from '$lib/constants/nav-button-preset';
   import type { GalleryPhoto } from '$lib/types/content';
-  import type { PhotographInfoMode } from './gallery-scene.types';
+  import type {
+    DetailViewMode,
+    PhotographInfoMode,
+  } from './gallery-scene.types';
 
   type PortalAction = (node: HTMLElement) => { destroy: () => void };
 
@@ -21,6 +24,10 @@
     activePhoto,
     currentImage,
     promoted,
+    detailViewMode,
+    activePosition,
+    totalPhotos,
+    supportsAdditionalImages,
     transitionPhase,
     overlayChromeHidden,
     photographInfoMode,
@@ -49,6 +56,10 @@
     activePhoto: GalleryPhoto;
     currentImage: NonNullable<GalleryPhoto['leadImage']>;
     promoted: boolean;
+    detailViewMode: DetailViewMode;
+    activePosition: number;
+    totalPhotos: number;
+    supportsAdditionalImages: boolean;
     transitionPhase: string;
     overlayChromeHidden: boolean;
     photographInfoMode: PhotographInfoMode;
@@ -100,6 +111,7 @@
   const showLicense = $derived(
     showPhotoInfoLicenseText && hasText(licenseText),
   );
+  const isContactSheet = $derived(detailViewMode === 'contact_sheet');
   const showAnyText = $derived(
     showTitle ||
       showDescription ||
@@ -107,10 +119,14 @@
       showDimensions ||
       showLicense,
   );
-  const showAdditionalStrip = $derived(activePhoto.additionalImages.length > 0);
+  const showAdditionalStrip = $derived(
+    supportsAdditionalImages && activePhoto.additionalImages.length > 0,
+  );
   const isBottomDock = $derived(photographInfoMode === 'bottom_dock');
   const showInfoShell = $derived(
-    photographInfoMode !== 'hidden' && (showAnyText || showAdditionalStrip),
+    !isContactSheet &&
+      photographInfoMode !== 'hidden' &&
+      (showAnyText || showAdditionalStrip),
   );
 
   const detailViewportStyle = $derived(
@@ -254,7 +270,7 @@
   aria-label="Close photo detail"
 ></div>
 
-{#if !promoted && transitionPhase !== 'scale-and-mask'}
+{#if !isContactSheet && !promoted && transitionPhase !== 'scale-and-mask'}
   <div
     use:portal
     data-full-viewport
@@ -448,6 +464,29 @@
       </a>
     {/if}
   </div>
+{/if}
+
+{#if isContactSheet}
+  <aside
+    use:portal
+    class="chrome-panel fixed top-4 left-4 z-[80] max-w-[min(92vw,24rem)] rounded-xl border border-border-strong px-4 py-3 shadow-xl transition-opacity ease-out sm:top-6 sm:left-6"
+    class:opacity-0={overlayChromeHidden}
+    style="transition-duration: {closingChromeMs}ms"
+  >
+    <div class="grid gap-1">
+      <p class="text-[0.65rem] tracking-[0.24em] text-canvas-text/65 uppercase">
+        Contact sheet
+        {#if activePosition > 0 && totalPhotos > 0}
+          <span class="ml-2 text-canvas-text/50">
+            {activePosition}/{totalPhotos}
+          </span>
+        {/if}
+      </p>
+      <h1 class="text-sm font-semibold tracking-wide text-canvas-text">
+        {titleText}
+      </h1>
+    </div>
+  </aside>
 {/if}
 
 {#if showInfoShell && photographInfoMode === 'floating'}

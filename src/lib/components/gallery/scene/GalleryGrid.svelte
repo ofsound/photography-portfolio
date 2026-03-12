@@ -140,6 +140,7 @@
 {#if model.layoutMode === 'coverage' || model.layoutMode === 'rows' || model.layoutMode === 'columns'}
   <section
     class="coverage-container w-full"
+    use:model.bindGridRoot
     use:model.bindCoverageSection
     use:resolveEntranceOrder={{
       batchKey: model.entranceBatchKey,
@@ -161,6 +162,7 @@
   <section
     class="mx-auto w-full px-4 py-5"
     style={model.sectionMaxWidthStyle}
+    use:model.bindGridRoot
     use:resolveEntranceOrder={{
       batchKey: model.entranceBatchKey,
       presetId: model.thumbnailEntrancePreset,

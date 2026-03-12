@@ -111,7 +111,7 @@
   {:else if preset === 'curtain'}
     <!-- ═══════════════ CURTAIN ═══════════════ -->
     <div
-      class="preloader-root"
+      class="preloader-root preloader-root--curtain"
       class:curtain-entering={phase === 'entering'}
       class:curtain-loading={phase === 'loading'}
       class:curtain-exiting={phase === 'exiting'}
@@ -119,6 +119,7 @@
       aria-live="polite"
       aria-label="Loading gallery"
     >
+      <div class="preloader-stage preloader-stage--curtain"></div>
       <div class="curtain-panel curtain-panel--left"></div>
       <div class="curtain-panel curtain-panel--right"></div>
       <div
@@ -138,7 +139,7 @@
   {:else if preset === 'iris'}
     <!-- ═══════════════ IRIS ═══════════════ -->
     <div
-      class="preloader-root"
+      class="preloader-root preloader-root--iris"
       class:iris-entering={phase === 'entering'}
       class:iris-loading={phase === 'loading'}
       class:iris-exiting={phase === 'exiting'}
@@ -146,6 +147,7 @@
       aria-live="polite"
       aria-label="Loading gallery"
     >
+      <div class="preloader-stage preloader-stage--iris"></div>
       <div class="iris-mask"></div>
       <div
         class="iris-content"
@@ -182,7 +184,7 @@
   {:else if preset === 'veil'}
     <!-- ═══════════════ VEIL ═══════════════ -->
     <div
-      class="preloader-root"
+      class="preloader-root preloader-root--veil"
       class:veil-entering={phase === 'entering'}
       class:veil-loading={phase === 'loading'}
       class:veil-exiting={phase === 'exiting'}
@@ -190,6 +192,7 @@
       aria-live="polite"
       aria-label="Loading gallery"
     >
+      <div class="preloader-stage preloader-stage--veil"></div>
       <div class="veil-gradient"></div>
       <div
         class="veil-content"
@@ -206,7 +209,7 @@
   {:else if preset === 'diagonal'}
     <!-- ═══════════════ DIAGONAL ═══════════════ -->
     <div
-      class="preloader-root"
+      class="preloader-root preloader-root--diag"
       class:diag-entering={phase === 'entering'}
       class:diag-loading={phase === 'loading'}
       class:diag-exiting={phase === 'exiting'}
@@ -214,6 +217,7 @@
       aria-live="polite"
       aria-label="Loading gallery"
     >
+      <div class="preloader-stage preloader-stage--diag"></div>
       <div class="diag-panel diag-panel--tl"></div>
       <div class="diag-panel diag-panel--br"></div>
       <div
@@ -229,7 +233,7 @@
   {:else if preset === 'filmBurn'}
     <!-- ═══════════════ FILM BURN ═══════════════ -->
     <div
-      class="preloader-root"
+      class="preloader-root preloader-root--burn"
       class:burn-entering={phase === 'entering'}
       class:burn-loading={phase === 'loading'}
       class:burn-exiting={phase === 'exiting'}
@@ -237,6 +241,7 @@
       aria-live="polite"
       aria-label="Loading gallery"
     >
+      <div class="preloader-stage preloader-stage--burn"></div>
       <div class="burn-flash"></div>
       <div class="burn-grain"></div>
       <div
@@ -268,6 +273,134 @@
     justify-content: center;
     background: var(--color-bg);
     overflow: hidden;
+  }
+
+  .preloader-stage {
+    pointer-events: none;
+    position: absolute;
+    inset: -12%;
+    z-index: 0;
+    will-change: transform, opacity, filter;
+  }
+
+  .preloader-root--curtain {
+    background: radial-gradient(
+      circle at 50% 46%,
+      color-mix(in srgb, var(--color-surface-strong) 92%, var(--color-bg)),
+      color-mix(in srgb, var(--color-bg) 86%, var(--color-overlay)) 70%
+    );
+  }
+
+  .preloader-stage--curtain {
+    background:
+      radial-gradient(
+        circle at 50% 50%,
+        color-mix(in srgb, var(--color-brand) 8%, transparent) 0%,
+        transparent 62%
+      ),
+      repeating-linear-gradient(
+        90deg,
+        color-mix(in srgb, var(--color-border) 12%, transparent) 0 4px,
+        transparent 4px 11px
+      );
+    opacity: 0.88;
+  }
+
+  .preloader-root--iris {
+    background: radial-gradient(
+      circle at 50% 50%,
+      color-mix(in srgb, var(--color-surface-subtle) 88%, var(--color-bg)) 0%,
+      color-mix(in srgb, var(--color-bg) 82%, var(--color-overlay)) 74%
+    );
+  }
+
+  .preloader-stage--iris {
+    background:
+      radial-gradient(
+        circle at 50% 50%,
+        color-mix(in srgb, var(--color-brand) 16%, transparent) 0%,
+        transparent 44%
+      ),
+      repeating-radial-gradient(
+        circle at 50% 50%,
+        color-mix(in srgb, var(--color-border-strong) 22%, transparent) 0 10px,
+        transparent 10px 22px
+      );
+    opacity: 0.84;
+  }
+
+  .preloader-root--veil {
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--color-surface) 80%, var(--color-bg)) 0%,
+      color-mix(in srgb, var(--color-bg) 84%, var(--color-overlay)) 100%
+    );
+  }
+
+  .preloader-stage--veil {
+    background:
+      radial-gradient(
+        ellipse at 50% 0%,
+        color-mix(in srgb, var(--color-brand) 10%, transparent) 0%,
+        transparent 62%
+      ),
+      linear-gradient(
+        120deg,
+        color-mix(in srgb, var(--color-border) 14%, transparent) 0%,
+        transparent 42%,
+        color-mix(in srgb, var(--color-border-strong) 12%, transparent) 78%,
+        transparent 100%
+      );
+    opacity: 0.92;
+  }
+
+  .preloader-root--diag {
+    background: radial-gradient(
+      ellipse at 50% 48%,
+      color-mix(in srgb, var(--color-surface) 88%, var(--color-bg)) 0%,
+      color-mix(in srgb, var(--color-bg) 80%, var(--color-overlay)) 82%
+    );
+  }
+
+  .preloader-stage--diag {
+    background:
+      linear-gradient(
+        130deg,
+        color-mix(in srgb, var(--color-border) 20%, transparent) 0%,
+        transparent 40%,
+        color-mix(in srgb, var(--color-brand) 10%, transparent) 74%,
+        transparent 100%
+      ),
+      repeating-linear-gradient(
+        45deg,
+        color-mix(in srgb, var(--color-border-strong) 10%, transparent) 0 3px,
+        transparent 3px 11px
+      );
+    opacity: 0.9;
+  }
+
+  .preloader-root--burn {
+    background: radial-gradient(
+      ellipse at 50% 54%,
+      color-mix(in srgb, var(--color-bg) 62%, var(--color-overlay)) 0%,
+      color-mix(in srgb, var(--color-overlay) 74%, black) 100%
+    );
+  }
+
+  .preloader-stage--burn {
+    background:
+      radial-gradient(
+        circle at 50% 50%,
+        color-mix(in srgb, var(--color-brand) 18%, transparent) 0%,
+        transparent 56%
+      ),
+      linear-gradient(
+        160deg,
+        color-mix(in srgb, var(--color-warning) 16%, transparent) 0%,
+        transparent 48%,
+        color-mix(in srgb, var(--color-danger) 18%, transparent) 100%
+      );
+    opacity: 0.94;
   }
 
   .preloader-inner {
@@ -332,19 +465,29 @@
     top: 0;
     bottom: 0;
     width: 50%;
-    background: var(--color-bg);
-    z-index: 1;
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--color-surface-strong) 92%, var(--color-bg)) 0%,
+      color-mix(in srgb, var(--color-bg) 82%, var(--color-overlay)) 100%
+    );
+    z-index: 2;
     will-change: transform;
+    box-shadow: inset 0 0 0 1px
+      color-mix(in srgb, var(--color-border) 55%, transparent);
   }
 
   .curtain-panel--left {
     left: 0;
     transform-origin: left center;
+    border-right: 1px solid
+      color-mix(in srgb, var(--color-border-strong) 70%, transparent);
   }
 
   .curtain-panel--right {
     right: 0;
     transform-origin: right center;
+    border-left: 1px solid
+      color-mix(in srgb, var(--color-border-strong) 70%, transparent);
   }
 
   /* Entrance: panels slide IN from off-screen */
@@ -378,9 +521,10 @@
     top: 0;
     bottom: 0;
     left: 50%;
-    width: 1px;
-    background: var(--color-border);
-    z-index: 2;
+    width: 2px;
+    background: color-mix(in srgb, var(--color-brand) 55%, var(--color-border));
+    box-shadow: 0 0 14px color-mix(in srgb, var(--color-brand) 38%, transparent);
+    z-index: 3;
     opacity: 0;
     transform: scaleY(0);
     transform-origin: center;
@@ -392,7 +536,7 @@
 
   .curtain-content {
     position: relative;
-    z-index: 3;
+    z-index: 4;
     opacity: 0;
     transform: translateY(8px);
   }
@@ -455,8 +599,20 @@
   .iris-mask {
     position: absolute;
     inset: 0;
-    background: var(--color-bg);
-    z-index: 1;
+    background:
+      radial-gradient(
+        circle at 50% 50%,
+        color-mix(in srgb, var(--color-bg) 74%, var(--color-overlay)) 0%,
+        color-mix(in srgb, var(--color-overlay) 66%, black) 100%
+      ),
+      linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--color-overlay) 42%, transparent) 0%,
+        color-mix(in srgb, var(--color-overlay) 74%, transparent) 100%
+      );
+    z-index: 2;
+    box-shadow: inset 0 0 80px
+      color-mix(in srgb, var(--color-overlay) 55%, transparent);
   }
 
   /* Entrance: circle expands from center via clip-path */
@@ -476,7 +632,7 @@
 
   .iris-content {
     position: relative;
-    z-index: 2;
+    z-index: 3;
     opacity: 0;
     transform: scale(0.85);
     display: flex;
@@ -500,6 +656,13 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    border-radius: 999px;
+    border: 1px solid
+      color-mix(in srgb, var(--color-border-strong) 75%, transparent);
+    background: color-mix(in srgb, var(--color-surface) 65%, transparent);
+    box-shadow:
+      0 0 24px color-mix(in srgb, var(--color-brand) 22%, transparent),
+      inset 0 0 18px color-mix(in srgb, var(--color-overlay) 28%, transparent);
   }
 
   .iris-ring {
@@ -518,7 +681,7 @@
     font-size: 0.8rem;
     font-weight: 700;
     letter-spacing: 0.1em;
-    color: var(--color-text-muted);
+    color: color-mix(in srgb, var(--color-text) 88%, var(--color-text-muted));
     font-variant-numeric: tabular-nums;
   }
 
@@ -570,12 +733,16 @@
     inset: 0;
     background: linear-gradient(
       to bottom,
-      var(--color-bg) 0%,
-      color-mix(in srgb, var(--color-bg) 96%, transparent) 60%,
-      color-mix(in srgb, var(--color-bg) 85%, transparent) 100%
+      color-mix(in srgb, var(--color-overlay) 52%, var(--color-bg)) 0%,
+      color-mix(in srgb, var(--color-bg) 84%, transparent) 46%,
+      color-mix(in srgb, var(--color-brand) 22%, transparent) 100%
     );
-    z-index: 1;
+    z-index: 2;
     will-change: transform, filter;
+    box-shadow:
+      inset 0 -56px 80px
+        color-mix(in srgb, var(--color-overlay) 20%, transparent),
+      0 10px 34px color-mix(in srgb, var(--color-overlay) 22%, transparent);
   }
 
   /* Entrance: descends from above */
@@ -595,7 +762,7 @@
 
   .veil-content {
     position: relative;
-    z-index: 2;
+    z-index: 3;
     opacity: 0;
     transform: translateY(-12px);
     display: flex;
@@ -677,9 +844,10 @@
     position: absolute;
     width: 150%;
     height: 150%;
-    background: var(--color-bg);
-    z-index: 1;
+    z-index: 2;
     will-change: transform;
+    box-shadow: inset 0 0 0 1px
+      color-mix(in srgb, var(--color-border) 55%, transparent);
   }
 
   .diag-panel--tl {
@@ -687,6 +855,11 @@
     left: -25%;
     transform-origin: top left;
     clip-path: polygon(0 0, 100% 0, 0 100%);
+    background: linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--color-surface-strong) 92%, var(--color-bg)) 0%,
+      color-mix(in srgb, var(--color-bg) 76%, var(--color-overlay)) 100%
+    );
   }
 
   .diag-panel--br {
@@ -694,6 +867,11 @@
     right: -25%;
     transform-origin: bottom right;
     clip-path: polygon(100% 0, 100% 100%, 0 100%);
+    background: linear-gradient(
+      315deg,
+      color-mix(in srgb, var(--color-surface-subtle) 94%, var(--color-bg)) 0%,
+      color-mix(in srgb, var(--color-bg) 74%, var(--color-overlay)) 100%
+    );
   }
 
   /* Entrance: triangles sweep in */
@@ -721,7 +899,7 @@
 
   .diag-content {
     position: relative;
-    z-index: 2;
+    z-index: 3;
     opacity: 0;
     transform: translateY(6px) rotate(-2deg);
     display: flex;
@@ -795,12 +973,12 @@
   .burn-flash {
     position: absolute;
     inset: 0;
-    z-index: 1;
+    z-index: 2;
     background: radial-gradient(
       ellipse at center,
-      rgba(255, 255, 255, 1) 0%,
-      rgba(255, 255, 255, 0.8) 30%,
-      var(--color-bg) 80%
+      color-mix(in srgb, var(--color-warning) 65%, white) 0%,
+      color-mix(in srgb, var(--color-brand) 28%, white) 22%,
+      color-mix(in srgb, var(--color-overlay) 36%, var(--color-bg)) 78%
     );
     will-change: opacity;
     opacity: 0;
@@ -809,11 +987,11 @@
   .burn-grain {
     position: absolute;
     inset: 0;
-    z-index: 2;
+    z-index: 3;
     opacity: 0;
     background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
     background-size: 200px 200px;
-    mix-blend-mode: overlay;
+    mix-blend-mode: soft-light;
     pointer-events: none;
   }
 
@@ -829,7 +1007,7 @@
     opacity: 0;
   }
   .burn-loading .burn-grain {
-    opacity: 0.08;
+    opacity: 0.16;
   }
 
   /* Exit: another searing flash that recedes */
@@ -842,7 +1020,7 @@
 
   .burn-content {
     position: relative;
-    z-index: 3;
+    z-index: 4;
     opacity: 0;
     display: flex;
     flex-direction: column;
@@ -860,7 +1038,7 @@
   }
 
   .preloader-text--burn {
-    color: var(--color-text);
+    color: color-mix(in srgb, var(--color-warning) 28%, var(--color-text));
     letter-spacing: 0.15em;
   }
 
@@ -868,7 +1046,7 @@
     max-width: 240px;
     height: 2px;
     border: none;
-    background: color-mix(in srgb, var(--color-border) 30%, transparent);
+    background: color-mix(in srgb, var(--color-warning) 25%, transparent);
     box-shadow: none;
     border-radius: 1px;
   }

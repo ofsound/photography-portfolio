@@ -1,5 +1,6 @@
 import type { GalleryPhoto } from '$lib/types/content';
 import type { ThumbnailEntrancePreset } from '$lib/constants/thumbnail-entrance';
+import type { PreloaderPreset } from '$lib/constants/preloader-preset';
 
 export type GalleryLayoutMode =
   | 'uniform'
@@ -42,6 +43,7 @@ export type ViewerData = {
     theme_default?: 'light' | 'dark' | 'system' | null;
     transition_preset?: 'cinematic' | 'snappy' | 'experimental' | null;
     thumbnail_entrance_preset?: ThumbnailEntrancePreset | null;
+    preloader_preset?: PreloaderPreset | null;
     allow_transition_toggle?: boolean | null;
     photograph_info_mode?: PhotographInfoMode | null;
     show_photo_info_title?: boolean | null;

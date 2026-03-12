@@ -101,11 +101,11 @@ const loadGalleryModeData = async ({
 
   const resolvedRoute = routePhoto
     ? await resolvePhotoRoute(
-        locals,
-        scope,
-        routePhoto.photoSlug,
-        routePhoto.imageId,
-      )
+      locals,
+      scope,
+      routePhoto.photoSlug,
+      routePhoto.imageId,
+    )
     : null;
 
   if (resolvedRoute?.kind === 'redirect') {
@@ -218,6 +218,7 @@ const loadGalleryModeData = async ({
       transition_preset: settings.transition_preset ?? 'cinematic',
       thumbnail_entrance_preset:
         settings.thumbnail_entrance_preset ?? 'cascade',
+      preloader_preset: settings.preloader_preset ?? 'minimal',
       allow_transition_toggle: settings.allow_transition_toggle ?? true,
       photograph_info_mode: settings.photograph_info_mode ?? 'floating',
       show_photo_info_title: settings.show_photo_info_title ?? true,
@@ -341,6 +342,7 @@ export const load: LayoutServerLoad = async ({ locals, params, url }) => {
       theme_default: 'system',
       transition_preset: 'cinematic',
       thumbnail_entrance_preset: 'cascade',
+      preloader_preset: 'minimal',
       allow_transition_toggle: true,
       photograph_info_mode: 'floating',
       show_photo_info_title: true,

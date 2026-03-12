@@ -94,6 +94,7 @@ type SettingsFields = Pick<
   | 'uniform_thumb_ratio'
   | 'transition_preset'
   | 'thumbnail_entrance_preset'
+  | 'preloader_preset'
   | 'allow_transition_toggle'
   | 'photograph_info_mode'
   | 'show_photo_info_title'
@@ -114,20 +115,20 @@ type GallerySettings = SettingsFields;
 
 type ResolvedGalleryScope =
   | (BaseScope & {
-      kind: 'gallery';
-      id: string;
-      description: string | null;
-      seoTitle: string | null;
-      seoDescription: string | null;
-      ogTitle: string | null;
-      ogDescription: string | null;
-      ogImagePath: string | null;
-      navOrder: number;
-      visibilityStatus: GalleryVisibilityStatus;
-    })
+    kind: 'gallery';
+    id: string;
+    description: string | null;
+    seoTitle: string | null;
+    seoDescription: string | null;
+    ogTitle: string | null;
+    ogDescription: string | null;
+    ogImagePath: string | null;
+    navOrder: number;
+    visibilityStatus: GalleryVisibilityStatus;
+  })
   | (BaseScope & {
-      kind: 'all';
-    });
+    kind: 'all';
+  });
 
 type GalleryScopeResolution =
   | { kind: 'scope'; scope: ResolvedGalleryScope }
@@ -158,6 +159,7 @@ const gallerySettingsSelect = [
   'uniform_thumb_ratio',
   'transition_preset',
   'thumbnail_entrance_preset',
+  'preloader_preset',
   'allow_transition_toggle',
   'photograph_info_mode',
   'show_photo_info_title',
@@ -226,9 +228,9 @@ const mapPhotoRows = (rows: PhotoListRow[], fallbackGallerySlug: string) =>
       capture_date: photo.capture_date,
       thumb: lead?.delivery_storage_path
         ? photoPublicUrl(
-            lead.delivery_storage_path,
-            GALLERY_DETAIL_SHARED_WIDTH,
-          )
+          lead.delivery_storage_path,
+          GALLERY_DETAIL_SHARED_WIDTH,
+        )
         : null,
       thumbAlt: lead?.alt_text ?? photo.title,
       leadImage: lead ?? null,
@@ -351,16 +353,16 @@ export const loadGallerySettings = async (
   const settingsQuery =
     scope.kind === 'gallery'
       ? await locals.supabase
-          .from('gallery_settings')
-          .select(gallerySettingsSelect)
-          .eq('scope', 'gallery')
-          .eq('gallery_id', scope.id)
-          .maybeSingle()
+        .from('gallery_settings')
+        .select(gallerySettingsSelect)
+        .eq('scope', 'gallery')
+        .eq('gallery_id', scope.id)
+        .maybeSingle()
       : await locals.supabase
-          .from('gallery_settings')
-          .select(gallerySettingsSelect)
-          .eq('scope', 'all')
-          .maybeSingle();
+        .from('gallery_settings')
+        .select(gallerySettingsSelect)
+        .eq('scope', 'all')
+        .maybeSingle();
 
   if (settingsQuery.error) {
     throwLoaderError(
@@ -437,9 +439,9 @@ const buildPhotosQuery = (
   const baseSelect =
     scope.kind === 'all'
       ? photoListSelect.replace(
-          'galleries(slug, visibility_status)',
-          'galleries!inner(slug, visibility_status)',
-        )
+        'galleries(slug, visibility_status)',
+        'galleries!inner(slug, visibility_status)',
+      )
       : photoListSelect;
 
   let query = locals.supabase
@@ -545,12 +547,12 @@ export const loadGalleryPhotoNeighbors = async (
   const rpcResult =
     scope.kind === 'gallery'
       ? await locals.supabase.rpc('gallery_photo_neighbors_scoped', {
-          p_gallery_id: scope.id,
-          p_photo_id: photoId,
-        })
+        p_gallery_id: scope.id,
+        p_photo_id: photoId,
+      })
       : await locals.supabase.rpc('all_photo_neighbors', {
-          p_photo_id: photoId,
-        });
+        p_photo_id: photoId,
+      });
 
   if (rpcResult.error) {
     throwLoaderError(
@@ -585,28 +587,28 @@ const findPublishedPhotoBySlug = async (
   const query =
     scope.kind === 'gallery'
       ? await locals.supabase
-          .from('photos')
-          .select('id, slug, gallery_id, galleries!inner(slug)')
-          .eq('gallery_id', scope.id)
-          .eq('slug', photoSlug)
-          .eq('status', 'published')
-          .is('deleted_at', null)
-          .limit(1)
-          .maybeSingle()
+        .from('photos')
+        .select('id, slug, gallery_id, galleries!inner(slug)')
+        .eq('gallery_id', scope.id)
+        .eq('slug', photoSlug)
+        .eq('status', 'published')
+        .is('deleted_at', null)
+        .limit(1)
+        .maybeSingle()
       : await locals.supabase
-          .from('photos')
-          .select(
-            'id, slug, gallery_id, capture_date, created_at, galleries!inner(slug, visibility_status)',
-          )
-          .eq('slug', photoSlug)
-          .eq('status', 'published')
-          .is('deleted_at', null)
-          .eq('galleries.visibility_status', 'public')
-          .order('capture_date', { ascending: false, nullsFirst: false })
-          .order('created_at', { ascending: false })
-          .order('id', { ascending: false })
-          .limit(1)
-          .maybeSingle();
+        .from('photos')
+        .select(
+          'id, slug, gallery_id, capture_date, created_at, galleries!inner(slug, visibility_status)',
+        )
+        .eq('slug', photoSlug)
+        .eq('status', 'published')
+        .is('deleted_at', null)
+        .eq('galleries.visibility_status', 'public')
+        .order('capture_date', { ascending: false, nullsFirst: false })
+        .order('created_at', { ascending: false })
+        .order('id', { ascending: false })
+        .limit(1)
+        .maybeSingle();
 
   if (query.error) {
     throwLoaderError(
@@ -654,22 +656,22 @@ const resolvePhotoSlugRedirect = async (
   const query =
     scope.kind === 'gallery'
       ? locals.supabase
-          .from('photo_slug_history')
-          .select(
-            'created_at, photos!inner(id, slug, gallery_id, status, deleted_at, galleries!inner(slug, visibility_status))',
-          )
-          .eq('old_gallery_id', scope.id)
-          .eq('old_slug', oldPhotoSlug)
-          .order('created_at', { ascending: false })
-          .limit(30)
+        .from('photo_slug_history')
+        .select(
+          'created_at, photos!inner(id, slug, gallery_id, status, deleted_at, galleries!inner(slug, visibility_status))',
+        )
+        .eq('old_gallery_id', scope.id)
+        .eq('old_slug', oldPhotoSlug)
+        .order('created_at', { ascending: false })
+        .limit(30)
       : locals.supabase
-          .from('photo_slug_history')
-          .select(
-            'created_at, photos!inner(id, slug, gallery_id, status, deleted_at, capture_date, created_at, galleries!inner(slug, visibility_status))',
-          )
-          .eq('old_slug', oldPhotoSlug)
-          .order('created_at', { ascending: false })
-          .limit(60);
+        .from('photo_slug_history')
+        .select(
+          'created_at, photos!inner(id, slug, gallery_id, status, deleted_at, capture_date, created_at, galleries!inner(slug, visibility_status))',
+        )
+        .eq('old_slug', oldPhotoSlug)
+        .order('created_at', { ascending: false })
+        .limit(60);
 
   const { data, error } = await query;
   if (error) {

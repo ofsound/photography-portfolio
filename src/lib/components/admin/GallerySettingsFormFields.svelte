@@ -6,6 +6,7 @@
 
   import type { GallerySettingsDefaults } from '$lib/constants/gallery-settings';
   import { THUMBNAIL_ENTRANCE_PRESET_OPTIONS } from '$lib/constants/thumbnail-entrance';
+  import { PRELOADER_PRESET_OPTIONS } from '$lib/constants/preloader-preset';
 
   type Props = {
     settings: GallerySettingsDefaults;
@@ -147,6 +148,23 @@
     >
       {#each THUMBNAIL_ENTRANCE_PRESET_OPTIONS as option (option.id)}
         <option value={option.id}>{option.id}</option>
+      {/each}
+    </FormSelect>
+  </FormField>
+  <FormField
+    label={'Loading Animation' + (disableTransitionPreset ? ' (Admin)' : '')}
+    id={p('preloader_preset')}
+    class="w-fit"
+  >
+    <FormSelect
+      name="preloader_preset"
+      id={p('preloader_preset')}
+      value={settings.preloader_preset}
+      disabled={readonly || disableTransitionPreset}
+      class="w-auto"
+    >
+      {#each PRELOADER_PRESET_OPTIONS as option (option.id)}
+        <option value={option.id}>{option.label}</option>
       {/each}
     </FormSelect>
   </FormField>

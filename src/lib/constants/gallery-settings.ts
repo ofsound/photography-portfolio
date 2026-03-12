@@ -11,6 +11,7 @@ export type GallerySettingsDefaults = Pick<
   | 'uniform_thumb_ratio'
   | 'transition_preset'
   | 'thumbnail_entrance_preset'
+  | 'preloader_preset'
   | 'allow_transition_toggle'
   | 'photograph_info_mode'
   | 'show_photo_info_title'
@@ -32,6 +33,7 @@ export const GALLERY_SETTINGS_DEFAULTS: GallerySettingsDefaults = {
   uniform_thumb_ratio: 1,
   transition_preset: 'cinematic',
   thumbnail_entrance_preset: 'cascade',
+  preloader_preset: 'minimal',
   allow_transition_toggle: true,
   photograph_info_mode: 'floating',
   show_photo_info_title: true,

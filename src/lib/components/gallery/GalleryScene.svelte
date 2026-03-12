@@ -32,6 +32,7 @@
   } from './scene/useGalleryRouter.svelte';
   import { createGalleryTileAnimator } from './scene/useGalleryTileAnimator.svelte';
   import { normalizeThumbnailEntrancePreset } from '$lib/constants/thumbnail-entrance';
+  import { normalizePreloaderPreset } from '$lib/constants/preloader-preset';
   import { resolveThumbnailEntrancePresetRuntime } from './scene/thumbnail-entrance-presets';
 
   import type { GalleryPhoto } from '$lib/types/content';
@@ -68,6 +69,23 @@
   const CLOSING_CHROME_MS = 180;
 
   const PRELOADER_FADE_MS = 420;
+
+  const PRELOADER_EXIT_MS: Record<string, number> = {
+    minimal: 420,
+    curtain: 800,
+    iris: 700,
+    veil: 650,
+    diagonal: 800,
+    filmBurn: 600,
+  };
+
+  const preloaderPreset = $derived(
+    normalizePreloaderPreset(data.gallerySettings?.preloader_preset),
+  );
+
+  const preloaderExitMs = $derived(
+    PRELOADER_EXIT_MS[preloaderPreset] ?? PRELOADER_FADE_MS,
+  );
 
   const transitionQueue = createGalleryTransitionQueue({
     onError: (error) => {
@@ -577,7 +595,7 @@
     await Promise.all(loadTasks.map((task) => task.promise));
 
     await new Promise((resolveFade) =>
-      setTimeout(resolveFade, PRELOADER_FADE_MS),
+      setTimeout(resolveFade, preloaderExitMs),
     );
     state.preloaderVisible = false;
 
@@ -768,6 +786,7 @@
   imagesLoaded={state.imagesLoaded}
   totalImages={state.totalImages}
   fadeMs={PRELOADER_FADE_MS}
+  preset={normalizePreloaderPreset(data.gallerySettings?.preloader_preset)}
 />
 
 <GalleryGrid model={gridModel} />

@@ -1,5 +1,6 @@
 import { GALLERY_SETTINGS_DEFAULTS } from '$lib/constants/gallery-settings';
 import { normalizeThumbnailEntrancePreset } from '$lib/constants/thumbnail-entrance';
+import { normalizePreloaderPreset } from '$lib/constants/preloader-preset';
 import {
   asBoolean,
   asOptionalNumber,
@@ -14,7 +15,7 @@ type SettingsScope =
   | { kind: 'gallery'; galleryId: string };
 
 const settingsFieldSelect =
-  'theme_default, grid_desktop_default, grid_mobile_default, max_content_width_px, gallery_layout_mode, gallery_gap_px, uniform_thumb_ratio, transition_preset, thumbnail_entrance_preset, allow_transition_toggle, photograph_info_mode, show_photo_info_title, show_photo_info_description, show_photo_info_capture_date, show_photo_info_dimensions, show_photo_info_license_text, show_photograph_info, show_thumbnail_zoom_hover';
+  'theme_default, grid_desktop_default, grid_mobile_default, max_content_width_px, gallery_layout_mode, gallery_gap_px, uniform_thumb_ratio, transition_preset, thumbnail_entrance_preset, preloader_preset, allow_transition_toggle, photograph_info_mode, show_photo_info_title, show_photo_info_description, show_photo_info_capture_date, show_photo_info_dimensions, show_photo_info_license_text, show_photograph_info, show_thumbnail_zoom_hover';
 
 const asThemeMode = (value: FormDataEntryValue | null) => {
   const mode = asString(value, 'system');
@@ -46,6 +47,9 @@ const asTransitionPreset = (value: FormDataEntryValue | null) => {
 const asThumbnailEntrancePreset = (value: FormDataEntryValue | null) =>
   normalizeThumbnailEntrancePreset(asString(value, 'cascade'));
 
+const asPreloaderPreset = (value: FormDataEntryValue | null) =>
+  normalizePreloaderPreset(asString(value, 'minimal'));
+
 const asPhotographInfoMode = (value: FormDataEntryValue | null) => {
   const mode = asString(value, 'floating');
   return mode === 'hidden' || mode === 'floating' || mode === 'bottom_dock'
@@ -75,7 +79,7 @@ const readPayload = (
       Math.min(
         20,
         asOptionalNumber(form.get('gallery_gap_px')) ??
-          GALLERY_SETTINGS_DEFAULTS.gallery_gap_px,
+        GALLERY_SETTINGS_DEFAULTS.gallery_gap_px,
       ),
     ),
     uniform_thumb_ratio: Number(
@@ -110,6 +114,9 @@ const readPayload = (
     payload.thumbnail_entrance_preset = asThumbnailEntrancePreset(
       form.get('thumbnail_entrance_preset'),
     );
+    payload.preloader_preset = asPreloaderPreset(
+      form.get('preloader_preset'),
+    );
   }
 
   return payload;
@@ -131,16 +138,16 @@ const loadScopeSettings = async (locals: App.Locals, scope: SettingsScope) => {
   const query =
     scope.kind === 'all'
       ? await locals.supabase
-          .from('gallery_settings')
-          .select(`id, scope, gallery_id, ${settingsFieldSelect}`)
-          .eq('scope', 'all')
-          .maybeSingle()
+        .from('gallery_settings')
+        .select(`id, scope, gallery_id, ${settingsFieldSelect}`)
+        .eq('scope', 'all')
+        .maybeSingle()
       : await locals.supabase
-          .from('gallery_settings')
-          .select(`id, scope, gallery_id, ${settingsFieldSelect}`)
-          .eq('scope', 'gallery')
-          .eq('gallery_id', scope.galleryId)
-          .maybeSingle();
+        .from('gallery_settings')
+        .select(`id, scope, gallery_id, ${settingsFieldSelect}`)
+        .eq('scope', 'gallery')
+        .eq('gallery_id', scope.galleryId)
+        .maybeSingle();
 
   if (query.error) throw new Error(query.error.message);
   if (query.data) return query.data;
@@ -183,14 +190,14 @@ const saveScopeSettings = async (
   const update =
     scope.kind === 'all'
       ? await locals.supabase
-          .from('gallery_settings')
-          .update(payload)
-          .eq('scope', 'all')
+        .from('gallery_settings')
+        .update(payload)
+        .eq('scope', 'all')
       : await locals.supabase
-          .from('gallery_settings')
-          .update(payload)
-          .eq('scope', 'gallery')
-          .eq('gallery_id', scope.galleryId);
+        .from('gallery_settings')
+        .update(payload)
+        .eq('scope', 'gallery')
+        .eq('gallery_id', scope.galleryId);
   if (update.error) throw new Error(update.error.message);
 };
 

@@ -14,6 +14,7 @@
     overflow?: boolean;
     scrollListOnly?: boolean;
     reverseColumnOrder?: boolean;
+    showMobileDivider?: boolean;
     create: import('svelte').Snippet;
     list: import('svelte').Snippet;
     leading?: import('svelte').Snippet;
@@ -31,6 +32,7 @@
     overflow = false,
     scrollListOnly = false,
     reverseColumnOrder = false,
+    showMobileDivider = false,
     create,
     list,
     leading,
@@ -71,7 +73,7 @@
     </AdminHeader>
     <section class="flex min-h-0 flex-1 flex-col overflow-hidden">
       <div
-        class="grid min-h-0 flex-1 grid-rows-[1fr] gap-8 lg:grid-cols-[24rem_1fr]"
+        class="grid min-h-0 flex-1 grid-cols-1 grid-rows-[auto_1fr] gap-8 lg:grid-cols-[24rem_1fr] lg:grid-rows-[1fr]"
       >
         <div class="min-w-0 {scrollListOnly ? 'min-h-0 overflow-hidden' : ''}">
           {@render create()}
@@ -120,6 +122,9 @@
     >
       {@render create()}
     </div>
+    {#if showMobileDivider}
+      <div class="h-px shrink-0 bg-border lg:hidden" aria-hidden="true"></div>
+    {/if}
     <div class="flex min-w-0 flex-1 flex-col gap-3">
       {@render list()}
     </div>

@@ -29,6 +29,7 @@
     form,
     reverseColumnOrder,
     showCreateStatus = true,
+    showMobileDivider,
   }: {
     title: string;
     singularLabel: string;
@@ -37,6 +38,7 @@
     form?: FormState | null | undefined;
     reverseColumnOrder?: boolean;
     showCreateStatus?: boolean;
+    showMobileDivider?: boolean;
   } = $props();
 
   const typedForm = $derived(form ?? undefined);
@@ -81,6 +83,7 @@
   formMessage={typedForm?.message}
   formSuccess={typedForm?.success}
   {reverseColumnOrder}
+  {showMobileDivider}
   create={createForm}
   list={itemList}
 />

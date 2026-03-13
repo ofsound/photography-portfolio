@@ -11,5 +11,6 @@
   items={data.categories}
   reverseColumnOrder
   showCreateStatus={false}
+  showMobileDivider
   {form}
 />

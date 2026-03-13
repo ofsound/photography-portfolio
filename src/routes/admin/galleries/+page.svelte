@@ -146,6 +146,7 @@
   formMessage={form?.message}
   formSuccess={form?.success}
   reverseColumnOrder
+  showMobileDivider
   create={createForm}
   list={galleryList}
   actions={headerActions}

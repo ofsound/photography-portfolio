@@ -11,5 +11,6 @@
   items={data.tags}
   reverseColumnOrder
   showCreateStatus={false}
+  showMobileDivider
   {form}
 />

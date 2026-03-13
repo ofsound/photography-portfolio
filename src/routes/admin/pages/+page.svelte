@@ -145,6 +145,7 @@
   dataSuccess={data.messageSuccess}
   clearDataMessageQuery
   reverseColumnOrder
+  showMobileDivider
   create={createForm}
   list={pageList}
 />

@@ -99,7 +99,7 @@
     aria-label={label}
     aria-controls={id}
     aria-expanded={isOpen}
-    class="inline-flex min-h-11 min-w-11 items-center justify-center rounded-md border border-border bg-surface text-text transition-colors hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+    class="inline-flex min-h-11 min-w-11 items-center justify-center rounded-md border-0 border-border text-text transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
     onclick={() => {
       setOpen(!isOpen);
     }}
@@ -156,9 +156,7 @@
       in:fly={panelTransition()}
       out:fly={panelTransition()}
     >
-      <div
-        class="h-full overflow-y-auto p-4 pt-2"
-      >
+      <div class="h-full overflow-y-auto p-4 pt-2">
         {@render children?.()}
       </div>
     </section>

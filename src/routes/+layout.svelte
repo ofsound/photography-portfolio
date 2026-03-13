@@ -642,13 +642,13 @@
     >
       <a
         href={resolve('/')}
-        class="text-xs tracking-[0.22em] uppercase"
+        class="hidden text-2xl tracking-[0.22em] uppercase"
         aria-label="Go to Home"
       >
         Home
       </a>
 
-      <div class="flex items-center justify-end gap-2">
+      <div class="ml-auto flex items-center justify-end gap-2">
         {#if publicSveditEditable}
           <button
             type="button"
@@ -760,8 +760,7 @@
             {#each navPages as navPage (navPage.id)}
               <a
                 href={resolve(`/${navPage.slug}`)}
-                class="border-t border-border py-4 text-xl"
-                >{navPage.title}</a
+                class="border-t border-border py-4 text-xl">{navPage.title}</a
               >
             {/each}
             {#if showSearchLinkInNav}

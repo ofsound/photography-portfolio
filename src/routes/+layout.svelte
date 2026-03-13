@@ -740,18 +740,19 @@
         >
           <nav
             aria-label="Site mobile navigation"
-            class="text-md flex flex-col border-y border-border font-medium"
+            class="flex flex-col border-b border-border font-medium"
           >
             <a
               href={resolve('/')}
-              class="border-t border-border px-4 py-3 first:border-t-0">Home</a
+              class="border-t border-border py-4 text-xl first:border-t-0"
+              >Home</a
             >
             {#each navGalleries as navGallery (navGallery.id)}
               <a
                 href={resolve(
                   buildGalleryPath(navGallery.slug) as `/${string}`,
                 )}
-                class="border-t border-border px-4 py-3"
+                class="border-t border-border py-4 text-xl"
               >
                 {navGallery.name}
               </a>
@@ -759,19 +760,20 @@
             {#each navPages as navPage (navPage.id)}
               <a
                 href={resolve(`/${navPage.slug}`)}
-                class="border-t border-border px-4 py-3">{navPage.title}</a
+                class="border-t border-border py-4 text-xl"
+                >{navPage.title}</a
               >
             {/each}
             {#if showSearchLinkInNav}
               <a
                 href={resolve('/search')}
-                class="border-t border-border px-4 py-3">Search</a
+                class="border-t border-border py-4 text-xl">Search</a
               >
             {/if}
             {#if hasSession}
               <a
                 href={resolve('/admin/galleries')}
-                class="border-t border-border px-4 py-3"
+                class="border-t border-border py-4 text-xl"
               >
                 Admin
               </a>
@@ -779,7 +781,7 @@
           </nav>
 
           {#if isViewer}
-            <div class="grid gap-3 border-t border-border pt-3">
+            <div class="grid gap-3 pt-3">
               <label
                 for="header-layout-mobile"
                 class="text-xs tracking-widest uppercase"
@@ -816,7 +818,7 @@
               />
             </div>
           {:else if siteSettings?.allow_transition_toggle}
-            <div class="grid gap-2 border-t border-border pt-3">
+            <div class="grid gap-2 pt-3">
               <label
                 for="transition-mobile"
                 class="text-xs tracking-widest uppercase">Motion</label

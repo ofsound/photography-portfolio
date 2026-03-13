@@ -136,7 +136,7 @@
 
 {#if isOpen}
   <div
-    class="fixed inset-x-0 top-[var(--size-mobile-header-offset)] bottom-0 z-50 md:hidden"
+    class="fixed inset-x-0 top-[var(--size-mobile-header-offset)] z-50 h-[calc(100dvh-var(--size-mobile-header-offset))] md:hidden"
   >
     <button
       type="button"
@@ -152,12 +152,12 @@
     <section
       bind:this={panelEl}
       {id}
-      class="relative h-full origin-top border-b border-border bg-surface-strong"
+      class="absolute inset-0 origin-top border-b border-border bg-surface-strong"
       in:fly={panelTransition()}
       out:fly={panelTransition()}
     >
       <div
-        class="max-h-[calc(100dvh-var(--size-mobile-header-offset))] overflow-y-auto p-4 pt-2"
+        class="h-full overflow-y-auto p-4 pt-2"
       >
         {@render children?.()}
       </div>

@@ -128,6 +128,20 @@
     typeof window !== 'undefined'
       ? window.matchMedia('(max-width: 767px)').matches
       : false;
+  const detectSafariBrowser = () => {
+    if (typeof window === 'undefined') return false;
+
+    const { userAgent, vendor } = window.navigator;
+    const isAppleVendor = /Apple/i.test(vendor);
+    const hasSafariToken = /Safari/i.test(userAgent);
+    const hasOtherBrowserToken =
+      /(Chrome|CriOS|Chromium|EdgiOS|FxiOS|OPiOS|OPR|SamsungBrowser|DuckDuckGo|YaBrowser)/i.test(
+        userAgent,
+      );
+
+    return isAppleVendor && hasSafariToken && !hasOtherBrowserToken;
+  };
+  const safariSmoothMode = () => detectSafariBrowser();
 
   const colCount = $derived(
     Math.max(
@@ -315,6 +329,7 @@
     state,
     reducedMotion,
     isMobileViewport,
+    smoothSafariMode: safariSmoothMode,
     getSettings: () => ({
       perspectivePx: data.gallerySettings?.contact_sheet_perspective_px ?? 1200,
       rotateXDeg: data.gallerySettings?.contact_sheet_rotate_x_deg ?? 8,
@@ -329,6 +344,13 @@
       void onRetargetPhoto(slug);
     },
   });
+
+  const disableChromeBlurForSafariContactSheet = $derived(
+    safariSmoothMode() &&
+      detailViewMode === 'contact_sheet' &&
+      Boolean(state.activeSlug) &&
+      isTransitioning,
+  );
 
   const viewerController = $derived.by<GalleryViewerController>(() =>
     detailViewMode === 'contact_sheet' ? contactSheetViewer : classicViewer,
@@ -749,6 +771,21 @@
 
     initializedScopeSlug = routeScopeSlug;
     applyScopeViewerDefaults();
+  });
+
+  $effect(() => {
+    if (typeof document === 'undefined') return;
+
+    const root = document.documentElement;
+    if (disableChromeBlurForSafariContactSheet) {
+      root.setAttribute('data-contact-sheet-safari-transition', '1');
+    } else {
+      root.removeAttribute('data-contact-sheet-safari-transition');
+    }
+
+    return () => {
+      root.removeAttribute('data-contact-sheet-safari-transition');
+    };
   });
 
   $effect(() => {

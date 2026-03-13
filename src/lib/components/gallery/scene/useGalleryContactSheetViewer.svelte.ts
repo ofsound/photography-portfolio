@@ -42,6 +42,7 @@ type ContactSheetSession = {
   tiles: SvelteMap<string, TileMetric>;
   currentTransform: string;
   currentOrigin: string;
+  currentValues: TransformValues;
   onClick: (event: MouseEvent) => void;
 };
 
@@ -49,8 +50,23 @@ type CreateGalleryContactSheetViewerOptions = {
   state: GallerySceneState;
   reducedMotion: () => boolean;
   isMobileViewport: () => boolean;
+  smoothSafariMode: () => boolean;
   getSettings: () => ContactSheetSettings;
   onRetargetRequest: (slug: string) => void;
+};
+
+type TransformOrigin = {
+  x: number;
+  y: number;
+};
+
+type TransformValues = {
+  tx: number;
+  ty: number;
+  tz: number;
+  scale: number;
+  rotateX: number;
+  rotateY: number;
 };
 
 const OPEN_EASING = 'cubic-bezier(0.16, 1, 0.3, 1)';
@@ -62,6 +78,32 @@ const waitForFrame = () =>
 
 const clamp = (value: number, min: number, max: number) =>
   Math.min(max, Math.max(min, value));
+
+const toTransformString = (values: TransformValues) =>
+  `translate3d(${values.tx}px, ${values.ty}px, ${values.tz}px) scale(${values.scale}) rotateX(${values.rotateX}deg) rotateY(${values.rotateY}deg)`;
+
+const parseOrigin = (origin: string): TransformOrigin => {
+  const [xToken = '0', yToken = '0'] = origin.split(' ');
+  return {
+    x: Number.parseFloat(xToken) || 0,
+    y: Number.parseFloat(yToken) || 0,
+  };
+};
+
+const adjustForOriginChange = (
+  values: TransformValues,
+  from: TransformOrigin,
+  to: TransformOrigin,
+): TransformValues => {
+  const scaleDelta = values.scale - 1;
+  if (scaleDelta === 0) return values;
+
+  return {
+    ...values,
+    tx: values.tx + (from.x - to.x) * scaleDelta,
+    ty: values.ty + (from.y - to.y) * scaleDelta,
+  };
+};
 
 const rectFromElement = (node: Element): RootRect => {
   const rect = node.getBoundingClientRect();
@@ -77,6 +119,7 @@ export const createGalleryContactSheetViewer = ({
   state,
   reducedMotion,
   isMobileViewport,
+  smoothSafariMode,
   getSettings,
   onRetargetRequest,
 }: CreateGalleryContactSheetViewerOptions): GalleryViewerController => {
@@ -92,12 +135,25 @@ export const createGalleryContactSheetViewer = ({
     const intensity = shouldSoftenForMobile()
       ? clamp(base.mobileIntensityPct / 100, 0, 1)
       : 1;
+    const useSmoothSafariProfile = smoothSafariMode() && !reducedMotion();
 
     return {
       perspectivePx: base.perspectivePx,
-      rotateXDeg: reducedMotion() ? 0 : base.rotateXDeg * intensity,
-      rotateYDeg: reducedMotion() ? 0 : base.rotateYDeg * intensity,
-      travelZPx: reducedMotion() ? 0 : base.travelZPx * intensity,
+      rotateXDeg: reducedMotion()
+        ? 0
+        : useSmoothSafariProfile
+          ? 0
+          : base.rotateXDeg * intensity,
+      rotateYDeg: reducedMotion()
+        ? 0
+        : useSmoothSafariProfile
+          ? 0
+          : base.rotateYDeg * intensity,
+      travelZPx: reducedMotion()
+        ? 0
+        : useSmoothSafariProfile
+          ? clamp(base.travelZPx * intensity * 0.22, 0, 28)
+          : base.travelZPx * intensity,
       targetFillPct: base.targetFillPct,
     };
   };
@@ -223,9 +279,16 @@ export const createGalleryContactSheetViewer = ({
     const rotateY = settings.rotateYDeg * -offsetX;
     const travelZ = settings.travelZPx * (0.65 + distance * 0.35);
     const origin = `${scaledCenterX}px ${scaledCenterY}px`;
-    const transform = `translate3d(${tx}px, ${ty}px, ${travelZ}px) scale(${scale}) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+    const values: TransformValues = {
+      tx,
+      ty,
+      tz: travelZ,
+      scale,
+      rotateX,
+      rotateY,
+    };
 
-    return { origin, transform };
+    return { origin, transform: toTransformString(values), values };
   };
 
   const animateToSlug = async (
@@ -244,6 +307,8 @@ export const createGalleryContactSheetViewer = ({
 
     const fromTransform = session.currentTransform;
     const fromOrigin = session.currentOrigin;
+    const fromValues = session.currentValues;
+    const smoothSafariProfile = smoothSafariMode() && !reducedMotion();
 
     isAnimating = true;
     session.sheet.style.willChange = 'transform';
@@ -257,23 +322,48 @@ export const createGalleryContactSheetViewer = ({
         session.sheet.style.transformOrigin = target.origin;
         session.sheet.style.transform = target.transform;
       } else {
-        const animation = session.sheet.animate(
-          [
-            {
-              transformOrigin: fromOrigin,
-              transform: fromTransform,
-            },
-            {
-              transformOrigin: target.origin,
-              transform: target.transform,
-            },
-          ],
-          {
-            duration: durationMs,
-            easing,
-            fill: 'forwards',
-          },
-        );
+        const animation = smoothSafariProfile
+          ? (() => {
+              const adjustedFromValues = adjustForOriginChange(
+                fromValues,
+                parseOrigin(fromOrigin),
+                parseOrigin(target.origin),
+              );
+              session.sheet.style.transformOrigin = target.origin;
+
+              return session.sheet.animate(
+                [
+                  {
+                    transform: toTransformString(adjustedFromValues),
+                  },
+                  {
+                    transform: target.transform,
+                  },
+                ],
+                {
+                  duration: durationMs,
+                  easing,
+                  fill: 'forwards',
+                },
+              );
+            })()
+          : session.sheet.animate(
+              [
+                {
+                  transformOrigin: fromOrigin,
+                  transform: fromTransform,
+                },
+                {
+                  transformOrigin: target.origin,
+                  transform: target.transform,
+                },
+              ],
+              {
+                duration: durationMs,
+                easing,
+                fill: 'forwards',
+              },
+            );
 
         try {
           await animation.finished;
@@ -286,6 +376,7 @@ export const createGalleryContactSheetViewer = ({
       session.sheet.style.transform = target.transform;
       session.currentOrigin = target.origin;
       session.currentTransform = target.transform;
+      session.currentValues = target.values;
       session.activeSlug = slug;
       state.activeSlug = slug;
       return true;
@@ -308,11 +399,13 @@ export const createGalleryContactSheetViewer = ({
     const sourceRoot = gridRoot;
     const originalParent = sourceRoot.parentNode;
     if (!originalParent) return null;
-    const renderScale = clamp(
-      (window.devicePixelRatio || 1) * (isMobileViewport() ? 1.1 : 1.5),
-      1,
-      3,
-    );
+    const renderScale = smoothSafariMode()
+      ? 1
+      : clamp(
+          (window.devicePixelRatio || 1) * (isMobileViewport() ? 1.1 : 1.5),
+          1,
+          3,
+        );
 
     const frame = document.createElement('div');
     frame.setAttribute(CONTACT_SHEET_FRAME_ATTR, 'true');
@@ -340,8 +433,16 @@ export const createGalleryContactSheetViewer = ({
     sheet.style.margin = '0';
     sheet.style.pointerEvents = 'auto';
     sheet.style.transformOrigin = '0px 0px';
-    sheet.style.transform = `translate3d(0px, 0px, 0px) scale(${1 / renderScale}) rotateX(0deg) rotateY(0deg)`;
-    sheet.style.transformStyle = 'preserve-3d';
+    const initialValues: TransformValues = {
+      tx: 0,
+      ty: 0,
+      tz: 0,
+      scale: 1 / renderScale,
+      rotateX: 0,
+      rotateY: 0,
+    };
+    sheet.style.transform = toTransformString(initialValues);
+    sheet.style.transformStyle = smoothSafariMode() ? 'flat' : 'preserve-3d';
     sheet.style.backfaceVisibility = 'hidden';
 
     sourceRoot.style.position = 'absolute';
@@ -353,7 +454,9 @@ export const createGalleryContactSheetViewer = ({
     sourceRoot.style.pointerEvents = 'auto';
     sourceRoot.style.transformOrigin = '0px 0px';
     sourceRoot.style.transform = `scale(${renderScale})`;
-    sourceRoot.style.transformStyle = 'preserve-3d';
+    sourceRoot.style.transformStyle = smoothSafariMode()
+      ? 'flat'
+      : 'preserve-3d';
     sourceRoot.style.backfaceVisibility = 'hidden';
     sourceRoot.setAttribute('data-contact-sheet-promoted', 'true');
 
@@ -389,8 +492,9 @@ export const createGalleryContactSheetViewer = ({
       renderScale,
       rootRect: geometry.rootRect,
       tiles: geometry.tiles,
-      currentTransform: `translate3d(0px, 0px, 0px) scale(${1 / renderScale}) rotateX(0deg) rotateY(0deg)`,
+      currentTransform: toTransformString(initialValues),
       currentOrigin: '0px 0px',
+      currentValues: initialValues,
       onClick,
     } satisfies ContactSheetSession;
   };
@@ -423,6 +527,7 @@ export const createGalleryContactSheetViewer = ({
     animate: boolean,
     durationMsOverride?: number,
   ) => {
+    const hadSession = Boolean(session);
     const nextSession = await ensureSession(slug);
     if (!nextSession) {
       state.activeSlug = slug;
@@ -433,15 +538,16 @@ export const createGalleryContactSheetViewer = ({
     session = nextSession;
     state.activeSlug = slug;
     state.activeImageId = imageId;
+    const shouldAnimate = animate && hadSession;
     await animateToSlug(
       slug,
-      animate ? (durationMsOverride ?? 520) : 0,
+      shouldAnimate ? (durationMsOverride ?? 520) : 0,
       OPEN_EASING,
     );
 
     // Animated scale-up can leave the promoted layer rasterized too softly.
     // Re-promote once at rest to restore full detail after gallery-entry opens.
-    if (animate && !reducedMotion()) {
+    if (shouldAnimate && !reducedMotion() && !smoothSafariMode()) {
       await reopenActive();
     }
   };
@@ -501,23 +607,56 @@ export const createGalleryContactSheetViewer = ({
         animate &&
         typeof session.sheet.animate === 'function'
       ) {
-        const closeAnimation = session.sheet.animate(
-          [
-            {
-              transformOrigin: session.currentOrigin,
-              transform: session.currentTransform,
-            },
-            {
-              transformOrigin: '0px 0px',
-              transform: `translate3d(0px, 0px, 0px) scale(${1 / session.renderScale}) rotateX(0deg) rotateY(0deg)`,
-            },
-          ],
-          {
-            duration: 520,
-            easing: OPEN_EASING,
-            fill: 'forwards',
-          },
-        );
+        const resetValues: TransformValues = {
+          tx: 0,
+          ty: 0,
+          tz: 0,
+          scale: 1 / session.renderScale,
+          rotateX: 0,
+          rotateY: 0,
+        };
+        const closeAnimation = smoothSafariMode()
+          ? (() => {
+              const adjustedFromValues = adjustForOriginChange(
+                session.currentValues,
+                parseOrigin(session.currentOrigin),
+                { x: 0, y: 0 },
+              );
+              session.sheet.style.transformOrigin = '0px 0px';
+
+              return session.sheet.animate(
+                [
+                  {
+                    transform: toTransformString(adjustedFromValues),
+                  },
+                  {
+                    transform: toTransformString(resetValues),
+                  },
+                ],
+                {
+                  duration: 520,
+                  easing: OPEN_EASING,
+                  fill: 'forwards',
+                },
+              );
+            })()
+          : session.sheet.animate(
+              [
+                {
+                  transformOrigin: session.currentOrigin,
+                  transform: session.currentTransform,
+                },
+                {
+                  transformOrigin: '0px 0px',
+                  transform: toTransformString(resetValues),
+                },
+              ],
+              {
+                duration: 520,
+                easing: OPEN_EASING,
+                fill: 'forwards',
+              },
+            );
 
         try {
           await closeAnimation.finished;

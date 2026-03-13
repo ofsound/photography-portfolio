@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onNavigate } from '$app/navigation';
+  import { afterNavigate } from '$app/navigation';
   import { fade, fly } from 'svelte/transition';
 
   import type { Snippet } from 'svelte';
@@ -68,7 +68,7 @@
     };
   });
 
-  onNavigate(() => {
+  afterNavigate(() => {
     if (isOpen) {
       setOpen(false);
     }
@@ -90,21 +90,6 @@
       firstFocusable?.focus();
     });
     return () => window.cancelAnimationFrame(frame);
-  });
-
-  $effect(() => {
-    if (typeof document === 'undefined' || !isOpen) return;
-    const onDocumentClick = (event: MouseEvent) => {
-      const target = event.target;
-      if (!(target instanceof Element)) return;
-      if (!panelEl || !panelEl.contains(target)) return;
-      if (target.closest('a[href]')) {
-        setOpen(false);
-      }
-    };
-
-    document.addEventListener('click', onDocumentClick);
-    return () => document.removeEventListener('click', onDocumentClick);
   });
 </script>
 
@@ -167,7 +152,7 @@
     <section
       bind:this={panelEl}
       {id}
-      class="relative origin-top border-b border-border bg-surface shadow-lg"
+      class="relative h-full origin-top border-b border-border bg-surface shadow-lg"
       in:fly={panelTransition()}
       out:fly={panelTransition()}
     >

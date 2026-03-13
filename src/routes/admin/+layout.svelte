@@ -126,7 +126,7 @@
   style="--font-sans: var(--font-sans-admin); font-family: var(--font-sans)"
 >
   <header
-    class="chrome-panel fixed inset-x-0 top-0 z-[60] border-b border-border px-4 pt-[env(safe-area-inset-top)] md:hidden"
+    class="fixed inset-x-0 top-0 z-[60] border-b border-border bg-surface px-4 pt-[env(safe-area-inset-top)] md:hidden"
   >
     <div
       class="flex h-[var(--size-mobile-header)] items-center justify-between gap-3"
@@ -170,22 +170,16 @@
             aria-label="Admin mobile navigation"
             class="text-md flex flex-col border-y border-border font-medium"
           >
-            {#each links as link, i (link.href)}
+            {#each links as link (link.href)}
               <a
                 href={resolve(link.href as `/${string}`)}
-                class="border-t border-border px-4 py-3 transition-shadow duration-300 first:border-t-0"
-                class:bg-surface-subtle={!isActiveLink(link.href) &&
-                  i % 2 === 1}
-                class:bg-surface-strong={isActiveLink(link.href)}
-                style="box-shadow: {isActiveLink(link.href)
-                  ? 'inset 3px 0 0 var(--color-brand), inset 0 2px 8px rgba(0,0,0,0.14)'
-                  : 'inset 3px 0 0 transparent, inset 0 2px 8px transparent'}"
+                class="border-t border-border py-4 text-xl transition-shadow duration-300 first:border-t-0"
               >
                 {link.label}
               </a>
             {/each}
           </nav>
-          <div class="pt-3">
+          <div class="pt-8">
             <AdminThemeToggle />
           </div>
         </MobileDropdownMenu>

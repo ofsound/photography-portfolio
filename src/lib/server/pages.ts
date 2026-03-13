@@ -51,9 +51,9 @@ const toCmsPage = (data: {
   kind: 'home' | 'custom';
   visibility_status: 'public' | 'unlisted' | 'draft';
   background_image?:
-  | { delivery_storage_path?: string | null }
-  | Array<{ delivery_storage_path?: string | null }>
-  | null;
+    | { delivery_storage_path?: string | null }
+    | Array<{ delivery_storage_path?: string | null }>
+    | null;
 }): CmsPage => {
   const heroVerticalAlignmentPct = Number(data.hero_vertical_alignment_pct);
   const editorMode = data.editor_mode === 'svedit' ? 'svedit' : 'code';

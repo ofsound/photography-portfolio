@@ -35,8 +35,7 @@ type ContactSheetSession = {
   frame: HTMLElement;
   sheet: HTMLElement;
   sourceRoot: HTMLElement;
-  placeholder: HTMLElement;
-  originalParent: Node;
+  hiddenRoot: HTMLElement | null;
   renderScale: number;
   rootRect: RootRect;
   tiles: SvelteMap<string, TileMetric>;
@@ -165,26 +164,9 @@ export const createGalleryContactSheetViewer = ({
     session.frame.remove();
 
     if (restoreRoot) {
-      session.sourceRoot.style.removeProperty('position');
-      session.sourceRoot.style.removeProperty('top');
-      session.sourceRoot.style.removeProperty('left');
-      session.sourceRoot.style.removeProperty('width');
-      session.sourceRoot.style.removeProperty('height');
-      session.sourceRoot.style.removeProperty('margin');
-      session.sourceRoot.style.removeProperty('pointer-events');
-      session.sourceRoot.style.removeProperty('transform-origin');
-      session.sourceRoot.style.removeProperty('transform');
-      session.sourceRoot.style.removeProperty('transform-style');
-      session.sourceRoot.style.removeProperty('backface-visibility');
-      session.sourceRoot.removeAttribute('data-contact-sheet-promoted');
-
-      if (session.placeholder.isConnected) {
-        session.placeholder.replaceWith(session.sourceRoot);
-      } else if (session.originalParent instanceof Element) {
-        session.originalParent.appendChild(session.sourceRoot);
+      if (session.hiddenRoot) {
+        session.hiddenRoot.style.removeProperty('visibility');
       }
-
-      session.placeholder.remove();
     }
 
     session = null;
@@ -396,9 +378,7 @@ export const createGalleryContactSheetViewer = ({
     const geometry = measureGeometry();
     if (!geometry || !geometry.tiles.has(activeSlug)) return null;
 
-    const sourceRoot = gridRoot;
-    const originalParent = sourceRoot.parentNode;
-    if (!originalParent) return null;
+    const sourceRoot = gridRoot.cloneNode(true) as HTMLElement;
     const renderScale = smoothSafariMode()
       ? 1
       : clamp(
@@ -414,15 +394,6 @@ export const createGalleryContactSheetViewer = ({
     frame.style.zIndex = '70';
     frame.style.overflow = 'hidden';
     frame.style.pointerEvents = 'none';
-
-    const placeholder = document.createElement('div');
-    placeholder.setAttribute('aria-hidden', 'true');
-    placeholder.style.display = 'block';
-    placeholder.style.width = `${geometry.rootRect.width}px`;
-    placeholder.style.height = `${geometry.rootRect.height}px`;
-    placeholder.style.pointerEvents = 'none';
-
-    originalParent.insertBefore(placeholder, sourceRoot);
 
     const sheet = document.createElement('div');
     sheet.style.position = 'absolute';
@@ -480,6 +451,7 @@ export const createGalleryContactSheetViewer = ({
     sheet.addEventListener('click', onClick);
     sheet.appendChild(sourceRoot);
     frame.appendChild(sheet);
+    gridRoot.style.visibility = 'hidden';
     document.body.appendChild(frame);
 
     return {
@@ -487,8 +459,7 @@ export const createGalleryContactSheetViewer = ({
       frame,
       sheet,
       sourceRoot,
-      placeholder,
-      originalParent,
+      hiddenRoot: gridRoot,
       renderScale,
       rootRect: geometry.rootRect,
       tiles: geometry.tiles,

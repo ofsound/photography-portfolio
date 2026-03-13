@@ -438,6 +438,12 @@ export const createGalleryContactSheetViewer = ({
       animate ? (durationMsOverride ?? 520) : 0,
       OPEN_EASING,
     );
+
+    // Animated scale-up can leave the promoted layer rasterized too softly.
+    // Re-promote once at rest to restore full detail after gallery-entry opens.
+    if (animate && !reducedMotion()) {
+      await reopenActive();
+    }
   };
 
   const bindGridRoot = (node: HTMLElement) => {

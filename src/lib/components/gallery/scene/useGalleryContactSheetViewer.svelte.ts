@@ -378,14 +378,16 @@ export const createGalleryContactSheetViewer = ({
     const geometry = measureGeometry();
     if (!geometry || !geometry.tiles.has(activeSlug)) return null;
 
-    const sourceRoot = gridRoot.cloneNode(true) as HTMLElement;
+    const tileMetric = geometry.tiles.get(activeSlug)!;
+    const tileShortEdge = Math.max(1, Math.min(tileMetric.width, tileMetric.height));
+    const viewportShortEdge = Math.max(1, Math.min(window.innerWidth, window.innerHeight));
+    const targetScale = (viewportShortEdge * effectiveSettings().targetFillPct) / tileShortEdge;
+    
+    // We increase render scale so that the texture rasterized by the browser has 
+    // enough pixels to be crystal clear when zoomed in to the target tile.
     const renderScale = smoothSafariMode()
       ? 1
-      : clamp(
-          (window.devicePixelRatio || 1) * (isMobileViewport() ? 1.1 : 1.5),
-          1,
-          3,
-        );
+      : clamp(targetScale * (window.devicePixelRatio || 1) * 1.5, 1, 16);
 
     const frame = document.createElement('div');
     frame.setAttribute(CONTACT_SHEET_FRAME_ATTR, 'true');
@@ -415,6 +417,16 @@ export const createGalleryContactSheetViewer = ({
     sheet.style.transform = toTransformString(initialValues);
     sheet.style.transformStyle = smoothSafariMode() ? 'flat' : 'preserve-3d';
     sheet.style.backfaceVisibility = 'hidden';
+
+    const sourceRoot = gridRoot.cloneNode(true) as HTMLElement;
+    // Upgrade node src to highest resolution explicitly just in case.
+    const imageNodes = sourceRoot.querySelectorAll('img');
+    for (const img of imageNodes) {
+      const src = img.getAttribute('src');
+      if (src && !src.includes('width=2400')) {
+        img.setAttribute('src', src.replace(/width=\d+/, 'width=2400'));
+      }
+    }
 
     sourceRoot.style.position = 'absolute';
     sourceRoot.style.top = '0';
@@ -489,7 +501,26 @@ export const createGalleryContactSheetViewer = ({
 
   const maybeHydrateOpenState = (slug: string) => {
     if (!state.activeSlug || state.activeSlug !== slug || session) return;
-    void open(state.activeSlug, state.activeImageId, false);
+    
+    // Direct entry hydration sequence: the geometry layout may be 0x0
+    // initially because images or fonts haven't reflowed.
+    // Try to open, and if it fails, retry after a few frames.
+    const hydrate = async (attempts: number) => {
+      if (session || state.activeSlug !== slug) return;
+      
+      const geom = measureGeometry();
+      if (!geom || !geom.tiles.has(slug)) {
+        if (attempts > 0) {
+          await waitForFrame();
+          hydrate(attempts - 1);
+        }
+        return;
+      }
+      
+      void open(slug, state.activeImageId, false);
+    };
+
+    void hydrate(20); // allow up to ~20 frames for the tile to physically appear.
   };
 
   const open = async (
@@ -503,6 +534,10 @@ export const createGalleryContactSheetViewer = ({
     if (!nextSession) {
       state.activeSlug = slug;
       state.activeImageId = imageId;
+      // If we failed to ensureSession (e.g. tile not loaded), re-attempt hydration
+      if (!hadSession) {
+          maybeHydrateOpenState(slug);
+      }
       return;
     }
 
@@ -516,11 +551,8 @@ export const createGalleryContactSheetViewer = ({
       OPEN_EASING,
     );
 
-    // Animated scale-up can leave the promoted layer rasterized too softly.
-    // Re-promote once at rest to restore full detail after gallery-entry opens.
-    if (shouldAnimate && !reducedMotion() && !smoothSafariMode()) {
-      await reopenActive();
-    }
+    // We dynamically generate a high-resoluton renderScale from the start.
+    // Re-promotions are no longer necessary to restore full detail.
   };
 
   const bindGridRoot = (node: HTMLElement) => {

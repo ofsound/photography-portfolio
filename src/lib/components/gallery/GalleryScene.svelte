@@ -184,7 +184,21 @@
     }
 
     clearEntranceLock();
-    state.entranceLocked = !reducedMotion() && photos.length > 0;
+    if (photos.length === 0) {
+      state.entranceOrderReady = true;
+      state.entranceLocked = false;
+      resolvedEntranceBatchKey = state.entranceBatchKey;
+      return;
+    }
+
+    if (state.entranceSequenceComplete || reducedMotion()) {
+      state.entranceOrderReady = true;
+      state.entranceLocked = false;
+      resolvedEntranceBatchKey = state.entranceBatchKey;
+      return;
+    }
+
+    state.entranceLocked = true;
   };
 
   const onResolveEntranceOrder = (batchKey: number, orderedSlugs: string[]) => {
@@ -208,12 +222,13 @@
     if (rank === 0 || reducedMotion()) {
       clearEntranceLock();
       state.entranceLocked = false;
+      state.entranceSequenceComplete = true;
     }
   };
 
   const entranceFx = (slug: string, fallbackRank: number) => {
     const eligible = entranceEligibleSlugs.has(slug);
-    if (!eligible || reducedMotion()) {
+    if (!eligible || reducedMotion() || state.entranceSequenceComplete) {
       return {
         className: 'thumb-entrance-fx',
         style: '',
@@ -507,10 +522,6 @@
         setPhase('fade-out-chrome');
         await wait(FADE_OUT_CHROME_MS);
 
-        setPhase('scale-and-mask');
-        state.activeSlug = slug;
-        state.activeImageId = null;
-
         if (typeof document !== 'undefined') {
           document.body.style.overflow = 'hidden';
         }
@@ -523,6 +534,24 @@
           });
         });
 
+        if (detailViewMode === 'classic') {
+          const openPromise = viewerController.open(
+            slug,
+            null,
+            true,
+            SCALE_MASK_MS,
+          );
+          setPhase('scale-and-mask');
+          state.activeSlug = slug;
+          state.activeImageId = null;
+          await openPromise;
+          setPhase('open');
+          return;
+        }
+
+        setPhase('scale-and-mask');
+        state.activeSlug = slug;
+        state.activeImageId = null;
         await viewerController.open(slug, null, true, SCALE_MASK_MS);
         setPhase('open');
       });
@@ -758,6 +787,7 @@
     if (reducedMotion() || state.entranceOrderCount <= 0) {
       clearEntranceLock();
       state.entranceLocked = false;
+      state.entranceSequenceComplete = true;
       return;
     }
 
@@ -773,6 +803,7 @@
     entranceUnlockTimer = setTimeout(() => {
       if (batchKey !== state.entranceBatchKey) return;
       state.entranceLocked = false;
+      state.entranceSequenceComplete = true;
       entranceUnlockTimer = null;
     }, unlockAfterMs);
 

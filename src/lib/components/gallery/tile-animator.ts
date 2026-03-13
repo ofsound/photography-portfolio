@@ -28,6 +28,8 @@ export type TileAnimationSession = {
   imgCrop: ImgCropTransform | null;
   /** Grid aspect ratio to restore when reinserting (so tile responds to density changes) */
   gridAspectRatio?: number;
+  /** Original inline aspect-ratio style from the tile node. */
+  originalInlineAspectRatio: string;
 };
 
 type AnimationConfig = {
@@ -173,6 +175,7 @@ export const promoteTile = async ({
 }: PromoteConfig): Promise<TileAnimationSession> => {
   const startRect = rectFromElement(node);
   const parent = node.parentNode;
+  const originalInlineAspectRatio = node.style.aspectRatio;
 
   const placeholder = document.createElement('div');
   placeholder.dataset.tilePlaceholder = slug;
@@ -322,6 +325,7 @@ export const promoteTile = async ({
     currentRect: targetRect,
     imgCrop: imgCropFrom ?? null,
     gridAspectRatio: aspectRatio,
+    originalInlineAspectRatio,
   };
 };
 
@@ -434,6 +438,8 @@ export const reinsertPromotedTile = (
     session.node.style.width = `${rect.width}px`;
     session.node.style.height = `${rect.height}px`;
     session.node.style.aspectRatio = 'auto';
+  } else if (session.originalInlineAspectRatio) {
+    session.node.style.aspectRatio = session.originalInlineAspectRatio;
   } else if (session.gridAspectRatio != null) {
     session.node.style.aspectRatio = String(session.gridAspectRatio);
   }
@@ -469,6 +475,8 @@ export const releasePromotedTile = (
     session.node.style.width = `${rect.width}px`;
     session.node.style.height = `${rect.height}px`;
     session.node.style.aspectRatio = 'auto';
+  } else if (session.originalInlineAspectRatio) {
+    session.node.style.aspectRatio = session.originalInlineAspectRatio;
   } else if (session.gridAspectRatio != null) {
     session.node.style.aspectRatio = String(session.gridAspectRatio);
   }

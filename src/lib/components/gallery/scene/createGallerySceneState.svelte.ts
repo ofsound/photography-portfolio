@@ -44,6 +44,7 @@ export const createGallerySceneState = (data: ViewerData) => {
     entranceOrderReady: false,
     entranceOrderCount: 0,
     entranceLocked: false,
+    entranceSequenceComplete: false,
   });
   return state;
 };

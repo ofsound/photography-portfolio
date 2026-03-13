@@ -183,6 +183,16 @@
     transform: none !important;
   }
 
+  :global([data-promoted] .thumb-entrance-fx),
+  :global([data-promoted] .thumb-entrance-fx--await),
+  :global([data-promoted] .thumb-entrance-fx--cascade),
+  :global([data-promoted] .thumb-entrance-fx--lift),
+  :global([data-promoted] .thumb-entrance-fx--pop) {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
   :global([data-promoted] .tile-img) {
     object-fit: cover;
     height: 100%;

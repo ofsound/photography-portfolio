@@ -176,19 +176,12 @@ export const promoteTile = async ({
 
   const placeholder = document.createElement('div');
   placeholder.dataset.tilePlaceholder = slug;
-  // For uniform (square) tiles, anchor via the cell's min-dimension + aspect-ratio so
-  // the placeholder responds to density changes correctly. For masonry tiles (non-square
-  // aspect ratio), use the tile's exact rendered rect so the demote animation returns to
-  // the correct position regardless of column reflow.
-  if (
-    aspectRatio != null &&
-    Math.abs(aspectRatio - 1) < 0.01 &&
-    parent instanceof Element
-  ) {
+  // If the tile participates in an aspect-ratio driven layout, use the cell rect so the
+  // placeholder can track layout changes while the tile is promoted.
+  if (aspectRatio != null && parent instanceof Element) {
     const cellRect = rectFromElement(parent);
-    const size = Math.min(cellRect.width, cellRect.height);
-    placeholder.style.width = `${size}px`;
-    placeholder.style.height = `${size}px`;
+    placeholder.style.width = `${cellRect.width}px`;
+    placeholder.style.height = `${cellRect.height}px`;
     placeholder.style.aspectRatio = String(aspectRatio);
   } else {
     placeholder.style.width = `${startRect.width}px`;
@@ -222,7 +215,7 @@ export const promoteTile = async ({
   if (img && imgCropFrom) {
     const origin = `${imgCropFrom.originX * 100}% ${imgCropFrom.originY * 100}%`;
     img.style.transformOrigin = origin;
-    img.style.objectFit = 'contain';
+    img.style.objectFit = 'cover';
     const tx = imgCropFrom.translateX;
     const ty = imgCropFrom.translateY;
     const durationMs = options?.durationMs ?? 520;
@@ -236,7 +229,7 @@ export const promoteTile = async ({
     ) {
       applyRectToWrapper(wrapper, targetRect);
       img.style.transform = '';
-      img.style.objectFit = 'contain';
+      img.style.objectFit = 'cover';
     } else {
       const rectTiming: KeyframeAnimationOptions = {
         duration: durationMs,
@@ -282,7 +275,7 @@ export const promoteTile = async ({
 
       applyRectToWrapper(wrapper, targetRect);
       img.style.transform = '';
-      img.style.objectFit = 'contain';
+      img.style.objectFit = 'cover';
     }
   } else {
     if (
@@ -483,7 +476,7 @@ export const releasePromotedTile = (
   if (session.imgCrop) {
     const img = session.node.querySelector('img');
     if (img) {
-      img.style.objectFit = 'contain';
+      img.style.objectFit = 'cover';
       img.style.transformOrigin = `${session.imgCrop.originX * 100}% ${session.imgCrop.originY * 100}%`;
       img.style.transform = `translate(${session.imgCrop.translateX}%, ${session.imgCrop.translateY}%) scale(${session.imgCrop.scale})`;
     }
@@ -508,7 +501,7 @@ export const releasePromotedTile = (
 
 import { thumbCropTransform as thumbCropTransformUtil } from '$lib/utils/thumb-crop';
 
-/** Match admin ThumbnailCropEditor exactly - uses shared thumb-crop.ts. imgWidth/imgHeight = imageAspect. */
+/** Match admin ThumbnailCropEditor exactly - uses shared thumb-crop.ts. */
 export const cropToImgTransform = (
   cropX: number,
   cropY: number,

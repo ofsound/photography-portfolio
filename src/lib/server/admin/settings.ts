@@ -14,6 +14,7 @@ import {
   normalizeGallerySettingsForRead,
   type GallerySettingsRecord,
 } from '$lib/server/gallery-settings-contract';
+import { normalizeThumbCropAspect } from '$lib/utils/thumb-crop';
 
 type SettingsScope =
   | { kind: 'defaults' }
@@ -158,10 +159,12 @@ const readPayload = (
       100,
       GALLERY_SETTINGS_DEFAULTS.contact_sheet_mobile_intensity_pct,
     ),
-    uniform_thumb_ratio: Number(
-      asString(
-        form.get('uniform_thumb_ratio'),
-        String(GALLERY_SETTINGS_DEFAULTS.uniform_thumb_ratio),
+    uniform_thumb_ratio: normalizeThumbCropAspect(
+      Number(
+        asString(
+          form.get('uniform_thumb_ratio'),
+          String(GALLERY_SETTINGS_DEFAULTS.uniform_thumb_ratio),
+        ),
       ),
     ),
     allow_transition_toggle: asBoolean(form.get('allow_transition_toggle')),

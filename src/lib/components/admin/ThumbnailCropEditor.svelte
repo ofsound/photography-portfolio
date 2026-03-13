@@ -2,6 +2,11 @@
   import { enhance } from '$app/forms';
   import AdminButton from '$lib/components/admin/AdminButton.svelte';
   import { parseDimensions } from '$lib/utils/parse-dimensions';
+  import {
+    normalizeThumbCropAspect,
+    thumbCropVisibleWindow,
+    thumbCropTransform,
+  } from '$lib/utils/thumb-crop';
   import { photoPublicUrl } from '$lib/utils/storage-url';
 
   type ThumbCrop = {
@@ -15,26 +20,36 @@
     deliveryStoragePath,
     altText,
     dimensions = null,
+    cropAspect,
     initialCrop = null,
     photoId,
     galleryId = '',
   } = $props<{
     imageId: string;
     deliveryStoragePath: string;
-    sourceStoragePath?: string | null;
     altText: string | null;
     dimensions?: string | null;
+    cropAspect: number;
     initialCrop?: ThumbCrop | null;
     photoId: string;
     galleryId?: string;
   }>();
 
-  const parsedDims = $derived(parseDimensions(dimensions));
-
-  const EDITOR_MAX_SIZE = 360;
+  const EDITOR_MAX_LONG_EDGE = 360;
   const ZOOM_MIN = 1;
   const ZOOM_MAX = 4;
   const ZOOM_STEP = 0.1;
+
+  const parsedDims = $derived(parseDimensions(dimensions));
+  const safeCropAspect = $derived(normalizeThumbCropAspect(cropAspect));
+  const previewMaxWidthPx = $derived(
+    safeCropAspect >= 1
+      ? EDITOR_MAX_LONG_EDGE
+      : EDITOR_MAX_LONG_EDGE * safeCropAspect,
+  );
+  const previewFrameStyle = $derived(
+    `aspect-ratio: ${safeCropAspect}; max-width: min(100%, ${previewMaxWidthPx}px);`,
+  );
 
   const initialX = $derived(initialCrop?.thumb_crop_x ?? 0.5);
   const initialY = $derived(initialCrop?.thumb_crop_y ?? 0.5);
@@ -49,7 +64,8 @@
 
   let imgNaturalWidth = $state<number | null>(null);
   let imgNaturalHeight = $state<number | null>(null);
-  let editorClientWidth = $state(EDITOR_MAX_SIZE);
+  let viewportClientWidth = $state(1);
+  let viewportClientHeight = $state(1);
   let isDragging = $state(false);
   let dragStartX = 0;
   let dragStartY = 0;
@@ -58,93 +74,78 @@
 
   const imgWidth = $derived(imgNaturalWidth ?? parsedDims?.width ?? 1);
   const imgHeight = $derived(imgNaturalHeight ?? parsedDims?.height ?? 1);
-  const imgAspect = $derived(imgWidth / imgHeight);
-  const editorSize = $derived(
-    Math.min(EDITOR_MAX_SIZE, Math.max(editorClientWidth, 1)),
+  const cropWindow = $derived(
+    thumbCropVisibleWindow(imgWidth, imgHeight, safeCropAspect, cropZoom),
+  );
+  const visibleWidthNorm = $derived(cropWindow.visibleWidthNorm);
+  const visibleHeightNorm = $derived(cropWindow.visibleHeightNorm);
+  const clampedCropX = $derived(
+    clamp(cropX, visibleWidthNorm / 2, 1 - visibleWidthNorm / 2),
+  );
+  const clampedCropY = $derived(
+    clamp(cropY, visibleHeightNorm / 2, 1 - visibleHeightNorm / 2),
+  );
+  const cropTransform = $derived(
+    thumbCropTransform(
+      clampedCropX,
+      clampedCropY,
+      cropZoom,
+      imgWidth,
+      imgHeight,
+      safeCropAspect,
+    ),
+  );
+  const previewImageStyle = $derived(
+    `transform: translate(${cropTransform.translateX}%, ${cropTransform.translateY}%) scale(${cropTransform.scale}); transform-origin: ${cropTransform.originX * 100}% ${cropTransform.originY * 100}%;`,
   );
 
-  // Image display rect when contained in the rendered editor square
-  const containedRect = $derived.by(() => {
-    const size = editorSize;
-    if (imgAspect >= 1) {
-      const w = size;
-      const h = size / imgAspect;
-      return { left: 0, top: (size - h) / 2, width: w, height: h };
-    }
-    const h = size;
-    const w = size * imgAspect;
-    return { left: (size - w) / 2, top: 0, width: w, height: h };
-  });
+  function clamp(value: number, min: number, max: number) {
+    return Math.max(min, Math.min(max, value));
+  }
 
-  // Crop square side in image pixels: at zoom=1, it's min(W,H) (fit). At zoom=2, half.
-  const cropSideImagePx = $derived(Math.min(imgWidth, imgHeight) / cropZoom);
-  const cropSideNormX = $derived(cropSideImagePx / imgWidth);
-  const cropSideNormY = $derived(cropSideImagePx / imgHeight);
-
-  // Crop rect in container pixels (over the contained image)
-  const cropOverlayRect = $derived.by(() => {
-    const r = containedRect;
-    const cxNorm = cropX;
-    const cyNorm = cropY;
-    const halfW = cropSideNormX / 2;
-    const halfH = cropSideNormY / 2;
-    const size = Math.min(cropSideNormX * r.width, cropSideNormY * r.height);
-    return {
-      left: r.left + (cxNorm - halfW) * r.width,
-      top: r.top + (cyNorm - halfH) * r.height,
-      width: size,
-      height: size,
-    };
-  });
-
-  const clamp = (v: number, min: number, max: number) =>
-    Math.max(min, Math.min(max, v));
-
-  const onImgLoad = (e: Event) => {
-    const img = e.target as HTMLImageElement;
+  const onImgLoad = (event: Event) => {
+    const img = event.currentTarget as HTMLImageElement | null;
     if (img?.naturalWidth && img?.naturalHeight) {
       imgNaturalWidth = img.naturalWidth;
       imgNaturalHeight = img.naturalHeight;
     }
   };
 
-  const onPointerDown = (e: PointerEvent) => {
-    if (!(e.target as HTMLElement).closest('[data-crop-overlay]')) return;
-    e.preventDefault();
+  const onPointerDown = (event: PointerEvent) => {
+    if (event.button !== 0 && event.pointerType !== 'touch') return;
+    event.preventDefault();
     isDragging = true;
-    dragStartX = e.clientX;
-    dragStartY = e.clientY;
-    dragStartCropX = cropX;
-    dragStartCropY = cropY;
-    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    dragStartX = event.clientX;
+    dragStartY = event.clientY;
+    dragStartCropX = clampedCropX;
+    dragStartCropY = clampedCropY;
+    (event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
   };
 
-  const onPointerMove = (e: PointerEvent) => {
+  const onPointerMove = (event: PointerEvent) => {
     if (!isDragging) return;
-    const dx = e.clientX - dragStartX;
-    const dy = e.clientY - dragStartY;
-    const r = containedRect;
-    if (r.width <= 0 || r.height <= 0) return;
-    const normDx = dx / r.width;
-    const normDy = dy / r.height;
+    if (viewportClientWidth <= 0 || viewportClientHeight <= 0) return;
+
+    const dx = event.clientX - dragStartX;
+    const dy = event.clientY - dragStartY;
+
     cropX = clamp(
-      dragStartCropX + normDx,
-      cropSideNormX / 2,
-      1 - cropSideNormX / 2,
+      dragStartCropX - (dx / viewportClientWidth) * visibleWidthNorm,
+      visibleWidthNorm / 2,
+      1 - visibleWidthNorm / 2,
     );
     cropY = clamp(
-      dragStartCropY + normDy,
-      cropSideNormY / 2,
-      1 - cropSideNormY / 2,
+      dragStartCropY - (dy / viewportClientHeight) * visibleHeightNorm,
+      visibleHeightNorm / 2,
+      1 - visibleHeightNorm / 2,
     );
     scheduleSave();
   };
 
-  const onPointerUp = (e: PointerEvent) => {
-    if (isDragging) {
-      (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
-      isDragging = false;
-    }
+  const onPointerUp = (event: PointerEvent) => {
+    if (!isDragging) return;
+    (event.currentTarget as HTMLElement).releasePointerCapture(event.pointerId);
+    isDragging = false;
   };
 
   const resetToDefault = () => {
@@ -159,8 +160,8 @@
       initialCrop?.thumb_crop_zoom != null,
   );
   const hasChanges = $derived(
-    cropX !== (initialCrop?.thumb_crop_x ?? 0.5) ||
-      cropY !== (initialCrop?.thumb_crop_y ?? 0.5) ||
+    clampedCropX !== (initialCrop?.thumb_crop_x ?? 0.5) ||
+      clampedCropY !== (initialCrop?.thumb_crop_y ?? 0.5) ||
       cropZoom !== (initialCrop?.thumb_crop_zoom ?? 1),
   );
 
@@ -197,34 +198,50 @@
     </div>
   {/if}
 
-  <div
-    bind:clientWidth={editorClientWidth}
-    class="relative aspect-square w-full max-w-[360px] overflow-hidden rounded border border-border-strong bg-surface-muted"
-    role="img"
-    aria-label="Thumbnail crop editor"
-    onpointerdown={onPointerDown}
-    onpointermove={onPointerMove}
-    onpointerup={onPointerUp}
-    onpointercancel={onPointerUp}
-    onpointerleave={onPointerUp}
-  >
-    <img
-      src={photoPublicUrl(deliveryStoragePath, 800)}
-      alt={altText ?? ''}
-      class="absolute inset-0 h-full w-full object-contain"
-      onload={onImgLoad}
-      draggable="false"
-    />
+  <div class="w-full">
+    <div
+      bind:clientWidth={viewportClientWidth}
+      bind:clientHeight={viewportClientHeight}
+      class="relative w-full touch-none overflow-hidden rounded border border-border-strong bg-surface-muted"
+      style={previewFrameStyle}
+      role="img"
+      aria-label="Thumbnail crop editor"
+      onpointerdown={onPointerDown}
+      onpointermove={onPointerMove}
+      onpointerup={onPointerUp}
+      onpointercancel={onPointerUp}
+      onpointerleave={onPointerUp}
+    >
+      <img
+        src={photoPublicUrl(deliveryStoragePath, 800)}
+        alt={altText ?? ''}
+        class="absolute inset-0 h-full w-full object-cover select-none"
+        style={previewImageStyle}
+        onload={onImgLoad}
+        draggable="false"
+      />
 
-    {#if imgNaturalWidth && imgNaturalHeight}
       <div
-        data-crop-overlay
-        class="absolute cursor-move border-2 border-white/90 shadow-lg ring-2 ring-black/40"
-        style="left: {cropOverlayRect.left}px; top: {cropOverlayRect.top}px; width: {cropOverlayRect.width}px; height: {cropOverlayRect.height}px"
-      >
-        <span class="sr-only">Drag to reposition crop</span>
-      </div>
-    {/if}
+        aria-hidden="true"
+        class="pointer-events-none absolute inset-0 border border-white/25"
+      ></div>
+      <div
+        aria-hidden="true"
+        class="pointer-events-none absolute inset-y-0 left-1/3 w-px bg-white/15"
+      ></div>
+      <div
+        aria-hidden="true"
+        class="pointer-events-none absolute inset-y-0 left-2/3 w-px bg-white/15"
+      ></div>
+      <div
+        aria-hidden="true"
+        class="pointer-events-none absolute inset-x-0 top-1/3 h-px bg-white/15"
+      ></div>
+      <div
+        aria-hidden="true"
+        class="pointer-events-none absolute inset-x-0 top-2/3 h-px bg-white/15"
+      ></div>
+    </div>
   </div>
 
   <div class="flex flex-wrap items-center gap-4">
@@ -289,8 +306,8 @@
       <input type="hidden" name="gallery_id" value={galleryId} />
     {/if}
     <input type="hidden" name="image_id" value={imageId} />
-    <input type="hidden" name="thumb_crop_x" value={cropX} />
-    <input type="hidden" name="thumb_crop_y" value={cropY} />
+    <input type="hidden" name="thumb_crop_x" value={clampedCropX} />
+    <input type="hidden" name="thumb_crop_y" value={clampedCropY} />
     <input type="hidden" name="thumb_crop_zoom" value={cropZoom} />
   </form>
 </div>

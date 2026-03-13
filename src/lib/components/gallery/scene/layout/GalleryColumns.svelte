@@ -84,6 +84,6 @@
 
 <style>
   .tile-img-crop {
-    object-fit: contain !important;
+    object-fit: cover !important;
   }
 </style>

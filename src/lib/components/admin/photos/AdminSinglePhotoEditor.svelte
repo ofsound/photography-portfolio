@@ -5,6 +5,7 @@
     persistAdditionalOrder,
     persistTaxonomy,
   } from '$lib/components/admin/photos/persist';
+  import type { GalleryCropConfigByGalleryId } from '$lib/types/gallery-crop';
   import type {
     AdminCategory,
     AdminPhoto,
@@ -18,6 +19,7 @@
       categories: AdminCategory[];
       tags: AdminTag[];
       images: AdminPhotoImage[];
+      galleryCropConfigByGalleryId: GalleryCropConfigByGalleryId;
       selectedCategoryIds: string[];
       selectedTagIds: string[];
       photoConversionState: 'no-images' | 'pending' | 'ready' | 'mixed';
@@ -101,6 +103,7 @@
   <AdminPhotoCard
     {photo}
     {images}
+    galleryCropConfigByGalleryId={data.galleryCropConfigByGalleryId}
     {categories}
     {tags}
     {selectedPhotoIds}

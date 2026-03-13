@@ -14,6 +14,7 @@
   import FormInput from '$lib/components/FormInput.svelte';
   import FormTextarea from '$lib/components/FormTextarea.svelte';
   import { formControlContainerClass } from '$lib/constants/form';
+  import type { GalleryCropConfigByGalleryId } from '$lib/types/gallery-crop';
   import { slugify } from '$lib/utils/slug';
 
   import type {
@@ -30,6 +31,7 @@
   const {
     photo,
     images,
+    galleryCropConfigByGalleryId,
     categories,
     tags,
     selectedPhotoIds,
@@ -46,6 +48,7 @@
   } = $props<{
     photo: AdminPhoto | (Omit<AdminPhoto, 'id'> & { id: null });
     images: AdminPhotoImage[];
+    galleryCropConfigByGalleryId: GalleryCropConfigByGalleryId;
     categories: AdminCategory[];
     tags: AdminTag[];
     selectedPhotoIds: string[];
@@ -107,6 +110,12 @@
   );
   const isPublic = $derived(photoStatus === 'published');
   const photoFormId = $derived(isDraft ? 'draft' : photo.id);
+  const galleryCropConfig = $derived(
+    galleryCropConfigByGalleryId[photo.gallery_id] ?? {
+      layoutMode: 'uniform',
+      uniformThumbRatio: 1,
+    },
+  );
   const activeFormState = $derived.by(() => {
     if (!formState) return null;
     const targetId = formState.values?.id;
@@ -186,6 +195,7 @@
         <AdminPhotoImageManager
           {photo}
           {images}
+          {galleryCropConfig}
           {additionalOrder}
           {onAdditionalReorder}
           draftTitle={form.title}

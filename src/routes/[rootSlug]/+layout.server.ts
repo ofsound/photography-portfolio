@@ -17,6 +17,7 @@ import {
 import { loadPageBySlug } from '$lib/server/pages';
 import { RESERVED_SLUGS } from '$lib/server/reserved-slugs';
 import { buildGalleryPhotoPath } from '$lib/utils/gallery-routes';
+import { normalizeThumbCropAspect } from '$lib/utils/thumb-crop';
 import type { LayoutServerLoad } from './$types';
 
 type GalleryLayoutMode =
@@ -223,7 +224,7 @@ const loadGalleryModeData = async ({
     layoutMode,
     widthMode,
     maxContentWidthPx: settings.max_content_width_px ?? null,
-    uniformThumbRatio: Number(settings.uniform_thumb_ratio ?? 1),
+    uniformThumbRatio: normalizeThumbCropAspect(settings.uniform_thumb_ratio),
     maxDensity,
     baseQueryString: buildBaseQueryString(q),
     active,
@@ -334,7 +335,7 @@ export const load: LayoutServerLoad = async ({ locals, params, url }) => {
     layoutMode: 'uniform' as const,
     widthMode: 'full' as const,
     maxContentWidthPx: null,
-    uniformThumbRatio: 1,
+    uniformThumbRatio: normalizeThumbCropAspect(1),
     maxDensity: 10,
     baseQueryString: '',
     active: null,

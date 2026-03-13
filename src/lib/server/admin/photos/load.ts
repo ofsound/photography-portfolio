@@ -1,5 +1,6 @@
 import { asString } from '$lib/server/admin-helpers';
 import { throwLoaderError } from '$lib/server/load-error';
+import { loadGalleryCropConfigByGalleryId } from '$lib/server/admin/photos/gallery-crop-config';
 import {
   isUuid,
   parseSearch,
@@ -311,6 +312,15 @@ export const loadAdminPhotosPage = async ({
     return true;
   });
 
+  const galleryCropConfigByGalleryId = await loadGalleryCropConfigByGalleryId({
+    locals,
+    galleryIds: filteredPhotos.map((photo) => photo.gallery_id),
+    route:
+      scope.kind === 'gallery'
+        ? `/admin/${scope.gallerySlug}/photos`
+        : '/admin/library',
+  });
+
   return {
     scopeKind: scope.kind,
     reorderEnabled: scope.kind === 'gallery',
@@ -321,6 +331,7 @@ export const loadAdminPhotosPage = async ({
     photoCategoryIds,
     photoTagIds,
     photoImageMap,
+    galleryCropConfigByGalleryId,
     photoConversionStateMap,
     showArchived,
     q,

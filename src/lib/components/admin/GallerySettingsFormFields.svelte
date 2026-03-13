@@ -108,7 +108,12 @@
       <option value="contact_sheet">contact sheet</option>
     </FormSelect>
   </FormField>
-  <FormField label="Thumb Ratio" id={p('uniform_thumb_ratio')} class="w-28">
+  <FormField
+    label="Uniform Thumb Ratio"
+    id={p('uniform_thumb_ratio')}
+    hint="Uniform gallery thumbnail aspect and crop target."
+    class="w-28"
+  >
     <FormInput
       id={p('uniform_thumb_ratio')}
       name="uniform_thumb_ratio"

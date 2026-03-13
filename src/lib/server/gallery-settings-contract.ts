@@ -12,6 +12,7 @@ import {
   normalizePreloaderPreset,
 } from '$lib/constants/preloader-preset';
 import { normalizeThumbnailEntrancePreset } from '$lib/constants/thumbnail-entrance';
+import { normalizeThumbCropAspect } from '$lib/utils/thumb-crop';
 
 import type { Database } from '$lib/types/database';
 
@@ -146,9 +147,10 @@ export const normalizeGallerySettingsForRead = (
     ),
     gallery_gap_px:
       source.gallery_gap_px ?? GALLERY_SETTINGS_DEFAULTS.gallery_gap_px,
-    uniform_thumb_ratio:
+    uniform_thumb_ratio: normalizeThumbCropAspect(
       source.uniform_thumb_ratio ??
-      GALLERY_SETTINGS_DEFAULTS.uniform_thumb_ratio,
+        GALLERY_SETTINGS_DEFAULTS.uniform_thumb_ratio,
+    ),
     transition_preset:
       source.transition_preset ?? GALLERY_SETTINGS_DEFAULTS.transition_preset,
     thumbnail_entrance_preset: thumbnailEntrancePreset,

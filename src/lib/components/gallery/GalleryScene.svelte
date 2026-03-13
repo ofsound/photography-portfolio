@@ -18,6 +18,7 @@
     GALLERY_DETAIL_SHARED_WIDTH,
     photoPublicUrl,
   } from '$lib/utils/storage-url';
+  import { normalizeThumbCropAspect } from '$lib/utils/thumb-crop';
   import {
     createGallerySceneState,
     routeKeyFromActive,
@@ -138,7 +139,7 @@
   const placeholderCount = $derived(Math.max(colCount, 6));
 
   const uniformRatio = $derived(
-    Math.max(0.2, Number(data.uniformThumbRatio ?? 1)),
+    normalizeThumbCropAspect(data.uniformThumbRatio),
   );
 
   const naturalAspectRatio = (photo: GalleryPhoto) => {

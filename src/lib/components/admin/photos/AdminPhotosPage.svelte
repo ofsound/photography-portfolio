@@ -30,6 +30,7 @@
     getAdminPhotosPrefs,
     setAdminPhotosPrefs,
   } from '$lib/stores/admin-photos-prefs';
+  import type { GalleryCropConfigByGalleryId } from '$lib/types/gallery-crop';
   import type {
     AdminCategory,
     AdminPhoto,
@@ -61,6 +62,7 @@
     photoCategoryIds: Record<string, string[]>;
     photoTagIds: Record<string, string[]>;
     photoImageMap: Record<string, AdminPhotoImage[]>;
+    galleryCropConfigByGalleryId: GalleryCropConfigByGalleryId;
     showArchived: boolean;
     q: string;
     filterCategoryId: string;
@@ -487,6 +489,7 @@
                     {photo}
                     editHref={`/admin/${photo.gallery_slug}/photos/edit/${photo.id}`}
                     images={imagesForPhoto(photo.id)}
+                    galleryCropConfigByGalleryId={data.galleryCropConfigByGalleryId}
                     {categories}
                     {tags}
                     {selectedPhotoIds}
@@ -506,6 +509,7 @@
                     {photo}
                     editHref={`/admin/${photo.gallery_slug}/photos/edit/${photo.id}`}
                     images={imagesForPhoto(photo.id)}
+                    galleryCropConfigByGalleryId={data.galleryCropConfigByGalleryId}
                     {categories}
                     {tags}
                     {selectedPhotoIds}

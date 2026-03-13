@@ -1,16 +1,29 @@
+const MIN_THUMB_CROP_ASPECT = 0.2;
+const MAX_THUMB_CROP_ASPECT = 3;
+
+export const normalizeThumbCropAspect = (
+  value: number | null | undefined,
+): number => {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) {
+    return 1;
+  }
+
+  return Math.min(
+    MAX_THUMB_CROP_ASPECT,
+    Math.max(MIN_THUMB_CROP_ASPECT, parsed),
+  );
+};
+
 /**
  * Thumbnail crop math - must match ThumbnailCropEditor.svelte exactly.
  *
- * Admin uses: square container, image with object-contain.
- * containedRect: when imgAspect >= 1 (landscape): full width, height = width/imgAspect, top = (size - height)/2
- *                when imgAspect < 1 (portrait): full height, width = height*imgAspect, left = (size - width)/2
- * Crop center (cropX, cropY) in image coords maps to container coords:
- *   landscape: originX = cropX, originY = (1 - 1/imgAspect)/2 + cropY/imgAspect
- *   portrait:  originX = (1 - imgAspect)/2 + cropX*imgAspect, originY = cropY
+ * Crop data is interpreted as a viewport over the original image:
+ * - cropX / cropY = crop center in normalized image coordinates
+ * - zoom = scale relative to the base object-fit: cover viewport
+ * - containerAspect = the target thumbnail aspect ratio
  *
- * General case for container with containerAspect = width/height:
- *   imgAspect >= containerAspect: originX = cropX, originY = 0.5 - 0.5*cA/iA + cropY*cA/iA
- *   imgAspect < containerAspect:  originX = 0.5 - 0.5*iA/cA + cropX*iA/cA, originY = cropY
+ * The transform is applied to an img with object-fit: cover.
  */
 
 function cropCenterToElementCoords(
@@ -21,21 +34,43 @@ function cropCenterToElementCoords(
   containerAspect: number,
 ): { originX: number; originY: number } {
   const iA = Math.max(0.01, imgWidth / imgHeight);
-  const cA = Math.max(0.01, containerAspect);
+  const cA = Math.max(0.01, normalizeThumbCropAspect(containerAspect));
 
   if (iA >= cA) {
     return {
-      originX: cropX,
-      originY: 0.5 - (0.5 * cA) / iA + (cropY * cA) / iA,
+      originX: 0.5 - (0.5 * iA) / cA + (cropX * iA) / cA,
+      originY: cropY,
     };
   }
   return {
-    originX: 0.5 - (0.5 * iA) / cA + (cropX * iA) / cA,
-    originY: cropY,
+    originX: cropX,
+    originY: 0.5 - (0.5 * cA) / iA + (cropY * cA) / iA,
   };
 }
 
-/** CSS transform values for img with object-fit: contain. Zoom from admin: cropSide = min(W,H)/zoom. */
+export const thumbCropVisibleWindow = (
+  imgWidth: number,
+  imgHeight: number,
+  containerAspect: number,
+  zoom: number,
+) => {
+  const iA = Math.max(0.01, imgWidth / imgHeight);
+  const cA = Math.max(0.01, normalizeThumbCropAspect(containerAspect));
+  const safeZoom = Math.max(1, zoom);
+
+  if (iA >= cA) {
+    return {
+      visibleWidthNorm: cA / iA / safeZoom,
+      visibleHeightNorm: 1 / safeZoom,
+    };
+  }
+
+  return {
+    visibleWidthNorm: 1 / safeZoom,
+    visibleHeightNorm: iA / cA / safeZoom,
+  };
+};
+
 export function thumbCropTransform(
   cropX: number,
   cropY: number,
@@ -49,7 +84,10 @@ export function thumbCropTransform(
   scale: number;
   originX: number;
   originY: number;
+  visibleWidthNorm: number;
+  visibleHeightNorm: number;
 } {
+  const safeZoom = Math.max(1, zoom);
   const { originX, originY } = cropCenterToElementCoords(
     cropX,
     cropY,
@@ -57,11 +95,20 @@ export function thumbCropTransform(
     imgHeight,
     containerAspect,
   );
+  const { visibleWidthNorm, visibleHeightNorm } = thumbCropVisibleWindow(
+    imgWidth,
+    imgHeight,
+    containerAspect,
+    safeZoom,
+  );
+
   return {
     translateX: (0.5 - originX) * 100,
     translateY: (0.5 - originY) * 100,
-    scale: zoom,
+    scale: safeZoom,
     originX,
     originY,
+    visibleWidthNorm,
+    visibleHeightNorm,
   };
 }

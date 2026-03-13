@@ -7,6 +7,7 @@ import {
   parseUuidList,
   storageSourcePath,
 } from '$lib/server/admin-helpers';
+import { loadGalleryCropConfigByGalleryId } from '$lib/server/admin/photos/gallery-crop-config';
 import { normalizePhotoImagePositions } from '$lib/server/admin/photos/shared';
 
 export async function uploadImageWithForm(
@@ -233,16 +234,29 @@ export const photoImageActions: Actions = {
 
     if (!photoId || !imageId)
       return fail(400, { message: 'Missing photo or image id.' });
+
+    let targetGalleryId: string;
     if (galleryId) {
       const guard = await locals.supabase
         .from('photos')
-        .select('id')
+        .select('id, gallery_id')
         .eq('id', photoId)
         .eq('gallery_id', galleryId)
         .maybeSingle();
       if (guard.error) return fail(400, { message: guard.error.message });
       if (!guard.data)
         return fail(404, { message: 'Photo not found in this gallery.' });
+      targetGalleryId = guard.data.gallery_id ?? galleryId;
+    } else {
+      const photoQuery = await locals.supabase
+        .from('photos')
+        .select('gallery_id')
+        .eq('id', photoId)
+        .maybeSingle();
+      if (photoQuery.error)
+        return fail(400, { message: photoQuery.error.message });
+      if (!photoQuery.data) return fail(404, { message: 'Photo not found.' });
+      targetGalleryId = photoQuery.data.gallery_id;
     }
 
     const { data: image, error: loadError } = await locals.supabase
@@ -257,6 +271,21 @@ export const photoImageActions: Actions = {
       return fail(400, {
         message: 'Thumbnail crop applies only to lead images.',
       });
+
+    const galleryCropConfigByGalleryId = await loadGalleryCropConfigByGalleryId(
+      {
+        locals,
+        galleryIds: [targetGalleryId],
+        route: '/admin/photos',
+      },
+    );
+    if (
+      galleryCropConfigByGalleryId[targetGalleryId]?.layoutMode !== 'uniform'
+    ) {
+      return fail(400, {
+        message: 'Thumbnail crop is only available for uniform galleries.',
+      });
+    }
 
     const updates: Record<string, number | null> = {};
     if (cropX != null && cropX >= 0 && cropX <= 1) updates.thumb_crop_x = cropX;

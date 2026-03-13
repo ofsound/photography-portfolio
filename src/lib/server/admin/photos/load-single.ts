@@ -1,4 +1,5 @@
 import { error } from '@sveltejs/kit';
+import { loadGalleryCropConfigByGalleryId } from '$lib/server/admin/photos/gallery-crop-config';
 import type { Database } from '$lib/types/database';
 import { isUuid } from '$lib/server/admin/photos/shared';
 
@@ -125,6 +126,11 @@ export const loadSinglePhotoEditorData = async (
       ...photo,
       gallery_slug: galleryRelation?.slug ?? '',
     },
+    galleryCropConfigByGalleryId: await loadGalleryCropConfigByGalleryId({
+      locals,
+      galleryIds: [photo.gallery_id],
+      route: '/admin/photos/edit',
+    }),
     categories,
     tags,
     selectedCategoryIds: categoryLinks.map(

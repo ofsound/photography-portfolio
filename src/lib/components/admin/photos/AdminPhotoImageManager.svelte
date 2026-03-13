@@ -9,12 +9,15 @@
   import PhotoUploadZone from '$lib/components/admin/PhotoUploadZone.svelte';
   import ThumbnailCropEditor from '$lib/components/admin/ThumbnailCropEditor.svelte';
 
+  import type { GalleryCropConfig } from '$lib/types/gallery-crop';
+  import { parseDimensions } from '$lib/utils/parse-dimensions';
   import { photoPublicUrl } from '$lib/utils/storage-url';
   import type { AdminPhoto, AdminPhotoImage } from '$lib/types/content';
 
   const {
     photo,
     images,
+    galleryCropConfig,
     additionalOrder,
     onAdditionalReorder,
     draftTitle,
@@ -22,6 +25,7 @@
   } = $props<{
     photo: AdminPhoto | (Omit<AdminPhoto, 'id'> & { id: null });
     images: AdminPhotoImage[];
+    galleryCropConfig: GalleryCropConfig;
     additionalOrder: string[];
     onAdditionalReorder: (
       photoId: string,
@@ -35,6 +39,18 @@
   const lead = $derived(
     images.find((image: AdminPhotoImage) => image.kind === 'lead') ?? null,
   );
+  const canEditThumbnailCrop = $derived(
+    galleryCropConfig.layoutMode === 'uniform',
+  );
+  const leadAspect = $derived.by(() => {
+    const parsed = parseDimensions(lead?.dimensions ?? null);
+    if (!parsed) return 1;
+    return Math.max(0.2, parsed.width / parsed.height);
+  });
+  const leadPreviewStyle = $derived.by(() => {
+    const maxWidthPx = leadAspect >= 1 ? 360 : 360 * leadAspect;
+    return `aspect-ratio: ${leadAspect}; max-width: min(100%, ${maxWidthPx}px);`;
+  });
   const imageById = (imageId: string) =>
     images.find((image: AdminPhotoImage) => image.id === imageId) ?? null;
 
@@ -74,22 +90,42 @@
           <div class="flex min-w-0 flex-col gap-2 text-xs">
             {#if lead.delivery_storage_path}
               <div class="mt-2">
-                {#key `${lead.id}_${lead.thumb_crop_x ?? 'default'}_${lead.thumb_crop_y ?? 'default'}_${lead.thumb_crop_zoom ?? 'default'}`}
-                  <ThumbnailCropEditor
-                    imageId={lead.id}
-                    deliveryStoragePath={lead.delivery_storage_path}
-                    sourceStoragePath={lead.source_storage_path}
-                    altText={lead.alt_text ?? photo.title}
-                    dimensions={lead.dimensions}
-                    initialCrop={{
-                      thumb_crop_x: lead.thumb_crop_x,
-                      thumb_crop_y: lead.thumb_crop_y,
-                      thumb_crop_zoom: lead.thumb_crop_zoom,
-                    }}
-                    photoId={photo.id}
-                    galleryId={photo.gallery_id}
-                  />
-                {/key}
+                {#if canEditThumbnailCrop}
+                  {#key `${lead.id}_${galleryCropConfig.uniformThumbRatio}_${lead.thumb_crop_x ?? 'default'}_${lead.thumb_crop_y ?? 'default'}_${lead.thumb_crop_zoom ?? 'default'}`}
+                    <ThumbnailCropEditor
+                      imageId={lead.id}
+                      deliveryStoragePath={lead.delivery_storage_path}
+                      altText={lead.alt_text ?? photo.title}
+                      dimensions={lead.dimensions}
+                      cropAspect={galleryCropConfig.uniformThumbRatio}
+                      initialCrop={{
+                        thumb_crop_x: lead.thumb_crop_x,
+                        thumb_crop_y: lead.thumb_crop_y,
+                        thumb_crop_zoom: lead.thumb_crop_zoom,
+                      }}
+                      photoId={photo.id}
+                      galleryId={photo.gallery_id}
+                    />
+                  {/key}
+                {:else}
+                  <div class="grid gap-2">
+                    <div
+                      class="relative w-full overflow-hidden rounded border border-border-strong bg-surface-muted"
+                      style={leadPreviewStyle}
+                    >
+                      <img
+                        src={photoPublicUrl(lead.delivery_storage_path, 800)}
+                        alt={lead.alt_text ?? photo.title}
+                        class="absolute inset-0 h-full w-full object-cover"
+                        draggable="false"
+                      />
+                    </div>
+                    <p class="text-text-muted">
+                      Thumbnail crop is only available when the gallery layout
+                      is uniform.
+                    </p>
+                  </div>
+                {/if}
               </div>
             {:else}
               <div

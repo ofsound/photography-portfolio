@@ -168,7 +168,7 @@
 
 <style>
   .tile-img-crop {
-    object-fit: contain !important;
+    object-fit: cover !important;
   }
 
   :global([data-contact-sheet-promoted='true'] .thumb-entrance-fx),
@@ -184,7 +184,7 @@
   }
 
   :global([data-promoted] .tile-img) {
-    object-fit: contain;
+    object-fit: cover;
     height: 100%;
   }
 </style>

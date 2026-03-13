@@ -83,6 +83,7 @@ export const createGalleryTileAnimator = ({
 
   const hasThumbCrop = (img: GalleryImage | null): boolean =>
     Boolean(
+      getLayoutMode() === 'uniform' &&
       img &&
       img.thumb_crop_x != null &&
       img.thumb_crop_y != null &&
@@ -108,7 +109,7 @@ export const createGalleryTileAnimator = ({
       containerAspect,
     );
 
-    return `object-fit: contain !important; transform: translate(${transform.translateX}%, ${transform.translateY}%) scale(${transform.scale}); transform-origin: ${transform.originX * 100}% ${transform.originY * 100}%;`;
+    return `object-fit: cover !important; transform: translate(${transform.translateX}%, ${transform.translateY}%) scale(${transform.scale}); transform-origin: ${transform.originX * 100}% ${transform.originY * 100}%;`;
   };
 
   const tileAspectRatio = (photo: GalleryPhoto) => {

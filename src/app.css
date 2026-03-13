@@ -177,6 +177,19 @@ body {
   text-transform: uppercase;
 }
 
+/* Keep control chrome visually stable while detail image swaps are running. */
+.nav-controls--transitioning .nav-btn,
+.nav-controls--transitioning .nav-btn .nav-btn__ring,
+.nav-controls--transitioning .nav-btn .nav-btn__strip,
+.nav-controls--transitioning .nav-btn .nav-btn__curtain,
+.nav-controls--transitioning .nav-btn .nav-btn__chevron,
+.nav-controls--transitioning .nav-btn .nav-btn__close-word,
+.nav-controls--transitioning .nav-btn .nav-btn__close-glyph,
+.nav-controls--transitioning .nav-btn .nav-btn__sprocket {
+  transition: none !important;
+  animation: none !important;
+}
+
 /* ── 1. WHISPER — Minimal editorial line ─────────────────── */
 .nav-btn--whisper {
   padding: 20px 16px;

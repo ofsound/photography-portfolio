@@ -293,6 +293,7 @@
   <div
     use:portal
     class="pointer-events-none fixed inset-0 z-[80] transition-opacity ease-out"
+    class:nav-controls--transitioning={isTransitioning}
     class:opacity-0={overlayChromeHidden}
     style="transition-duration: {closingChromeMs}ms"
     aria-hidden="true"
@@ -302,7 +303,6 @@
       onclick={onClose}
       class="nav-btn nav-btn--close nav-btn--{navButtonPreset} pointer-events-auto"
       class:pointer-events-none={isTransitioning}
-      class:opacity-50={isTransitioning}
       aria-label="Close photo detail"
     >
       {#if navButtonPreset === 'whisper'}

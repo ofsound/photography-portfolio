@@ -131,7 +131,7 @@
     <div
       class="flex h-[var(--size-mobile-header)] items-center justify-between gap-3"
     >
-      <p class="text-base font-bold tracking-[0.28em] uppercase">CMS</p>
+      <p class="text-2xl font-bold tracking-[0.28em] uppercase">CMS</p>
       <div class="flex items-center gap-2">
         {#if adminPublicPath}
           <a
@@ -168,7 +168,7 @@
         >
           <nav
             aria-label="Admin mobile navigation"
-            class="text-md flex flex-col border-y border-border font-medium"
+            class="text-md flex flex-col border-b border-border font-medium"
           >
             {#each links as link (link.href)}
               <a

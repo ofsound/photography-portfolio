@@ -167,8 +167,8 @@
 
   /* Layout */
   --size-header: 54px;
-  --size-mobile-header: 48px;
+  --size-mobile-header: 60px;
   --size-mobile-header-offset: calc(
-    var(--size-mobile-header) + env(safe-area-inset-top)
+    var(--size-mobile-header) + env(safe-area-inset-top, 0px) + 1px
   );
 }

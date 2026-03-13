@@ -152,12 +152,12 @@
     <section
       bind:this={panelEl}
       {id}
-      class="relative h-full origin-top border-b border-border bg-surface shadow-lg"
+      class="relative h-full origin-top border-b border-border bg-surface-strong"
       in:fly={panelTransition()}
       out:fly={panelTransition()}
     >
       <div
-        class="max-h-[calc(100dvh-var(--size-mobile-header-offset))] overflow-y-auto p-4"
+        class="max-h-[calc(100dvh-var(--size-mobile-header-offset))] overflow-y-auto p-4 pt-2"
       >
         {@render children?.()}
       </div>

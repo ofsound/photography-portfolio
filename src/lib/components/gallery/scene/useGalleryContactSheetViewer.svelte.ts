@@ -43,6 +43,10 @@ type ContactSheetSession = {
   currentOrigin: string;
   currentValues: TransformValues;
   onClick: (event: MouseEvent) => void;
+  originalParent: Node | null;
+  originalNextSibling: Node | null;
+  placeholder: HTMLElement;
+  originalCssText: string;
 };
 
 type CreateGalleryContactSheetViewerOptions = {
@@ -124,6 +128,7 @@ export const createGalleryContactSheetViewer = ({
 }: CreateGalleryContactSheetViewerOptions): GalleryViewerController => {
   let gridRoot = $state<HTMLElement | null>(null);
   let session = $state<ContactSheetSession | null>(null);
+  let sessionPromise: Promise<ContactSheetSession | null> | null = null;
   let isAnimating = $state(false);
   const tileRefs = new SvelteMap<string, HTMLElement>();
 
@@ -166,6 +171,16 @@ export const createGalleryContactSheetViewer = ({
     if (restoreRoot) {
       if (session.hiddenRoot) {
         session.hiddenRoot.style.removeProperty('visibility');
+      }
+      session.sourceRoot.style.cssText = session.originalCssText;
+      session.sourceRoot.removeAttribute('data-contact-sheet-promoted');
+      if (session.originalParent) {
+        if (session.placeholder && session.placeholder.parentNode === session.originalParent) {
+          session.originalParent.insertBefore(session.sourceRoot, session.placeholder);
+          session.placeholder.remove();
+        } else {
+          session.originalParent.insertBefore(session.sourceRoot, session.originalNextSibling);
+        }
       }
     }
 
@@ -382,9 +397,9 @@ export const createGalleryContactSheetViewer = ({
     const tileShortEdge = Math.max(1, Math.min(tileMetric.width, tileMetric.height));
     const viewportShortEdge = Math.max(1, Math.min(window.innerWidth, window.innerHeight));
     const targetScale = (viewportShortEdge * effectiveSettings().targetFillPct) / tileShortEdge;
-    
-    // We increase render scale so that the texture rasterized by the browser has 
-    // enough pixels to be crystal clear when zoomed in to the target tile.
+
+    // To prevent 3D transform pixelation, we scale the native grid up computationally (2D pixel-perfect scale), 
+    // and shrink it down with the 3D sheet layer. This forces Blink/WebKit into a massive layout resolution.
     const renderScale = smoothSafariMode()
       ? 1
       : clamp(targetScale * (window.devicePixelRatio || 1) * 1.5, 1, 16);
@@ -418,15 +433,18 @@ export const createGalleryContactSheetViewer = ({
     sheet.style.transformStyle = smoothSafariMode() ? 'flat' : 'preserve-3d';
     sheet.style.backfaceVisibility = 'hidden';
 
-    const sourceRoot = gridRoot.cloneNode(true) as HTMLElement;
-    // Upgrade node src to highest resolution explicitly just in case.
-    const imageNodes = sourceRoot.querySelectorAll('img');
-    for (const img of imageNodes) {
-      const src = img.getAttribute('src');
-      if (src && !src.includes('width=2400')) {
-        img.setAttribute('src', src.replace(/width=\d+/, 'width=2400'));
-      }
+    // Adopt the original gridRoot instead of cloning it
+    const sourceRoot = gridRoot;
+    const originalParent = sourceRoot.parentNode;
+    const originalNextSibling = sourceRoot.nextSibling;
+    
+    // Create a placeholder so Svelte maintains its spot if it doesn't unmount
+    const placeholder = document.createElement('div');
+    placeholder.style.display = 'none';
+    if (originalParent) {
+      originalParent.insertBefore(placeholder, sourceRoot);
     }
+    const originalCssText = sourceRoot.style.cssText;
 
     sourceRoot.style.position = 'absolute';
     sourceRoot.style.top = '0';
@@ -463,7 +481,6 @@ export const createGalleryContactSheetViewer = ({
     sheet.addEventListener('click', onClick);
     sheet.appendChild(sourceRoot);
     frame.appendChild(sheet);
-    gridRoot.style.visibility = 'hidden';
     document.body.appendChild(frame);
 
     return {
@@ -471,7 +488,7 @@ export const createGalleryContactSheetViewer = ({
       frame,
       sheet,
       sourceRoot,
-      hiddenRoot: gridRoot,
+      hiddenRoot: null,
       renderScale,
       rootRect: geometry.rootRect,
       tiles: geometry.tiles,
@@ -479,15 +496,34 @@ export const createGalleryContactSheetViewer = ({
       currentOrigin: '0px 0px',
       currentValues: initialValues,
       onClick,
+      originalParent,
+      originalNextSibling,
+      placeholder,
+      originalCssText,
     } satisfies ContactSheetSession;
   };
 
   const ensureSession = async (activeSlug: string) => {
     if (session?.tiles.has(activeSlug)) return session;
 
-    releaseSession(true);
-    session = await createSession(activeSlug);
-    return session;
+    if (sessionPromise) {
+      const existing = await sessionPromise;
+      if (existing?.tiles.has(activeSlug)) return existing;
+    }
+
+    const creation = (async () => {
+      releaseSession(true);
+      const newSession = await createSession(activeSlug);
+      session = newSession;
+      return newSession;
+    })();
+
+    sessionPromise = creation;
+    const result = await creation;
+    if (sessionPromise === creation) {
+      sessionPromise = null;
+    }
+    return result;
   };
 
   const reopenActive = async () => {

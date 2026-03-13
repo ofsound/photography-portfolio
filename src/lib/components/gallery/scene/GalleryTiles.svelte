@@ -172,6 +172,18 @@
   }
 
   :global([data-contact-sheet-promoted='true'] .thumb-entrance-fx),
+  :global([data-contact-sheet-promoted='true'] .thumb-entrance-fx--await),
+  :global([data-contact-sheet-promoted='true'] .thumb-entrance-fx--cascade),
+  :global([data-contact-sheet-promoted='true'] .thumb-entrance-fx--lift),
+  :global([data-contact-sheet-promoted='true'] .thumb-entrance-fx--pop) {
+    animation: none !important;
+    transition: none !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    transform: none !important;
+    will-change: auto !important;
+  }
+
   :global([data-contact-sheet-promoted='true'] .thumb-entrance-fx *),
   :global([data-contact-sheet-promoted='true'] [data-photo-slug]),
   :global([data-contact-sheet-promoted='true'] [data-photo-slug] img) {

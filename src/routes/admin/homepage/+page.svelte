@@ -656,7 +656,7 @@
 
 {#snippet availableImagesList()}
   <ul
-    class="grid min-h-0 flex-1 grid-cols-2 content-start gap-2 overflow-auto sm:grid-cols-3 xl:grid-cols-5"
+    class="grid grid-cols-2 content-start gap-2 sm:grid-cols-3 lg:min-h-0 lg:flex-1 lg:overflow-auto xl:grid-cols-5"
   >
     {#each availableImages as image (image.id)}
       <li class="w-full">

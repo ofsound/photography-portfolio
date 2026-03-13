@@ -43,7 +43,7 @@
 {#if overflow}
   <div
     class="flex flex-col {scrollListOnly
-      ? 'max-h-[calc(100dvh-var(--site-header-height)-8rem)] min-h-0'
+      ? 'lg:max-h-[calc(100dvh-var(--site-header-height)-8rem)] lg:min-h-0'
       : ''}"
   >
     <AdminHeader>
@@ -71,14 +71,18 @@
         clearQueryMessage={clearDataMessageQuery}
       />
     </AdminHeader>
-    <section class="flex min-h-0 flex-1 flex-col overflow-hidden">
+    <section class="flex flex-1 flex-col lg:min-h-0 lg:overflow-hidden">
       <div
         class="grid min-h-0 flex-1 grid-cols-1 grid-rows-[auto_1fr] gap-8 lg:grid-cols-[24rem_1fr] lg:grid-rows-[1fr]"
       >
-        <div class="min-w-0 {scrollListOnly ? 'min-h-0 overflow-hidden' : ''}">
+        <div
+          class="min-w-0 {scrollListOnly
+            ? 'lg:min-h-0 lg:overflow-hidden'
+            : ''}"
+        >
           {@render create()}
         </div>
-        <div class="flex min-h-0 min-w-0 flex-col overflow-hidden">
+        <div class="flex min-w-0 flex-col lg:min-h-0 lg:overflow-hidden">
           {@render list()}
         </div>
       </div>

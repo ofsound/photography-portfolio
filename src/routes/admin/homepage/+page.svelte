@@ -378,6 +378,7 @@
             label="HTML"
             id="homepage-hero-html_content"
             error={heroFieldErrors.html_content}
+            class="min-w-0"
           >
             <CodeEditor
               name="html_content"
@@ -386,7 +387,11 @@
               lines={15}
             />
           </FormField>
-          <FormField label="Scoped CSS" id="homepage-hero-css_module">
+          <FormField
+            label="Scoped CSS"
+            id="homepage-hero-css_module"
+            class="min-w-0"
+          >
             <CodeEditor
               name="css_module"
               bind:value={heroCssModule}

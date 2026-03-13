@@ -33,14 +33,23 @@
     typeof document !== 'undefined' &&
     document.documentElement.getAttribute('data-theme') === 'dark';
 
+  const readShouldWrapLines = () =>
+    typeof window !== 'undefined' &&
+    window.matchMedia('(max-width: 639px)').matches;
+
   let isDarkMode = $state(readIsDarkMode());
+  let shouldWrapLines = $state(readShouldWrapLines());
 
   onMount(() => {
     const checkTheme = () => {
       isDarkMode = readIsDarkMode();
     };
+    const checkWrapMode = () => {
+      shouldWrapLines = readShouldWrapLines();
+    };
 
     checkTheme();
+    checkWrapMode();
 
     const observer = new MutationObserver((mutations) => {
       for (const mutation of mutations) {
@@ -55,7 +64,16 @@
 
     observer.observe(document.documentElement, { attributes: true });
 
-    return () => observer.disconnect();
+    const mediaQuery = window.matchMedia('(max-width: 639px)');
+    const onMediaQueryChange = () => {
+      checkWrapMode();
+    };
+    mediaQuery.addEventListener('change', onMediaQueryChange);
+
+    return () => {
+      observer.disconnect();
+      mediaQuery.removeEventListener('change', onMediaQueryChange);
+    };
   });
 
   const extensions = $derived.by(() => {
@@ -68,25 +86,42 @@
 </script>
 
 <div
-  class="relative overflow-hidden rounded border border-border-strong bg-surface text-sm"
+  class="relative w-full max-w-full min-w-0 overflow-hidden rounded border border-border-strong bg-surface text-sm"
   style:height={effectiveHeight}
 >
   <CodeMirror
     bind:value
     {placeholder}
     {readonly}
+    lineWrapping={shouldWrapLines}
     drawSelection={false}
     {extensions}
-    class="h-full"
+    class="h-full w-full max-w-full min-w-0"
     styles={{
       '&': { height: '100%' },
-      '.cm-scroller': { overflow: 'auto' },
-      '.cm-content, .cm-gutter': { minHeight: '100%' },
-      '.cm-editor, .cm-scroller': {
-        backgroundColor: 'var(--color-surface)',
+      '.cm-editor': {
+        width: '100%',
+        minWidth: '0',
+        maxWidth: '100%',
+      },
+      '.cm-scroller': {
+        overflow: 'auto',
+        width: '100%',
+        minWidth: '0',
+        maxWidth: '100%',
       },
       '.cm-content': {
         color: 'var(--color-text)',
+        width: '100%',
+        minWidth: '0',
+        maxWidth: '100%',
+        minHeight: '100%',
+      },
+      '.cm-editor, .cm-scroller': {
+        backgroundColor: 'var(--color-surface)',
+      },
+      '.cm-gutter': {
+        minHeight: '100%',
       },
       '.cm-gutters': {
         backgroundColor: 'var(--color-surface)',

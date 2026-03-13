@@ -633,7 +633,7 @@
 
 <div class="min-h-screen bg-bg text-text">
   <header
-    class="chrome-panel fixed inset-x-0 top-0 z-[60] border-b border-border px-4 pt-[env(safe-area-inset-top)] transition-opacity duration-(--duration-chrome) ease-out md:hidden"
+    class="fixed inset-x-0 top-0 z-[60] border-b border-border bg-surface px-4 pt-[env(safe-area-inset-top)] transition-opacity duration-(--duration-chrome) ease-out md:hidden"
     class:hidden={isAdminRoute}
     class:opacity-0={chromeHidden}
   >

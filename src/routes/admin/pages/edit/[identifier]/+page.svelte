@@ -314,6 +314,7 @@
       label="HTML"
       id="page-edit-html_content"
       error={fieldErrors.html_content}
+      class="min-w-0"
     >
       <CodeEditor
         name="html_content"
@@ -322,7 +323,7 @@
         lines={15}
       />
     </FormField>
-    <FormField label="Scoped CSS" id="page-edit-css_module">
+    <FormField label="Scoped CSS" id="page-edit-css_module" class="min-w-0">
       <CodeEditor
         name="css_module"
         bind:value={formCssModule}

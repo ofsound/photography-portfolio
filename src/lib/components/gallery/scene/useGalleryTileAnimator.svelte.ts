@@ -388,7 +388,22 @@ export const createGalleryTileAnimator = ({
     let currentSlug = slug;
 
     if (state.activeSlug === slug && !promoted) {
-      void ensurePromotedTile(slug, state.activeImageId, false);
+      if (state.mounted) {
+        void ensurePromotedTile(slug, state.activeImageId, false);
+      } else {
+        requestAnimationFrame(() => {
+          if (
+            !state.mounted ||
+            state.activeSlug !== currentSlug ||
+            promoted ||
+            tileRefs.get(currentSlug) !== node
+          ) {
+            return;
+          }
+
+          void ensurePromotedTile(currentSlug, state.activeImageId, false);
+        });
+      }
     }
 
     return {

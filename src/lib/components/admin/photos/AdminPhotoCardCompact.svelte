@@ -115,7 +115,10 @@
   <div
     class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent px-2 pt-6 pb-2"
   >
-    <p class="text-sm font-semibold text-white">
+    <p
+      class="block w-full truncate text-sm font-semibold text-white"
+      title={photo.title}
+    >
       {photo.title}
     </p>
     {#if isPublic}

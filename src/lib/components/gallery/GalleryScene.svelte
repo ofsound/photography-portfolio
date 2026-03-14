@@ -1,7 +1,7 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
   import { resolve } from '$app/paths';
-  import { onDestroy, onMount } from 'svelte';
+  import { onDestroy, onMount, tick } from 'svelte';
   import { SvelteMap, SvelteSet } from 'svelte/reactivity';
   import GalleryDetailViewer from './scene/GalleryDetailViewer.svelte';
   import GalleryGrid from './scene/GalleryGrid.svelte';
@@ -409,6 +409,52 @@
   const wait = (ms: number) =>
     new Promise<void>((resolvePromise) => setTimeout(resolvePromise, ms));
 
+  const hasText = (value: string | null | undefined) =>
+    Boolean(value && value.trim().length > 0);
+
+  const shouldShowBottomDockForPhoto = (photo: GalleryPhoto) => {
+    if (detailViewMode !== 'classic') return false;
+    if (photographInfoMode !== 'bottom_dock') return false;
+
+    const showTitle = data.gallerySettings?.show_photo_info_title ?? true;
+    const showDescription =
+      data.gallerySettings?.show_photo_info_description ?? true;
+    const showCaptureDate =
+      data.gallerySettings?.show_photo_info_capture_date ?? false;
+    const showDimensions =
+      data.gallerySettings?.show_photo_info_dimensions ?? false;
+    const showLicense =
+      data.gallerySettings?.show_photo_info_license_text ?? false;
+
+    const showAnyText =
+      (showTitle && hasText(photo.title)) ||
+      (showDescription && hasText(photo.description)) ||
+      (showCaptureDate && hasText(photo.capture_date)) ||
+      (showDimensions && hasText(photo.dimensions)) ||
+      (showLicense && hasText(photo.license_text));
+
+    const showAdditionalStrip =
+      viewerController.supportsAdditionalImages &&
+      photo.additionalImages.length > 0;
+
+    return showAnyText || showAdditionalStrip;
+  };
+
+  const waitForBottomDockLayout = async (expectDock: boolean) => {
+    if (!expectDock) return;
+
+    await tick();
+
+    for (let frame = 0; frame < 10; frame += 1) {
+      if (detailBottomInsetPx > 0) return;
+      await new Promise<void>((resolveAnimation) => {
+        requestAnimationFrame(() => {
+          resolveAnimation();
+        });
+      });
+    }
+  };
+
   const clampDensity = (value: number) =>
     Math.max(1, Math.min(data.maxDensity ?? 20, Math.round(value)));
 
@@ -559,16 +605,12 @@
         });
 
         if (detailViewMode === 'classic') {
-          const openPromise = viewerController.open(
-            slug,
-            null,
-            true,
-            SCALE_MASK_MS,
-          );
+          const expectsBottomDock = shouldShowBottomDockForPhoto(photo);
           setPhase('scale-and-mask');
           state.activeSlug = slug;
           state.activeImageId = null;
-          await openPromise;
+          await waitForBottomDockLayout(expectsBottomDock);
+          await viewerController.open(slug, null, true, SCALE_MASK_MS);
           setPhase('open');
           return;
         }
@@ -639,7 +681,7 @@
   };
 
   const onResizePromoted = () => {
-    if (!state.activeSlug || !viewerController.isReady) return;
+    if (!state.activeSlug) return;
 
     void transitionQueue.enqueue(async () => {
       await viewerController.resize();

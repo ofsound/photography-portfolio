@@ -56,7 +56,7 @@
     {/if}
     <input type="hidden" name="draft_title" value={draftTitle} />
     <input type="hidden" name="draft_slug" value={draftSlug} />
-    <AdminHeading level={3}>Upload Image</AdminHeading>
+    <AdminHeading level={3}>Upload Additional Images</AdminHeading>
     <div class="grid gap-2">
       <div class="flex flex-wrap items-center gap-2">
         <AdminButton as="label" class="relative">

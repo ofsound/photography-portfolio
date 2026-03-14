@@ -103,8 +103,8 @@ const adjustForOriginChange = (
 
   return {
     ...values,
-    tx: values.tx + (from.x - to.x) * scaleDelta,
-    ty: values.ty + (from.y - to.y) * scaleDelta,
+    tx: values.tx + (to.x - from.x) * scaleDelta,
+    ty: values.ty + (to.y - from.y) * scaleDelta,
   };
 };
 
@@ -372,10 +372,8 @@ export const createGalleryContactSheetViewer = ({
     session.frame.style.perspective = nextPerspective;
     session.frame.style.perspectiveOrigin = '50% 50%';
 
-    const fromTransform = session.currentTransform;
     const fromOrigin = session.currentOrigin;
     const fromValues = session.currentValues;
-    const smoothSafariProfile = smoothSafariMode() && !reducedMotion();
 
     isAnimating = true;
     session.sheet.style.willChange = 'transform';
@@ -389,48 +387,29 @@ export const createGalleryContactSheetViewer = ({
         session.sheet.style.transformOrigin = target.origin;
         session.sheet.style.transform = target.transform;
       } else {
-        const animation = smoothSafariProfile
-          ? (() => {
-            const adjustedFromValues = adjustForOriginChange(
-              fromValues,
-              parseOrigin(fromOrigin),
-              parseOrigin(target.origin),
-            );
-            session.sheet.style.transformOrigin = target.origin;
+        // Always use a fixed transform-origin before animating. Interpolating
+        // transformOrigin and scale simultaneously produces a quadratic (parabolic)
+        // screen-space path — the visible "swooping" arc. By locking the origin
+        // first and compensating the from-values, each tile center tracks a
+        // perfectly straight line to its destination.
+        const adjustedFromValues = adjustForOriginChange(
+          fromValues,
+          parseOrigin(fromOrigin),
+          parseOrigin(target.origin),
+        );
+        session.sheet.style.transformOrigin = target.origin;
 
-            return session.sheet.animate(
-              [
-                {
-                  transform: toTransformString(adjustedFromValues),
-                },
-                {
-                  transform: target.transform,
-                },
-              ],
-              {
-                duration: durationMs,
-                easing,
-                fill: 'forwards',
-              },
-            );
-          })()
-          : session.sheet.animate(
-            [
-              {
-                transformOrigin: fromOrigin,
-                transform: fromTransform,
-              },
-              {
-                transformOrigin: target.origin,
-                transform: target.transform,
-              },
-            ],
-            {
-              duration: durationMs,
-              easing,
-              fill: 'forwards',
-            },
-          );
+        const animation = session.sheet.animate(
+          [
+            { transform: toTransformString(adjustedFromValues) },
+            { transform: target.transform },
+          ],
+          {
+            duration: durationMs,
+            easing,
+            fill: 'forwards',
+          },
+        );
 
         try {
           await animation.finished;
@@ -718,48 +697,24 @@ export const createGalleryContactSheetViewer = ({
         typeof session.sheet.animate === 'function'
       ) {
         const resetValues = resetValuesFor(session);
-        const closeAnimation = smoothSafariMode()
-          ? (() => {
-            const adjustedFromValues = adjustForOriginChange(
-              session.currentValues,
-              parseOrigin(session.currentOrigin),
-              { x: 0, y: 0 },
-            );
-            session.sheet.style.transformOrigin = '0px 0px';
+        const adjustedFromValues = adjustForOriginChange(
+          session.currentValues,
+          parseOrigin(session.currentOrigin),
+          { x: 0, y: 0 },
+        );
+        session.sheet.style.transformOrigin = '0px 0px';
 
-            return session.sheet.animate(
-              [
-                {
-                  transform: toTransformString(adjustedFromValues),
-                },
-                {
-                  transform: toTransformString(resetValues),
-                },
-              ],
-              {
-                duration: 520,
-                easing: OPEN_EASING,
-                fill: 'forwards',
-              },
-            );
-          })()
-          : session.sheet.animate(
-            [
-              {
-                transformOrigin: session.currentOrigin,
-                transform: session.currentTransform,
-              },
-              {
-                transformOrigin: '0px 0px',
-                transform: toTransformString(resetValues),
-              },
-            ],
-            {
-              duration: 520,
-              easing: OPEN_EASING,
-              fill: 'forwards',
-            },
-          );
+        const closeAnimation = session.sheet.animate(
+          [
+            { transform: toTransformString(adjustedFromValues) },
+            { transform: toTransformString(resetValues) },
+          ],
+          {
+            duration: 520,
+            easing: OPEN_EASING,
+            fill: 'forwards',
+          },
+        );
 
         try {
           await closeAnimation.finished;

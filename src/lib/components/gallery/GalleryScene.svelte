@@ -205,7 +205,11 @@
       return;
     }
 
-    if (state.entranceSequenceComplete || reducedMotion()) {
+    if (
+      state.entranceSequenceComplete ||
+      reducedMotion() ||
+      state.contactSheetEntranceFxDisabled
+    ) {
       state.entranceOrderReady = true;
       state.entranceLocked = false;
       resolvedEntranceBatchKey = state.entranceBatchKey;
@@ -242,7 +246,12 @@
 
   const entranceFx = (slug: string, fallbackRank: number) => {
     const eligible = entranceEligibleSlugs.has(slug);
-    if (!eligible || reducedMotion() || state.entranceSequenceComplete) {
+    if (
+      !eligible ||
+      reducedMotion() ||
+      state.entranceSequenceComplete ||
+      state.contactSheetEntranceFxDisabled
+    ) {
       return {
         className: 'thumb-entrance-fx',
         style: '',
@@ -489,6 +498,7 @@
         document.body.style.overflow = '';
       }
       await viewerController.close(animate);
+      setPhase('idle');
       state.prevGalleryHref = null;
       state.nextGalleryHref = null;
       return;
@@ -603,7 +613,9 @@
 
     void (async () => {
       await transitionQueue.enqueue(async () => {
+        setPhase('closing-chrome');
         await viewerController.close(true);
+        setPhase('idle');
       });
 
       if (typeof document !== 'undefined') {
@@ -847,6 +859,17 @@
     return () => {
       clearEntranceLock();
     };
+  });
+
+  $effect(() => {
+    if (!state.mounted) return;
+    if (state.contactSheetEntranceFxDisabled) return;
+    if (detailViewMode !== 'contact_sheet') return;
+    if (!state.galleryRevealed) return;
+    if (!state.entranceOrderReady) return;
+    if (!state.entranceSequenceComplete && !reducedMotion()) return;
+
+    state.contactSheetEntranceFxDisabled = true;
   });
 
   $effect(() => {

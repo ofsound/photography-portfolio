@@ -118,6 +118,18 @@ const rectFromElement = (node: Element): RootRect => {
   };
 };
 
+const placeholderRect = (node: HTMLElement): RootRect | null => {
+  const rect = node.getBoundingClientRect();
+  if (rect.width <= 0 || rect.height <= 0) return null;
+
+  return {
+    top: rect.top,
+    left: rect.left,
+    width: rect.width,
+    height: rect.height,
+  };
+};
+
 export const createGalleryContactSheetViewer = ({
   state,
   reducedMotion,
@@ -166,7 +178,6 @@ export const createGalleryContactSheetViewer = ({
     if (!session) return;
 
     session.sheet.removeEventListener('click', session.onClick);
-    session.frame.remove();
 
     if (restoreRoot) {
       if (session.hiddenRoot) {
@@ -175,15 +186,25 @@ export const createGalleryContactSheetViewer = ({
       session.sourceRoot.style.cssText = session.originalCssText;
       session.sourceRoot.removeAttribute('data-contact-sheet-promoted');
       if (session.originalParent) {
-        if (session.placeholder && session.placeholder.parentNode === session.originalParent) {
-          session.originalParent.insertBefore(session.sourceRoot, session.placeholder);
+        if (
+          session.placeholder &&
+          session.placeholder.parentNode === session.originalParent
+        ) {
+          session.originalParent.insertBefore(
+            session.sourceRoot,
+            session.placeholder,
+          );
           session.placeholder.remove();
         } else {
-          session.originalParent.insertBefore(session.sourceRoot, session.originalNextSibling);
+          session.originalParent.insertBefore(
+            session.sourceRoot,
+            session.originalNextSibling,
+          );
         }
       }
     }
 
+    session.frame.remove();
     session = null;
     isAnimating = false;
   };
@@ -286,6 +307,32 @@ export const createGalleryContactSheetViewer = ({
     };
 
     return { origin, transform: toTransformString(values), values };
+  };
+
+  const resetValuesFor = (
+    nextSession: ContactSheetSession,
+  ): TransformValues => {
+    const fallbackScale = 1 / nextSession.renderScale;
+    const targetRect = placeholderRect(nextSession.placeholder);
+    if (!targetRect) {
+      return {
+        tx: 0,
+        ty: 0,
+        tz: 0,
+        scale: fallbackScale,
+        rotateX: 0,
+        rotateY: 0,
+      };
+    }
+
+    return {
+      tx: targetRect.left - nextSession.rootRect.left,
+      ty: targetRect.top - nextSession.rootRect.top,
+      tz: 0,
+      scale: fallbackScale,
+      rotateX: 0,
+      rotateY: 0,
+    };
   };
 
   const animateToSlug = async (
@@ -394,11 +441,18 @@ export const createGalleryContactSheetViewer = ({
     if (!geometry || !geometry.tiles.has(activeSlug)) return null;
 
     const tileMetric = geometry.tiles.get(activeSlug)!;
-    const tileShortEdge = Math.max(1, Math.min(tileMetric.width, tileMetric.height));
-    const viewportShortEdge = Math.max(1, Math.min(window.innerWidth, window.innerHeight));
-    const targetScale = (viewportShortEdge * effectiveSettings().targetFillPct) / tileShortEdge;
+    const tileShortEdge = Math.max(
+      1,
+      Math.min(tileMetric.width, tileMetric.height),
+    );
+    const viewportShortEdge = Math.max(
+      1,
+      Math.min(window.innerWidth, window.innerHeight),
+    );
+    const targetScale =
+      (viewportShortEdge * effectiveSettings().targetFillPct) / tileShortEdge;
 
-    // To prevent 3D transform pixelation, we scale the native grid up computationally (2D pixel-perfect scale), 
+    // To prevent 3D transform pixelation, we scale the native grid up computationally (2D pixel-perfect scale),
     // and shrink it down with the 3D sheet layer. This forces Blink/WebKit into a massive layout resolution.
     const renderScale = smoothSafariMode()
       ? 1
@@ -437,10 +491,15 @@ export const createGalleryContactSheetViewer = ({
     const sourceRoot = gridRoot;
     const originalParent = sourceRoot.parentNode;
     const originalNextSibling = sourceRoot.nextSibling;
-    
-    // Create a placeholder so Svelte maintains its spot if it doesn't unmount
+
+    // Keep the original footprint in the layout so the promoted sheet can
+    // animate back to the live grid position without a final snap.
     const placeholder = document.createElement('div');
-    placeholder.style.display = 'none';
+    placeholder.style.width = `${geometry.rootRect.width}px`;
+    placeholder.style.height = `${geometry.rootRect.height}px`;
+    placeholder.style.pointerEvents = 'none';
+    placeholder.style.visibility = 'hidden';
+    placeholder.setAttribute('aria-hidden', 'true');
     if (originalParent) {
       originalParent.insertBefore(placeholder, sourceRoot);
     }
@@ -454,7 +513,7 @@ export const createGalleryContactSheetViewer = ({
     sourceRoot.style.margin = '0';
     sourceRoot.style.pointerEvents = 'auto';
     sourceRoot.style.transformOrigin = '0px 0px';
-    
+
     // WebKit Texture Limit Bypass:
     // If we use `transform: scale`, WebKit attempts to create a unified texture for the entire grid.
     // If the grid is extremely tall (e.g., density=2 -> 25,000px+), the scale pushes it past 8192px/16384px.
@@ -466,7 +525,7 @@ export const createGalleryContactSheetViewer = ({
     } else {
       sourceRoot.style.transform = `scale(${renderScale})`;
     }
-    
+
     // We MUST use preserve-3d to stop Safari from flattening the 25k pixel layout into one massive, crushed texture
     sourceRoot.style.transformStyle = 'preserve-3d';
     sourceRoot.style.backfaceVisibility = 'hidden';
@@ -547,14 +606,20 @@ export const createGalleryContactSheetViewer = ({
   };
 
   const maybeHydrateOpenState = (slug: string) => {
-    if (!state.activeSlug || state.activeSlug !== slug || session) return;
-    
+    if (
+      !state.activeSlug ||
+      state.activeSlug !== slug ||
+      session ||
+      sessionPromise
+    )
+      return;
+
     // Direct entry hydration sequence: the geometry layout may be 0x0
     // initially because images or fonts haven't reflowed.
     // Try to open, and if it fails, retry after a few frames.
     const hydrate = async (attempts: number) => {
-      if (session || state.activeSlug !== slug) return;
-      
+      if (session || sessionPromise || state.activeSlug !== slug) return;
+
       const geom = measureGeometry();
       if (!geom || !geom.tiles.has(slug)) {
         if (attempts > 0) {
@@ -563,7 +628,7 @@ export const createGalleryContactSheetViewer = ({
         }
         return;
       }
-      
+
       void open(slug, state.activeImageId, false);
     };
 
@@ -576,25 +641,21 @@ export const createGalleryContactSheetViewer = ({
     animate: boolean,
     durationMsOverride?: number,
   ) => {
-    const hadSession = Boolean(session);
     const nextSession = await ensureSession(slug);
     if (!nextSession) {
       state.activeSlug = slug;
       state.activeImageId = imageId;
       // If we failed to ensureSession (e.g. tile not loaded), re-attempt hydration
-      if (!hadSession) {
-          maybeHydrateOpenState(slug);
-      }
+      maybeHydrateOpenState(slug);
       return;
     }
 
     session = nextSession;
     state.activeSlug = slug;
     state.activeImageId = imageId;
-    const shouldAnimate = animate && hadSession;
     await animateToSlug(
       slug,
-      shouldAnimate ? (durationMsOverride ?? 520) : 0,
+      animate ? (durationMsOverride ?? 520) : 0,
       OPEN_EASING,
     );
 
@@ -657,14 +718,7 @@ export const createGalleryContactSheetViewer = ({
         animate &&
         typeof session.sheet.animate === 'function'
       ) {
-        const resetValues: TransformValues = {
-          tx: 0,
-          ty: 0,
-          tz: 0,
-          scale: 1 / session.renderScale,
-          rotateX: 0,
-          rotateY: 0,
-        };
+        const resetValues = resetValuesFor(session);
         const closeAnimation = smoothSafariMode()
           ? (() => {
               const adjustedFromValues = adjustForOriginChange(
@@ -713,6 +767,12 @@ export const createGalleryContactSheetViewer = ({
         } catch {
           // Ignore cancelled close animations.
         }
+
+        session.sheet.style.transformOrigin = '0px 0px';
+        session.sheet.style.transform = toTransformString(resetValues);
+        session.currentOrigin = '0px 0px';
+        session.currentTransform = toTransformString(resetValues);
+        session.currentValues = resetValues;
       }
 
       releaseSession(true);

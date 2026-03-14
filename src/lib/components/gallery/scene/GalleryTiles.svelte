@@ -172,10 +172,20 @@
   }
 
   :global([data-contact-sheet-promoted='true'] .thumb-entrance-fx),
+  :global([data-contact-sheet-restoring='true'] .thumb-entrance-fx),
+  :global([data-contact-sheet-restored='true'] .thumb-entrance-fx),
   :global([data-contact-sheet-promoted='true'] .thumb-entrance-fx--await),
+  :global([data-contact-sheet-restoring='true'] .thumb-entrance-fx--await),
+  :global([data-contact-sheet-restored='true'] .thumb-entrance-fx--await),
   :global([data-contact-sheet-promoted='true'] .thumb-entrance-fx--cascade),
+  :global([data-contact-sheet-restoring='true'] .thumb-entrance-fx--cascade),
+  :global([data-contact-sheet-restored='true'] .thumb-entrance-fx--cascade),
   :global([data-contact-sheet-promoted='true'] .thumb-entrance-fx--lift),
-  :global([data-contact-sheet-promoted='true'] .thumb-entrance-fx--pop) {
+  :global([data-contact-sheet-restoring='true'] .thumb-entrance-fx--lift),
+  :global([data-contact-sheet-restored='true'] .thumb-entrance-fx--lift),
+  :global([data-contact-sheet-promoted='true'] .thumb-entrance-fx--pop),
+  :global([data-contact-sheet-restoring='true'] .thumb-entrance-fx--pop),
+  :global([data-contact-sheet-restored='true'] .thumb-entrance-fx--pop) {
     animation: none !important;
     transition: none !important;
     opacity: 1 !important;
@@ -185,14 +195,16 @@
   }
 
   :global([data-contact-sheet-promoted='true'] .thumb-entrance-fx *),
+  :global([data-contact-sheet-restoring='true'] .thumb-entrance-fx *),
+  :global([data-contact-sheet-restored='true'] .thumb-entrance-fx *),
   :global([data-contact-sheet-promoted='true'] [data-photo-slug]),
-  :global([data-contact-sheet-promoted='true'] [data-photo-slug] img) {
+  :global([data-contact-sheet-restoring='true'] [data-photo-slug]),
+  :global([data-contact-sheet-restored='true'] [data-photo-slug]),
+  :global([data-contact-sheet-promoted='true'] [data-photo-slug] img),
+  :global([data-contact-sheet-restoring='true'] [data-photo-slug] img),
+  :global([data-contact-sheet-restored='true'] [data-photo-slug] img) {
     animation: none !important;
     transition: none !important;
-  }
-
-  :global([data-contact-sheet-promoted='true'] [data-photo-slug] img) {
-    transform: none !important;
   }
 
   :global([data-promoted] .thumb-entrance-fx),

@@ -177,14 +177,22 @@ export const createGalleryContactSheetViewer = ({
   const releaseSession = (restoreRoot = true) => {
     if (!session) return;
 
+    const promotedRoot = session.sourceRoot;
+    const originalCssText = session.originalCssText;
+    let removePromotedAttrAfterRestore = false;
+    let removeRestoringAttrAfterRestore = false;
+
     session.sheet.removeEventListener('click', session.onClick);
 
     if (restoreRoot) {
       if (session.hiddenRoot) {
         session.hiddenRoot.style.removeProperty('visibility');
       }
-      session.sourceRoot.style.cssText = session.originalCssText;
-      session.sourceRoot.removeAttribute('data-contact-sheet-promoted');
+      promotedRoot.style.cssText = originalCssText;
+      promotedRoot.style.willChange = 'transform';
+      promotedRoot.setAttribute('data-contact-sheet-restoring', 'true');
+      removePromotedAttrAfterRestore = true;
+      removeRestoringAttrAfterRestore = true;
       if (session.originalParent) {
         if (
           session.placeholder &&
@@ -205,6 +213,21 @@ export const createGalleryContactSheetViewer = ({
     }
 
     session.frame.remove();
+    if (removePromotedAttrAfterRestore) {
+      requestAnimationFrame(() => {
+        promotedRoot.removeAttribute('data-contact-sheet-promoted');
+        promotedRoot.style.removeProperty('will-change');
+        if (removeRestoringAttrAfterRestore) {
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              promotedRoot.removeAttribute('data-contact-sheet-restoring');
+              promotedRoot.setAttribute('data-contact-sheet-restored', 'true');
+              // Keep restored until next open; promoted replaces it seamlessly
+            });
+          });
+        }
+      });
+    }
     session = null;
     isAnimating = false;
   };
@@ -282,13 +305,13 @@ export const createGalleryContactSheetViewer = ({
 
     const offsetX = clamp(
       (scaledCenterX - (nextSession.rootRect.width * renderScale) / 2) /
-        Math.max(1, (nextSession.rootRect.width * renderScale) / 2),
+      Math.max(1, (nextSession.rootRect.width * renderScale) / 2),
       -1,
       1,
     );
     const offsetY = clamp(
       (scaledCenterY - (nextSession.rootRect.height * renderScale) / 2) /
-        Math.max(1, (nextSession.rootRect.height * renderScale) / 2),
+      Math.max(1, (nextSession.rootRect.height * renderScale) / 2),
       -1,
       1,
     );
@@ -368,37 +391,19 @@ export const createGalleryContactSheetViewer = ({
       } else {
         const animation = smoothSafariProfile
           ? (() => {
-              const adjustedFromValues = adjustForOriginChange(
-                fromValues,
-                parseOrigin(fromOrigin),
-                parseOrigin(target.origin),
-              );
-              session.sheet.style.transformOrigin = target.origin;
+            const adjustedFromValues = adjustForOriginChange(
+              fromValues,
+              parseOrigin(fromOrigin),
+              parseOrigin(target.origin),
+            );
+            session.sheet.style.transformOrigin = target.origin;
 
-              return session.sheet.animate(
-                [
-                  {
-                    transform: toTransformString(adjustedFromValues),
-                  },
-                  {
-                    transform: target.transform,
-                  },
-                ],
-                {
-                  duration: durationMs,
-                  easing,
-                  fill: 'forwards',
-                },
-              );
-            })()
-          : session.sheet.animate(
+            return session.sheet.animate(
               [
                 {
-                  transformOrigin: fromOrigin,
-                  transform: fromTransform,
+                  transform: toTransformString(adjustedFromValues),
                 },
                 {
-                  transformOrigin: target.origin,
                   transform: target.transform,
                 },
               ],
@@ -408,6 +413,24 @@ export const createGalleryContactSheetViewer = ({
                 fill: 'forwards',
               },
             );
+          })()
+          : session.sheet.animate(
+            [
+              {
+                transformOrigin: fromOrigin,
+                transform: fromTransform,
+              },
+              {
+                transformOrigin: target.origin,
+                transform: target.transform,
+              },
+            ],
+            {
+              duration: durationMs,
+              easing,
+              fill: 'forwards',
+            },
+          );
 
         try {
           await animation.finished;
@@ -500,6 +523,7 @@ export const createGalleryContactSheetViewer = ({
     sourceRoot.style.transform = `scale(${renderScale})`;
     sourceRoot.style.transformStyle = 'preserve-3d';
     sourceRoot.style.backfaceVisibility = 'hidden';
+    sourceRoot.removeAttribute('data-contact-sheet-restored');
     sourceRoot.setAttribute('data-contact-sheet-promoted', 'true');
 
     const onClick = (event: MouseEvent) => {
@@ -696,37 +720,19 @@ export const createGalleryContactSheetViewer = ({
         const resetValues = resetValuesFor(session);
         const closeAnimation = smoothSafariMode()
           ? (() => {
-              const adjustedFromValues = adjustForOriginChange(
-                session.currentValues,
-                parseOrigin(session.currentOrigin),
-                { x: 0, y: 0 },
-              );
-              session.sheet.style.transformOrigin = '0px 0px';
+            const adjustedFromValues = adjustForOriginChange(
+              session.currentValues,
+              parseOrigin(session.currentOrigin),
+              { x: 0, y: 0 },
+            );
+            session.sheet.style.transformOrigin = '0px 0px';
 
-              return session.sheet.animate(
-                [
-                  {
-                    transform: toTransformString(adjustedFromValues),
-                  },
-                  {
-                    transform: toTransformString(resetValues),
-                  },
-                ],
-                {
-                  duration: 520,
-                  easing: OPEN_EASING,
-                  fill: 'forwards',
-                },
-              );
-            })()
-          : session.sheet.animate(
+            return session.sheet.animate(
               [
                 {
-                  transformOrigin: session.currentOrigin,
-                  transform: session.currentTransform,
+                  transform: toTransformString(adjustedFromValues),
                 },
                 {
-                  transformOrigin: '0px 0px',
                   transform: toTransformString(resetValues),
                 },
               ],
@@ -736,6 +742,24 @@ export const createGalleryContactSheetViewer = ({
                 fill: 'forwards',
               },
             );
+          })()
+          : session.sheet.animate(
+            [
+              {
+                transformOrigin: session.currentOrigin,
+                transform: session.currentTransform,
+              },
+              {
+                transformOrigin: '0px 0px',
+                transform: toTransformString(resetValues),
+              },
+            ],
+            {
+              duration: 520,
+              easing: OPEN_EASING,
+              fill: 'forwards',
+            },
+          );
 
         try {
           await closeAnimation.finished;

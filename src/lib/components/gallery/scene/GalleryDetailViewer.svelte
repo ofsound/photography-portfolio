@@ -258,7 +258,7 @@
     duration: transitionPhase === 'open' ? 0 : scaleMaskMs,
     easing: quartOut,
   }}
-  out:fade={{ duration: scaleMaskMs, easing: quartOut }}
+  out:fade={{ duration: isContactSheet ? 0 : scaleMaskMs, easing: quartOut }}
   class="fixed inset-0 z-[60] cursor-default bg-(--color-letterbox)"
   onclick={(event: MouseEvent) => !isTransitioning && onClose(event)}
   onkeydown={(event: KeyboardEvent) =>

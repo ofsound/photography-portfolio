@@ -62,7 +62,6 @@ body {
   width: 100%;
   transform: none;
   opacity: 1;
-  will-change: transform, opacity;
 }
 
 .thumb-entrance-fx--await {

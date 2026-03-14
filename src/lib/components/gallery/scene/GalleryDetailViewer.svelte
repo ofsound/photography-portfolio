@@ -469,7 +469,7 @@
 {#if isContactSheet}
   <aside
     use:portal
-    class="chrome-panel fixed top-4 left-4 z-[80] max-w-[min(92vw,24rem)] rounded-xl border border-border-strong px-4 py-3 shadow-xl transition-opacity ease-out sm:top-6 sm:left-6"
+    class="chrome-panel fixed top-4 right-4 z-[80] max-w-[min(92vw,24rem)] rounded-xl border border-border-strong px-4 py-3 shadow-xl transition-opacity ease-out sm:top-6 sm:right-6"
     class:opacity-0={overlayChromeHidden}
     style="transition-duration: {closingChromeMs}ms"
   >

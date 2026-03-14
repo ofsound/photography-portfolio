@@ -409,7 +409,7 @@ export const createGalleryContactSheetViewer = ({
     frame.style.position = 'fixed';
     frame.style.inset = '0';
     frame.style.zIndex = '70';
-    frame.style.overflow = 'hidden';
+    // frame.style.overflow = 'hidden'; // REMOVED: overflow:hidden forces WebKit to flatten 3D children into a single GPU texture!
     frame.style.pointerEvents = 'none';
 
     const sheet = document.createElement('div');
@@ -454,10 +454,21 @@ export const createGalleryContactSheetViewer = ({
     sourceRoot.style.margin = '0';
     sourceRoot.style.pointerEvents = 'auto';
     sourceRoot.style.transformOrigin = '0px 0px';
-    sourceRoot.style.transform = `scale(${renderScale})`;
-    sourceRoot.style.transformStyle = smoothSafariMode()
-      ? 'flat'
-      : 'preserve-3d';
+    
+    // WebKit Texture Limit Bypass:
+    // If we use `transform: scale`, WebKit attempts to create a unified texture for the entire grid.
+    // If the grid is extremely tall (e.g., density=2 -> 25,000px+), the scale pushes it past 8192px/16384px.
+    // WebKit forcefully downsamples the texture, destroying resolution.
+    // Using `zoom` forces a physical CSS reflow layer, dividing the massive grid into correctly sized tiles natively!
+    if (typeof CSS !== 'undefined' && CSS.supports('zoom', '1')) {
+      sourceRoot.style.zoom = renderScale.toString();
+      sourceRoot.style.transform = `scale(1)`;
+    } else {
+      sourceRoot.style.transform = `scale(${renderScale})`;
+    }
+    
+    // We MUST use preserve-3d to stop Safari from flattening the 25k pixel layout into one massive, crushed texture
+    sourceRoot.style.transformStyle = 'preserve-3d';
     sourceRoot.style.backfaceVisibility = 'hidden';
     sourceRoot.setAttribute('data-contact-sheet-promoted', 'true');
 

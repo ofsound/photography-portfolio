@@ -72,8 +72,8 @@
   };
 </script>
 
-<div class="flex min-w-0 gap-12">
-  <div class="grid min-w-0 flex-1 gap-3">
+<div class="flex min-w-0 flex-wrap gap-12 md:flex-nowrap">
+  <div class="grid min-w-0 basis-full gap-3 md:flex-1">
     {#if isDraft}
       <p class="text-sm text-text-muted">No lead image set.</p>
       <div class="grid gap-2">
@@ -464,7 +464,7 @@
     {/if}
   </div>
 
-  <div class="min-w-0 flex-1">
+  <div class="min-w-0 basis-full md:flex-1">
     <PhotoUploadZone
       photoId={isDraft ? 'draft' : photo.id}
       galleryId={photo.gallery_id}

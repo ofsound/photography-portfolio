@@ -24,6 +24,7 @@
     activePhoto,
     currentImage,
     promoted,
+    galleryName,
     detailViewMode,
     activePosition,
     totalPhotos,
@@ -84,6 +85,7 @@
     portal: PortalAction;
     scaleMaskMs: number;
     closingChromeMs: number;
+    galleryName: string;
   }>();
 
   let controlsVisible = $state(true);
@@ -92,6 +94,7 @@
   const hasText = (value: string | null | undefined) =>
     Boolean(value && value.trim().length > 0);
 
+  const galleryHeaderText = $derived(galleryName.trim());
   const titleText = $derived(activePhoto.title.trim());
   const descriptionText = $derived((activePhoto.description ?? '').trim());
   const captureDateText = $derived((activePhoto.capture_date ?? '').trim());
@@ -475,7 +478,7 @@
   >
     <div class="grid gap-1">
       <p class="text-[0.65rem] tracking-[0.24em] text-canvas-text/65 uppercase">
-        Contact sheet
+        {galleryHeaderText}
         {#if activePosition > 0 && totalPhotos > 0}
           <span class="ml-2 text-canvas-text/50">
             {activePosition}/{totalPhotos}

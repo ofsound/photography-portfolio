@@ -3,7 +3,6 @@
   import { resolve } from '$app/paths';
   import { page } from '$app/state';
 
-  import ZoomControl from '$lib/components/ZoomControl.svelte';
   import MobileDropdownMenu from '$lib/components/navigation/MobileDropdownMenu.svelte';
 
   import {
@@ -14,12 +13,6 @@
     adminThemeModeStore,
     type AdminThemeMode,
   } from '$lib/stores/admin-theme-mode.svelte';
-  import {
-    getGalleryPrefs,
-    galleryDensityStore,
-    layoutModeStore,
-    setGalleryPrefs,
-  } from '$lib/stores/gallery-prefs.svelte';
   import {
     buildGalleryPath,
     buildGalleryPhotoPath,
@@ -169,7 +162,6 @@
   const pendingConversionCount = $derived(
     (data?.pendingConversionCount as number) ?? 0,
   );
-  const maxDensity = 10;
   let transitionPreset = $state<'cinematic' | 'snappy' | 'experimental'>(
     'cinematic',
   );
@@ -310,14 +302,6 @@
   });
 
   $effect(() => {
-    if (typeof window === 'undefined' || !isViewer) return;
-    const prefs = getGalleryPrefs(maxDensity);
-    if (prefs) {
-      galleryDensityStore.set(prefs.density);
-    }
-  });
-
-  $effect(() => {
     if (typeof document === 'undefined') return;
     document.documentElement.style.setProperty(
       '--font-sans-public',
@@ -345,21 +329,6 @@
     );
   });
 
-  const toUiZoomValue = (density: number) =>
-    maxDensity + 1 - Math.max(1, Math.min(maxDensity, Math.round(density)));
-
-  const toDensityValue = (uiZoom: number) =>
-    maxDensity + 1 - Math.max(1, Math.min(maxDensity, Math.round(uiZoom)));
-
-  const updateHeaderDensity = (nextUiZoom: number) => {
-    setGalleryPrefs({ density: toDensityValue(nextUiZoom) }, maxDensity);
-  };
-
-  const updateHeaderLayoutMode = (
-    mode: 'uniform' | 'masonry' | 'coverage' | 'rows' | 'columns',
-  ) => {
-    setGalleryPrefs({ layoutMode: mode }, maxDensity);
-  };
   const setPublicEditMode = (next: boolean) => {
     if (!publicSveditEditable) return;
 
@@ -779,44 +748,7 @@
             {/if}
           </nav>
 
-          {#if isViewer}
-            <div class="grid gap-3 pt-3">
-              <label
-                for="header-layout-mobile"
-                class="text-xs tracking-widest uppercase"
-              >
-                Layout
-              </label>
-              <select
-                id="header-layout-mobile"
-                class="h-10 rounded border border-border-strong bg-transparent px-3 text-sm tracking-wider uppercase"
-                aria-label="Gallery layout"
-                value={layoutModeStore.value}
-                onchange={(e) =>
-                  updateHeaderLayoutMode(
-                    (e.currentTarget as HTMLSelectElement).value as
-                      | 'uniform'
-                      | 'masonry'
-                      | 'coverage'
-                      | 'rows'
-                      | 'columns',
-                  )}
-              >
-                <option value="uniform">Uniform</option>
-                <option value="masonry">Masonry</option>
-                <option value="coverage">Coverage</option>
-                <option value="rows">Rows</option>
-                <option value="columns">Columns</option>
-              </select>
-              <ZoomControl
-                label="Zoom"
-                min={1}
-                max={maxDensity}
-                value={toUiZoomValue(galleryDensityStore.value)}
-                onUpdate={updateHeaderDensity}
-              />
-            </div>
-          {:else if siteSettings?.allow_transition_toggle}
+          {#if !isViewer && siteSettings?.allow_transition_toggle}
             <div class="grid gap-2 pt-3">
               <label
                 for="transition-mobile"
@@ -872,38 +804,8 @@
       </nav>
 
       {#if isViewer}
-        <div class="ml-4 flex items-center justify-end gap-3">
-          <label for="header-layout" class="sr-only">Layout</label>
-          <select
-            id="header-layout"
-            class="h-6 min-w-0 rounded border border-border-strong bg-transparent px-2 py-0.5 text-xs tracking-wider uppercase"
-            aria-label="Gallery layout"
-            value={layoutModeStore.value}
-            onchange={(e) =>
-              updateHeaderLayoutMode(
-                (e.currentTarget as HTMLSelectElement).value as
-                  | 'uniform'
-                  | 'masonry'
-                  | 'coverage'
-                  | 'rows'
-                  | 'columns',
-              )}
-          >
-            <option value="uniform">Uniform</option>
-            <option value="masonry">Masonry</option>
-            <option value="coverage">Coverage</option>
-            <option value="rows">Rows</option>
-            <option value="columns">Columns</option>
-          </select>
-          <ZoomControl
-            label="Zoom"
-            min={1}
-            max={maxDensity}
-            value={toUiZoomValue(galleryDensityStore.value)}
-            onUpdate={updateHeaderDensity}
-          />
-          {#if adminEditorPath}
-            <span class="h-6 w-px bg-border" aria-hidden="true"></span>
+        {#if adminEditorPath}
+          <div class="ml-4 flex items-center justify-end">
             <a
               href={resolve(adminEditorPath as `/${string}`)}
               class="inline-flex h-6 w-6 items-center justify-center rounded border border-transparent transition-colors hover:border-border hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
@@ -924,8 +826,8 @@
                 <path d="M16.5 3.5a2.12 2.12 0 113 3L7 19l-4 1 1-4z" />
               </svg>
             </a>
-          {/if}
-        </div>
+          </div>
+        {/if}
       {:else}
         <div class="flex items-center justify-end gap-2">
           {#if siteSettings?.allow_transition_toggle}

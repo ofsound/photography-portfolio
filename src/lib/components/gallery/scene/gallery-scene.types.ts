@@ -24,6 +24,7 @@ export type ActiveRoute = {
 export type ViewerData = {
   galleryScope: {
     slug: string;
+    name: string;
   } | null;
   photos: GalleryPhoto[];
   hasMore: boolean;

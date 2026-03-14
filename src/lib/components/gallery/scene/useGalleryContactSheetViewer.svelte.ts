@@ -305,13 +305,13 @@ export const createGalleryContactSheetViewer = ({
 
     const offsetX = clamp(
       (scaledCenterX - (nextSession.rootRect.width * renderScale) / 2) /
-      Math.max(1, (nextSession.rootRect.width * renderScale) / 2),
+        Math.max(1, (nextSession.rootRect.width * renderScale) / 2),
       -1,
       1,
     );
     const offsetY = clamp(
       (scaledCenterY - (nextSession.rootRect.height * renderScale) / 2) /
-      Math.max(1, (nextSession.rootRect.height * renderScale) / 2),
+        Math.max(1, (nextSession.rootRect.height * renderScale) / 2),
       -1,
       1,
     );

@@ -9,7 +9,6 @@
   import { createGalleryTransitionQueue } from './scene/GalleryTransitionQueue.svelte';
   import { getGalleryTransitionContext } from '$lib/context/gallery-transition';
   import {
-    getGalleryPrefs,
     galleryDensityStore,
     layoutModeStore,
   } from '$lib/stores/gallery-prefs.svelte';
@@ -424,15 +423,8 @@
   };
 
   const applyScopeViewerDefaults = () => {
-    const prefs = getGalleryPrefs(data.maxDensity ?? 20);
-    if (prefs) {
-      galleryDensityStore.set(prefs.density);
-      state.pageSize = prefs.pageSize;
-    } else {
-      galleryDensityStore.set(defaultDensityForViewport());
-      state.pageSize = data.pageSize;
-    }
-
+    galleryDensityStore.set(defaultDensityForViewport());
+    state.pageSize = data.pageSize;
     layoutModeStore.set(data.layoutMode);
   };
 
@@ -808,6 +800,16 @@
   });
 
   $effect(() => {
+    if (typeof window === 'undefined' || !state.mounted) return;
+    const media = window.matchMedia('(max-width: 767px)');
+    const onChange = () => {
+      galleryDensityStore.set(defaultDensityForViewport());
+    };
+    media.addEventListener('change', onChange);
+    return () => media.removeEventListener('change', onChange);
+  });
+
+  $effect(() => {
     if (!state.mounted) return;
 
     const key = [routeScopeSlug, data.q || '\0'].join('|');
@@ -996,6 +998,9 @@
     nextGalleryHref={state.nextGalleryHref}
     withCurrentSearch={router.withCurrentSearch}
     galleryBasePath={router.galleryBasePath()}
+    galleryName={data.galleryScope?.name ??
+      data.galleryScope?.slug ??
+      'Gallery'}
     photoPath={router.photoPath}
     onClose={closeToGallery}
     onNavigateNeighbor={navigation.onNeighborNavigate}

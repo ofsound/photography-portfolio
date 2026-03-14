@@ -1064,13 +1064,14 @@
     </div>
   </header>
 
-  <main class="relative z-0 min-h-screen pt-[var(--site-header-height)]">
+  <main
+    class="relative z-0 min-h-screen pt-[var(--site-header-height)] lg:min-h-[calc(100vh-var(--site-header-height))] lg:pt-0"
+  >
     {@render children()}
   </main>
 </div>
 
 <style>
-
   :global(html) {
     --site-header-height: var(--size-header);
     --vt-duration: 450ms;

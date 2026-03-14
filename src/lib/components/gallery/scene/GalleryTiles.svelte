@@ -16,7 +16,7 @@
 {#if model.layoutMode === 'uniform'}
   <ul
     class="grid"
-    style={`grid-template-columns: repeat(${model.colCount}, minmax(0, 1fr)); gap: ${model.gap}px;`}
+    style={`grid-template-columns: repeat(${model.colCount}, minmax(0, 1fr)); gap: ${model.gap}px; view-transition-name: gallery-grid;`}
   >
     {#each model.photos as photo, index (photo.id)}
       <li>
@@ -87,7 +87,7 @@
 {:else}
   <ul
     class="columns-2 md:columns-4 lg:columns-6"
-    style={`columns: ${model.colCount}; column-gap: ${model.gap}px;`}
+    style={`columns: ${model.colCount}; column-gap: ${model.gap}px; view-transition-name: gallery-grid;`}
   >
     {#each model.photos as photo, index (photo.id)}
       {#if photo.leadImage}

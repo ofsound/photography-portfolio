@@ -1064,18 +1064,12 @@
     </div>
   </header>
 
-  <main
-    class="site-main pt-[var(--site-header-height)] md:pt-0"
-    data-mobile-menu-root
-  >
+  <main class="relative z-0 min-h-screen pt-[var(--site-header-height)]">
     {@render children()}
   </main>
 </div>
 
 <style>
-  :global(.site-main) {
-    view-transition-name: page-main;
-  }
 
   :global(html) {
     --site-header-height: var(--size-header);

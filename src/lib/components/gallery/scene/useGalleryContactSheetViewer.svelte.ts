@@ -434,36 +434,19 @@ export const createGalleryContactSheetViewer = ({
     if (!gridRoot) return null;
 
     cleanupOrphanFrames();
-    await waitForFrame();
-    await waitForFrame();
 
     const geometry = measureGeometry();
     if (!geometry || !geometry.tiles.has(activeSlug)) return null;
 
-    const tileMetric = geometry.tiles.get(activeSlug)!;
-    const tileShortEdge = Math.max(
-      1,
-      Math.min(tileMetric.width, tileMetric.height),
-    );
-    const viewportShortEdge = Math.max(
-      1,
-      Math.min(window.innerWidth, window.innerHeight),
-    );
-    const targetScale =
-      (viewportShortEdge * effectiveSettings().targetFillPct) / tileShortEdge;
-
-    // To prevent 3D transform pixelation, we scale the native grid up computationally (2D pixel-perfect scale),
-    // and shrink it down with the 3D sheet layer. This forces Blink/WebKit into a massive layout resolution.
-    const renderScale = smoothSafariMode()
-      ? 1
-      : clamp(targetScale * (window.devicePixelRatio || 1) * 1.5, 1, 16);
+    // renderScale is strictly 1 to prevent grid subpixel fractional layout shifts
+    // Chrome handles 'transform: scale()' perfectly for 3D elements inside Web Animations API frames natively.
+    const renderScale = 1;
 
     const frame = document.createElement('div');
     frame.setAttribute(CONTACT_SHEET_FRAME_ATTR, 'true');
     frame.style.position = 'fixed';
     frame.style.inset = '0';
     frame.style.zIndex = '70';
-    // frame.style.overflow = 'hidden'; // REMOVED: overflow:hidden forces WebKit to flatten 3D children into a single GPU texture!
     frame.style.pointerEvents = 'none';
 
     const sheet = document.createElement('div');
@@ -514,19 +497,7 @@ export const createGalleryContactSheetViewer = ({
     sourceRoot.style.pointerEvents = 'auto';
     sourceRoot.style.transformOrigin = '0px 0px';
 
-    // WebKit Texture Limit Bypass:
-    // If we use `transform: scale`, WebKit attempts to create a unified texture for the entire grid.
-    // If the grid is extremely tall (e.g., density=2 -> 25,000px+), the scale pushes it past 8192px/16384px.
-    // WebKit forcefully downsamples the texture, destroying resolution.
-    // Using `zoom` forces a physical CSS reflow layer, dividing the massive grid into correctly sized tiles natively!
-    if (typeof CSS !== 'undefined' && CSS.supports('zoom', '1')) {
-      sourceRoot.style.zoom = renderScale.toString();
-      sourceRoot.style.transform = `scale(1)`;
-    } else {
-      sourceRoot.style.transform = `scale(${renderScale})`;
-    }
-
-    // We MUST use preserve-3d to stop Safari from flattening the 25k pixel layout into one massive, crushed texture
+    sourceRoot.style.transform = `scale(${renderScale})`;
     sourceRoot.style.transformStyle = 'preserve-3d';
     sourceRoot.style.backfaceVisibility = 'hidden';
     sourceRoot.setAttribute('data-contact-sheet-promoted', 'true');
@@ -628,6 +599,10 @@ export const createGalleryContactSheetViewer = ({
         }
         return;
       }
+
+      // Allow the layout to fully stabilize before promoting elements to a fixed layer.
+      await waitForFrame();
+      await waitForFrame();
 
       void open(slug, state.activeImageId, false);
     };

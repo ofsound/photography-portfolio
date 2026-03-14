@@ -777,7 +777,7 @@
 
   <header
     bind:this={siteHeaderEl}
-    class="chrome-panel sticky top-0 z-40 hidden border-b border-border px-4 transition-opacity duration-(--duration-chrome) ease-out md:block"
+    class="sticky top-0 z-40 hidden border-b border-border bg-surface px-4 transition-opacity duration-(--duration-chrome) ease-out md:block"
     class:opacity-0={chromeHidden}
   >
     <div class="mx-auto flex w-full items-center justify-between gap-3">

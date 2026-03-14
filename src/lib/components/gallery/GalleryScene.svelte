@@ -184,6 +184,18 @@
     }
   };
 
+  const resetEntranceLifecycleForRouteChange = () => {
+    clearEntranceLock();
+    resolvedEntranceBatchKey = -1;
+    entranceEligibleSlugs.clear();
+    entranceRanks.clear();
+    state.entranceLocked = false;
+    state.entranceOrderReady = false;
+    state.entranceOrderCount = 0;
+    state.entranceSequenceComplete = false;
+    state.contactSheetEntranceFxDisabled = false;
+  };
+
   const startEntranceBatch = (photos: GalleryPhoto[]) => {
     state.entranceBatchKey += 1;
     state.entranceOrderReady = false;
@@ -838,6 +850,7 @@
     if (!state.mounted) return;
     if (routeScopeSlug === initializedScopeSlug) return;
     initializedScopeSlug = routeScopeSlug;
+    resetEntranceLifecycleForRouteChange();
     applyScopeViewerDefaults();
   });
 

@@ -160,6 +160,19 @@ export const createGalleryTileAnimator = ({
     containerAspect: number,
   ) => {
     if (!img || !hasThumbCrop(img)) return '';
+
+    // When the tile is promoted, its <img> is in a wrapper on document.body.
+    // Svelte still tracks the style binding and re-applies the crop transform
+    // whenever naturalImageSizes changes, overwriting our promoted styles.
+    // Return '' to prevent Svelte from fighting the promotion.
+    if (promoted) {
+      const activePhoto = findPhoto(state.activeSlug);
+      if (activePhoto) {
+        const activeImg = imageFor(activePhoto, state.activeImageId);
+        if (activeImg && activeImg.id === img.id) return '';
+      }
+    }
+
     const naturalSize = naturalSizeForImage(img);
     const width = naturalSize?.width ?? 1;
     const height = naturalSize?.height ?? 1;
@@ -429,6 +442,7 @@ export const createGalleryTileAnimator = ({
       durationMs: 0,
       aspectRatio: incomingContainerAspect,
       imgCropFrom: incomingImgCrop ?? undefined,
+      borderPx: getClassicDetailBorderPx(),
     });
 
     const motion = {
@@ -510,6 +524,16 @@ export const createGalleryTileAnimator = ({
     if (!(target instanceof HTMLImageElement)) return;
 
     rememberNaturalSize(imageId, naturalSizeFromElement(target));
+
+    // If this image's tile is currently promoted, re-target now that we know
+    // the real dimensions (avoids the 1000x1000 fallback rect on direct-URL load).
+    if (promoted && state.activeSlug) {
+      const photo = findPhoto(state.activeSlug);
+      const activeImg = photo ? imageFor(photo, state.activeImageId) : null;
+      if (activeImg && activeImg.id === imageId) {
+        void resizePromotedNow();
+      }
+    }
   };
 
   const releaseAnyPromoted = () => {

@@ -228,6 +228,19 @@ export const promoteTile = async ({
 
   const img = node.querySelector('img');
 
+  // Kill any CSS transition on the img (e.g. Tailwind's transition-transform duration-500)
+  // so transform changes during promote/demote are instant, not animated.
+  // Also wipe the Svelte-managed style attribute which may contain thumb-crop transforms
+  // with !important that can't be overridden via img.style properties.
+  if (img) {
+    img.style.transition = 'none';
+    img.removeAttribute('style');
+    img.style.transition = 'none';
+    img.style.width = '100%';
+    img.style.height = '100%';
+    img.style.display = 'block';
+  }
+
   if (img && imgCropFrom) {
     const origin = `${imgCropFrom.originX * 100}% ${imgCropFrom.originY * 100}%`;
     img.style.transformOrigin = origin;
@@ -298,6 +311,12 @@ export const promoteTile = async ({
       if (borderPx > 0) wrapper.style.borderWidth = `${borderPx}px`;
     }
   } else {
+    // Clear any thumbnail crop transform so the image fills the wrapper cleanly.
+    if (img) {
+      img.style.transform = '';
+      img.style.transformOrigin = '';
+      img.style.objectPosition = '';
+    }
     if (
       options?.reducedMotion ||
       (options?.durationMs ?? 520) <= 0 ||
@@ -491,6 +510,8 @@ export const reinsertPromotedTile = (
   if (img && !session.imgCrop) {
     img.style.objectFit = '';
   }
+  // Restore CSS transition that was disabled during promotion.
+  if (img) img.style.transition = '';
 
   const parent = session.placeholder.parentNode;
   if (parent) {
@@ -530,11 +551,13 @@ export const releasePromotedTile = (
       img.style.objectFit = 'cover';
       img.style.transformOrigin = `${session.imgCrop.originX * 100}% ${session.imgCrop.originY * 100}%`;
       img.style.transform = `translate(${session.imgCrop.translateX}%, ${session.imgCrop.translateY}%) scale(${session.imgCrop.scale})`;
+      img.style.transition = '';
     }
   } else {
     const img = session.node.querySelector('img');
     if (img) {
       img.style.objectFit = '';
+      img.style.transition = '';
     }
   }
   const parent = session.placeholder.parentNode;

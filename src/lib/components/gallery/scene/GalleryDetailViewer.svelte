@@ -536,68 +536,79 @@
     <div
       class="mx-auto grid max-h-[38vh] w-full max-w-6xl gap-3 overflow-y-auto sm:max-h-[34vh]"
     >
-      {#if showAnyText}
-        <div class="grid gap-2">
-          {#if showTitle}
-            <h1 class="text-sm font-semibold tracking-widest uppercase">
-              {titleText}
-            </h1>
+      {#key activePhoto.slug}
+        <div
+          class="[grid-area:1/1]"
+          in:fade={{ duration: 200 }}
+          out:fade={{ duration: 120 }}
+        >
+          {#if showAnyText}
+            <div class="grid gap-2">
+              {#if showTitle}
+                <h1 class="text-sm font-semibold tracking-widest uppercase">
+                  {titleText}
+                </h1>
+              {/if}
+              {#if showDescription}
+                <p class="text-sm leading-relaxed text-text/85">
+                  {descriptionText}
+                </p>
+              {/if}
+              {#if showCaptureDate}
+                <p class="text-sm text-text/90">
+                  <span
+                    class="mr-2 text-xs tracking-wide text-text/65 uppercase"
+                    >Date</span
+                  >
+                  {captureDateText}
+                </p>
+              {/if}
+              {#if showDimensions}
+                <p class="text-sm text-text/90">
+                  <span
+                    class="mr-2 text-xs tracking-wide text-text/65 uppercase"
+                    >Dimensions</span
+                  >
+                  {dimensionsText}
+                </p>
+              {/if}
+              {#if showLicense}
+                <p class="text-sm text-text/90">
+                  <span
+                    class="mr-2 text-xs tracking-wide text-text/65 uppercase"
+                    >License</span
+                  >
+                  {licenseText}
+                </p>
+              {/if}
+            </div>
           {/if}
-          {#if showDescription}
-            <p class="text-sm leading-relaxed text-text/85">
-              {descriptionText}
-            </p>
-          {/if}
-          {#if showCaptureDate}
-            <p class="text-sm text-text/90">
-              <span class="mr-2 text-xs tracking-wide text-text/65 uppercase"
-                >Date</span
-              >
-              {captureDateText}
-            </p>
-          {/if}
-          {#if showDimensions}
-            <p class="text-sm text-text/90">
-              <span class="mr-2 text-xs tracking-wide text-text/65 uppercase"
-                >Dimensions</span
-              >
-              {dimensionsText}
-            </p>
-          {/if}
-          {#if showLicense}
-            <p class="text-sm text-text/90">
-              <span class="mr-2 text-xs tracking-wide text-text/65 uppercase"
-                >License</span
-              >
-              {licenseText}
-            </p>
-          {/if}
-        </div>
-      {/if}
 
-      {#if showClassicAdditionalStrip}
-        <div class="flex gap-2 overflow-x-auto pb-1" data-swipe-ignore>
-          {#each activePhoto.additionalImages as image (image.id)}
-            <a
-              href={resolve(
-                withCurrentSearch(
-                  photoPath(activePhoto.slug, image.id),
-                ) as `/${string}`,
-              )}
-              onclick={(event: MouseEvent) =>
-                onAdditionalImageClick(event, image.id)}
-              class="block shrink-0 overflow-hidden rounded border border-border-strong"
-            >
-              <img
-                src={photoPublicUrl(image.delivery_storage_path, 180)}
-                alt={image.alt_text ?? activePhoto.title}
-                class="h-14 w-20 object-cover"
-                loading="lazy"
-              />
-            </a>
-          {/each}
+          {#if showClassicAdditionalStrip}
+            <div class="flex gap-2 overflow-x-auto pb-1" data-swipe-ignore>
+              {#each activePhoto.additionalImages as image (image.id)}
+                <a
+                  href={resolve(
+                    withCurrentSearch(
+                      photoPath(activePhoto.slug, image.id),
+                    ) as `/${string}`,
+                  )}
+                  onclick={(event: MouseEvent) =>
+                    onAdditionalImageClick(event, image.id)}
+                  class="block shrink-0 overflow-hidden rounded border border-border-strong"
+                >
+                  <img
+                    src={photoPublicUrl(image.delivery_storage_path, 180)}
+                    alt={image.alt_text ?? activePhoto.title}
+                    class="h-14 w-20 object-cover"
+                    loading="lazy"
+                  />
+                </a>
+              {/each}
+            </div>
+          {/if}
         </div>
-      {/if}
+      {/key}
     </div>
   </aside>
 {/if}

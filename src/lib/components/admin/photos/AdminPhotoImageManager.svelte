@@ -10,7 +10,6 @@
   import ThumbnailCropEditor from '$lib/components/admin/ThumbnailCropEditor.svelte';
 
   import type { GalleryCropConfig } from '$lib/types/gallery-crop';
-  import { parseDimensions } from '$lib/utils/parse-dimensions';
   import { photoPublicUrl } from '$lib/utils/storage-url';
   import type { AdminPhoto, AdminPhotoImage } from '$lib/types/content';
 
@@ -42,10 +41,11 @@
   const canEditThumbnailCrop = $derived(
     galleryCropConfig.layoutMode === 'uniform',
   );
+  let leadNaturalAspectByImageId = $state<Record<string, number>>({});
   const leadAspect = $derived.by(() => {
-    const parsed = parseDimensions(lead?.dimensions ?? null);
-    if (!parsed) return 1;
-    return Math.max(0.2, parsed.width / parsed.height);
+    const leadImageId = lead?.id;
+    if (!leadImageId) return 1;
+    return leadNaturalAspectByImageId[leadImageId] ?? 1;
   });
   const leadPreviewStyle = $derived.by(() => {
     const maxWidthPx = leadAspect >= 1 ? 360 : 360 * leadAspect;
@@ -69,6 +69,17 @@
     const [removed] = next.splice(initialIndex, 1);
     next.splice(index, 0, removed);
     void onAdditionalReorder(photo.id, next);
+  };
+
+  const onLeadPreviewLoad = (event: Event) => {
+    const image = event.currentTarget as HTMLImageElement | null;
+    if (!image?.naturalWidth || !image.naturalHeight) return;
+    if (!lead?.id) return;
+
+    leadNaturalAspectByImageId = {
+      ...leadNaturalAspectByImageId,
+      [lead.id]: Math.max(0.2, image.naturalWidth / image.naturalHeight),
+    };
   };
 </script>
 
@@ -96,7 +107,6 @@
                       imageId={lead.id}
                       deliveryStoragePath={lead.delivery_storage_path}
                       altText={lead.alt_text ?? photo.title}
-                      dimensions={lead.dimensions}
                       cropAspect={galleryCropConfig.uniformThumbRatio}
                       initialCrop={{
                         thumb_crop_x: lead.thumb_crop_x,
@@ -118,6 +128,7 @@
                         alt={lead.alt_text ?? photo.title}
                         class="absolute inset-0 h-full w-full object-cover"
                         draggable="false"
+                        onload={onLeadPreviewLoad}
                       />
                     </div>
                     <p class="text-text-muted">

@@ -12,7 +12,6 @@
     galleryDensityStore,
     layoutModeStore,
   } from '$lib/stores/gallery-prefs.svelte';
-  import { parseDimensions } from '$lib/utils/parse-dimensions';
   import {
     GALLERY_DETAIL_SHARED_WIDTH,
     photoPublicUrl,
@@ -155,14 +154,6 @@
     normalizeThumbCropAspect(data.uniformThumbRatio),
   );
 
-  const naturalAspectRatio = (photo: GalleryPhoto) => {
-    const parsed = parseDimensions(photo.leadImage?.dimensions);
-    if (parsed) {
-      return Math.max(0.2, parsed.width / parsed.height);
-    }
-    return uniformRatio;
-  };
-
   const thumbnailEntrancePreset = $derived(
     normalizeThumbnailEntrancePreset(
       data.gallerySettings?.thumbnail_entrance_preset,
@@ -285,6 +276,7 @@
   };
 
   let layout!: ReturnType<typeof createGalleryLayout>;
+  let tileAnimator!: ReturnType<typeof createGalleryTileAnimator>;
 
   const getContainerAspectForPhoto = (photo: GalleryPhoto) => {
     if (layoutMode === 'rows') {
@@ -303,7 +295,7 @@
       return uniformRatio;
     }
 
-    return naturalAspectRatio(photo);
+    return tileAnimator.tileAspectRatio(photo);
   };
 
   const detailViewMode = $derived.by<DetailViewMode>(() => {
@@ -326,7 +318,7 @@
       : 'floating';
   });
 
-  const tileAnimator = createGalleryTileAnimator({
+  tileAnimator = createGalleryTileAnimator({
     state,
     getLayoutMode: () => layoutMode,
     getUniformRatio: () => uniformRatio,
@@ -797,6 +789,7 @@
     onOpenPhoto,
     bindGridRoot: viewerController.bindGridRoot,
     registerTile: viewerController.registerTile,
+    onTileImageLoad: tileAnimator.onTileImageLoad,
     hasThumbCrop: tileAnimator.hasThumbCrop,
     thumbCropStyle: tileAnimator.thumbCropStyle,
     tileAspectRatio: tileAnimator.tileAspectRatio,

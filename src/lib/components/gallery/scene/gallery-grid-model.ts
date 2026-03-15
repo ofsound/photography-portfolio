@@ -27,6 +27,7 @@ export type GalleryGridModel = {
   onOpenPhoto: (event: MouseEvent, slug: string) => void;
   bindGridRoot: BindGridRootAction;
   registerTile: RegisterTileAction;
+  onTileImageLoad: (imageId: string, event: Event) => void;
   hasThumbCrop: (img: GalleryImage | null) => boolean;
   thumbCropStyle: (img: GalleryImage | null, containerAspect: number) => string;
   tileAspectRatio: (photo: GalleryPhoto) => number;

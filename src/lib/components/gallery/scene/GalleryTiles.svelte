@@ -1,6 +1,5 @@
 <script lang="ts">
   import { resolve } from '$app/paths';
-  import { parseDimensions } from '$lib/utils/parse-dimensions';
   import {
     GALLERY_DETAIL_SHARED_WIDTH,
     photoPublicUrl,
@@ -61,6 +60,8 @@
                     model.uniformRatio,
                   )}
                   loading="eager"
+                  onload={(event) =>
+                    model.onTileImageLoad(photo.leadImage.id, event)}
                 />
               </div>
             {/key}
@@ -91,7 +92,6 @@
   >
     {#each model.photos as photo, index (photo.id)}
       {#if photo.leadImage}
-        {@const knownRatio = parseDimensions(photo.leadImage.dimensions)}
         {@const entranceFx = model.entranceFx(photo.slug, index)}
         <li class="break-inside-avoid" style="margin-bottom: {model.gap}px">
           <a
@@ -107,9 +107,6 @@
             class="group relative block overflow-hidden {model.entranceLocked
               ? 'pointer-events-none'
               : ''}"
-            style={knownRatio
-              ? `aspect-ratio: ${knownRatio.width / knownRatio.height};`
-              : ''}
             onclick={(event: MouseEvent) =>
               model.onOpenPhoto(event, photo.slug)}
           >
@@ -134,18 +131,7 @@
                   )}
                   loading="eager"
                   onload={(event) => {
-                    if (
-                      !knownRatio &&
-                      event.currentTarget instanceof HTMLImageElement
-                    ) {
-                      const img = event.currentTarget;
-                      const anchor = img.closest('a');
-                      if (anchor && img.naturalWidth && img.naturalHeight) {
-                        anchor.style.aspectRatio = String(
-                          img.naturalWidth / img.naturalHeight,
-                        );
-                      }
-                    }
+                    model.onTileImageLoad(photo.leadImage.id, event);
                   }}
                 />
               </div>

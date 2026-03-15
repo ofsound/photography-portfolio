@@ -1,7 +1,6 @@
 import { untrack } from 'svelte';
 import { SvelteMap } from 'svelte/reactivity';
 import type { GalleryPhoto } from '$lib/types/content';
-import { parseDimensions } from '$lib/utils/parse-dimensions';
 import { thumbCropTransform } from '$lib/utils/thumb-crop';
 import {
   computeContainRect,
@@ -27,6 +26,11 @@ type GalleryTileAnimatorOptions = {
   setPhase: (phase: GalleryTransitionPhase) => void;
   scaleMaskMs: number;
   closingChromeMs: number;
+};
+
+type NaturalImageSize = {
+  width: number;
+  height: number;
 };
 
 const getViewportSize = () => {
@@ -63,6 +67,7 @@ export const createGalleryTileAnimator = ({
 }: GalleryTileAnimatorOptions) => {
   let promoted = $state<TileAnimationSession | null>(null);
   const tileRefs = new SvelteMap<string, HTMLElement>();
+  const naturalImageSizes = new SvelteMap<string, NaturalImageSize>();
 
   const findPhoto = (slug: string | null | undefined) => {
     if (!slug) return null;
@@ -91,14 +96,65 @@ export const createGalleryTileAnimator = ({
       img.thumb_crop_zoom >= 1,
     );
 
+  const naturalSizeFromElement = (
+    element: HTMLImageElement | null | undefined,
+  ): NaturalImageSize | null => {
+    if (!element || !element.naturalWidth || !element.naturalHeight) {
+      return null;
+    }
+
+    return {
+      width: element.naturalWidth,
+      height: element.naturalHeight,
+    };
+  };
+
+  const rememberNaturalSize = (
+    imageId: string | null | undefined,
+    size: NaturalImageSize | null,
+  ) => {
+    if (!imageId || !size) return;
+    const current = naturalImageSizes.get(imageId);
+    if (
+      current &&
+      current.width === size.width &&
+      current.height === size.height
+    ) {
+      return;
+    }
+
+    naturalImageSizes.set(imageId, size);
+  };
+
+  const naturalSizeForImage = (
+    img: GalleryImage | null,
+  ): NaturalImageSize | null => {
+    if (!img) return null;
+    return naturalImageSizes.get(img.id) ?? null;
+  };
+
+  const ratioForSize = (size: NaturalImageSize): number =>
+    Math.max(0.2, size.width / size.height);
+
+  const readLeadNaturalSizeFromTile = (
+    photo: GalleryPhoto,
+  ): NaturalImageSize | null => {
+    if (!photo.leadImage) return null;
+
+    // Avoid subscribing layout solvers to tileRefs writes to prevent update loops.
+    const node = untrack(() => tileRefs.get(photo.slug));
+    const image = node?.querySelector('img');
+    return naturalSizeFromElement(image);
+  };
+
   const thumbCropStyle = (
     img: GalleryImage | null,
     containerAspect: number,
   ) => {
     if (!img || !hasThumbCrop(img)) return '';
-    const parsed = parseDimensions(img.dimensions);
-    const width = parsed?.width ?? 1;
-    const height = parsed?.height ?? 1;
+    const naturalSize = naturalSizeForImage(img);
+    const width = naturalSize?.width ?? 1;
+    const height = naturalSize?.height ?? 1;
 
     const transform = thumbCropTransform(
       img.thumb_crop_x ?? 0.5,
@@ -113,19 +169,27 @@ export const createGalleryTileAnimator = ({
   };
 
   const tileAspectRatio = (photo: GalleryPhoto) => {
-    const parsed = parseDimensions(photo.leadImage?.dimensions);
-    if (parsed) {
-      return Math.max(0.2, parsed.width / parsed.height);
+    const leadImage = photo.leadImage;
+    if (!leadImage) return getUniformRatio();
+
+    return knownTileAspectRatio(photo) ?? getUniformRatio();
+  };
+
+  const knownTileAspectRatio = (photo: GalleryPhoto): number | null => {
+    const leadImage = photo.leadImage;
+    if (!leadImage) return null;
+
+    const naturalSize = naturalImageSizes.get(leadImage.id);
+    if (naturalSize) {
+      return ratioForSize(naturalSize);
     }
 
-    // Avoid subscribing layout solvers to tileRefs writes to prevent update loops.
-    const node = untrack(() => tileRefs.get(photo.slug));
-    const img = node?.querySelector('img');
-    if (img && img.naturalWidth && img.naturalHeight) {
-      return Math.max(0.2, img.naturalWidth / img.naturalHeight);
+    const tileSize = readLeadNaturalSizeFromTile(photo);
+    if (tileSize) {
+      return ratioForSize(tileSize);
     }
 
-    return getUniformRatio();
+    return null;
   };
 
   const imgCropFromForPhoto = (
@@ -137,14 +201,13 @@ export const createGalleryTileAnimator = ({
     if (!img || !hasThumbCrop(img)) return null;
 
     let imgAspect = 1;
-    const parsed = parseDimensions(img.dimensions);
-    if (parsed) {
-      imgAspect = parsed.width / parsed.height;
-    } else {
-      const node = tileRefs.get(photo.slug);
-      const imgEl = node?.querySelector('img');
-      if (imgEl && imgEl.naturalWidth) {
-        imgAspect = imgEl.naturalWidth / imgEl.naturalHeight;
+    const naturalSize = naturalSizeForImage(img);
+    if (naturalSize) {
+      imgAspect = naturalSize.width / naturalSize.height;
+    } else if (img.id === photo.leadImage?.id) {
+      const tileSize = readLeadNaturalSizeFromTile(photo);
+      if (tileSize) {
+        imgAspect = tileSize.width / tileSize.height;
       }
     }
 
@@ -169,15 +232,22 @@ export const createGalleryTileAnimator = ({
     let imgHeight = 1000;
 
     if (img) {
-      const parsed = parseDimensions(img.dimensions);
-      if (parsed) {
-        imgWidth = parsed.width;
-        imgHeight = parsed.height;
-      } else if (node) {
-        const imgEl = node.querySelector('img');
-        if (imgEl && imgEl.naturalWidth) {
-          imgWidth = imgEl.naturalWidth;
-          imgHeight = imgEl.naturalHeight;
+      const naturalSize = naturalSizeForImage(img);
+      if (naturalSize) {
+        imgWidth = naturalSize.width;
+        imgHeight = naturalSize.height;
+      } else if (img.id === photo.leadImage?.id) {
+        const tileSize = readLeadNaturalSizeFromTile(photo);
+        if (tileSize) {
+          imgWidth = tileSize.width;
+          imgHeight = tileSize.height;
+        } else if (node) {
+          const imgEl = node.querySelector('img');
+          const size = naturalSizeFromElement(imgEl);
+          if (size) {
+            imgWidth = size.width;
+            imgHeight = size.height;
+          }
         }
       }
     }
@@ -425,6 +495,13 @@ export const createGalleryTileAnimator = ({
     };
   };
 
+  const onTileImageLoad = (imageId: string, event: Event) => {
+    const target = event.currentTarget;
+    if (!(target instanceof HTMLImageElement)) return;
+
+    rememberNaturalSize(imageId, naturalSizeFromElement(target));
+  };
+
   const releaseAnyPromoted = () => {
     if (!promoted) return;
     releasePromotedTile(promoted);
@@ -433,6 +510,7 @@ export const createGalleryTileAnimator = ({
 
   return {
     registerTile,
+    onTileImageLoad,
     hasThumbCrop,
     thumbCropStyle,
     tileAspectRatio,

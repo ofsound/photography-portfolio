@@ -1,7 +1,6 @@
 <script lang="ts">
   import { enhance } from '$app/forms';
   import AdminButton from '$lib/components/admin/AdminButton.svelte';
-  import { parseDimensions } from '$lib/utils/parse-dimensions';
   import {
     normalizeThumbCropAspect,
     thumbCropVisibleWindow,
@@ -19,7 +18,6 @@
     imageId,
     deliveryStoragePath,
     altText,
-    dimensions = null,
     cropAspect,
     initialCrop = null,
     photoId,
@@ -28,7 +26,6 @@
     imageId: string;
     deliveryStoragePath: string;
     altText: string | null;
-    dimensions?: string | null;
     cropAspect: number;
     initialCrop?: ThumbCrop | null;
     photoId: string;
@@ -40,7 +37,6 @@
   const ZOOM_MAX = 4;
   const ZOOM_STEP = 0.1;
 
-  const parsedDims = $derived(parseDimensions(dimensions));
   const safeCropAspect = $derived(normalizeThumbCropAspect(cropAspect));
   const previewMaxWidthPx = $derived(
     safeCropAspect >= 1
@@ -72,8 +68,8 @@
   let dragStartCropX = 0;
   let dragStartCropY = 0;
 
-  const imgWidth = $derived(imgNaturalWidth ?? parsedDims?.width ?? 1);
-  const imgHeight = $derived(imgNaturalHeight ?? parsedDims?.height ?? 1);
+  const imgWidth = $derived(imgNaturalWidth ?? 1);
+  const imgHeight = $derived(imgNaturalHeight ?? 1);
   const cropWindow = $derived(
     thumbCropVisibleWindow(imgWidth, imgHeight, safeCropAspect, cropZoom),
   );

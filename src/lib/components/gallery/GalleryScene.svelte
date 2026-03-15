@@ -327,6 +327,22 @@
       state.activeSlug && photographInfoMode === 'bottom_dock'
         ? detailBottomInsetPx
         : 0,
+    getClassicDetailBorderPx: () =>
+      detailViewMode === 'classic'
+        ? (data.gallerySettings?.classic_detail_border_px ?? 0)
+        : 0,
+    getClassicDetailHInsetPct: () =>
+      detailViewMode === 'classic'
+        ? (data.gallerySettings?.classic_detail_h_inset_pct ?? 0)
+        : 0,
+    getClassicDetailVInsetPct: () =>
+      detailViewMode === 'classic'
+        ? (data.gallerySettings?.classic_detail_v_inset_pct ?? 0)
+        : 0,
+    getClassicDetailVPositionPct: () =>
+      detailViewMode === 'classic'
+        ? (data.gallerySettings?.classic_detail_v_position_pct ?? 50)
+        : 50,
     reducedMotion,
     setPhase,
     scaleMaskMs: SCALE_MASK_MS,
@@ -1028,6 +1044,15 @@
     {transitionPhase}
     {overlayChromeHidden}
     {photographInfoMode}
+    classicDetailHInsetPct={detailViewMode === 'classic'
+      ? (data.gallerySettings?.classic_detail_h_inset_pct ?? 0)
+      : 0}
+    classicDetailVInsetPct={detailViewMode === 'classic'
+      ? (data.gallerySettings?.classic_detail_v_inset_pct ?? 0)
+      : 0}
+    classicDetailVPositionPct={detailViewMode === 'classic'
+      ? (data.gallerySettings?.classic_detail_v_position_pct ?? 50)
+      : 50}
     showPhotoInfoTitle={data.gallerySettings?.show_photo_info_title ?? true}
     showPhotoInfoDescription={data.gallerySettings
       ?.show_photo_info_description ?? true}

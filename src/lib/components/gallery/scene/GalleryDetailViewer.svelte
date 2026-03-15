@@ -39,6 +39,9 @@
     showPhotoInfoCaptureDate,
     showPhotoInfoDimensions,
     showPhotoInfoLicenseText,
+    classicDetailHInsetPct,
+    classicDetailVInsetPct,
+    classicDetailVPositionPct,
     isTransitioning,
     canCycleGallery,
     navButtonPreset,
@@ -72,6 +75,9 @@
     showPhotoInfoCaptureDate: boolean;
     showPhotoInfoDimensions: boolean;
     showPhotoInfoLicenseText: boolean;
+    classicDetailHInsetPct: number;
+    classicDetailVInsetPct: number;
+    classicDetailVPositionPct: number;
     isTransitioning: boolean;
     canCycleGallery: boolean;
     navButtonPreset: NavButtonPreset;
@@ -145,11 +151,25 @@
       (showAnyText || showClassicAdditionalStrip),
   );
 
-  const detailViewportStyle = $derived(
-    showBottomDockInfo
-      ? `--detail-bottom-inset: ${bottomDockInsetPx}px;`
-      : '--detail-bottom-inset: 0px;',
-  );
+  const detailViewportStyle = $derived.by(() => {
+    const parts: string[] = [];
+    parts.push(
+      showBottomDockInfo
+        ? `--detail-bottom-inset: ${bottomDockInsetPx}px`
+        : '--detail-bottom-inset: 0px',
+    );
+    if (classicDetailHInsetPct > 0) {
+      parts.push(`padding-left: ${classicDetailHInsetPct}vw`);
+      parts.push(`padding-right: ${classicDetailHInsetPct}vw`);
+    }
+    if (classicDetailVInsetPct > 0) {
+      const anchor = classicDetailVPositionPct / 100;
+      const totalVh = classicDetailVInsetPct * 2;
+      parts.push(`padding-top: ${totalVh * anchor}vh`);
+      parts.push(`padding-bottom: ${totalVh * (1 - anchor)}vh`);
+    }
+    return parts.join('; ') + ';';
+  });
 
   const showFloatingAdditionalStrip = $derived(showClassicAdditionalStrip);
 

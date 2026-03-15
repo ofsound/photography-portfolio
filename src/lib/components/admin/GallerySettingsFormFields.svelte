@@ -315,6 +315,87 @@
 <AdminCard class="grid gap-3 p-3">
   <div class="grid gap-1">
     <p class="text-xs font-medium tracking-wide text-text uppercase">
+      Classic Detail Letterbox Inset
+    </p>
+    <p class="text-xs text-text-muted">
+      Shrinks the promoted image in classic detail view, centering it with
+      letterbox padding. Applied when Detail Viewer is set to classic.
+    </p>
+  </div>
+
+  <div class="grid gap-3 sm:grid-cols-4">
+    <FormField
+      label="Horizontal Inset (%)"
+      id={p('classic_detail_h_inset_pct')}
+      class="w-full"
+    >
+      <FormInput
+        id={p('classic_detail_h_inset_pct')}
+        name="classic_detail_h_inset_pct"
+        type="number"
+        step="0.5"
+        min="0"
+        max="50"
+        value={String(settings.classic_detail_h_inset_pct)}
+        {readonly}
+      />
+    </FormField>
+    <FormField
+      label="Vertical Inset (%)"
+      id={p('classic_detail_v_inset_pct')}
+      class="w-full"
+    >
+      <FormInput
+        id={p('classic_detail_v_inset_pct')}
+        name="classic_detail_v_inset_pct"
+        type="number"
+        step="0.5"
+        min="0"
+        max="50"
+        value={String(settings.classic_detail_v_inset_pct)}
+        {readonly}
+      />
+    </FormField>
+    <FormField
+      label="Vertical Position (%)"
+      id={p('classic_detail_v_position_pct')}
+      hint="0 = top, 50 = center, 100 = bottom"
+      class="w-full"
+    >
+      <FormInput
+        id={p('classic_detail_v_position_pct')}
+        name="classic_detail_v_position_pct"
+        type="number"
+        step="1"
+        min="0"
+        max="100"
+        value={String(settings.classic_detail_v_position_pct)}
+        {readonly}
+      />
+    </FormField>
+    <FormField
+      label="Border Width (px)"
+      id={p('classic_detail_border_px')}
+      hint="0 = no border"
+      class="w-full"
+    >
+      <FormInput
+        id={p('classic_detail_border_px')}
+        name="classic_detail_border_px"
+        type="number"
+        step="1"
+        min="0"
+        max="50"
+        value={String(settings.classic_detail_border_px)}
+        {readonly}
+      />
+    </FormField>
+  </div>
+</AdminCard>
+
+<AdminCard class="grid gap-3 p-3">
+  <div class="grid gap-1">
+    <p class="text-xs font-medium tracking-wide text-text uppercase">
       Contact Sheet Viewer
     </p>
     <p class="text-xs text-text-muted">

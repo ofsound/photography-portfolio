@@ -30,6 +30,8 @@ export type TileAnimationSession = {
   gridAspectRatio?: number;
   /** Original inline aspect-ratio style from the tile node. */
   originalInlineAspectRatio: string;
+  /** Border width used during promotion (px). */
+  borderPx: number;
 };
 
 type AnimationConfig = {
@@ -44,6 +46,7 @@ type PromoteConfig = AnimationConfig & {
   targetRect: TileRect;
   aspectRatio?: number;
   imgCropFrom?: ImgCropTransform | null;
+  borderPx?: number;
 };
 
 const DEMOTE_Z_INDEX = 90;
@@ -171,8 +174,10 @@ export const promoteTile = async ({
   targetRect,
   aspectRatio,
   imgCropFrom,
+  borderPx: borderPxRaw,
   ...options
 }: PromoteConfig): Promise<TileAnimationSession> => {
+  const borderPx = Math.max(0, borderPxRaw ?? 0);
   const startRect = rectFromElement(node);
   const parent = node.parentNode;
   const originalInlineAspectRatio = node.style.aspectRatio;
@@ -211,6 +216,14 @@ export const promoteTile = async ({
   wrapper.appendChild(node);
   document.body.appendChild(wrapper);
 
+  // Border setup: box-sizing ensures border eats into the wrapper rect.
+  if (borderPx > 0) {
+    wrapper.style.boxSizing = 'border-box';
+    wrapper.style.borderStyle = 'solid';
+    wrapper.style.borderColor = 'light-dark(#000, #fff)';
+    wrapper.style.borderWidth = '0px';
+  }
+
   applyRectToWrapper(wrapper, startRect);
 
   const img = node.querySelector('img');
@@ -233,6 +246,7 @@ export const promoteTile = async ({
       applyRectToWrapper(wrapper, targetRect);
       img.style.transform = '';
       img.style.objectFit = 'cover';
+      if (borderPx > 0) wrapper.style.borderWidth = `${borderPx}px`;
     } else {
       const rectTiming: KeyframeAnimationOptions = {
         duration: durationMs,
@@ -244,23 +258,25 @@ export const promoteTile = async ({
         easing,
         fill: 'forwards',
       };
-      const rectAnim = wrapper.animate(
-        [
-          {
-            top: `${startRect.top}px`,
-            left: `${startRect.left}px`,
-            width: `${startRect.width}px`,
-            height: `${startRect.height}px`,
-          },
-          {
-            top: `${targetRect.top}px`,
-            left: `${targetRect.left}px`,
-            width: `${targetRect.width}px`,
-            height: `${targetRect.height}px`,
-          },
-        ],
-        rectTiming,
-      );
+      const rectKeyframes: Keyframe[] = [
+        {
+          top: `${startRect.top}px`,
+          left: `${startRect.left}px`,
+          width: `${startRect.width}px`,
+          height: `${startRect.height}px`,
+        },
+        {
+          top: `${targetRect.top}px`,
+          left: `${targetRect.left}px`,
+          width: `${targetRect.width}px`,
+          height: `${targetRect.height}px`,
+        },
+      ];
+      if (borderPx > 0) {
+        (rectKeyframes[0] as Record<string, string>).borderWidth = '0px';
+        (rectKeyframes[1] as Record<string, string>).borderWidth = `${borderPx}px`;
+      }
+      const rectAnim = wrapper.animate(rectKeyframes, rectTiming);
       const imgAnim = img.animate(
         [
           {
@@ -279,6 +295,7 @@ export const promoteTile = async ({
       applyRectToWrapper(wrapper, targetRect);
       img.style.transform = '';
       img.style.objectFit = 'cover';
+      if (borderPx > 0) wrapper.style.borderWidth = `${borderPx}px`;
     }
   } else {
     if (
@@ -287,23 +304,29 @@ export const promoteTile = async ({
       typeof wrapper.animate !== 'function'
     ) {
       applyRectToWrapper(wrapper, targetRect);
+      if (borderPx > 0) wrapper.style.borderWidth = `${borderPx}px`;
     } else {
       if (img) img.style.objectFit = 'cover';
+      const noCropKeyframes: Keyframe[] = [
+        {
+          top: `${startRect.top}px`,
+          left: `${startRect.left}px`,
+          width: `${startRect.width}px`,
+          height: `${startRect.height}px`,
+        },
+        {
+          top: `${targetRect.top}px`,
+          left: `${targetRect.left}px`,
+          width: `${targetRect.width}px`,
+          height: `${targetRect.height}px`,
+        },
+      ];
+      if (borderPx > 0) {
+        (noCropKeyframes[0] as Record<string, string>).borderWidth = '0px';
+        (noCropKeyframes[1] as Record<string, string>).borderWidth = `${borderPx}px`;
+      }
       await wrapper.animate(
-        [
-          {
-            top: `${startRect.top}px`,
-            left: `${startRect.left}px`,
-            width: `${startRect.width}px`,
-            height: `${startRect.height}px`,
-          },
-          {
-            top: `${targetRect.top}px`,
-            left: `${targetRect.left}px`,
-            width: `${targetRect.width}px`,
-            height: `${targetRect.height}px`,
-          },
-        ],
+        noCropKeyframes,
         {
           duration: options?.durationMs ?? 520,
           easing: options?.easing ?? 'cubic-bezier(0.16, 1, 0.3, 1)',
@@ -311,6 +334,7 @@ export const promoteTile = async ({
         },
       ).finished;
       applyRectToWrapper(wrapper, targetRect);
+      if (borderPx > 0) wrapper.style.borderWidth = `${borderPx}px`;
       if (img) img.style.objectFit = '';
     }
   }
@@ -326,6 +350,7 @@ export const promoteTile = async ({
     imgCrop: imgCropFrom ?? null,
     gridAspectRatio: aspectRatio,
     originalInlineAspectRatio,
+    borderPx,
   };
 };
 
@@ -376,29 +401,32 @@ export const demoteTile = async (
     ) {
       applyRectToWrapper(rectEl, targetRect, DEMOTE_Z_INDEX);
       img.style.transform = `${base} scale(${session.imgCrop.scale})`;
+      if (session.borderPx > 0) rectEl.style.borderWidth = '0px';
     } else {
       const timing: KeyframeAnimationOptions = {
         duration: durationMs,
         easing: rectEasing,
         fill: 'forwards',
       };
-      const rectAnim = rectEl.animate(
-        [
-          {
-            top: `${session.currentRect.top}px`,
-            left: `${session.currentRect.left}px`,
-            width: `${session.currentRect.width}px`,
-            height: `${session.currentRect.height}px`,
-          },
-          {
-            top: `${targetRect.top}px`,
-            left: `${targetRect.left}px`,
-            width: `${targetRect.width}px`,
-            height: `${targetRect.height}px`,
-          },
-        ],
-        timing,
-      );
+      const demoteRectKeyframes: Keyframe[] = [
+        {
+          top: `${session.currentRect.top}px`,
+          left: `${session.currentRect.left}px`,
+          width: `${session.currentRect.width}px`,
+          height: `${session.currentRect.height}px`,
+        },
+        {
+          top: `${targetRect.top}px`,
+          left: `${targetRect.left}px`,
+          width: `${targetRect.width}px`,
+          height: `${targetRect.height}px`,
+        },
+      ];
+      if (session.borderPx > 0) {
+        (demoteRectKeyframes[0] as Record<string, string>).borderWidth = `${session.borderPx}px`;
+        (demoteRectKeyframes[1] as Record<string, string>).borderWidth = '0px';
+      }
+      const rectAnim = rectEl.animate(demoteRectKeyframes, timing);
       const imgAnim = img.animate(
         [
           { transform: `translate(0, 0) scale(1)` },
@@ -415,10 +443,25 @@ export const demoteTile = async (
 
       applyRectToWrapper(rectEl, targetRect, DEMOTE_Z_INDEX);
       img.style.transform = `translate(${tx}%, ${ty}%) scale(${session.imgCrop.scale})`;
+      if (session.borderPx > 0) rectEl.style.borderWidth = '0px';
     }
   } else {
     if (img) img.style.objectFit = 'cover';
+    if (session.borderPx > 0) {
+      const durationMs = options?.durationMs ?? 520;
+      const easing = options?.easing ?? 'cubic-bezier(0.16, 1, 0.3, 1)';
+      const reducedMotion = options?.reducedMotion ?? false;
+      if (reducedMotion || durationMs <= 0 || typeof rectEl.animate !== 'function') {
+        rectEl.style.borderWidth = '0px';
+      } else {
+        rectEl.animate(
+          [{ borderWidth: `${session.borderPx}px` }, { borderWidth: '0px' }],
+          { duration: durationMs, easing, fill: 'forwards' },
+        );
+      }
+    }
     await animateRect(rectEl, session.currentRect, targetRect, options);
+    if (session.borderPx > 0) rectEl.style.borderWidth = '0px';
   }
   session.currentRect = targetRect;
 };
@@ -551,13 +594,21 @@ export const computeContainRect = (
   chromeBottomOffset: number,
   horizontalPadding = 0,
   verticalPadding = 0,
+  verticalPositionPct = 50,
 ): TileRect => {
   const safeImageWidth = Math.max(1, imageWidth);
   const safeImageHeight = Math.max(1, imageHeight);
   const availableWidth = Math.max(1, viewportWidth - horizontalPadding * 2);
+
+  // Distribute vertical padding asymmetrically based on vertical position.
+  // 0% = image at top (all padding below), 50% = centered, 100% = bottom.
+  const verticalAnchor = Math.min(100, Math.max(0, verticalPositionPct)) / 100;
+  const topPadding = verticalPadding * 2 * verticalAnchor;
+  const bottomPadding = verticalPadding * 2 * (1 - verticalAnchor);
+
   const availableHeight = Math.max(
     1,
-    viewportHeight - chromeTopOffset - chromeBottomOffset - verticalPadding * 2,
+    viewportHeight - chromeTopOffset - chromeBottomOffset - topPadding - bottomPadding,
   );
 
   const imageRatio = safeImageWidth / safeImageHeight;
@@ -573,7 +624,7 @@ export const computeContainRect = (
   }
 
   const top =
-    chromeTopOffset + verticalPadding + (availableHeight - height) / 2;
+    chromeTopOffset + topPadding + (availableHeight - height) / 2;
   const left = horizontalPadding + (availableWidth - width) / 2;
 
   return {

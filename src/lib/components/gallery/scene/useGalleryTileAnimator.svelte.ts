@@ -22,6 +22,10 @@ type GalleryTileAnimatorOptions = {
   getUniformRatio: () => number;
   getContainerAspect: (photo: GalleryPhoto) => number;
   getDetailBottomInset: () => number;
+  getClassicDetailBorderPx: () => number;
+  getClassicDetailHInsetPct: () => number;
+  getClassicDetailVInsetPct: () => number;
+  getClassicDetailVPositionPct: () => number;
   reducedMotion: () => boolean;
   setPhase: (phase: GalleryTransitionPhase) => void;
   scaleMaskMs: number;
@@ -60,6 +64,10 @@ export const createGalleryTileAnimator = ({
   getUniformRatio,
   getContainerAspect,
   getDetailBottomInset,
+  getClassicDetailBorderPx,
+  getClassicDetailHInsetPct,
+  getClassicDetailVInsetPct,
+  getClassicDetailVPositionPct,
   reducedMotion,
   setPhase,
   scaleMaskMs,
@@ -259,8 +267,9 @@ export const createGalleryTileAnimator = ({
       imgHeight,
       0,
       Math.max(0, getDetailBottomInset()),
-      0,
-      0,
+      viewportWidth * (getClassicDetailHInsetPct() / 100),
+      viewportHeight * (getClassicDetailVInsetPct() / 100),
+      getClassicDetailVPositionPct(),
     );
   };
 
@@ -304,6 +313,7 @@ export const createGalleryTileAnimator = ({
         ...baseMotion,
         aspectRatio: containerAspect,
         imgCropFrom: imgCrop ?? undefined,
+        borderPx: getClassicDetailBorderPx(),
       });
     } else {
       await movePromotedTile(promoted, nextRect, baseMotion);

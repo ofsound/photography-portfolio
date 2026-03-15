@@ -14,6 +14,10 @@ export type GallerySettingsDefaults = Pick<
   | 'thumbnail_entrance_preset'
   | 'preloader_preset'
   | 'nav_button_preset'
+  | 'classic_detail_border_px'
+  | 'classic_detail_h_inset_pct'
+  | 'classic_detail_v_inset_pct'
+  | 'classic_detail_v_position_pct'
   | 'contact_sheet_perspective_px'
   | 'contact_sheet_rotate_x_deg'
   | 'contact_sheet_rotate_y_deg'
@@ -44,6 +48,10 @@ export const GALLERY_SETTINGS_DEFAULTS: GallerySettingsDefaults = {
   thumbnail_entrance_preset: 'cascade',
   preloader_preset: 'minimal',
   nav_button_preset: 'whisper',
+  classic_detail_border_px: 0,
+  classic_detail_h_inset_pct: 0,
+  classic_detail_v_inset_pct: 0,
+  classic_detail_v_position_pct: 50,
   contact_sheet_perspective_px: 1200,
   contact_sheet_rotate_x_deg: 8,
   contact_sheet_rotate_y_deg: 10,

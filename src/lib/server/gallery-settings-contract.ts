@@ -31,6 +31,10 @@ export const GALLERY_SETTINGS_FIELD_KEYS = [
   'thumbnail_entrance_preset',
   'preloader_preset',
   'nav_button_preset',
+  'classic_detail_border_px',
+  'classic_detail_h_inset_pct',
+  'classic_detail_v_inset_pct',
+  'classic_detail_v_position_pct',
   'contact_sheet_perspective_px',
   'contact_sheet_rotate_x_deg',
   'contact_sheet_rotate_y_deg',
@@ -98,7 +102,7 @@ export const normalizeGallerySettingsForRead = (
 
   const thumbnailEntrancePreset = normalizeThumbnailEntrancePreset(
     source.thumbnail_entrance_preset ??
-      GALLERY_SETTINGS_DEFAULTS.thumbnail_entrance_preset,
+    GALLERY_SETTINGS_DEFAULTS.thumbnail_entrance_preset,
   );
   warnPresetCoercion(
     'thumbnail_entrance_preset',
@@ -149,13 +153,37 @@ export const normalizeGallerySettingsForRead = (
       source.gallery_gap_px ?? GALLERY_SETTINGS_DEFAULTS.gallery_gap_px,
     uniform_thumb_ratio: normalizeThumbCropAspect(
       source.uniform_thumb_ratio ??
-        GALLERY_SETTINGS_DEFAULTS.uniform_thumb_ratio,
+      GALLERY_SETTINGS_DEFAULTS.uniform_thumb_ratio,
     ),
     transition_preset:
       source.transition_preset ?? GALLERY_SETTINGS_DEFAULTS.transition_preset,
     thumbnail_entrance_preset: thumbnailEntrancePreset,
     preloader_preset: preloaderPreset,
     nav_button_preset: navButtonPreset,
+    classic_detail_border_px: clampNumber(
+      source.classic_detail_border_px,
+      GALLERY_SETTINGS_DEFAULTS.classic_detail_border_px,
+      0,
+      50,
+    ),
+    classic_detail_h_inset_pct: clampNumber(
+      source.classic_detail_h_inset_pct,
+      GALLERY_SETTINGS_DEFAULTS.classic_detail_h_inset_pct,
+      0,
+      50,
+    ),
+    classic_detail_v_inset_pct: clampNumber(
+      source.classic_detail_v_inset_pct,
+      GALLERY_SETTINGS_DEFAULTS.classic_detail_v_inset_pct,
+      0,
+      50,
+    ),
+    classic_detail_v_position_pct: clampNumber(
+      source.classic_detail_v_position_pct,
+      GALLERY_SETTINGS_DEFAULTS.classic_detail_v_position_pct,
+      0,
+      100,
+    ),
     contact_sheet_perspective_px: clampNumber(
       source.contact_sheet_perspective_px,
       GALLERY_SETTINGS_DEFAULTS.contact_sheet_perspective_px,
@@ -239,6 +267,10 @@ const viewerGallerySettingProjectors: {
   thumbnail_entrance_preset: (settings) => settings.thumbnail_entrance_preset,
   preloader_preset: (settings) => settings.preloader_preset,
   nav_button_preset: (settings) => settings.nav_button_preset,
+  classic_detail_border_px: (settings) => settings.classic_detail_border_px,
+  classic_detail_h_inset_pct: (settings) => settings.classic_detail_h_inset_pct,
+  classic_detail_v_inset_pct: (settings) => settings.classic_detail_v_inset_pct,
+  classic_detail_v_position_pct: (settings) => settings.classic_detail_v_position_pct,
   contact_sheet_perspective_px: (settings) =>
     settings.contact_sheet_perspective_px,
   contact_sheet_rotate_x_deg: (settings) => settings.contact_sheet_rotate_x_deg,

@@ -5,6 +5,8 @@
   import { quartOut } from 'svelte/easing';
   import { fade } from 'svelte/transition';
 
+  import PhotoInfoPanel from './PhotoInfoPanel.svelte';
+
   import { useSwipeGesture } from '$lib/actions/useSwipeGesture.svelte';
   import {
     GALLERY_DETAIL_SHARED_WIDTH,
@@ -24,10 +26,10 @@
     activePhoto,
     currentImage,
     promoted,
-    galleryName,
+    galleryName: _galleryName,
     detailViewMode,
-    activePosition,
-    totalPhotos,
+    activePosition: _activePosition,
+    totalPhotos: _totalPhotos,
     supportsAdditionalImages,
     transitionPhase,
     overlayChromeHidden,
@@ -57,6 +59,7 @@
     activePhoto: GalleryPhoto;
     currentImage: NonNullable<GalleryPhoto['leadImage']>;
     promoted: boolean;
+    galleryName: string;
     detailViewMode: DetailViewMode;
     activePosition: number;
     totalPhotos: number;
@@ -85,7 +88,6 @@
     portal: PortalAction;
     scaleMaskMs: number;
     closingChromeMs: number;
-    galleryName: string;
   }>();
 
   let controlsVisible = $state(true);
@@ -94,7 +96,6 @@
   const hasText = (value: string | null | undefined) =>
     Boolean(value && value.trim().length > 0);
 
-  const galleryHeaderText = $derived(galleryName.trim());
   const titleText = $derived(activePhoto.title.trim());
   const descriptionText = $derived((activePhoto.description ?? '').trim());
   const captureDateText = $derived((activePhoto.capture_date ?? '').trim());
@@ -122,21 +123,35 @@
       showDimensions ||
       showLicense,
   );
-  const showAdditionalStrip = $derived(
-    supportsAdditionalImages && activePhoto.additionalImages.length > 0,
-  );
-  const isBottomDock = $derived(photographInfoMode === 'bottom_dock');
-  const showInfoShell = $derived(
+  const showClassicAdditionalStrip = $derived(
     !isContactSheet &&
-      photographInfoMode !== 'hidden' &&
-      (showAnyText || showAdditionalStrip),
+      supportsAdditionalImages &&
+      activePhoto.additionalImages.length > 0,
+  );
+  const showClassicFloatingInfo = $derived(
+    !isContactSheet &&
+      photographInfoMode === 'floating' &&
+      (showAnyText || showClassicAdditionalStrip),
+  );
+  const showContactSheetFloatingInfo = $derived(
+    isContactSheet && photographInfoMode !== 'hidden' && showAnyText,
+  );
+  const showFloatingInfo = $derived(
+    showClassicFloatingInfo || showContactSheetFloatingInfo,
+  );
+  const showBottomDockInfo = $derived(
+    !isContactSheet &&
+      photographInfoMode === 'bottom_dock' &&
+      (showAnyText || showClassicAdditionalStrip),
   );
 
   const detailViewportStyle = $derived(
-    isBottomDock && showInfoShell
+    showBottomDockInfo
       ? `--detail-bottom-inset: ${bottomDockInsetPx}px;`
       : '--detail-bottom-inset: 0px;',
   );
+
+  const showFloatingAdditionalStrip = $derived(showClassicAdditionalStrip);
 
   const revealControls = () => {
     controlsVisible = true;
@@ -469,106 +484,31 @@
   </div>
 {/if}
 
-{#if isContactSheet}
+{#if showFloatingInfo}
+  <PhotoInfoPanel
+    {activePhoto}
+    {titleText}
+    {descriptionText}
+    {captureDateText}
+    {dimensionsText}
+    {licenseText}
+    {showTitle}
+    {showDescription}
+    {showCaptureDate}
+    {showDimensions}
+    {showLicense}
+    showAdditionalStrip={showFloatingAdditionalStrip}
+    {overlayChromeHidden}
+    {closingChromeMs}
+    {withCurrentSearch}
+    {photoPath}
+    {onAdditionalImageClick}
+    {portal}
+  />
+{:else if showBottomDockInfo}
   <aside
     use:portal
-    class="chrome-panel fixed top-4 right-4 z-[80] max-w-[min(92vw,24rem)] rounded-xl border border-border-strong px-4 py-3 shadow-xl transition-opacity ease-out sm:top-6 sm:right-6"
-    class:opacity-0={overlayChromeHidden}
-    style="transition-duration: {closingChromeMs}ms"
-  >
-    <div class="grid gap-1">
-      <p class="text-[0.65rem] tracking-[0.24em] text-canvas-text/65 uppercase">
-        {galleryHeaderText}
-        {#if activePosition > 0 && totalPhotos > 0}
-          <span class="ml-2 text-canvas-text/50">
-            {activePosition}/{totalPhotos}
-          </span>
-        {/if}
-      </p>
-      <h1 class="text-sm font-semibold tracking-wide text-canvas-text">
-        {titleText}
-      </h1>
-    </div>
-  </aside>
-{/if}
-
-{#if showInfoShell && photographInfoMode === 'floating'}
-  <aside
-    use:portal
-    class="chrome-panel fixed bottom-4 left-4 z-[80] w-[min(92vw,40rem)] rounded-xl border border-border-strong px-4 py-4 shadow-xl transition-opacity ease-out sm:bottom-6 sm:left-6"
-    class:opacity-0={overlayChromeHidden}
-    style="transition-duration: {closingChromeMs}ms"
-  >
-    {#if showAnyText}
-      <div class="grid gap-2">
-        {#if showTitle}
-          <h1 class="text-sm font-semibold tracking-widest uppercase">
-            {titleText}
-          </h1>
-        {/if}
-        {#if showDescription}
-          <p class="text-sm leading-relaxed text-canvas-text/85">
-            {descriptionText}
-          </p>
-        {/if}
-        {#if showCaptureDate}
-          <p class="text-sm text-canvas-text/90">
-            <span
-              class="mr-2 text-xs tracking-wide text-canvas-text/65 uppercase"
-              >Date</span
-            >
-            {captureDateText}
-          </p>
-        {/if}
-        {#if showDimensions}
-          <p class="text-sm text-canvas-text/90">
-            <span
-              class="mr-2 text-xs tracking-wide text-canvas-text/65 uppercase"
-              >Dimensions</span
-            >
-            {dimensionsText}
-          </p>
-        {/if}
-        {#if showLicense}
-          <p class="text-sm text-canvas-text/90">
-            <span
-              class="mr-2 text-xs tracking-wide text-canvas-text/65 uppercase"
-              >License</span
-            >
-            {licenseText}
-          </p>
-        {/if}
-      </div>
-    {/if}
-
-    {#if showAdditionalStrip}
-      <div class="mt-3 flex gap-2 overflow-x-auto pb-1" data-swipe-ignore>
-        {#each activePhoto.additionalImages as image (image.id)}
-          <a
-            href={resolve(
-              withCurrentSearch(
-                photoPath(activePhoto.slug, image.id),
-              ) as `/${string}`,
-            )}
-            onclick={(event: MouseEvent) =>
-              onAdditionalImageClick(event, image.id)}
-            class="block shrink-0 overflow-hidden rounded border border-border-strong"
-          >
-            <img
-              src={photoPublicUrl(image.delivery_storage_path, 180)}
-              alt={image.alt_text ?? activePhoto.title}
-              class="h-14 w-20 object-cover"
-              loading="lazy"
-            />
-          </a>
-        {/each}
-      </div>
-    {/if}
-  </aside>
-{:else if showInfoShell && photographInfoMode === 'bottom_dock'}
-  <aside
-    use:portal
-    {@attach fromAction(observeBottomDock, () => showInfoShell && isBottomDock)}
+    {@attach fromAction(observeBottomDock, () => showBottomDockInfo)}
     class="chrome-panel fixed right-0 bottom-0 left-0 z-[80] border-t border-border-strong px-4 pt-3 pb-4 transition-opacity ease-out"
     class:opacity-0={overlayChromeHidden}
     style="transition-duration: {closingChromeMs}ms"
@@ -618,7 +558,7 @@
         </div>
       {/if}
 
-      {#if showAdditionalStrip}
+      {#if showClassicAdditionalStrip}
         <div class="flex gap-2 overflow-x-auto pb-1" data-swipe-ignore>
           {#each activePhoto.additionalImages as image (image.id)}
             <a

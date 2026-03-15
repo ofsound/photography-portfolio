@@ -27,6 +27,7 @@ body {
 .chrome-panel {
   backdrop-filter: blur(12px);
   background: color-mix(in srgb, var(--color-surface) 78%, transparent);
+  color: var(--color-text);
 }
 
 :root[data-contact-sheet-safari-transition='1'] .chrome-panel {

@@ -524,32 +524,29 @@
             </h1>
           {/if}
           {#if showDescription}
-            <p class="text-sm leading-relaxed text-canvas-text/85">
+            <p class="text-sm leading-relaxed text-text/85">
               {descriptionText}
             </p>
           {/if}
           {#if showCaptureDate}
-            <p class="text-sm text-canvas-text/90">
-              <span
-                class="mr-2 text-xs tracking-wide text-canvas-text/65 uppercase"
+            <p class="text-sm text-text/90">
+              <span class="mr-2 text-xs tracking-wide text-text/65 uppercase"
                 >Date</span
               >
               {captureDateText}
             </p>
           {/if}
           {#if showDimensions}
-            <p class="text-sm text-canvas-text/90">
-              <span
-                class="mr-2 text-xs tracking-wide text-canvas-text/65 uppercase"
+            <p class="text-sm text-text/90">
+              <span class="mr-2 text-xs tracking-wide text-text/65 uppercase"
                 >Dimensions</span
               >
               {dimensionsText}
             </p>
           {/if}
           {#if showLicense}
-            <p class="text-sm text-canvas-text/90">
-              <span
-                class="mr-2 text-xs tracking-wide text-canvas-text/65 uppercase"
+            <p class="text-sm text-text/90">
+              <span class="mr-2 text-xs tracking-wide text-text/65 uppercase"
                 >License</span
               >
               {licenseText}

@@ -539,7 +539,7 @@
       {#key activePhoto.slug}
         <div
           class="[grid-area:1/1]"
-          in:fade={{ duration: 180, delay: 340 }}
+          in:fade={{ duration: 100, delay: 200 }}
           out:fade={{ duration: 200 }}
         >
           {#if showAnyText}

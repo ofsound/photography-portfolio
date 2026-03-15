@@ -451,14 +451,16 @@ export const createGalleryTileAnimator = ({
       easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
     };
 
+    // Update slug before the slide so the info panel crossfade starts immediately.
+    state.activeSlug = targetSlug;
+    state.activeImageId = null;
+
     await Promise.all([
       movePromotedTile(outgoingSession, outgoingEndRect, motion),
       movePromotedTile(incomingSession, incomingFinalRect, motion),
     ]);
 
     promoted = incomingSession;
-    state.activeSlug = targetSlug;
-    state.activeImageId = null;
     releasePromotedTile(outgoingSession);
 
     return true;

@@ -66,8 +66,8 @@
   {#key activePhoto.slug}
     <div
       class="[grid-area:1/1]"
-      in:fade={{ duration: 200 }}
-      out:fade={{ duration: 120 }}
+      in:fade={{ duration: 180, delay: 340 }}
+      out:fade={{ duration: 200 }}
     >
       {#if showAnyText}
         <div class="grid gap-2">

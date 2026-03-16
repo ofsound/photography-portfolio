@@ -48,11 +48,14 @@ export type ViewerData = {
   active: ActiveRoute | null;
   gallerySettings?: {
     theme_default?: 'light' | 'dark' | 'system' | null;
-    transition_preset?: 'cinematic' | 'snappy' | 'experimental' | null;
     detail_view_mode?: DetailViewMode | null;
     thumbnail_entrance_preset?: ThumbnailEntrancePreset | null;
     thumbnail_entrance_stagger_ms?: number | null;
     thumbnail_entrance_duration_ms?: number | null;
+    thumbnail_promote_duration_ms?: number | null;
+    thumbnail_promote_easing?: string | null;
+    thumbnail_demote_duration_ms?: number | null;
+    thumbnail_demote_easing?: string | null;
     preloader_preset?: PreloaderPreset | null;
     nav_button_preset?: NavButtonPreset | null;
     contact_sheet_perspective_px?: number | null;

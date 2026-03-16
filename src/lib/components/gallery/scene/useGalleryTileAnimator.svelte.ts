@@ -26,9 +26,12 @@ type GalleryTileAnimatorOptions = {
   getClassicDetailHInsetPct: () => number;
   getClassicDetailVInsetPct: () => number;
   getClassicDetailVPositionPct: () => number;
+  getPromoteDurationMs: () => number;
+  getPromoteEasing: () => string;
+  getDemoteDurationMs: () => number;
+  getDemoteEasing: () => string;
   reducedMotion: () => boolean;
   setPhase: (phase: GalleryTransitionPhase) => void;
-  scaleMaskMs: number;
   closingChromeMs: number;
 };
 
@@ -68,9 +71,12 @@ export const createGalleryTileAnimator = ({
   getClassicDetailHInsetPct,
   getClassicDetailVInsetPct,
   getClassicDetailVPositionPct,
+  getPromoteDurationMs,
+  getPromoteEasing,
+  getDemoteDurationMs,
+  getDemoteEasing,
   reducedMotion,
   setPhase,
-  scaleMaskMs,
   closingChromeMs,
 }: GalleryTileAnimatorOptions) => {
   let promoted = $state<TileAnimationSession | null>(null);
@@ -314,11 +320,12 @@ export const createGalleryTileAnimator = ({
     }
 
     const nextRect = targetRectFor(photo, imageId, node);
-    const duration = durationMsOverride ?? (animate ? 520 : 0);
+    const duration =
+      durationMsOverride ?? (animate ? getPromoteDurationMs() : 0);
     const baseMotion = {
       reducedMotion: reducedMotion(),
       durationMs: duration,
-      easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
+      easing: getPromoteEasing(),
     };
 
     if (promoted && promoted.slug !== slug) {
@@ -390,8 +397,8 @@ export const createGalleryTileAnimator = ({
     const layoutMode = getLayoutMode();
     await demoteTile(session, {
       reducedMotion: reducedMotion(),
-      durationMs: animate ? scaleMaskMs : 0,
-      easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
+      durationMs: animate ? getDemoteDurationMs() : 0,
+      easing: getDemoteEasing(),
       imgEasing: 'cubic-bezier(0.5, 0, 1, 1)',
       useCover:
         layoutMode === 'uniform' ||

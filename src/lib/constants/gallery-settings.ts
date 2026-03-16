@@ -1,7 +1,16 @@
 import type { Database } from '$lib/types/database';
 
-export type GallerySettingsDefaults = Pick<
-  Database['public']['Tables']['gallery_settings']['Row'],
+type GallerySettingsRow =
+  Database['public']['Tables']['gallery_settings']['Row'];
+
+type MotionFieldKey =
+  | 'thumbnail_promote_duration_ms'
+  | 'thumbnail_promote_easing'
+  | 'thumbnail_demote_duration_ms'
+  | 'thumbnail_demote_easing';
+
+type BaseGallerySettingsDefaults = Pick<
+  GallerySettingsRow,
   | 'theme_default'
   | 'grid_desktop_default'
   | 'grid_mobile_default'
@@ -10,10 +19,13 @@ export type GallerySettingsDefaults = Pick<
   | 'detail_view_mode'
   | 'gallery_gap_px'
   | 'uniform_thumb_ratio'
-  | 'transition_preset'
   | 'thumbnail_entrance_preset'
   | 'thumbnail_entrance_stagger_ms'
   | 'thumbnail_entrance_duration_ms'
+  | 'thumbnail_promote_duration_ms'
+  | 'thumbnail_promote_easing'
+  | 'thumbnail_demote_duration_ms'
+  | 'thumbnail_demote_easing'
   | 'preloader_preset'
   | 'nav_button_preset'
   | 'classic_detail_border_px'
@@ -39,6 +51,16 @@ export type GallerySettingsDefaults = Pick<
   | 'show_photo_info_position'
 >;
 
+export type GallerySettingsDefaults = Omit<
+  BaseGallerySettingsDefaults,
+  MotionFieldKey
+> & {
+  thumbnail_promote_duration_ms: number;
+  thumbnail_promote_easing: string;
+  thumbnail_demote_duration_ms: number;
+  thumbnail_demote_easing: string;
+};
+
 export const GALLERY_SETTINGS_DEFAULTS: GallerySettingsDefaults = {
   theme_default: 'system',
   grid_desktop_default: 6,
@@ -48,10 +70,13 @@ export const GALLERY_SETTINGS_DEFAULTS: GallerySettingsDefaults = {
   detail_view_mode: 'classic',
   gallery_gap_px: 8,
   uniform_thumb_ratio: 1,
-  transition_preset: 'cinematic',
   thumbnail_entrance_preset: 'cascade',
   thumbnail_entrance_stagger_ms: 40,
   thumbnail_entrance_duration_ms: 520,
+  thumbnail_promote_duration_ms: 520,
+  thumbnail_promote_easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
+  thumbnail_demote_duration_ms: 520,
+  thumbnail_demote_easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
   preloader_preset: 'minimal',
   nav_button_preset: 'whisper',
   classic_detail_border_px: 0,

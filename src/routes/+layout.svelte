@@ -100,7 +100,6 @@
     ((page.data as Record<string, unknown> | null)?.gallerySettings ??
       null) as {
       theme_default?: 'light' | 'dark' | 'system' | null;
-      transition_preset?: 'cinematic' | 'snappy' | 'experimental' | null;
     } | null,
   );
   const siteSettings = $derived(
@@ -418,7 +417,7 @@
 
     const pathname = page.url.pathname;
     const onAdmin = isAdminPath(pathname);
-    transitionPreset = siteSettings?.transition_preset ?? 'cinematic';
+    transitionPreset = globalSiteSettings?.transition_preset ?? 'cinematic';
     let resolvedThemeMode: AdminThemeMode = onAdmin
       ? 'system'
       : siteThemeDefault;
@@ -489,7 +488,7 @@
 
   $effect(() => {
     if (typeof document === 'undefined') return;
-    transitionPreset = siteSettings?.transition_preset ?? 'cinematic';
+    transitionPreset = globalSiteSettings?.transition_preset ?? 'cinematic';
     applyTransitionPreset();
   });
 

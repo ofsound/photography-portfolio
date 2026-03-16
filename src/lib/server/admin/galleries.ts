@@ -181,6 +181,10 @@ const seedGallerySettingsFromDefaults = async (
     scope: 'gallery',
     gallery_id: galleryId,
     ...defaults,
+    thumbnail_promote_duration_ms: null,
+    thumbnail_promote_easing: null,
+    thumbnail_demote_duration_ms: null,
+    thumbnail_demote_easing: null,
   });
 
   if (error && error.code !== '23505') {

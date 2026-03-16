@@ -149,6 +149,10 @@
     {settings}
     disableTransitionPreset={!isAdmin}
     idPrefix="settings-"
+    {fieldErrors}
+    {values}
+    motionOverrides={data.motionOverrides}
+    allowMotionOverrides={true}
   />
 </form>
 

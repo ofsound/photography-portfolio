@@ -1,4 +1,7 @@
-import type { GallerySettingsDefaults } from '$lib/constants/gallery-settings';
+import {
+  GALLERY_SETTINGS_DEFAULTS,
+  type GallerySettingsDefaults,
+} from '$lib/constants/gallery-settings';
 import type { GalleryVisibilityStatus } from '$lib/constants/gallery-visibility';
 import { throwLoaderError } from '$lib/server/load-error';
 import {
@@ -131,6 +134,15 @@ const maxPageSize = 120;
 
 const photoListSelect =
   'id, gallery_id, slug, title, description, dimensions, license_text, seo_title, seo_description, og_title, og_description, og_image_path, capture_date, galleries(slug, visibility_status), photo_images(id, kind, position, delivery_storage_path, alt_text, dimensions, thumb_crop_x, thumb_crop_y, thumb_crop_zoom)';
+
+const THUMBNAIL_MOTION_FIELDS = [
+  'thumbnail_promote_duration_ms',
+  'thumbnail_promote_easing',
+  'thumbnail_demote_duration_ms',
+  'thumbnail_demote_easing',
+] as const;
+
+const THUMBNAIL_MOTION_SELECT = THUMBNAIL_MOTION_FIELDS.join(', ');
 
 const readGalleryRelation = (
   value: GalleryRelation | GalleryRelation[] | null | undefined,
@@ -308,19 +320,33 @@ export const loadGallerySettings = async (
   locals: App.Locals,
   scope: ResolvedGalleryScope,
 ): Promise<GallerySettings> => {
-  const settingsQuery =
+  const settingsQueryPromise =
     scope.kind === 'gallery'
-      ? await locals.supabase
+      ? locals.supabase
           .from('gallery_settings')
           .select(GALLERY_SETTINGS_FIELD_SELECT)
           .eq('scope', 'gallery')
           .eq('gallery_id', scope.id)
           .maybeSingle()
-      : await locals.supabase
+      : locals.supabase
           .from('gallery_settings')
           .select(GALLERY_SETTINGS_FIELD_SELECT)
           .eq('scope', 'all')
           .maybeSingle();
+
+  const motionDefaultsPromise =
+    scope.kind === 'gallery'
+      ? locals.supabase
+          .from('site_settings')
+          .select(THUMBNAIL_MOTION_SELECT)
+          .eq('singleton_id', 1)
+          .maybeSingle()
+      : Promise.resolve({ data: null, error: null });
+
+  const [settingsQuery, motionDefaultsQuery] = await Promise.all([
+    settingsQueryPromise,
+    motionDefaultsPromise,
+  ]);
 
   if (settingsQuery.error) {
     throwLoaderError(
@@ -333,9 +359,48 @@ export const loadGallerySettings = async (
     );
   }
 
+  if (scope.kind === 'gallery' && motionDefaultsQuery.error) {
+    throwLoaderError(
+      {
+        route: '/[rootSlug]',
+        operation: 'loadGallerySettings motion defaults',
+        details: { scope: scope.slug },
+      },
+      motionDefaultsQuery.error,
+    );
+  }
+
   if (settingsQuery.data) {
+    const scopedSettings = settingsQuery.data as Partial<GallerySettings>;
+    const motionDefaults = motionDefaultsQuery.data as
+      | Partial<GallerySettings>
+      | null
+      | undefined;
+    const mergedSettings =
+      scope.kind === 'gallery'
+        ? {
+            ...scopedSettings,
+            thumbnail_promote_duration_ms:
+              scopedSettings.thumbnail_promote_duration_ms ??
+              motionDefaults?.thumbnail_promote_duration_ms ??
+              GALLERY_SETTINGS_DEFAULTS.thumbnail_promote_duration_ms,
+            thumbnail_promote_easing:
+              scopedSettings.thumbnail_promote_easing ??
+              motionDefaults?.thumbnail_promote_easing ??
+              GALLERY_SETTINGS_DEFAULTS.thumbnail_promote_easing,
+            thumbnail_demote_duration_ms:
+              scopedSettings.thumbnail_demote_duration_ms ??
+              motionDefaults?.thumbnail_demote_duration_ms ??
+              GALLERY_SETTINGS_DEFAULTS.thumbnail_demote_duration_ms,
+            thumbnail_demote_easing:
+              scopedSettings.thumbnail_demote_easing ??
+              motionDefaults?.thumbnail_demote_easing ??
+              GALLERY_SETTINGS_DEFAULTS.thumbnail_demote_easing,
+          }
+        : scopedSettings;
+
     return normalizeGallerySettingsForRead(
-      settingsQuery.data as Partial<GallerySettings>,
+      mergedSettings,
       `public:${scope.slug}`,
     );
   }

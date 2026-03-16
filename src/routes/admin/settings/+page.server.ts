@@ -28,7 +28,7 @@ const DEFAULT_PAGE_MAX_WIDTH_PX = 1280;
 type ThemeMode = 'light' | 'dark' | 'system';
 
 const typographySelect =
-  'site_theme_default, gallery_theme_default_is_overridden, public_font_import_url, public_font_family, admin_font_import_url, admin_font_family, show_search_link_in_nav, default_page_max_width_px, brand_light_hex, brand_dark_hex, brand_contrast_light_hex, brand_contrast_dark_hex';
+  'site_theme_default, transition_preset, gallery_theme_default_is_overridden, public_font_import_url, public_font_family, admin_font_import_url, admin_font_family, show_search_link_in_nav, default_page_max_width_px, brand_light_hex, brand_dark_hex, brand_contrast_light_hex, brand_contrast_dark_hex';
 
 type TypographyValues = {
   public_font_import_url: string;
@@ -58,6 +58,15 @@ const normalizeThemeMode = (
   return mode === 'light' || mode === 'dark' || mode === 'system'
     ? mode
     : fallback;
+};
+
+const normalizeTransitionPreset = (
+  value: FormDataEntryValue | string | null | undefined,
+) => {
+  const preset = typeof value === 'string' ? value.trim() : '';
+  return preset === 'snappy' || preset === 'experimental'
+    ? preset
+    : 'cinematic';
 };
 
 const normalizeDefaultPageMaxWidthPx = (value: number | null | undefined) => {
@@ -132,6 +141,9 @@ export const load: PageServerLoad = async ({ locals }) => {
     siteThemeDefault: normalizeThemeMode(
       typographyQuery.data?.site_theme_default,
     ),
+    transitionPreset: normalizeTransitionPreset(
+      typographyQuery.data?.transition_preset,
+    ),
     typography: normalizeTypographyValues(
       (typographyQuery.data ?? {}) as Partial<TypographyValues>,
     ),
@@ -184,6 +196,32 @@ export const actions: Actions = {
     }
 
     return { success: true, message: 'Site color theme saved.' };
+  },
+  saveTransition: async ({ locals, request }) => {
+    const role = await getCmsRole(locals);
+    if (role !== 'admin' && role !== 'editor') {
+      return fail(403, {
+        message: 'Only admins and editors can update site transitions.',
+      });
+    }
+
+    const form = await request.formData();
+    const transitionPreset = normalizeTransitionPreset(
+      form.get('transition_preset'),
+    );
+
+    const update = await locals.supabase
+      .from('site_settings')
+      .update({ transition_preset: transitionPreset })
+      .eq('singleton_id', 1);
+
+    if (update.error) {
+      return fail(400, {
+        message: update.error.message,
+      });
+    }
+
+    return { success: true, message: 'Site transition saved.' };
   },
   saveTypography: async ({ locals, request }) => {
     const role = await getCmsRole(locals);

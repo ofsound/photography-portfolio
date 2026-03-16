@@ -55,6 +55,10 @@ type CreateGalleryContactSheetViewerOptions = {
   isMobileViewport: () => boolean;
   smoothSafariMode: () => boolean;
   getSettings: () => ContactSheetSettings;
+  getPromoteDurationMs: () => number;
+  getPromoteEasing: () => string;
+  getDemoteDurationMs: () => number;
+  getDemoteEasing: () => string;
   onRetargetRequest: (slug: string) => void;
 };
 
@@ -136,6 +140,10 @@ export const createGalleryContactSheetViewer = ({
   isMobileViewport,
   smoothSafariMode,
   getSettings,
+  getPromoteDurationMs,
+  getPromoteEasing,
+  getDemoteDurationMs,
+  getDemoteEasing,
   onRetargetRequest,
 }: CreateGalleryContactSheetViewerOptions): GalleryViewerController => {
   let gridRoot = $state<HTMLElement | null>(null);
@@ -633,8 +641,8 @@ export const createGalleryContactSheetViewer = ({
     state.activeImageId = imageId;
     await animateToSlug(
       slug,
-      animate ? (durationMsOverride ?? 520) : 0,
-      OPEN_EASING,
+      animate ? (durationMsOverride ?? getPromoteDurationMs()) : 0,
+      getPromoteEasing(),
     );
 
     // We dynamically generate a high-resoluton renderScale from the start.
@@ -710,8 +718,8 @@ export const createGalleryContactSheetViewer = ({
             { transform: toTransformString(resetValues) },
           ],
           {
-            duration: 520,
-            easing: OPEN_EASING,
+            duration: getDemoteDurationMs(),
+            easing: getDemoteEasing(),
             fill: 'forwards',
           },
         );

@@ -19,6 +19,15 @@
     disableTransitionPreset?: boolean;
     idPrefix?: string;
     colorThemeLabel?: string;
+    fieldErrors?: Record<string, string | undefined>;
+    values?: Record<string, unknown>;
+    motionOverrides?: {
+      thumbnail_promote_duration_ms: number | string | null;
+      thumbnail_promote_easing: string | null;
+      thumbnail_demote_duration_ms: number | string | null;
+      thumbnail_demote_easing: string | null;
+    } | null;
+    allowMotionOverrides?: boolean;
   };
   const {
     settings,
@@ -26,29 +35,117 @@
     disableTransitionPreset = false,
     idPrefix = 'settings-',
     colorThemeLabel = 'Color Theme',
+    fieldErrors = {},
+    values = {},
+    motionOverrides = null,
+    allowMotionOverrides = false,
   }: Props = $props();
 
   const p = (name: string) => `${idPrefix}${name}`;
-  let layoutMode = $state('uniform');
-  let uniformThumbRatio = $state('1');
-  let detailViewMode = $state('classic');
-  let photographInfoMode = $state('floating');
-  $effect(() => {
-    layoutMode = settings.gallery_layout_mode ?? 'uniform';
-    uniformThumbRatio = String(settings.uniform_thumb_ratio);
-    detailViewMode = settings.detail_view_mode ?? 'classic';
-    photographInfoMode = settings.photograph_info_mode ?? 'floating';
+  const stringValue = (key: string): string | undefined => {
+    const value = values[key];
+    return typeof value === 'string' ? value : undefined;
+  };
+  const motionDurationValue = (
+    key: 'thumbnail_promote_duration_ms' | 'thumbnail_demote_duration_ms',
+    fallback: number,
+  ) => {
+    const fromValues = stringValue(key);
+    if (fromValues != null) return fromValues;
+    if (!allowMotionOverrides) return String(fallback);
+    const override = motionOverrides?.[key];
+    return override == null ? '' : String(override);
+  };
+  const motionEasingValue = (
+    key: 'thumbnail_promote_easing' | 'thumbnail_demote_easing',
+    fallback: string,
+  ) => {
+    const fromValues = stringValue(key);
+    if (fromValues != null) return fromValues;
+    if (!allowMotionOverrides) return fallback;
+    const override = motionOverrides?.[key];
+    return typeof override === 'string' ? override : '';
+  };
+  let layoutModeOverride = $state<
+    'uniform' | 'masonry' | 'coverage' | 'rows' | 'columns' | null
+  >(null);
+  let uniformThumbRatioOverride = $state<string | null>(null);
+  let detailViewModeOverride = $state<'classic' | 'contact_sheet' | null>(null);
+  let photographInfoModeOverride = $state<
+    'hidden' | 'floating' | 'bottom_dock' | null
+  >(null);
+  const layoutMode = $derived(
+    layoutModeOverride ?? settings.gallery_layout_mode ?? 'uniform',
+  );
+  const uniformThumbRatio = $derived(
+    uniformThumbRatioOverride ?? String(settings.uniform_thumb_ratio),
+  );
+  const detailViewMode = $derived(
+    detailViewModeOverride ?? settings.detail_view_mode ?? 'classic',
+  );
+  const photographInfoMode = $derived.by(() => {
+    const nextMode =
+      photographInfoModeOverride ?? settings.photograph_info_mode ?? 'floating';
+    if (detailViewMode === 'contact_sheet' && nextMode === 'bottom_dock') {
+      return 'floating';
+    }
+    return nextMode;
   });
-  $effect(() => {
+  const onLayoutModeChange = (event: Event) => {
+    const next = (event.currentTarget as HTMLSelectElement).value;
+    layoutModeOverride =
+      next === 'masonry' ||
+      next === 'coverage' ||
+      next === 'rows' ||
+      next === 'columns'
+        ? next
+        : 'uniform';
+  };
+  const onUniformThumbRatioInput = (event: Event) => {
+    uniformThumbRatioOverride = (event.currentTarget as HTMLInputElement).value;
+  };
+  const onDetailViewModeChange = (event: Event) => {
+    const next = (event.currentTarget as HTMLSelectElement).value;
+    detailViewModeOverride =
+      next === 'contact_sheet' ? 'contact_sheet' : 'classic';
     if (
-      detailViewMode === 'contact_sheet' &&
+      detailViewModeOverride === 'contact_sheet' &&
       photographInfoMode === 'bottom_dock'
     ) {
-      photographInfoMode = 'floating';
+      photographInfoModeOverride = 'floating';
     }
-  });
+  };
+  const onPhotographInfoModeChange = (event: Event) => {
+    const next = (event.currentTarget as HTMLSelectElement).value;
+    photographInfoModeOverride =
+      next === 'hidden' || next === 'bottom_dock' ? next : 'floating';
+  };
   const selectedNavButtonPreset = $derived(
     normalizeNavButtonPreset(settings.nav_button_preset),
+  );
+  const promoteDurationValue = $derived(
+    motionDurationValue(
+      'thumbnail_promote_duration_ms',
+      settings.thumbnail_promote_duration_ms ?? 520,
+    ),
+  );
+  const promoteEasingValue = $derived(
+    motionEasingValue(
+      'thumbnail_promote_easing',
+      settings.thumbnail_promote_easing ?? 'cubic-bezier(0.16, 1, 0.3, 1)',
+    ),
+  );
+  const demoteDurationValue = $derived(
+    motionDurationValue(
+      'thumbnail_demote_duration_ms',
+      settings.thumbnail_demote_duration_ms ?? 520,
+    ),
+  );
+  const demoteEasingValue = $derived(
+    motionEasingValue(
+      'thumbnail_demote_easing',
+      settings.thumbnail_demote_easing ?? 'cubic-bezier(0.16, 1, 0.3, 1)',
+    ),
   );
 </script>
 
@@ -64,7 +161,8 @@
         <FormSelect
           name="gallery_layout_mode"
           id={p('gallery_layout_mode')}
-          bind:value={layoutMode}
+          value={layoutMode}
+          onchange={onLayoutModeChange}
           disabled={readonly}
           class="w-auto"
         >
@@ -86,7 +184,8 @@
             name="uniform_thumb_ratio"
             type="number"
             step="0.001"
-            bind:value={uniformThumbRatio}
+            value={uniformThumbRatio}
+            oninput={onUniformThumbRatioInput}
             {readonly}
           />
         </FormField>
@@ -261,7 +360,8 @@
         <FormSelect
           name="detail_view_mode"
           id={p('detail_view_mode')}
-          bind:value={detailViewMode}
+          value={detailViewMode}
+          onchange={onDetailViewModeChange}
           disabled={readonly}
           class="w-auto"
         >
@@ -292,21 +392,83 @@
       </FormField>
 
       <FormField
-        label={'Transition' + (disableTransitionPreset ? ' (Admin)' : '')}
-        id={p('transition_preset')}
+        label="Promote Duration (ms)"
+        id={p('thumbnail_promote_duration_ms')}
+        helper={allowMotionOverrides
+          ? 'Leave blank to inherit defaults.'
+          : 'Must be 1 - 5000 ms.'}
+        error={fieldErrors.thumbnail_promote_duration_ms}
         class="w-fit"
       >
-        <FormSelect
-          name="transition_preset"
-          id={p('transition_preset')}
-          value={settings.transition_preset}
-          disabled={readonly || disableTransitionPreset}
-          class="w-auto"
-        >
-          <option value="cinematic">Cinematic</option>
-          <option value="snappy">Snappy</option>
-          <option value="experimental">Experimental</option>
-        </FormSelect>
+        <div class="w-[9ch]">
+          <FormInput
+            id={p('thumbnail_promote_duration_ms')}
+            name="thumbnail_promote_duration_ms"
+            type="number"
+            min="1"
+            max="5000"
+            step="1"
+            value={promoteDurationValue}
+            {readonly}
+          />
+        </div>
+      </FormField>
+      <FormField
+        label="Promote Easing"
+        id={p('thumbnail_promote_easing')}
+        helper={allowMotionOverrides
+          ? 'Leave blank to inherit defaults. Example: cubic-bezier(0.16, 1, 0.3, 1)'
+          : 'Example: cubic-bezier(0.16, 1, 0.3, 1)'}
+        error={fieldErrors.thumbnail_promote_easing}
+        class="min-w-[18rem] flex-1"
+      >
+        <FormInput
+          id={p('thumbnail_promote_easing')}
+          name="thumbnail_promote_easing"
+          value={promoteEasingValue}
+          {readonly}
+        />
+      </FormField>
+    </div>
+
+    <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
+      <FormField
+        label="Demote Duration (ms)"
+        id={p('thumbnail_demote_duration_ms')}
+        helper={allowMotionOverrides
+          ? 'Leave blank to inherit defaults.'
+          : 'Must be 1 - 5000 ms.'}
+        error={fieldErrors.thumbnail_demote_duration_ms}
+        class="w-fit"
+      >
+        <div class="w-[9ch]">
+          <FormInput
+            id={p('thumbnail_demote_duration_ms')}
+            name="thumbnail_demote_duration_ms"
+            type="number"
+            min="1"
+            max="5000"
+            step="1"
+            value={demoteDurationValue}
+            {readonly}
+          />
+        </div>
+      </FormField>
+      <FormField
+        label="Demote Easing"
+        id={p('thumbnail_demote_easing')}
+        helper={allowMotionOverrides
+          ? 'Leave blank to inherit defaults. Example: cubic-bezier(0.16, 1, 0.3, 1)'
+          : 'Example: cubic-bezier(0.16, 1, 0.3, 1)'}
+        error={fieldErrors.thumbnail_demote_easing}
+        class="min-w-[18rem] flex-1"
+      >
+        <FormInput
+          id={p('thumbnail_demote_easing')}
+          name="thumbnail_demote_easing"
+          value={demoteEasingValue}
+          {readonly}
+        />
       </FormField>
     </div>
 
@@ -590,7 +752,8 @@
         <FormSelect
           name="photograph_info_mode"
           id={p('photograph_info_mode')}
-          bind:value={photographInfoMode}
+          value={photographInfoMode}
+          onchange={onPhotographInfoModeChange}
           disabled={readonly}
           class="w-auto"
         >

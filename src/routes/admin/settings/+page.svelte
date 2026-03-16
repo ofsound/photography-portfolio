@@ -17,6 +17,7 @@
 
   type SettingsFormValues = {
     site_theme_default?: 'light' | 'dark' | 'system';
+    transition_preset?: 'cinematic' | 'snappy' | 'experimental';
     public_font_import_url?: string;
     public_font_family?: string;
     admin_font_import_url?: string;
@@ -36,12 +37,22 @@
   const canEditSiteTheme = $derived(
     data.role === 'admin' || data.role === 'editor',
   );
+  const canEditTransition = $derived(
+    data.role === 'admin' || data.role === 'editor',
+  );
   const siteThemeDefaultValue = $derived.by(() => {
     const next = values.site_theme_default;
     if (next === 'light' || next === 'dark' || next === 'system') {
       return next;
     }
     return data.siteThemeDefault;
+  });
+  const transitionPresetValue = $derived.by(() => {
+    const next = values.transition_preset;
+    if (next === 'cinematic' || next === 'snappy' || next === 'experimental') {
+      return next;
+    }
+    return data.transitionPreset;
   });
   const getValue = (value: string | boolean | undefined) =>
     typeof value === 'string' ? value : undefined;
@@ -141,6 +152,31 @@
   {:else}
     <p class="text-sm text-text-muted">
       Only admins and editors can edit site color theme.
+    </p>
+  {/if}
+</form>
+
+<form method="POST" action="?/saveTransition" class="mb-4 grid gap-3">
+  <FormField label="Site Transition" id="site-transition" class="w-fit">
+    <FormSelect
+      id="site-transition"
+      name="transition_preset"
+      value={transitionPresetValue}
+      disabled={!canEditTransition}
+    >
+      <option value="cinematic">Cinematic</option>
+      <option value="snappy">Snappy</option>
+      <option value="experimental">Experimental</option>
+    </FormSelect>
+  </FormField>
+
+  {#if canEditTransition}
+    <div>
+      <AdminButton type="submit" variant="submit">Save Transition</AdminButton>
+    </div>
+  {:else}
+    <p class="text-sm text-text-muted">
+      Only admins and editors can edit site transition.
     </p>
   {/if}
 </form>

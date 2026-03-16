@@ -10,6 +10,7 @@ import {
 import { failForm } from '$lib/server/form-errors';
 import {
   loadSettingsEditor,
+  SettingsValidationError,
   saveSettingsEditor,
 } from '$lib/server/admin/settings';
 import type { Actions, PageServerLoad } from './$types';
@@ -101,6 +102,13 @@ export const actions: Actions = {
         form,
       );
     } catch (cause) {
+      if (cause instanceof SettingsValidationError) {
+        return fail(400, {
+          message: cause.message,
+          fieldErrors: cause.fieldErrors,
+          values: cause.values,
+        });
+      }
       return fail(400, {
         message:
           cause instanceof Error

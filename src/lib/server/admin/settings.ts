@@ -1,7 +1,12 @@
 import { GALLERY_SETTINGS_DEFAULTS } from '$lib/constants/gallery-settings';
-import { normalizeThumbnailEntrancePreset } from '$lib/constants/thumbnail-entrance';
-import { normalizePreloaderPreset } from '$lib/constants/preloader-preset';
+import {
+  THUMBNAIL_MOTION_DURATION_MAX_MS,
+  THUMBNAIL_MOTION_DURATION_MIN_MS,
+  isValidCssTimingFunction,
+} from '$lib/constants/thumbnail-motion';
 import { normalizeNavButtonPreset } from '$lib/constants/nav-button-preset';
+import { normalizePreloaderPreset } from '$lib/constants/preloader-preset';
+import { normalizeThumbnailEntrancePreset } from '$lib/constants/thumbnail-entrance';
 import {
   asBoolean,
   asOptionalNumber,
@@ -14,6 +19,7 @@ import {
   normalizeGallerySettingsForRead,
   type GallerySettingsRecord,
 } from '$lib/server/gallery-settings-contract';
+import type { Database } from '$lib/types/database';
 import { normalizeThumbCropAspect } from '$lib/utils/thumb-crop';
 
 type SettingsScope =
@@ -21,6 +27,25 @@ type SettingsScope =
   | { kind: 'all' }
   | { kind: 'gallery'; galleryId: string };
 type ThemeMode = 'light' | 'dark' | 'system';
+
+type MotionFieldName =
+  | 'thumbnail_promote_duration_ms'
+  | 'thumbnail_promote_easing'
+  | 'thumbnail_demote_duration_ms'
+  | 'thumbnail_demote_easing';
+
+type MotionOverrideValues = {
+  thumbnail_promote_duration_ms: number | null;
+  thumbnail_promote_easing: string | null;
+  thumbnail_demote_duration_ms: number | null;
+  thumbnail_demote_easing: string | null;
+};
+
+type SettingsFormValues = Record<string, string>;
+type SettingsFieldErrors = Record<string, string | undefined>;
+
+const MOTION_SELECT =
+  'thumbnail_promote_duration_ms, thumbnail_promote_easing, thumbnail_demote_duration_ms, thumbnail_demote_easing';
 
 const isThemeMode = (value: unknown): value is ThemeMode =>
   value === 'light' || value === 'dark' || value === 'system';
@@ -41,15 +66,6 @@ const asLayoutMode = (value: FormDataEntryValue | null) => {
     mode === 'columns'
     ? mode
     : 'uniform';
-};
-
-const asTransitionPreset = (value: FormDataEntryValue | null) => {
-  const preset = asString(value, 'cinematic');
-  return preset === 'cinematic' ||
-    preset === 'snappy' ||
-    preset === 'experimental'
-    ? preset
-    : 'cinematic';
 };
 
 const asDetailViewMode = (value: FormDataEntryValue | null) => {
@@ -90,10 +106,191 @@ const asFloatingPanelPosition = (value: FormDataEntryValue | null) => {
     : 'bottom_left';
 };
 
+const readFormValues = (form: FormData): SettingsFormValues => {
+  const values: SettingsFormValues = {};
+  for (const [key, value] of form.entries()) {
+    if (typeof value === 'string') {
+      values[key] = value;
+    }
+  }
+  return values;
+};
+
+const hasFieldErrors = (fieldErrors: SettingsFieldErrors) =>
+  Object.values(fieldErrors).some(Boolean);
+
+const readDurationField = (
+  raw: string,
+  field: MotionFieldName,
+  allowBlank: boolean,
+  fieldErrors: SettingsFieldErrors,
+): number | null => {
+  if (!raw) {
+    if (allowBlank) return null;
+    fieldErrors[field] = 'Required.';
+    return null;
+  }
+
+  if (!/^-?\d+$/.test(raw)) {
+    fieldErrors[field] = 'Must be a whole number in milliseconds.';
+    return null;
+  }
+
+  const parsed = Number(raw);
+  if (!Number.isInteger(parsed)) {
+    fieldErrors[field] = 'Must be a whole number in milliseconds.';
+    return null;
+  }
+
+  if (
+    parsed < THUMBNAIL_MOTION_DURATION_MIN_MS ||
+    parsed > THUMBNAIL_MOTION_DURATION_MAX_MS
+  ) {
+    fieldErrors[field] =
+      `Must be between ${THUMBNAIL_MOTION_DURATION_MIN_MS} and ${THUMBNAIL_MOTION_DURATION_MAX_MS} ms.`;
+    return null;
+  }
+
+  return parsed;
+};
+
+const readEasingField = (
+  raw: string,
+  field: MotionFieldName,
+  allowBlank: boolean,
+  fieldErrors: SettingsFieldErrors,
+): string | null => {
+  if (!raw) {
+    if (allowBlank) return null;
+    fieldErrors[field] = 'Required.';
+    return null;
+  }
+
+  if (!isValidCssTimingFunction(raw)) {
+    fieldErrors[field] =
+      'Must be a valid CSS timing function (for example: ease, cubic-bezier(...), steps(...), linear(...)).';
+    return null;
+  }
+
+  return raw;
+};
+
+const readMotionPayload = (
+  form: FormData,
+  scope: SettingsScope,
+  fieldErrors: SettingsFieldErrors,
+  values: SettingsFormValues,
+): MotionOverrideValues => {
+  const allowBlank = scope.kind === 'gallery';
+
+  const promoteDurationRaw = asString(
+    form.get('thumbnail_promote_duration_ms'),
+  ).trim();
+  const promoteEasingRaw = asString(
+    form.get('thumbnail_promote_easing'),
+  ).trim();
+  const demoteDurationRaw = asString(
+    form.get('thumbnail_demote_duration_ms'),
+  ).trim();
+  const demoteEasingRaw = asString(form.get('thumbnail_demote_easing')).trim();
+
+  values.thumbnail_promote_duration_ms = promoteDurationRaw;
+  values.thumbnail_promote_easing = promoteEasingRaw;
+  values.thumbnail_demote_duration_ms = demoteDurationRaw;
+  values.thumbnail_demote_easing = demoteEasingRaw;
+
+  return {
+    thumbnail_promote_duration_ms: readDurationField(
+      promoteDurationRaw,
+      'thumbnail_promote_duration_ms',
+      allowBlank,
+      fieldErrors,
+    ),
+    thumbnail_promote_easing: readEasingField(
+      promoteEasingRaw,
+      'thumbnail_promote_easing',
+      allowBlank,
+      fieldErrors,
+    ),
+    thumbnail_demote_duration_ms: readDurationField(
+      demoteDurationRaw,
+      'thumbnail_demote_duration_ms',
+      allowBlank,
+      fieldErrors,
+    ),
+    thumbnail_demote_easing: readEasingField(
+      demoteEasingRaw,
+      'thumbnail_demote_easing',
+      allowBlank,
+      fieldErrors,
+    ),
+  };
+};
+
+const resolveMotionDefaults = (
+  source: Partial<GallerySettingsRecord> | null | undefined,
+) => ({
+  thumbnail_promote_duration_ms:
+    source?.thumbnail_promote_duration_ms ??
+    GALLERY_SETTINGS_DEFAULTS.thumbnail_promote_duration_ms,
+  thumbnail_promote_easing:
+    source?.thumbnail_promote_easing ??
+    GALLERY_SETTINGS_DEFAULTS.thumbnail_promote_easing,
+  thumbnail_demote_duration_ms:
+    source?.thumbnail_demote_duration_ms ??
+    GALLERY_SETTINGS_DEFAULTS.thumbnail_demote_duration_ms,
+  thumbnail_demote_easing:
+    source?.thumbnail_demote_easing ??
+    GALLERY_SETTINGS_DEFAULTS.thumbnail_demote_easing,
+});
+
+const extractMotionOverrides = (
+  source: Partial<GallerySettingsRecord> | null | undefined,
+): MotionOverrideValues => ({
+  thumbnail_promote_duration_ms:
+    typeof source?.thumbnail_promote_duration_ms === 'number'
+      ? source.thumbnail_promote_duration_ms
+      : null,
+  thumbnail_promote_easing:
+    typeof source?.thumbnail_promote_easing === 'string' &&
+    source.thumbnail_promote_easing.trim().length > 0
+      ? source.thumbnail_promote_easing
+      : null,
+  thumbnail_demote_duration_ms:
+    typeof source?.thumbnail_demote_duration_ms === 'number'
+      ? source.thumbnail_demote_duration_ms
+      : null,
+  thumbnail_demote_easing:
+    typeof source?.thumbnail_demote_easing === 'string' &&
+    source.thumbnail_demote_easing.trim().length > 0
+      ? source.thumbnail_demote_easing
+      : null,
+});
+
+export class SettingsValidationError extends Error {
+  fieldErrors: SettingsFieldErrors;
+  values: SettingsFormValues;
+
+  constructor(
+    message: string,
+    fieldErrors: SettingsFieldErrors,
+    values: SettingsFormValues,
+  ) {
+    super(message);
+    this.name = 'SettingsValidationError';
+    this.fieldErrors = fieldErrors;
+    this.values = values;
+  }
+}
+
 const readPayload = (
   form: FormData,
   role: 'admin' | 'editor',
+  scope: SettingsScope,
 ): Record<string, unknown> => {
+  const values = readFormValues(form);
+  const fieldErrors: SettingsFieldErrors = {};
+
   const photographInfoMode = asPhotographInfoMode(
     form.get('photograph_info_mode'),
   );
@@ -230,9 +427,6 @@ const readPayload = (
   };
 
   if (role === 'admin') {
-    payload.transition_preset = asTransitionPreset(
-      form.get('transition_preset'),
-    );
     payload.thumbnail_entrance_preset = asThumbnailEntrancePreset(
       form.get('thumbnail_entrance_preset'),
     );
@@ -256,6 +450,22 @@ const readPayload = (
     );
   }
 
+  const motionPayload = readMotionPayload(form, scope, fieldErrors, values);
+  payload.thumbnail_promote_duration_ms =
+    motionPayload.thumbnail_promote_duration_ms;
+  payload.thumbnail_promote_easing = motionPayload.thumbnail_promote_easing;
+  payload.thumbnail_demote_duration_ms =
+    motionPayload.thumbnail_demote_duration_ms;
+  payload.thumbnail_demote_easing = motionPayload.thumbnail_demote_easing;
+
+  if (hasFieldErrors(fieldErrors)) {
+    throw new SettingsValidationError(
+      'Please fix the highlighted settings fields.',
+      fieldErrors,
+      values,
+    );
+  }
+
   return payload;
 };
 
@@ -267,34 +477,79 @@ const loadScopeSettings = async (locals: App.Locals, scope: SettingsScope) => {
       .eq('singleton_id', 1)
       .maybeSingle();
     if (defaults.error) throw new Error(defaults.error.message);
-    return normalizeGallerySettingsForRead(
-      defaults.data as Partial<GallerySettingsRecord> | null,
-      'admin:defaults',
-    );
+    return {
+      settings: normalizeGallerySettingsForRead(
+        defaults.data as Partial<GallerySettingsRecord> | null,
+        'admin:defaults',
+      ),
+      motionOverrides: null as MotionOverrideValues | null,
+    };
   }
 
   await ensureAllSettingsSeeded(locals);
 
-  const query =
+  const settingsQueryPromise =
     scope.kind === 'all'
-      ? await locals.supabase
+      ? locals.supabase
           .from('gallery_settings')
           .select(`id, scope, gallery_id, ${GALLERY_SETTINGS_FIELD_SELECT}`)
           .eq('scope', 'all')
           .maybeSingle()
-      : await locals.supabase
+      : locals.supabase
           .from('gallery_settings')
           .select(`id, scope, gallery_id, ${GALLERY_SETTINGS_FIELD_SELECT}`)
           .eq('scope', 'gallery')
           .eq('gallery_id', scope.galleryId)
           .maybeSingle();
 
+  const defaultsMotionQueryPromise =
+    scope.kind === 'gallery'
+      ? locals.supabase
+          .from('site_settings')
+          .select(MOTION_SELECT)
+          .eq('singleton_id', 1)
+          .maybeSingle()
+      : Promise.resolve({ data: null, error: null });
+
+  const [query, defaultsMotionQuery] = await Promise.all([
+    settingsQueryPromise,
+    defaultsMotionQueryPromise,
+  ]);
+
   if (query.error) throw new Error(query.error.message);
+  if (scope.kind === 'gallery' && defaultsMotionQuery.error) {
+    throw new Error(defaultsMotionQuery.error.message);
+  }
+
   if (query.data) {
-    return normalizeGallerySettingsForRead(
-      query.data as Partial<GallerySettingsRecord>,
-      `admin:${scope.kind}`,
+    const scoped = query.data as Partial<GallerySettingsRecord>;
+    const motionDefaults = resolveMotionDefaults(
+      defaultsMotionQuery.data as Partial<GallerySettingsRecord> | null,
     );
+    const merged =
+      scope.kind === 'gallery'
+        ? {
+            ...scoped,
+            thumbnail_promote_duration_ms:
+              scoped.thumbnail_promote_duration_ms ??
+              motionDefaults.thumbnail_promote_duration_ms,
+            thumbnail_promote_easing:
+              scoped.thumbnail_promote_easing ??
+              motionDefaults.thumbnail_promote_easing,
+            thumbnail_demote_duration_ms:
+              scoped.thumbnail_demote_duration_ms ??
+              motionDefaults.thumbnail_demote_duration_ms,
+            thumbnail_demote_easing:
+              scoped.thumbnail_demote_easing ??
+              motionDefaults.thumbnail_demote_easing,
+          }
+        : scoped;
+
+    return {
+      settings: normalizeGallerySettingsForRead(merged, `admin:${scope.kind}`),
+      motionOverrides:
+        scope.kind === 'gallery' ? extractMotionOverrides(scoped) : null,
+    };
   }
 
   const defaults = await locals.supabase
@@ -303,27 +558,77 @@ const loadScopeSettings = async (locals: App.Locals, scope: SettingsScope) => {
     .eq('singleton_id', 1)
     .maybeSingle();
   if (defaults.error) throw new Error(defaults.error.message);
-  if (!defaults.data) return null;
+  if (!defaults.data) {
+    return {
+      settings: null,
+      motionOverrides: null,
+    };
+  }
 
   const normalizedDefaults = normalizeGallerySettingsForRead(
     defaults.data as Partial<GallerySettingsRecord>,
     `admin:fallback:${scope.kind}`,
   );
 
-  const insert = await locals.supabase
-    .from('gallery_settings')
-    .insert({
+  const insertPayload: Database['public']['Tables']['gallery_settings']['Insert'] =
+    {
       scope: scope.kind,
       gallery_id: scope.kind === 'gallery' ? scope.galleryId : null,
       ...normalizedDefaults,
-    })
+    };
+
+  if (scope.kind === 'gallery') {
+    insertPayload.thumbnail_promote_duration_ms = null;
+    insertPayload.thumbnail_promote_easing = null;
+    insertPayload.thumbnail_demote_duration_ms = null;
+    insertPayload.thumbnail_demote_easing = null;
+  }
+
+  const insert = await locals.supabase
+    .from('gallery_settings')
+    .insert(insertPayload)
     .select(`id, scope, gallery_id, ${GALLERY_SETTINGS_FIELD_SELECT}`)
     .single();
   if (insert.error) throw new Error(insert.error.message);
-  return normalizeGallerySettingsForRead(
-    insert.data as Partial<GallerySettingsRecord>,
-    `admin:seeded:${scope.kind}`,
+
+  const inserted = insert.data as Partial<GallerySettingsRecord>;
+  const motionDefaults = resolveMotionDefaults(
+    defaults.data as Partial<GallerySettingsRecord>,
   );
+  const mergedInsertForRead =
+    scope.kind === 'gallery'
+      ? {
+          ...inserted,
+          thumbnail_promote_duration_ms:
+            inserted.thumbnail_promote_duration_ms ??
+            motionDefaults.thumbnail_promote_duration_ms,
+          thumbnail_promote_easing:
+            inserted.thumbnail_promote_easing ??
+            motionDefaults.thumbnail_promote_easing,
+          thumbnail_demote_duration_ms:
+            inserted.thumbnail_demote_duration_ms ??
+            motionDefaults.thumbnail_demote_duration_ms,
+          thumbnail_demote_easing:
+            inserted.thumbnail_demote_easing ??
+            motionDefaults.thumbnail_demote_easing,
+        }
+      : inserted;
+
+  return {
+    settings: normalizeGallerySettingsForRead(
+      mergedInsertForRead,
+      `admin:seeded:${scope.kind}`,
+    ),
+    motionOverrides:
+      scope.kind === 'gallery'
+        ? {
+            thumbnail_promote_duration_ms: null,
+            thumbnail_promote_easing: null,
+            thumbnail_demote_duration_ms: null,
+            thumbnail_demote_easing: null,
+          }
+        : null,
+  };
 };
 
 const saveScopeSettings = async (
@@ -378,12 +683,16 @@ export const loadSettingsEditor = async (
   locals: App.Locals,
   scope: SettingsScope,
 ) => {
-  const [settings, role] = await Promise.all([
+  const [settingsPayload, role] = await Promise.all([
     loadScopeSettings(locals, scope),
     getCmsRole(locals),
   ]);
 
-  return { settings, role };
+  return {
+    settings: settingsPayload.settings,
+    motionOverrides: settingsPayload.motionOverrides,
+    role,
+  };
 };
 
 export const saveSettingsEditor = async (
@@ -396,6 +705,6 @@ export const saveSettingsEditor = async (
     throw new Error('Unauthorized.');
   }
 
-  const payload = readPayload(form, role);
+  const payload = readPayload(form, role, scope);
   await saveScopeSettings(locals, scope, payload);
 };

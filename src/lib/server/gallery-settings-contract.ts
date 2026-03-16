@@ -11,12 +11,18 @@ import {
   DEFAULT_PRELOADER_PRESET,
   normalizePreloaderPreset,
 } from '$lib/constants/preloader-preset';
+import {
+  normalizeThumbnailMotionDuration,
+  normalizeThumbnailMotionEasing,
+} from '$lib/constants/thumbnail-motion';
 import { normalizeThumbnailEntrancePreset } from '$lib/constants/thumbnail-entrance';
 import { normalizeThumbCropAspect } from '$lib/utils/thumb-crop';
 
 import type { Database } from '$lib/types/database';
 
 type SiteSettingsRow = Database['public']['Tables']['site_settings']['Row'];
+type GallerySettingsRow =
+  Database['public']['Tables']['gallery_settings']['Row'];
 
 export const GALLERY_SETTINGS_FIELD_KEYS = [
   'theme_default',
@@ -27,10 +33,13 @@ export const GALLERY_SETTINGS_FIELD_KEYS = [
   'detail_view_mode',
   'gallery_gap_px',
   'uniform_thumb_ratio',
-  'transition_preset',
   'thumbnail_entrance_preset',
   'thumbnail_entrance_stagger_ms',
   'thumbnail_entrance_duration_ms',
+  'thumbnail_promote_duration_ms',
+  'thumbnail_promote_easing',
+  'thumbnail_demote_duration_ms',
+  'thumbnail_demote_easing',
   'preloader_preset',
   'nav_button_preset',
   'classic_detail_border_px',
@@ -61,10 +70,20 @@ export const GALLERY_SETTINGS_FIELD_SELECT =
 
 export type GallerySettingsFieldKey =
   (typeof GALLERY_SETTINGS_FIELD_KEYS)[number];
+type GallerySettingsMotionFieldKey =
+  | 'thumbnail_promote_duration_ms'
+  | 'thumbnail_promote_easing'
+  | 'thumbnail_demote_duration_ms'
+  | 'thumbnail_demote_easing';
+type GallerySettingsStableFieldKey = Exclude<
+  GallerySettingsFieldKey,
+  GallerySettingsMotionFieldKey
+>;
 export type GallerySettingsRecord = Pick<
   SiteSettingsRow,
-  GallerySettingsFieldKey
->;
+  GallerySettingsStableFieldKey
+> &
+  Pick<GallerySettingsRow, GallerySettingsMotionFieldKey>;
 export type ViewerGallerySettings = {
   [K in GallerySettingsFieldKey]: GallerySettingsDefaults[K];
 };
@@ -159,8 +178,6 @@ export const normalizeGallerySettingsForRead = (
       source.uniform_thumb_ratio ??
         GALLERY_SETTINGS_DEFAULTS.uniform_thumb_ratio,
     ),
-    transition_preset:
-      source.transition_preset ?? GALLERY_SETTINGS_DEFAULTS.transition_preset,
     thumbnail_entrance_preset: thumbnailEntrancePreset,
     thumbnail_entrance_stagger_ms: clampNumber(
       source.thumbnail_entrance_stagger_ms,
@@ -173,6 +190,22 @@ export const normalizeGallerySettingsForRead = (
       GALLERY_SETTINGS_DEFAULTS.thumbnail_entrance_duration_ms,
       100,
       1200,
+    ),
+    thumbnail_promote_duration_ms: normalizeThumbnailMotionDuration(
+      source.thumbnail_promote_duration_ms,
+      GALLERY_SETTINGS_DEFAULTS.thumbnail_promote_duration_ms,
+    ),
+    thumbnail_promote_easing: normalizeThumbnailMotionEasing(
+      source.thumbnail_promote_easing,
+      GALLERY_SETTINGS_DEFAULTS.thumbnail_promote_easing,
+    ),
+    thumbnail_demote_duration_ms: normalizeThumbnailMotionDuration(
+      source.thumbnail_demote_duration_ms,
+      GALLERY_SETTINGS_DEFAULTS.thumbnail_demote_duration_ms,
+    ),
+    thumbnail_demote_easing: normalizeThumbnailMotionEasing(
+      source.thumbnail_demote_easing,
+      GALLERY_SETTINGS_DEFAULTS.thumbnail_demote_easing,
     ),
     preloader_preset: preloaderPreset,
     nav_button_preset: navButtonPreset,
@@ -285,12 +318,17 @@ const viewerGallerySettingProjectors: {
   detail_view_mode: (settings) => settings.detail_view_mode,
   gallery_gap_px: (settings) => settings.gallery_gap_px,
   uniform_thumb_ratio: (settings) => settings.uniform_thumb_ratio,
-  transition_preset: (settings) => settings.transition_preset,
   thumbnail_entrance_preset: (settings) => settings.thumbnail_entrance_preset,
   thumbnail_entrance_stagger_ms: (settings) =>
     settings.thumbnail_entrance_stagger_ms,
   thumbnail_entrance_duration_ms: (settings) =>
     settings.thumbnail_entrance_duration_ms,
+  thumbnail_promote_duration_ms: (settings) =>
+    settings.thumbnail_promote_duration_ms,
+  thumbnail_promote_easing: (settings) => settings.thumbnail_promote_easing,
+  thumbnail_demote_duration_ms: (settings) =>
+    settings.thumbnail_demote_duration_ms,
+  thumbnail_demote_easing: (settings) => settings.thumbnail_demote_easing,
   preloader_preset: (settings) => settings.preloader_preset,
   nav_button_preset: (settings) => settings.nav_button_preset,
   classic_detail_border_px: (settings) => settings.classic_detail_border_px,

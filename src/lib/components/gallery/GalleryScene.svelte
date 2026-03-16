@@ -36,6 +36,10 @@
   import { normalizeThumbnailEntrancePreset } from '$lib/constants/thumbnail-entrance';
   import { normalizePreloaderPreset } from '$lib/constants/preloader-preset';
   import { normalizeNavButtonPreset } from '$lib/constants/nav-button-preset';
+  import {
+    normalizeThumbnailMotionDuration,
+    normalizeThumbnailMotionEasing,
+  } from '$lib/constants/thumbnail-motion';
   import { resolveThumbnailEntrancePresetRuntime } from './scene/thumbnail-entrance-presets';
 
   import type { GalleryPhoto } from '$lib/types/content';
@@ -168,6 +172,26 @@
 
   const thumbnailEntranceRuntime = $derived(
     resolveThumbnailEntrancePresetRuntime(thumbnailEntrancePreset),
+  );
+  const promoteDurationMs = $derived(
+    normalizeThumbnailMotionDuration(
+      data.gallerySettings?.thumbnail_promote_duration_ms,
+    ),
+  );
+  const promoteEasing = $derived(
+    normalizeThumbnailMotionEasing(
+      data.gallerySettings?.thumbnail_promote_easing,
+    ),
+  );
+  const demoteDurationMs = $derived(
+    normalizeThumbnailMotionDuration(
+      data.gallerySettings?.thumbnail_demote_duration_ms,
+    ),
+  );
+  const demoteEasing = $derived(
+    normalizeThumbnailMotionEasing(
+      data.gallerySettings?.thumbnail_demote_easing,
+    ),
   );
   const entranceEligibleSlugs = new SvelteSet<string>();
   const entranceRanks = new SvelteMap<string, number>();
@@ -374,9 +398,12 @@
       detailViewMode === 'classic'
         ? (data.gallerySettings?.classic_detail_v_position_pct ?? 50)
         : 50,
+    getPromoteDurationMs: () => promoteDurationMs,
+    getPromoteEasing: () => promoteEasing,
+    getDemoteDurationMs: () => demoteDurationMs,
+    getDemoteEasing: () => demoteEasing,
     reducedMotion,
     setPhase,
-    scaleMaskMs: SCALE_MASK_MS,
     closingChromeMs: CLOSING_CHROME_MS,
   });
 
@@ -399,6 +426,10 @@
       mobileIntensityPct:
         data.gallerySettings?.contact_sheet_mobile_intensity_pct ?? 55,
     }),
+    getPromoteDurationMs: () => promoteDurationMs,
+    getPromoteEasing: () => promoteEasing,
+    getDemoteDurationMs: () => demoteDurationMs,
+    getDemoteEasing: () => demoteEasing,
     onRetargetRequest: (slug: string) => {
       void onRetargetPhoto(slug);
     },
@@ -661,7 +692,7 @@
           state.activeSlug = slug;
           state.activeImageId = null;
           await waitForBottomDockLayout(expectsBottomDock);
-          await viewerController.open(slug, null, true, SCALE_MASK_MS);
+          await viewerController.open(slug, null, true, promoteDurationMs);
           setPhase('open');
           return;
         }
@@ -669,7 +700,7 @@
         setPhase('scale-and-mask');
         state.activeSlug = slug;
         state.activeImageId = null;
-        await viewerController.open(slug, null, true, SCALE_MASK_MS);
+        await viewerController.open(slug, null, true, promoteDurationMs);
         setPhase('open');
       });
 

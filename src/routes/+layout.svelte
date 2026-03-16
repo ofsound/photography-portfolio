@@ -387,14 +387,6 @@
 
     const isMobile = window.matchMedia('(max-width: 767px)').matches;
 
-    if (isAdminRoute) {
-      document.documentElement.style.setProperty(
-        '--site-header-height',
-        isMobile ? 'var(--size-mobile-header-offset)' : '0px',
-      );
-      return;
-    }
-
     if (isMobile) {
       document.documentElement.style.setProperty(
         '--site-header-height',
@@ -411,13 +403,11 @@
   };
 
   const desktopHeaderClass = $derived(
-    `sticky top-0 z-40 hidden border-b border-border bg-surface px-4 transition-opacity duration-(--duration-chrome) ease-out ${
-      isAdminRoute ? '' : 'md:block'
-    }`,
+    'sticky top-0 z-40 hidden border-b border-border bg-surface px-4 transition-opacity duration-(--duration-chrome) ease-out md:block',
   );
   const mainClass = $derived(
     isAdminRoute
-      ? 'relative z-0 h-[100dvh] overflow-hidden'
+      ? 'relative z-0 h-[100dvh] overflow-hidden md:h-[calc(100dvh-var(--site-header-height))]'
       : 'relative z-0 min-h-screen pt-[var(--site-header-height)] lg:min-h-[calc(100vh-var(--site-header-height))] lg:pt-0',
   );
 

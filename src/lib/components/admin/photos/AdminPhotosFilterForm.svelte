@@ -96,7 +96,7 @@
     </div>
   </form>
   {#if densityVisible && onDensityChange}
-    <div class="mb-1 ml-auto">
+    <div class="mb-1 ml-auto hidden md:flex">
       <ZoomControl
         label="Items Per Row"
         min={1}

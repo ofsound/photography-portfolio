@@ -181,9 +181,10 @@
   let density = $state(6);
   const gap = 8;
   let mounted = $state(false);
+  let isMobile = $state(true);
 
   const colCount = $derived(
-    Math.max(1, Math.min(maxDensity, Number(density) || 6)),
+    isMobile ? 3 : Math.max(1, Math.min(maxDensity, Number(density) || 6)),
   );
 
   const measureGrid = (node: HTMLUListElement) => {
@@ -208,12 +209,22 @@
     const prefs = getAdminPhotosPrefs(maxDensity);
     if (prefs) density = prefs.density;
 
+    const mobileMedia = window.matchMedia('(max-width: 767px)');
+    isMobile = mobileMedia.matches;
+    const onMobileChange = (e: MediaQueryListEvent) => {
+      isMobile = e.matches;
+    };
+    mobileMedia.addEventListener('change', onMobileChange);
+
     const intervalId = setInterval(() => {
       if (!hasVisiblePendingConversions || isPollingInFlight) return;
       void pollPendingConversions();
     }, 3000);
 
-    return () => clearInterval(intervalId);
+    return () => {
+      mobileMedia.removeEventListener('change', onMobileChange);
+      clearInterval(intervalId);
+    };
   });
 
   const photoById = $derived<Map<string, AdminPhoto>>(
@@ -473,6 +484,11 @@
     style={sectionMaxWidthStyle}
   >
     <div class="min-w-0 flex-1">
+      {#if canReorder}
+        <p class="mb-2 text-[10px] tracking-wider text-text-muted uppercase">
+          Drag photos to change the order
+        </p>
+      {/if}
       <DragDropProvider onDragEnd={onPhotoDragEnd}>
         <ul
           {@attach measureGrid}

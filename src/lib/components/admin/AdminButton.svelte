@@ -44,7 +44,7 @@
       variant === 'link' ? '' : sizeClasses[size as Size],
       variantClasses[variant as Variant],
       variant === 'default' && selected === true
-        ? 'bg-border hover:border-admin-btn-border hover:bg-border active:border-admin-btn-border active:bg-border'
+        ? 'bg-border hover:!border-admin-btn-border hover:!bg-border active:!border-admin-btn-border active:!bg-border'
         : '',
       variant === 'default' && selected === false ? 'opacity-40' : '',
       disabled

@@ -385,12 +385,15 @@
     if (typeof document === 'undefined' || typeof window === 'undefined')
       return;
 
+    const isMobile = window.matchMedia('(max-width: 767px)').matches;
+
     if (isAdminRoute) {
-      document.documentElement.style.setProperty('--site-header-height', '0px');
+      document.documentElement.style.setProperty(
+        '--site-header-height',
+        isMobile ? 'var(--size-mobile-header-offset)' : '0px',
+      );
       return;
     }
-
-    const isMobile = window.matchMedia('(max-width: 767px)').matches;
 
     if (isMobile) {
       document.documentElement.style.setProperty(

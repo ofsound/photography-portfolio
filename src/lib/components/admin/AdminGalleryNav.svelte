@@ -41,58 +41,60 @@
   ]);
 </script>
 
-<AdminHeader>
-  <nav class="flex justify-between">
-    <div class="flex items-center gap-3">
-      <a
-        href={resolve('/admin/galleries')}
-        class="-m-2 p-2 text-text-muted transition-colors hover:text-brand"
-        aria-label="Back to Galleries"
-      >
-        <svg
-          class="size-4"
-          viewBox="0 0 16 16"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
+<div>
+  <AdminHeader>
+    <nav class="flex justify-between">
+      <div class="flex items-center gap-3">
+        <a
+          href={resolve('/admin/galleries')}
+          class="-m-2 p-2 text-text-muted transition-colors hover:text-brand"
+          aria-label="Back to Galleries"
         >
-          <path d="M10 3 5 8l5 5" />
-        </svg>
-      </a>
-      <AdminHeading>{galleryName}</AdminHeading>
-      {#if currentView === 'photos'}
-        <AdminButton
-          href={photosHref}
-          variant="default"
-          size="xs"
-          selected={!showArchived}
-        >
-          Active ({activeCount})
-        </AdminButton>
-        <AdminButton
-          href={`${photosHref}?showArchived=1`}
-          variant="default"
-          size="xs"
-          selected={showArchived}
-        >
-          Archived ({archivedCount})
-        </AdminButton>
-      {/if}
-    </div>
+          <svg
+            class="size-4"
+            viewBox="0 0 16 16"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M10 3 5 8l5 5" />
+          </svg>
+        </a>
+        <AdminHeading>{galleryName}</AdminHeading>
+        {#if currentView === 'photos'}
+          <AdminButton
+            href={photosHref}
+            variant="default"
+            size="xs"
+            selected={!showArchived}
+          >
+            Active ({activeCount})
+          </AdminButton>
+          <AdminButton
+            href={`${photosHref}?showArchived=1`}
+            variant="default"
+            size="xs"
+            selected={showArchived}
+          >
+            Archived ({archivedCount})
+          </AdminButton>
+        {/if}
+      </div>
 
-    <div class="flex items-center gap-4">
-      <AdminSegmentedToggle
-        segments={sections}
-        activeKey={currentView}
-        ariaLabel="Gallery admin sections"
-      />
-    </div>
-  </nav>
+      <div class="flex items-center gap-4">
+        <AdminSegmentedToggle
+          segments={sections}
+          activeKey={currentView}
+          ariaLabel="Gallery admin sections"
+        />
+      </div>
+    </nav>
+  </AdminHeader>
 
   {#if currentView === 'photos'}
-    <div class="flex flex-wrap items-center gap-3 pt-1">
+    <div class="mb-4 flex flex-wrap items-center gap-3">
       <a
         href={resolve(uploadRoute, { gallerySlug })}
         class="group inline-flex items-center gap-2 rounded-lg bg-linear-to-r from-brand to-indigo-500 px-4 py-2 text-sm font-semibold tracking-wider text-white transition-all hover:scale-[1.01] active:scale-[0.98]"
@@ -116,4 +118,4 @@
       </a>
     </div>
   {/if}
-</AdminHeader>
+</div>

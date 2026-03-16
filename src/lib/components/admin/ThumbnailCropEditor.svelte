@@ -185,15 +185,6 @@
 </script>
 
 <div class="grid gap-3">
-  {#if isSaving}
-    <div class="flex items-center justify-end">
-      <span
-        class="animate-pulse text-[10px] font-medium tracking-widest text-text-muted uppercase"
-        >Saving...</span
-      >
-    </div>
-  {/if}
-
   <div class="w-full">
     <div
       bind:clientWidth={viewportClientWidth}
@@ -237,6 +228,36 @@
         aria-hidden="true"
         class="pointer-events-none absolute inset-x-0 top-2/3 h-px bg-white/15"
       ></div>
+
+      {#if isSaving}
+        <div
+          class="pointer-events-none absolute top-2 right-2 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-black/60"
+          aria-live="polite"
+          aria-label="Saving"
+        >
+          <svg
+            class="h-4 w-4 animate-spin text-white"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <circle
+              class="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              stroke-width="4"
+            />
+            <path
+              class="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+            />
+          </svg>
+        </div>
+      {/if}
     </div>
   </div>
 

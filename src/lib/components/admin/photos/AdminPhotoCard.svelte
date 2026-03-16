@@ -266,94 +266,99 @@
               {onTitleInput}
               {onSlugInput}
               trailingField={dimensionsField}
-              afterDescription={isDraft ? undefined : licenseField}
               fieldErrors={activeFieldErrors}
             />
+
+            {#if !isDraft}
+              <div class="grid gap-3 sm:grid-cols-2">
+                <FormField label="Categories">
+                  <div
+                    class="grid max-h-36 gap-1 overflow-auto {formControlContainerClass}"
+                  >
+                    {#each categories as category (category.id)}
+                      <label class="flex cursor-pointer items-center gap-2">
+                        <input
+                          type="checkbox"
+                          value={category.id}
+                          checked={selectedCategoryIds.includes(category.id)}
+                          onchange={() => {
+                            const checked = !selectedCategoryIds.includes(
+                              category.id,
+                            );
+                            const next = checked
+                              ? [...selectedCategoryIds, category.id]
+                              : selectedCategoryIds.filter(
+                                  (id: string) => id !== category.id,
+                                );
+                            onTaxonomyChange(photo.id, next, selectedTagIds);
+                          }}
+                        />
+                        {category.name}
+                      </label>
+                    {/each}
+                  </div>
+                </FormField>
+
+                <FormField label="Tags">
+                  <div
+                    class="grid max-h-36 gap-1 overflow-auto {formControlContainerClass}"
+                  >
+                    {#each tags as tag (tag.id)}
+                      <label class="flex cursor-pointer items-center gap-2">
+                        <input
+                          type="checkbox"
+                          value={tag.id}
+                          checked={selectedTagIds.includes(tag.id)}
+                          onchange={() => {
+                            const checked = !selectedTagIds.includes(tag.id);
+                            const next = checked
+                              ? [...selectedTagIds, tag.id]
+                              : selectedTagIds.filter(
+                                  (id: string) => id !== tag.id,
+                                );
+                            onTaxonomyChange(
+                              photo.id,
+                              selectedCategoryIds,
+                              next,
+                            );
+                          }}
+                        />
+                        {tag.name}
+                      </label>
+                    {/each}
+                  </div>
+                </FormField>
+              </div>
+
+              {@render licenseField()}
+
+              <div
+                transition:fade={{
+                  duration: FADE_DURATION,
+                  delay: 2 * STAGGER_MS,
+                  easing: quintOut,
+                }}
+                class="grid gap-3"
+              >
+                <AdminSeoSocialDrawer
+                  idPrefix="photo-{photoFormId}"
+                  storageKey="admin-seo-social:photo-editor"
+                  fieldErrors={activeFieldErrors}
+                  form="photo-update-form-{photoFormId}"
+                  bind:seoTitle={form.seoTitle}
+                  bind:seoDescription={form.seoDescription}
+                  bind:ogTitle={form.ogTitle}
+                  bind:ogDescription={form.ogDescription}
+                  bind:ogImagePath={form.ogImagePath}
+                />
+              </div>
+            {:else}
+              <p class="p-3 text-sm text-text-muted">
+                Upload the first image or save the draft first to add categories
+                and tags.
+              </p>
+            {/if}
           </form>
-
-          {#if !isDraft}
-            <div class="grid gap-3 sm:grid-cols-2">
-              <FormField label="Categories">
-                <div
-                  class="grid max-h-36 gap-1 overflow-auto {formControlContainerClass}"
-                >
-                  {#each categories as category (category.id)}
-                    <label class="flex cursor-pointer items-center gap-2">
-                      <input
-                        type="checkbox"
-                        value={category.id}
-                        checked={selectedCategoryIds.includes(category.id)}
-                        onchange={() => {
-                          const checked = !selectedCategoryIds.includes(
-                            category.id,
-                          );
-                          const next = checked
-                            ? [...selectedCategoryIds, category.id]
-                            : selectedCategoryIds.filter(
-                                (id: string) => id !== category.id,
-                              );
-                          onTaxonomyChange(photo.id, next, selectedTagIds);
-                        }}
-                      />
-                      {category.name}
-                    </label>
-                  {/each}
-                </div>
-              </FormField>
-
-              <FormField label="Tags">
-                <div
-                  class="grid max-h-36 gap-1 overflow-auto {formControlContainerClass}"
-                >
-                  {#each tags as tag (tag.id)}
-                    <label class="flex cursor-pointer items-center gap-2">
-                      <input
-                        type="checkbox"
-                        value={tag.id}
-                        checked={selectedTagIds.includes(tag.id)}
-                        onchange={() => {
-                          const checked = !selectedTagIds.includes(tag.id);
-                          const next = checked
-                            ? [...selectedTagIds, tag.id]
-                            : selectedTagIds.filter(
-                                (id: string) => id !== tag.id,
-                              );
-                          onTaxonomyChange(photo.id, selectedCategoryIds, next);
-                        }}
-                      />
-                      {tag.name}
-                    </label>
-                  {/each}
-                </div>
-              </FormField>
-            </div>
-
-            <div
-              transition:fade={{
-                duration: FADE_DURATION,
-                delay: 2 * STAGGER_MS,
-                easing: quintOut,
-              }}
-              class="grid gap-3"
-            >
-              <AdminSeoSocialDrawer
-                idPrefix="photo-{photoFormId}"
-                storageKey="admin-seo-social:photo-editor"
-                fieldErrors={activeFieldErrors}
-                form="photo-update-form-{photoFormId}"
-                bind:seoTitle={form.seoTitle}
-                bind:seoDescription={form.seoDescription}
-                bind:ogTitle={form.ogTitle}
-                bind:ogDescription={form.ogDescription}
-                bind:ogImagePath={form.ogImagePath}
-              />
-            </div>
-          {:else}
-            <p class="p-3 text-sm text-text-muted">
-              Upload the first image or save the draft first to add categories
-              and tags.
-            </p>
-          {/if}
         </div>
       </div>
 

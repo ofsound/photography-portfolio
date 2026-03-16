@@ -7,7 +7,10 @@ export const routeKeyFor = (photoSlug: string, imageId: string | null) =>
 export const routeKeyFromActive = (active: ViewerData['active']) =>
   active ? routeKeyFor(active.photoSlug, active.imageId) : '';
 
-export const createGallerySceneState = (data: ViewerData) => {
+export const createGallerySceneState = (
+  data: ViewerData,
+  initialRouteScopeSlug: string,
+) => {
   const state = $state({
     gap: data.gap,
     widthMode: data.widthMode,
@@ -25,7 +28,7 @@ export const createGallerySceneState = (data: ViewerData) => {
     nextGalleryHref: data.active?.nextGalleryHref ?? null,
 
     routeKey: routeKeyFromActive(data.active),
-    querySignature: '',
+    querySignature: [initialRouteScopeSlug, data.q, data.page].join('|'),
     mounted: false,
     hasHydratedRoute: Boolean(data.active),
     skipNextRouteAnimation: false,

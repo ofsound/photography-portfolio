@@ -52,8 +52,10 @@
 
   const { data } = $props<{ data: ViewerData }>();
   const readInitialData = () => data;
+  const initialData = readInitialData();
+  const initialRouteScopeSlug = initialData.galleryScope?.slug ?? 'all';
 
-  const state = createGallerySceneState(readInitialData());
+  const state = createGallerySceneState(initialData, initialRouteScopeSlug);
   let detailBottomInsetPx = 0;
   const layoutMode = $derived(layoutModeStore.value);
 
@@ -224,6 +226,10 @@
 
     state.entranceLocked = true;
   };
+
+  if (!initialData.active && state.photos.length > 0) {
+    startEntranceBatch(state.photos);
+  }
 
   const onResolveEntranceOrder = (batchKey: number, orderedSlugs: string[]) => {
     if (batchKey !== state.entranceBatchKey) return;
@@ -736,8 +742,8 @@
     onResizePromoted();
   };
 
-  const preloadImages = async () => {
-    const toPreload = state.photos
+  const preloadImages = async (photos: GalleryPhoto[]) => {
+    const toPreload = photos
       .filter((photo) => photo.leadImage)
       .map((photo) =>
         photoPublicUrl(
@@ -898,8 +904,9 @@
     if (!state.mounted) return;
 
     const key = [routeScopeSlug, data.q || '\0'].join('|');
+    const nextPhotos = data.photos;
     if (!shouldShowPreloader) {
-      if (state.photos.length > 0) {
+      if (nextPhotos.length > 0) {
         state.galleryRevealed = true;
         state.preloaderVisible = false;
         state.preloadKey = key;
@@ -909,7 +916,7 @@
 
     if (key === state.preloadKey) return;
     state.preloadKey = key;
-    void preloadImages();
+    void preloadImages(nextPhotos);
   });
 
   $effect(() => {
@@ -930,10 +937,12 @@
     clearEntranceLock();
 
     const batchKey = state.entranceBatchKey;
+    const configuredStaggerMs =
+      data.gallerySettings?.thumbnail_entrance_stagger_ms ??
+      thumbnailEntranceRuntime.staggerMs;
     const unlockAfterMs =
       thumbnailEntranceRuntime.durationMs +
-      Math.max(state.entranceOrderCount - 1, 0) *
-        thumbnailEntranceRuntime.staggerMs +
+      Math.max(state.entranceOrderCount - 1, 0) * configuredStaggerMs +
       24;
 
     entranceUnlockTimer = setTimeout(() => {
@@ -1041,6 +1050,16 @@
     contactSheetViewer.release();
   });
 </script>
+
+<svelte:head>
+  <noscript>
+    <style>
+      .thumb-entrance-fx--await {
+        opacity: 1 !important;
+      }
+    </style>
+  </noscript>
+</svelte:head>
 
 <GalleryPreloader
   visible={state.preloaderVisible}

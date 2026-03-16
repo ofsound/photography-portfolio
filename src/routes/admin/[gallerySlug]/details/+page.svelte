@@ -131,15 +131,6 @@
     </div>
   </div>
 
-  <hr class="my-8 border-border" />
-  <AdminHeading class="mb-4" level={2}>Gallery Settings</AdminHeading>
-
-  <GallerySettingsFormFields
-    {settings}
-    disableTransitionPreset={!isAdmin}
-    idPrefix="settings-"
-  />
-
   <AdminSeoSocialDrawer
     idPrefix="details"
     storageKey="admin-seo-social:gallery-details"
@@ -150,6 +141,15 @@
     ogTitle={ogTitleValue}
     ogDescription={ogDescriptionValue}
     ogImagePath={ogImagePathValue}
+  />
+
+  <hr class="my-8 border-border" />
+  <AdminHeading class="mb-4" level={2}>Gallery Settings</AdminHeading>
+
+  <GallerySettingsFormFields
+    {settings}
+    disableTransitionPreset={!isAdmin}
+    idPrefix="settings-"
   />
 </form>
 

@@ -138,6 +138,17 @@ export const createGalleryTileAnimator = ({
     img: GalleryImage | null,
   ): NaturalImageSize | null => {
     if (!img) return null;
+
+    // Prefer database dimensions for stability during entrance animations.
+    if (img.dimensions) {
+      const parts = img.dimensions.split('x');
+      const width = parseInt(parts[0], 10);
+      const height = parseInt(parts[1], 10);
+      if (!isNaN(width) && !isNaN(height)) {
+        return { width, height };
+      }
+    }
+
     return naturalImageSizes.get(img.id) ?? null;
   };
 

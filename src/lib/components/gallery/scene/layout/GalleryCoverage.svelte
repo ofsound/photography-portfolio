@@ -41,7 +41,9 @@
                   GALLERY_DETAIL_SHARED_WIDTH,
                 )}
                 alt={photo.leadImage.alt_text ?? photo.title}
-                class="block h-full w-full object-cover transition-transform duration-500 ease-cinematic {model.hasThumbCrop(
+                class="block h-full w-full object-cover {model.entranceLocked
+                  ? ''
+                  : 'transition-transform duration-500 ease-cinematic'} {model.hasThumbCrop(
                   photo.leadImage,
                 )
                   ? 'tile-img-crop'

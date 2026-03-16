@@ -48,7 +48,9 @@
                     GALLERY_DETAIL_SHARED_WIDTH,
                   )}
                   alt={photo.leadImage.alt_text ?? photo.title}
-                  class="block h-full w-full object-cover transition-transform duration-500 ease-cinematic {model.hasThumbCrop(
+                  class="block h-full w-full object-cover {model.entranceLocked
+                    ? ''
+                    : 'transition-transform duration-500 ease-cinematic'} {model.hasThumbCrop(
                     photo.leadImage,
                   )
                     ? 'tile-img-crop'
@@ -107,18 +109,24 @@
             class="group relative block overflow-hidden {model.entranceLocked
               ? 'pointer-events-none'
               : ''}"
+            style={`aspect-ratio: ${model.tileAspectRatio(photo)};`}
             onclick={(event: MouseEvent) =>
               model.onOpenPhoto(event, photo.slug)}
           >
             {#key `${model.entranceBatchKey}:${photo.id}`}
-              <div class={entranceFx.className} style={entranceFx.style}>
+              <div
+                class={`h-full w-full ${entranceFx.className}`}
+                style={entranceFx.style}
+              >
                 <img
                   src={photoPublicUrl(
                     photo.leadImage.delivery_storage_path,
                     GALLERY_DETAIL_SHARED_WIDTH,
                   )}
                   alt={photo.leadImage.alt_text ?? photo.title}
-                  class="block h-auto w-full object-cover transition-transform duration-500 ease-cinematic {model.hasThumbCrop(
+                  class="block h-full w-full object-cover {model.entranceLocked
+                    ? ''
+                    : 'transition-transform duration-500 ease-cinematic'} {model.hasThumbCrop(
                     photo.leadImage,
                   )
                     ? 'tile-img-crop'

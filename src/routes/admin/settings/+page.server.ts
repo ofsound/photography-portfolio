@@ -25,9 +25,10 @@ import {
 import type { PageServerLoad } from './$types';
 
 const DEFAULT_PAGE_MAX_WIDTH_PX = 1280;
+type ThemeMode = 'light' | 'dark' | 'system';
 
 const typographySelect =
-  'public_font_import_url, public_font_family, admin_font_import_url, admin_font_family, show_search_link_in_nav, default_page_max_width_px, brand_light_hex, brand_dark_hex, brand_contrast_light_hex, brand_contrast_dark_hex';
+  'site_theme_default, gallery_theme_default_is_overridden, public_font_import_url, public_font_family, admin_font_import_url, admin_font_family, show_search_link_in_nav, default_page_max_width_px, brand_light_hex, brand_dark_hex, brand_contrast_light_hex, brand_contrast_dark_hex';
 
 type TypographyValues = {
   public_font_import_url: string;
@@ -47,6 +48,16 @@ type TypographyFormValues = Omit<
   'default_page_max_width_px'
 > & {
   default_page_max_width_px: number | null;
+};
+
+const normalizeThemeMode = (
+  value: FormDataEntryValue | string | null | undefined,
+  fallback: ThemeMode = 'system',
+): ThemeMode => {
+  const mode = typeof value === 'string' ? value.trim() : '';
+  return mode === 'light' || mode === 'dark' || mode === 'system'
+    ? mode
+    : fallback;
 };
 
 const normalizeDefaultPageMaxWidthPx = (value: number | null | undefined) => {
@@ -118,6 +129,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 
   return {
     role,
+    siteThemeDefault: normalizeThemeMode(typographyQuery.data?.site_theme_default),
     typography: normalizeTypographyValues(
       (typographyQuery.data ?? {}) as Partial<TypographyValues>,
     ),
@@ -125,6 +137,52 @@ export const load: PageServerLoad = async ({ locals }) => {
 };
 
 export const actions: Actions = {
+  saveSiteTheme: async ({ locals, request }) => {
+    const role = await getCmsRole(locals);
+    if (role !== 'admin' && role !== 'editor') {
+      return fail(403, {
+        message: 'Only admins and editors can update site color theme.',
+      });
+    }
+
+    const form = await request.formData();
+    const siteThemeDefault = normalizeThemeMode(form.get('site_theme_default'));
+
+    const syncStateQuery = await locals.supabase
+      .from('site_settings')
+      .select('gallery_theme_default_is_overridden')
+      .eq('singleton_id', 1)
+      .maybeSingle();
+
+    if (syncStateQuery.error) {
+      return fail(400, {
+        message: syncStateQuery.error.message,
+      });
+    }
+
+    const updateValues: {
+      site_theme_default: ThemeMode;
+      theme_default?: ThemeMode;
+    } = {
+      site_theme_default: siteThemeDefault,
+    };
+    if (!syncStateQuery.data?.gallery_theme_default_is_overridden) {
+      updateValues.theme_default = siteThemeDefault;
+    }
+
+    const update = await locals.supabase
+      .from('site_settings')
+      .update(updateValues)
+      .eq('singleton_id', 1);
+
+    if (update.error) {
+      return fail(400, {
+        message: update.error.message,
+      });
+    }
+
+    return { success: true, message: 'Site color theme saved.' };
+  },
   saveTypography: async ({ locals, request }) => {
     const role = await getCmsRole(locals);
     if (role !== 'admin') {

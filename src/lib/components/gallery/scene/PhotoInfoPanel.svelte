@@ -93,7 +93,7 @@
       {#if showAnyText}
         <div class="grid gap-2">
           {#if showTitle}
-            <h1 class="text-sm font-semibold tracking-widest uppercase">
+            <h1 class="text-base font-semibold tracking-widest uppercase">
               {titleText}
             </h1>
           {/if}
@@ -104,9 +104,6 @@
           {/if}
           {#if showCaptureDate}
             <p class="text-sm text-text/90">
-              <span class="mr-2 text-xs tracking-wide text-text/65 uppercase"
-                >Date</span
-              >
               {captureDateText}
             </p>
           {/if}

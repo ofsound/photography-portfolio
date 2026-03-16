@@ -5,6 +5,7 @@
   import { useAdminFormState } from '$lib/components/admin/useAdminFormState.svelte';
   import FormField from '$lib/components/FormField.svelte';
   import FormInput from '$lib/components/FormInput.svelte';
+  import FormSelect from '$lib/components/FormSelect.svelte';
   import {
     DEFAULT_BRAND_CONTRAST_DARK_HEX,
     DEFAULT_BRAND_CONTRAST_LIGHT_HEX,
@@ -15,6 +16,7 @@
   } from '$lib/constants/theme-colors';
 
   type SettingsFormValues = {
+    site_theme_default?: 'light' | 'dark' | 'system';
     public_font_import_url?: string;
     public_font_family?: string;
     admin_font_import_url?: string;
@@ -31,6 +33,16 @@
     () => form,
   );
   const isAdmin = $derived(data.role === 'admin');
+  const canEditSiteTheme = $derived(
+    data.role === 'admin' || data.role === 'editor',
+  );
+  const siteThemeDefaultValue = $derived.by(() => {
+    const next = values.site_theme_default;
+    if (next === 'light' || next === 'dark' || next === 'system') {
+      return next;
+    }
+    return data.siteThemeDefault;
+  });
   const getValue = (value: string | boolean | undefined) =>
     typeof value === 'string' ? value : undefined;
   const toColorInputValue = (value: unknown, fallback: string) => {
@@ -108,6 +120,31 @@
   formSuccess={form?.success === true}
 />
 
+<form method="POST" action="?/saveSiteTheme" class="mb-4 grid gap-3">
+  <FormField label="Site Color Theme" id="site-theme-default" class="w-fit">
+    <FormSelect
+      id="site-theme-default"
+      name="site_theme_default"
+      value={siteThemeDefaultValue}
+      disabled={!canEditSiteTheme}
+    >
+      <option value="system">System</option>
+      <option value="light">Light</option>
+      <option value="dark">Dark</option>
+    </FormSelect>
+  </FormField>
+
+  {#if canEditSiteTheme}
+    <div>
+      <AdminButton type="submit" variant="submit">Save Site Theme</AdminButton>
+    </div>
+  {:else}
+    <p class="text-sm text-text-muted">
+      Only admins and editors can edit site color theme.
+    </p>
+  {/if}
+</form>
+
 <form method="POST" action="?/saveTypography" class="grid gap-4">
   <div class="flex flex-col gap-3">
     <FormField
@@ -153,7 +190,7 @@
 
     <hr class="my-2 border-border" />
 
-    <AdminHeading level={2}>Site Fonts</AdminHeading>
+    <AdminHeading level={2}>Fonts</AdminHeading>
 
     <div class="mb-4 flex flex-col gap-3">
       <FormField

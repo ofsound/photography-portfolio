@@ -106,7 +106,7 @@ export const normalizeGallerySettingsForRead = (
 
   const thumbnailEntrancePreset = normalizeThumbnailEntrancePreset(
     source.thumbnail_entrance_preset ??
-    GALLERY_SETTINGS_DEFAULTS.thumbnail_entrance_preset,
+      GALLERY_SETTINGS_DEFAULTS.thumbnail_entrance_preset,
   );
   warnPresetCoercion(
     'thumbnail_entrance_preset',
@@ -157,7 +157,7 @@ export const normalizeGallerySettingsForRead = (
       source.gallery_gap_px ?? GALLERY_SETTINGS_DEFAULTS.gallery_gap_px,
     uniform_thumb_ratio: normalizeThumbCropAspect(
       source.uniform_thumb_ratio ??
-      GALLERY_SETTINGS_DEFAULTS.uniform_thumb_ratio,
+        GALLERY_SETTINGS_DEFAULTS.uniform_thumb_ratio,
     ),
     transition_preset:
       source.transition_preset ?? GALLERY_SETTINGS_DEFAULTS.transition_preset,

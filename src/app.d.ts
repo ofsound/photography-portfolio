@@ -21,7 +21,7 @@ declare global {
         slug?: string;
       };
       siteSettings: {
-        theme_default: 'light' | 'dark' | 'system';
+        site_theme_default: 'light' | 'dark' | 'system';
         transition_preset: 'cinematic' | 'snappy' | 'experimental';
         thumbnail_entrance_preset: ThumbnailEntrancePreset;
         preloader_preset: PreloaderPreset;
@@ -33,4 +33,4 @@ declare global {
   }
 }
 
-export { };
+export {};

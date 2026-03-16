@@ -327,8 +327,8 @@
             id="homepage-hero-visibility_status"
             bind:value={heroVisibilityStatus}
           >
-            <option value="public">public</option>
-            <option value="draft">draft</option>
+            <option value="public">Public</option>
+            <option value="draft">Draft</option>
           </FormSelect>
         </FormField>
 

@@ -8,22 +8,22 @@ export const GALLERY_VISIBILITY_OPTIONS: Array<{
   label: string;
   description: string;
 }> = [
-    {
-      value: 'public',
-      label: 'Public',
-      description: 'Show in nav, search, and direct gallery URLs.',
-    },
-    {
-      value: 'unlisted',
-      label: 'Unlisted',
-      description: 'Available only by direct gallery or photo URL.',
-    },
-    {
-      value: 'archived',
-      label: 'Archived',
-      description: 'Only available in the gallery editor. Public routes 404.',
-    },
-  ];
+  {
+    value: 'public',
+    label: 'Public',
+    description: 'Show in nav, search, and direct gallery URLs.',
+  },
+  {
+    value: 'unlisted',
+    label: 'Unlisted',
+    description: 'Available only by direct gallery or photo URL.',
+  },
+  {
+    value: 'archived',
+    label: 'Archived',
+    description: 'Only available in the gallery editor. Public routes 404.',
+  },
+];
 
 export const GALLERY_VISIBILITY_LABELS: Record<
   GalleryVisibilityStatus,

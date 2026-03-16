@@ -36,15 +36,14 @@
           }
 
           var theme = siteTheme;
-          if (path.startsWith("/admin/")) {
+          if (path === "/admin" || path.startsWith("/admin/")) {
             var adminTheme = localStorage.getItem("admin-theme");
-            if (
+            theme =
               adminTheme === "light" ||
               adminTheme === "dark" ||
               adminTheme === "system"
-            ) {
-              theme = adminTheme;
-            }
+                ? adminTheme
+                : "system";
           }
 
           var isDark =

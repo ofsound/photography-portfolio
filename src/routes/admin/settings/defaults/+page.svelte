@@ -22,6 +22,7 @@
     {settings}
     disableTransitionPreset={!isAdmin}
     idPrefix="settings-"
+    colorThemeLabel="Gallery Default Color Theme"
   />
 
   <AdminButton type="submit" variant="submit">Save Settings</AdminButton>

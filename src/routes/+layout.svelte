@@ -45,6 +45,8 @@
   }>();
 
   const isDetailRoute = (pathname: string) => isGalleryDetailPath(pathname);
+  const isAdminPath = (pathname: string) =>
+    pathname === '/admin' || pathname.startsWith('/admin/');
 
   let phase = $state<GalleryTransitionPhase>(
     isDetailRoute(page.url.pathname) ? 'open' : 'idle',
@@ -109,6 +111,10 @@
         }
       : globalSiteSettings,
   );
+  const isThemeMode = (
+    value: unknown,
+  ): value is 'light' | 'dark' | 'system' =>
+    value === 'light' || value === 'dark' || value === 'system';
   const showSearchLinkInNav = $derived(
     siteSettings?.show_search_link_in_nav ?? true,
   );
@@ -170,7 +176,7 @@
   let publicMobileMenuOpen = $state(false);
 
   const isViewer = $derived(isViewerRoute(page.url.pathname));
-  const isAdminRoute = $derived(page.url.pathname.startsWith('/admin/'));
+  const isAdminRoute = $derived(isAdminPath(page.url.pathname));
   const cmsRole = $derived(
     ((data as Record<string, unknown> | null)?.cmsRole ?? null) as
       | 'admin'
@@ -214,7 +220,7 @@
     if (!canAccessPublicEditor) return null;
 
     const pathname = page.url.pathname;
-    if (pathname.startsWith('/admin/') || pathname.startsWith('/auth/')) {
+    if (isAdminPath(pathname) || pathname.startsWith('/auth/')) {
       return null;
     }
     if (pathname === '/auth' || pathname === '/search') return null;
@@ -363,12 +369,20 @@
     document.documentElement.style.colorScheme = active;
   };
 
+  const publicSiteThemeDefault = $derived(
+    isThemeMode(globalSiteSettings?.site_theme_default)
+      ? globalSiteSettings.site_theme_default
+      : 'system',
+  );
+  const galleryRouteThemeDefault = $derived(
+    isThemeMode(viewerGallerySettings?.theme_default)
+      ? viewerGallerySettings.theme_default
+      : null,
+  );
   const siteThemeDefault = $derived(
-    (siteSettings?.theme_default === 'dark' ||
-    siteSettings?.theme_default === 'light' ||
-    siteSettings?.theme_default === 'system'
-      ? siteSettings.theme_default
-      : 'system') as 'light' | 'dark' | 'system',
+    isViewerRoute(page.url.pathname) && galleryRouteThemeDefault
+      ? galleryRouteThemeDefault
+      : publicSiteThemeDefault,
   );
 
   const syncSiteHeaderHeight = () => {
@@ -405,16 +419,16 @@
     if (typeof window === 'undefined' || hasHydratedClientPrefs) return;
 
     const pathname = page.url.pathname;
-    const onAdmin = pathname.startsWith('/admin/');
+    const onAdmin = isAdminPath(pathname);
     transitionPreset = siteSettings?.transition_preset ?? 'cinematic';
-    let resolvedThemeMode: AdminThemeMode = siteThemeDefault;
+    let resolvedThemeMode: AdminThemeMode = onAdmin ? 'system' : siteThemeDefault;
 
     if (onAdmin) {
       const stored = localStorage.getItem('admin-theme');
       resolvedThemeMode =
         stored === 'light' || stored === 'dark' || stored === 'system'
           ? stored
-          : siteThemeDefault;
+          : 'system';
     }
     adminThemeModeStore.set(resolvedThemeMode);
 
@@ -426,14 +440,14 @@
   $effect(() => {
     if (typeof window === 'undefined' || !hasHydratedClientPrefs) return;
     const pathname = page.url.pathname;
-    const onAdmin = pathname.startsWith('/admin/');
-    let resolvedThemeMode: AdminThemeMode = siteThemeDefault;
+    const onAdmin = isAdminPath(pathname);
+    let resolvedThemeMode: AdminThemeMode = onAdmin ? 'system' : siteThemeDefault;
     if (onAdmin) {
       const stored = localStorage.getItem('admin-theme');
       resolvedThemeMode =
         stored === 'light' || stored === 'dark' || stored === 'system'
           ? stored
-          : siteThemeDefault;
+          : 'system';
     }
     adminThemeModeStore.set(resolvedThemeMode);
     applyTheme(resolvedThemeMode);
@@ -441,7 +455,7 @@
 
   $effect(() => {
     if (typeof window === 'undefined' || !hasHydratedClientPrefs) return;
-    if (!page.url.pathname.startsWith('/admin/')) return;
+    if (!isAdminPath(page.url.pathname)) return;
     const selectedThemeMode = adminThemeModeStore.value;
     localStorage.setItem('admin-theme', selectedThemeMode);
     applyTheme(selectedThemeMode);
@@ -510,7 +524,7 @@
     }
 
     // Admin nav: skip View Transitions so rapid clicks always register and lead to route changes.
-    if (fromPath.startsWith('/admin/') || toPath.startsWith('/admin/')) {
+    if (isAdminPath(fromPath) || isAdminPath(toPath)) {
       return;
     }
 

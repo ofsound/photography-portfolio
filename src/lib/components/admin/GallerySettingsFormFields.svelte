@@ -18,12 +18,14 @@
     readonly?: boolean;
     disableTransitionPreset?: boolean;
     idPrefix?: string;
+    colorThemeLabel?: string;
   };
   const {
     settings,
     readonly = false,
     disableTransitionPreset = false,
     idPrefix = 'settings-',
+    colorThemeLabel = 'Color Theme',
   }: Props = $props();
 
   const p = (name: string) => `${idPrefix}${name}`;
@@ -66,11 +68,11 @@
           disabled={readonly}
           class="w-auto"
         >
-          <option value="uniform">uniform</option>
-          <option value="masonry">masonry</option>
-          <option value="coverage">coverage</option>
-          <option value="rows">rows</option>
-          <option value="columns">columns</option>
+          <option value="uniform">Uniform</option>
+          <option value="masonry">Masonry</option>
+          <option value="coverage">Coverage</option>
+          <option value="rows">Rows</option>
+          <option value="columns">Columns</option>
         </FormSelect>
       </FormField>
       {#if layoutMode === 'uniform'}
@@ -177,7 +179,7 @@
             disabled={readonly || disableTransitionPreset}
           >
             {#each THUMBNAIL_ENTRANCE_PRESET_OPTIONS as option (option.id)}
-              <option value={option.id}>{option.id}</option>
+              <option value={option.id}>{option.label}</option>
             {/each}
           </FormSelect>
         </div>
@@ -242,7 +244,7 @@
     <AdminHeading level={2}>Gallery Settings</AdminHeading>
 
     <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
-      <FormField label="Color Theme" id={p('theme_default')} class="w-fit">
+      <FormField label={colorThemeLabel} id={p('theme_default')} class="w-fit">
         <FormSelect
           name="theme_default"
           id={p('theme_default')}
@@ -263,8 +265,8 @@
           disabled={readonly}
           class="w-auto"
         >
-          <option value="classic">classic</option>
-          <option value="contact_sheet">contact sheet</option>
+          <option value="classic">Classic</option>
+          <option value="contact_sheet">Contact Sheet</option>
         </FormSelect>
       </FormField>
     </div>
@@ -301,9 +303,9 @@
           disabled={readonly || disableTransitionPreset}
           class="w-auto"
         >
-          <option value="cinematic">cinematic</option>
-          <option value="snappy">snappy</option>
-          <option value="experimental">experimental</option>
+          <option value="cinematic">Cinematic</option>
+          <option value="snappy">Snappy</option>
+          <option value="experimental">Experimental</option>
         </FormSelect>
       </FormField>
     </div>
@@ -592,10 +594,10 @@
           disabled={readonly}
           class="w-auto"
         >
-          <option value="hidden">hidden</option>
-          <option value="floating">floating</option>
+          <option value="hidden">Hidden</option>
+          <option value="floating">Floating</option>
           {#if detailViewMode !== 'contact_sheet'}
-            <option value="bottom_dock">bottom dock</option>
+            <option value="bottom_dock">Bottom Dock</option>
           {/if}
         </FormSelect>
       </FormField>
@@ -613,9 +615,9 @@
             disabled={readonly}
             class="w-auto"
           >
-            <option value="bottom_left">bottom left</option>
-            <option value="top_right">top right</option>
-            <option value="bottom_right">bottom right</option>
+            <option value="bottom_left">Bottom Left</option>
+            <option value="top_right">Top Right</option>
+            <option value="bottom_right">Bottom Right</option>
           </FormSelect>
         </FormField>
       {/if}

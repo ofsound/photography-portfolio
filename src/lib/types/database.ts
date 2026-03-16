@@ -816,6 +816,7 @@ export type Database = {
           photograph_info_mode: Database['public']['Enums']['photograph_info_mode'];
           public_font_family: string;
           public_font_import_url: string;
+          site_theme_default: Database['public']['Enums']['theme_mode'];
           show_photo_info_capture_date: boolean;
           show_photo_info_description: boolean;
           show_photo_info_dimensions: boolean;
@@ -826,6 +827,7 @@ export type Database = {
           show_search_link_in_nav: boolean;
           show_thumbnail_zoom_hover: boolean;
           loop_gallery_navigation: boolean;
+          gallery_theme_default_is_overridden: boolean;
           singleton_id: number;
           thumbnail_entrance_preset: string;
           thumbnail_entrance_stagger_ms: number;
@@ -872,6 +874,7 @@ export type Database = {
           photograph_info_mode?: Database['public']['Enums']['photograph_info_mode'];
           public_font_family?: string;
           public_font_import_url?: string;
+          site_theme_default?: Database['public']['Enums']['theme_mode'];
           show_photo_info_capture_date?: boolean;
           show_photo_info_description?: boolean;
           show_photo_info_dimensions?: boolean;
@@ -882,6 +885,7 @@ export type Database = {
           show_search_link_in_nav?: boolean;
           show_thumbnail_zoom_hover?: boolean;
           loop_gallery_navigation?: boolean;
+          gallery_theme_default_is_overridden?: boolean;
           singleton_id?: number;
           thumbnail_entrance_preset?: string;
           thumbnail_entrance_stagger_ms?: number;
@@ -928,6 +932,7 @@ export type Database = {
           photograph_info_mode?: Database['public']['Enums']['photograph_info_mode'];
           public_font_family?: string;
           public_font_import_url?: string;
+          site_theme_default?: Database['public']['Enums']['theme_mode'];
           show_photo_info_capture_date?: boolean;
           show_photo_info_description?: boolean;
           show_photo_info_dimensions?: boolean;
@@ -938,6 +943,7 @@ export type Database = {
           show_search_link_in_nav?: boolean;
           show_thumbnail_zoom_hover?: boolean;
           loop_gallery_navigation?: boolean;
+          gallery_theme_default_is_overridden?: boolean;
           singleton_id?: number;
           thumbnail_entrance_preset?: string;
           thumbnail_entrance_stagger_ms?: number;

@@ -12,7 +12,10 @@ export type GalleryLayoutMode =
 
 export type GalleryWidthMode = 'full' | 'constrained';
 export type PhotographInfoMode = 'hidden' | 'floating' | 'bottom_dock';
-export type FloatingPanelPosition = 'bottom_left' | 'top_right' | 'bottom_right';
+export type FloatingPanelPosition =
+  | 'bottom_left'
+  | 'top_right'
+  | 'bottom_right';
 export type DetailViewMode = 'classic' | 'contact_sheet';
 
 export type ActiveRoute = {

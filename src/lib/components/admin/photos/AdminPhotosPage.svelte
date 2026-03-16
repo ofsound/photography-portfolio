@@ -481,10 +481,10 @@
 
 <section class="mt-8">
   <div
-    class="mx-auto flex w-full items-start gap-6"
+    class="mx-auto flex w-full flex-col items-start gap-6 md:flex-row"
     style={sectionMaxWidthStyle}
   >
-    <div class="min-w-0 flex-1">
+    <div class="order-2 min-w-0 flex-1 md:order-none">
       {#if canReorder}
         <p class="mb-2 text-[10px] tracking-wider text-text-muted uppercase">
           Drag photos to change the order
@@ -574,7 +574,9 @@
     </div>
 
     {#if showBulkTaxonomy}
-      <aside class="sticky top-20 w-full max-w-[300px] flex-shrink-0">
+      <aside
+        class="order-1 w-full flex-shrink-0 md:sticky md:top-20 md:order-none md:max-w-[300px]"
+      >
         <PhotoTaxonomyEditor
           {categories}
           {tags}

@@ -84,10 +84,10 @@ export const createGalleryRouter = ({
     const loop = getLoopNavigation();
     const prev = loop
       ? photos[(index - 1 + photos.length) % photos.length]
-      : photos[index - 1] ?? null;
+      : (photos[index - 1] ?? null);
     const next = loop
       ? photos[(index + 1) % photos.length]
-      : photos[index + 1] ?? null;
+      : (photos[index + 1] ?? null);
 
     return {
       prevGalleryHref: prev?.slug ? photoPath(prev.slug) : null,

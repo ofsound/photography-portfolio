@@ -362,7 +362,6 @@
           </form>
         </div>
       </div>
-
     </div>
   </article>
 
@@ -393,9 +392,7 @@
           formaction="?/archive"
           onclick={(e: MouseEvent) => {
             if (
-              !window.confirm(
-                'Are you sure you want to archive this photo?',
-              )
+              !window.confirm('Are you sure you want to archive this photo?')
             ) {
               e.preventDefault();
             }

@@ -37,10 +37,15 @@
   }>();
 </script>
 
-<div class="my-6 flex w-full flex-wrap items-end gap-3">
-  <form method="GET" class="flex min-w-0 flex-1 flex-wrap items-end gap-3">
+<div
+  class="my-6 flex w-full flex-col gap-3 md:flex-row md:flex-wrap md:items-end"
+>
+  <form
+    method="GET"
+    class="flex min-w-0 flex-1 flex-col gap-3 md:flex-row md:flex-wrap md:items-end"
+  >
     <input type="hidden" name="showArchived" value={showArchived ? '1' : '0'} />
-    <div class="max-w-xs min-w-44 flex-1">
+    <div class="w-full md:max-w-xs md:min-w-44 md:flex-1">
       <FormField label="Search" id="filter-q">
         <FormInput
           id="filter-q"
@@ -50,7 +55,7 @@
         />
       </FormField>
     </div>
-    <div class="max-w-56 min-w-36 flex-1">
+    <div class="w-full md:max-w-56 md:min-w-36 md:flex-1">
       <FormField label="Category" id="filter-category">
         <FormSelect
           id="filter-category"
@@ -64,7 +69,7 @@
         </FormSelect>
       </FormField>
     </div>
-    <div class="max-w-56 min-w-36 flex-1">
+    <div class="w-full md:max-w-56 md:min-w-36 md:flex-1">
       <FormField label="Tag" id="filter-tag">
         <FormSelect id="filter-tag" name="tag" value={filterTagId}>
           <option value="">All</option>
@@ -75,7 +80,7 @@
       </FormField>
     </div>
     {#if showGalleryFilter}
-      <div class="max-w-56 min-w-36 flex-1">
+      <div class="w-full md:max-w-56 md:min-w-36 md:flex-1">
         <FormField label="Gallery" id="filter-gallery">
           <FormSelect
             id="filter-gallery"
@@ -91,7 +96,7 @@
       </div>
     {/if}
 
-    <div class="mb-1">
+    <div class="mb-1 w-full md:w-auto">
       <AdminButton type="submit">Apply</AdminButton>
     </div>
   </form>

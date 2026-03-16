@@ -287,7 +287,8 @@ export const promoteTile = async ({
       ];
       if (borderPx > 0) {
         (rectKeyframes[0] as Record<string, string>).borderWidth = '0px';
-        (rectKeyframes[1] as Record<string, string>).borderWidth = `${borderPx}px`;
+        (rectKeyframes[1] as Record<string, string>).borderWidth =
+          `${borderPx}px`;
       }
       const rectAnim = wrapper.animate(rectKeyframes, rectTiming);
       const imgAnim = img.animate(
@@ -342,16 +343,14 @@ export const promoteTile = async ({
       ];
       if (borderPx > 0) {
         (noCropKeyframes[0] as Record<string, string>).borderWidth = '0px';
-        (noCropKeyframes[1] as Record<string, string>).borderWidth = `${borderPx}px`;
+        (noCropKeyframes[1] as Record<string, string>).borderWidth =
+          `${borderPx}px`;
       }
-      await wrapper.animate(
-        noCropKeyframes,
-        {
-          duration: options?.durationMs ?? 520,
-          easing: options?.easing ?? 'cubic-bezier(0.16, 1, 0.3, 1)',
-          fill: 'forwards',
-        },
-      ).finished;
+      await wrapper.animate(noCropKeyframes, {
+        duration: options?.durationMs ?? 520,
+        easing: options?.easing ?? 'cubic-bezier(0.16, 1, 0.3, 1)',
+        fill: 'forwards',
+      }).finished;
       applyRectToWrapper(wrapper, targetRect);
       if (borderPx > 0) wrapper.style.borderWidth = `${borderPx}px`;
       if (img) img.style.objectFit = '';
@@ -442,7 +441,8 @@ export const demoteTile = async (
         },
       ];
       if (session.borderPx > 0) {
-        (demoteRectKeyframes[0] as Record<string, string>).borderWidth = `${session.borderPx}px`;
+        (demoteRectKeyframes[0] as Record<string, string>).borderWidth =
+          `${session.borderPx}px`;
         (demoteRectKeyframes[1] as Record<string, string>).borderWidth = '0px';
       }
       const rectAnim = rectEl.animate(demoteRectKeyframes, timing);
@@ -470,7 +470,11 @@ export const demoteTile = async (
       const durationMs = options?.durationMs ?? 520;
       const easing = options?.easing ?? 'cubic-bezier(0.16, 1, 0.3, 1)';
       const reducedMotion = options?.reducedMotion ?? false;
-      if (reducedMotion || durationMs <= 0 || typeof rectEl.animate !== 'function') {
+      if (
+        reducedMotion ||
+        durationMs <= 0 ||
+        typeof rectEl.animate !== 'function'
+      ) {
         rectEl.style.borderWidth = '0px';
       } else {
         rectEl.animate(
@@ -631,7 +635,11 @@ export const computeContainRect = (
 
   const availableHeight = Math.max(
     1,
-    viewportHeight - chromeTopOffset - chromeBottomOffset - topPadding - bottomPadding,
+    viewportHeight -
+      chromeTopOffset -
+      chromeBottomOffset -
+      topPadding -
+      bottomPadding,
   );
 
   const imageRatio = safeImageWidth / safeImageHeight;
@@ -646,8 +654,7 @@ export const computeContainRect = (
     width = height * imageRatio;
   }
 
-  const top =
-    chromeTopOffset + topPadding + (availableHeight - height) / 2;
+  const top = chromeTopOffset + topPadding + (availableHeight - height) / 2;
   const left = horizontalPadding + (availableWidth - width) / 2;
 
   return {

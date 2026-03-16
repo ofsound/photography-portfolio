@@ -33,13 +33,21 @@
 </script>
 
 <AdminHeader>
-  <div class="flex flex-wrap items-center gap-4">
-    {#if leading}
-      {@render leading()}
-    {/if}
-    <AdminHeading>{title}</AdminHeading>
+  <div
+    class="flex flex-col gap-4 md:flex-row md:flex-wrap md:items-center md:gap-4"
+  >
+    <div class="order-last flex flex-wrap items-center gap-4 md:order-1">
+      {#if leading}
+        {@render leading()}
+      {/if}
+      <AdminHeading>{title}</AdminHeading>
+    </div>
     {#if actions}
-      {@render actions()}
+      <div
+        class="order-first flex w-full justify-center md:order-2 md:ml-auto md:w-auto"
+      >
+        {@render actions()}
+      </div>
     {/if}
   </div>
 

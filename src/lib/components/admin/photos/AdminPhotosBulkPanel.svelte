@@ -52,8 +52,8 @@
   <div
     class="flex flex-wrap items-center gap-2 text-xs tracking-widest uppercase"
   >
-    <span class="inline-block w-40 font-bold"
-      >Selected photos: {selectedPhotoIds.length}</span
+    <span class="inline-block w-34 font-bold"
+      >Selected: {selectedPhotoIds.length}</span
     >
     <AdminButton size="xs" type="button" onclick={selectAllVisiblePhotos}
       >Select all</AdminButton

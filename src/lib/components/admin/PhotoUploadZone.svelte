@@ -66,7 +66,10 @@
   const totalCount = $derived(uploadQueue.length);
 
   const makeId = () => {
-    if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    if (
+      typeof crypto !== 'undefined' &&
+      typeof crypto.randomUUID === 'function'
+    ) {
       return crypto.randomUUID();
     }
     return `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
@@ -141,11 +144,16 @@
   const parseResponse = (payload: string): UploadResponse => {
     try {
       const parsed = JSON.parse(payload) as Record<string, unknown>;
-      if (typeof parsed !== 'object' || parsed === null || typeof parsed.success !== 'boolean')
+      if (
+        typeof parsed !== 'object' ||
+        parsed === null ||
+        typeof parsed.success !== 'boolean'
+      )
         return null;
       return {
         success: parsed.success,
-        message: typeof parsed.message === 'string' ? parsed.message : undefined,
+        message:
+          typeof parsed.message === 'string' ? parsed.message : undefined,
       };
     } catch {
       return null;
@@ -302,9 +310,7 @@
       <line x1="12" y1="4" x2="12" y2="16" />
     </svg>
     <span class="text-center text-sm font-medium text-text">
-      {dragOver
-        ? 'Drop images here'
-        : 'Drop images here or click to browse'}
+      {dragOver ? 'Drop images here' : 'Drop images here or click to browse'}
     </span>
     <span class="text-xs text-text-muted">JPEG, PNG, WebP, HEIC</span>
   </button>
@@ -348,7 +354,9 @@
               </AdminStatusMessage>
             </div>
             <div class="flex items-center gap-2">
-              <div class="h-1.5 flex-1 overflow-hidden rounded bg-surface-muted">
+              <div
+                class="h-1.5 flex-1 overflow-hidden rounded bg-surface-muted"
+              >
                 <div
                   class={`h-full transition-all ${barClasses(item.status)}`}
                   style={`width: ${item.progressPct}%;`}

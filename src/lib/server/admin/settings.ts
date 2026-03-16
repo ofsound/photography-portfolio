@@ -109,40 +109,40 @@ const readPayload = (
       Math.min(
         20,
         asOptionalNumber(form.get('gallery_gap_px')) ??
-        GALLERY_SETTINGS_DEFAULTS.gallery_gap_px,
+          GALLERY_SETTINGS_DEFAULTS.gallery_gap_px,
       ),
     ),
     classic_detail_border_px: clampNumber(
       asOptionalNumber(form.get('classic_detail_border_px')) ??
-      GALLERY_SETTINGS_DEFAULTS.classic_detail_border_px,
+        GALLERY_SETTINGS_DEFAULTS.classic_detail_border_px,
       0,
       50,
       GALLERY_SETTINGS_DEFAULTS.classic_detail_border_px,
     ),
     classic_detail_h_inset_pct: clampNumber(
       asOptionalNumber(form.get('classic_detail_h_inset_pct')) ??
-      GALLERY_SETTINGS_DEFAULTS.classic_detail_h_inset_pct,
+        GALLERY_SETTINGS_DEFAULTS.classic_detail_h_inset_pct,
       0,
       50,
       GALLERY_SETTINGS_DEFAULTS.classic_detail_h_inset_pct,
     ),
     classic_detail_v_inset_pct: clampNumber(
       asOptionalNumber(form.get('classic_detail_v_inset_pct')) ??
-      GALLERY_SETTINGS_DEFAULTS.classic_detail_v_inset_pct,
+        GALLERY_SETTINGS_DEFAULTS.classic_detail_v_inset_pct,
       0,
       50,
       GALLERY_SETTINGS_DEFAULTS.classic_detail_v_inset_pct,
     ),
     classic_detail_v_position_pct: clampNumber(
       asOptionalNumber(form.get('classic_detail_v_position_pct')) ??
-      GALLERY_SETTINGS_DEFAULTS.classic_detail_v_position_pct,
+        GALLERY_SETTINGS_DEFAULTS.classic_detail_v_position_pct,
       0,
       100,
       GALLERY_SETTINGS_DEFAULTS.classic_detail_v_position_pct,
     ),
     contact_sheet_perspective_px: clampNumber(
       asOptionalNumber(form.get('contact_sheet_perspective_px')) ??
-      GALLERY_SETTINGS_DEFAULTS.contact_sheet_perspective_px,
+        GALLERY_SETTINGS_DEFAULTS.contact_sheet_perspective_px,
       200,
       4000,
       GALLERY_SETTINGS_DEFAULTS.contact_sheet_perspective_px,
@@ -171,7 +171,7 @@ const readPayload = (
     ),
     contact_sheet_travel_z_px: clampNumber(
       asOptionalNumber(form.get('contact_sheet_travel_z_px')) ??
-      GALLERY_SETTINGS_DEFAULTS.contact_sheet_travel_z_px,
+        GALLERY_SETTINGS_DEFAULTS.contact_sheet_travel_z_px,
       0,
       1000,
       GALLERY_SETTINGS_DEFAULTS.contact_sheet_travel_z_px,
@@ -189,7 +189,7 @@ const readPayload = (
     ),
     contact_sheet_mobile_intensity_pct: clampNumber(
       asOptionalNumber(form.get('contact_sheet_mobile_intensity_pct')) ??
-      GALLERY_SETTINGS_DEFAULTS.contact_sheet_mobile_intensity_pct,
+        GALLERY_SETTINGS_DEFAULTS.contact_sheet_mobile_intensity_pct,
       0,
       100,
       GALLERY_SETTINGS_DEFAULTS.contact_sheet_mobile_intensity_pct,
@@ -235,7 +235,7 @@ const readPayload = (
     );
     payload.thumbnail_entrance_stagger_ms = clampNumber(
       asOptionalNumber(form.get('thumbnail_entrance_stagger_ms')) ??
-      GALLERY_SETTINGS_DEFAULTS.thumbnail_entrance_stagger_ms,
+        GALLERY_SETTINGS_DEFAULTS.thumbnail_entrance_stagger_ms,
       10,
       200,
       GALLERY_SETTINGS_DEFAULTS.thumbnail_entrance_stagger_ms,
@@ -268,16 +268,16 @@ const loadScopeSettings = async (locals: App.Locals, scope: SettingsScope) => {
   const query =
     scope.kind === 'all'
       ? await locals.supabase
-        .from('gallery_settings')
-        .select(`id, scope, gallery_id, ${GALLERY_SETTINGS_FIELD_SELECT}`)
-        .eq('scope', 'all')
-        .maybeSingle()
+          .from('gallery_settings')
+          .select(`id, scope, gallery_id, ${GALLERY_SETTINGS_FIELD_SELECT}`)
+          .eq('scope', 'all')
+          .maybeSingle()
       : await locals.supabase
-        .from('gallery_settings')
-        .select(`id, scope, gallery_id, ${GALLERY_SETTINGS_FIELD_SELECT}`)
-        .eq('scope', 'gallery')
-        .eq('gallery_id', scope.galleryId)
-        .maybeSingle();
+          .from('gallery_settings')
+          .select(`id, scope, gallery_id, ${GALLERY_SETTINGS_FIELD_SELECT}`)
+          .eq('scope', 'gallery')
+          .eq('gallery_id', scope.galleryId)
+          .maybeSingle();
 
   if (query.error) throw new Error(query.error.message);
   if (query.data) {
@@ -333,14 +333,14 @@ const saveScopeSettings = async (
   const update =
     scope.kind === 'all'
       ? await locals.supabase
-        .from('gallery_settings')
-        .update(payload)
-        .eq('scope', 'all')
+          .from('gallery_settings')
+          .update(payload)
+          .eq('scope', 'all')
       : await locals.supabase
-        .from('gallery_settings')
-        .update(payload)
-        .eq('scope', 'gallery')
-        .eq('gallery_id', scope.galleryId);
+          .from('gallery_settings')
+          .update(payload)
+          .eq('scope', 'gallery')
+          .eq('gallery_id', scope.galleryId);
   if (update.error) throw new Error(update.error.message);
 };
 

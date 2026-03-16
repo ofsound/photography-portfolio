@@ -281,13 +281,11 @@
 <AdminPageHeader title="Homepage" actions={headerActions} />
 
 {#snippet headerActions()}
-  <div class="ml-auto">
-    <AdminSegmentedToggle
-      segments={sections}
-      activeKey={section}
-      ariaLabel="Homepage admin sections"
-    />
-  </div>
+  <AdminSegmentedToggle
+    segments={sections}
+    activeKey={section}
+    ariaLabel="Homepage admin sections"
+  />
 {/snippet}
 
 {#if section === 'slides'}

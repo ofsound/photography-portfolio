@@ -43,52 +43,57 @@
 
 <div>
   <AdminHeader>
-    <nav class="flex justify-between">
-      <div class="flex items-center gap-3">
-        <a
-          href={resolve('/admin/galleries')}
-          class="-m-2 p-2 text-text-muted transition-colors hover:text-brand"
-          aria-label="Back to Galleries"
-        >
-          <svg
-            class="size-4"
-            viewBox="0 0 16 16"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <path d="M10 3 5 8l5 5" />
-          </svg>
-        </a>
-        <AdminHeading>{galleryName}</AdminHeading>
-        {#if currentView === 'photos'}
-          <AdminButton
-            href={photosHref}
-            variant="default"
-            size="xs"
-            selected={!showArchived}
-          >
-            Active ({activeCount})
-          </AdminButton>
-          <AdminButton
-            href={`${photosHref}?showArchived=1`}
-            variant="default"
-            size="xs"
-            selected={showArchived}
-          >
-            Archived ({archivedCount})
-          </AdminButton>
-        {/if}
-      </div>
-
-      <div class="flex items-center gap-4">
+    <nav class="flex flex-col gap-4 md:flex-row md:justify-between md:gap-0">
+      <div class="flex justify-center md:order-2">
         <AdminSegmentedToggle
           segments={sections}
           activeKey={currentView}
           ariaLabel="Gallery admin sections"
         />
+      </div>
+      <div
+        class="flex flex-col gap-3 md:order-1 md:flex-row md:items-center md:gap-3"
+      >
+        <div class="flex items-center gap-3">
+          <a
+            href={resolve('/admin/galleries')}
+            class="-m-2 p-2 text-text-muted transition-colors hover:text-brand"
+            aria-label="Back to Galleries"
+          >
+            <svg
+              class="size-4"
+              viewBox="0 0 16 16"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M10 3 5 8l5 5" />
+            </svg>
+          </a>
+          <AdminHeading>{galleryName}</AdminHeading>
+        </div>
+        {#if currentView === 'photos'}
+          <div class="flex items-center gap-3">
+            <AdminButton
+              href={photosHref}
+              variant="default"
+              size="xs"
+              selected={!showArchived}
+            >
+              Active ({activeCount})
+            </AdminButton>
+            <AdminButton
+              href={`${photosHref}?showArchived=1`}
+              variant="default"
+              size="xs"
+              selected={showArchived}
+            >
+              Archived ({archivedCount})
+            </AdminButton>
+          </div>
+        {/if}
       </div>
     </nav>
   </AdminHeader>

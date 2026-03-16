@@ -67,6 +67,8 @@
     getCurrentPage: () => state.currentPage,
     getPageSize: () => state.pageSize,
     getPhotos: () => state.photos,
+    getLoopNavigation: () =>
+      data.gallerySettings?.loop_gallery_navigation ?? true,
   });
 
   const FADE_OUT_CHROME_MS = 280;
@@ -1081,6 +1083,8 @@
       false}
     showPhotoInfoLicenseText={data.gallerySettings
       ?.show_photo_info_license_text ?? false}
+    showPhotoInfoPosition={data.gallerySettings
+      ?.show_photo_info_position ?? false}
     {isTransitioning}
     {canCycleGallery}
     navButtonPreset={normalizeNavButtonPreset(

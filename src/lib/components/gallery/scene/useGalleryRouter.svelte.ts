@@ -14,6 +14,7 @@ type GalleryRouterOptions = {
   getCurrentPage: () => number;
   getPageSize: () => number;
   getPhotos: () => GalleryPhoto[];
+  getLoopNavigation: () => boolean;
 };
 
 const parseSlugFromPhotoHref = (href: string | null) => {
@@ -32,6 +33,7 @@ export const createGalleryRouter = ({
   getCurrentPage,
   getPageSize,
   getPhotos,
+  getLoopNavigation,
 }: GalleryRouterOptions) => {
   const galleryBasePath = () => buildGalleryPath(getRouteScopeSlug());
 
@@ -79,8 +81,13 @@ export const createGalleryRouter = ({
       return { prevGalleryHref: null, nextGalleryHref: null };
     }
 
-    const prev = photos[(index - 1 + photos.length) % photos.length];
-    const next = photos[(index + 1) % photos.length];
+    const loop = getLoopNavigation();
+    const prev = loop
+      ? photos[(index - 1 + photos.length) % photos.length]
+      : photos[index - 1] ?? null;
+    const next = loop
+      ? photos[(index + 1) % photos.length]
+      : photos[index + 1] ?? null;
 
     return {
       prevGalleryHref: prev?.slug ? photoPath(prev.slug) : null,

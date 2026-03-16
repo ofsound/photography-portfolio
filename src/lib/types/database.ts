@@ -199,8 +199,10 @@ export type Database = {
           show_photo_info_license_text: boolean;
           show_photo_info_title: boolean;
           show_photograph_info: boolean;
+          show_photo_info_position: boolean;
           show_in_nav: boolean;
           show_thumbnail_zoom_hover: boolean;
+          loop_gallery_navigation: boolean;
           thumbnail_entrance_preset: string;
           thumbnail_entrance_stagger_ms: number;
           preloader_preset: string;
@@ -242,8 +244,10 @@ export type Database = {
           show_photo_info_license_text?: boolean;
           show_photo_info_title?: boolean;
           show_photograph_info?: boolean;
+          show_photo_info_position?: boolean;
           show_in_nav?: boolean;
           show_thumbnail_zoom_hover?: boolean;
+          loop_gallery_navigation?: boolean;
           thumbnail_entrance_preset?: string;
           thumbnail_entrance_stagger_ms?: number;
           preloader_preset?: string;
@@ -284,8 +288,10 @@ export type Database = {
           show_photo_info_license_text?: boolean;
           show_photo_info_title?: boolean;
           show_photograph_info?: boolean;
+          show_photo_info_position?: boolean;
           show_in_nav?: boolean;
           show_thumbnail_zoom_hover?: boolean;
+          loop_gallery_navigation?: boolean;
           thumbnail_entrance_preset?: string;
           thumbnail_entrance_stagger_ms?: number;
           preloader_preset?: string;
@@ -813,8 +819,10 @@ export type Database = {
           show_photo_info_license_text: boolean;
           show_photo_info_title: boolean;
           show_photograph_info: boolean;
+          show_photo_info_position: boolean;
           show_search_link_in_nav: boolean;
           show_thumbnail_zoom_hover: boolean;
+          loop_gallery_navigation: boolean;
           singleton_id: number;
           thumbnail_entrance_preset: string;
           thumbnail_entrance_stagger_ms: number;
@@ -866,8 +874,10 @@ export type Database = {
           show_photo_info_license_text?: boolean;
           show_photo_info_title?: boolean;
           show_photograph_info?: boolean;
+          show_photo_info_position?: boolean;
           show_search_link_in_nav?: boolean;
           show_thumbnail_zoom_hover?: boolean;
+          loop_gallery_navigation?: boolean;
           singleton_id?: number;
           thumbnail_entrance_preset?: string;
           thumbnail_entrance_stagger_ms?: number;
@@ -919,8 +929,10 @@ export type Database = {
           show_photo_info_license_text?: boolean;
           show_photo_info_title?: boolean;
           show_photograph_info?: boolean;
+          show_photo_info_position?: boolean;
           show_search_link_in_nav?: boolean;
           show_thumbnail_zoom_hover?: boolean;
+          loop_gallery_navigation?: boolean;
           singleton_id?: number;
           thumbnail_entrance_preset?: string;
           thumbnail_entrance_stagger_ms?: number;

@@ -52,6 +52,8 @@ export const GALLERY_SETTINGS_FIELD_KEYS = [
   'show_photo_info_license_text',
   'show_photograph_info',
   'show_thumbnail_zoom_hover',
+  'loop_gallery_navigation',
+  'show_photo_info_position',
 ] as const satisfies ReadonlyArray<keyof SiteSettingsRow>;
 
 export const GALLERY_SETTINGS_FIELD_SELECT =
@@ -258,6 +260,12 @@ export const normalizeGallerySettingsForRead = (
     show_thumbnail_zoom_hover:
       source.show_thumbnail_zoom_hover ??
       GALLERY_SETTINGS_DEFAULTS.show_thumbnail_zoom_hover,
+    loop_gallery_navigation:
+      source.loop_gallery_navigation ??
+      GALLERY_SETTINGS_DEFAULTS.loop_gallery_navigation,
+    show_photo_info_position:
+      source.show_photo_info_position ??
+      GALLERY_SETTINGS_DEFAULTS.show_photo_info_position,
   };
 };
 
@@ -306,6 +314,8 @@ const viewerGallerySettingProjectors: {
     settings.show_photo_info_license_text,
   show_photograph_info: (settings) => settings.show_photograph_info,
   show_thumbnail_zoom_hover: (settings) => settings.show_thumbnail_zoom_hover,
+  loop_gallery_navigation: (settings) => settings.loop_gallery_navigation,
+  show_photo_info_position: (settings) => settings.show_photo_info_position,
 };
 
 export const projectViewerGallerySettings = (

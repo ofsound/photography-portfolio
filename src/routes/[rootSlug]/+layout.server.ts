@@ -110,11 +110,11 @@ const loadGalleryModeData = async ({
 
   const resolvedRoute = routePhoto
     ? await resolvePhotoRoute(
-        locals,
-        scope,
-        routePhoto.photoSlug,
-        routePhoto.imageId,
-      )
+      locals,
+      scope,
+      routePhoto.photoSlug,
+      routePhoto.imageId,
+    )
     : null;
 
   if (resolvedRoute?.kind === 'redirect') {
@@ -190,6 +190,7 @@ const loadGalleryModeData = async ({
       locals,
       scope,
       activePhoto.id,
+      settings.loop_gallery_navigation ?? true,
     );
     active = {
       photoSlug: activePhoto.slug,

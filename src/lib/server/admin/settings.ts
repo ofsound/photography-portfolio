@@ -222,6 +222,8 @@ const readPayload = (
     ),
     show_photograph_info: photographInfoMode !== 'hidden',
     show_thumbnail_zoom_hover: asBoolean(form.get('show_thumbnail_zoom_hover')),
+    loop_gallery_navigation: asBoolean(form.get('loop_gallery_navigation')),
+    show_photo_info_position: asBoolean(form.get('show_photo_info_position')),
   };
 
   if (role === 'admin') {
@@ -233,7 +235,7 @@ const readPayload = (
     );
     payload.thumbnail_entrance_stagger_ms = clampNumber(
       asOptionalNumber(form.get('thumbnail_entrance_stagger_ms')) ??
-        GALLERY_SETTINGS_DEFAULTS.thumbnail_entrance_stagger_ms,
+      GALLERY_SETTINGS_DEFAULTS.thumbnail_entrance_stagger_ms,
       10,
       200,
       GALLERY_SETTINGS_DEFAULTS.thumbnail_entrance_stagger_ms,

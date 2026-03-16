@@ -35,6 +35,8 @@ export type GallerySettingsDefaults = Pick<
   | 'show_photo_info_license_text'
   | 'show_photograph_info'
   | 'show_thumbnail_zoom_hover'
+  | 'loop_gallery_navigation'
+  | 'show_photo_info_position'
 >;
 
 export const GALLERY_SETTINGS_DEFAULTS: GallerySettingsDefaults = {
@@ -71,4 +73,6 @@ export const GALLERY_SETTINGS_DEFAULTS: GallerySettingsDefaults = {
   show_photo_info_license_text: false,
   show_photograph_info: true,
   show_thumbnail_zoom_hover: true,
+  loop_gallery_navigation: true,
+  show_photo_info_position: false,
 };

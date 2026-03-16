@@ -22,6 +22,9 @@
     showCaptureDate,
     showDimensions,
     showLicense,
+    showPosition,
+    activePosition,
+    totalPhotos,
     showAdditionalStrip,
     overlayChromeHidden,
     closingChromeMs,
@@ -42,6 +45,9 @@
     showCaptureDate: boolean;
     showDimensions: boolean;
     showLicense: boolean;
+    showPosition: boolean;
+    activePosition: number;
+    totalPhotos: number;
     showAdditionalStrip: boolean;
     overlayChromeHidden: boolean;
     closingChromeMs: number;
@@ -56,7 +62,8 @@
       showDescription ||
       showCaptureDate ||
       showDimensions ||
-      showLicense,
+      showLicense ||
+      showPosition,
   );
 
   const positionClasses = $derived.by(() => {
@@ -117,6 +124,11 @@
                 >License</span
               >
               {licenseText}
+            </p>
+          {/if}
+          {#if showPosition}
+            <p class="text-xs tracking-wide text-text/65">
+              {activePosition} / {totalPhotos}
             </p>
           {/if}
         </div>

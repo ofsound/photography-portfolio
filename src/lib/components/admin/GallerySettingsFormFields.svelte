@@ -536,6 +536,23 @@
   </FormField>
 
   <FormField
+    label="Loop Gallery Navigation"
+    id={p('loop_gallery_navigation')}
+    labelSrOnly
+  >
+    <label class="flex items-center gap-2 text-sm">
+      <input
+        id={p('loop_gallery_navigation')}
+        type="checkbox"
+        name="loop_gallery_navigation"
+        checked={settings.loop_gallery_navigation}
+        disabled={readonly}
+      />
+      Loop gallery navigation
+    </label>
+  </FormField>
+
+  <FormField
     label="Show Photograph Info"
     id={p('photograph_info_mode')}
     class="w-fit"
@@ -628,6 +645,16 @@
           disabled={readonly}
         />
         Show license
+      </label>
+      <label class="flex items-center gap-2 text-sm">
+        <input
+          id={p('show_photo_info_position')}
+          type="checkbox"
+          name="show_photo_info_position"
+          checked={settings.show_photo_info_position}
+          disabled={readonly}
+        />
+        Show position (1/N)
       </label>
     </AdminCard>
   </FormField>

@@ -29,8 +29,8 @@
     promoted,
     galleryName: _galleryName,
     detailViewMode,
-    activePosition: _activePosition,
-    totalPhotos: _totalPhotos,
+    activePosition,
+    totalPhotos,
     supportsAdditionalImages,
     transitionPhase,
     overlayChromeHidden,
@@ -41,6 +41,7 @@
     showPhotoInfoCaptureDate,
     showPhotoInfoDimensions,
     showPhotoInfoLicenseText,
+    showPhotoInfoPosition,
     classicDetailHInsetPct,
     classicDetailVInsetPct,
     classicDetailVPositionPct,
@@ -78,6 +79,7 @@
     showPhotoInfoCaptureDate: boolean;
     showPhotoInfoDimensions: boolean;
     showPhotoInfoLicenseText: boolean;
+    showPhotoInfoPosition: boolean;
     classicDetailHInsetPct: number;
     classicDetailVInsetPct: number;
     classicDetailVPositionPct: number;
@@ -124,13 +126,17 @@
   const showLicense = $derived(
     showPhotoInfoLicenseText && hasText(licenseText),
   );
+  const showPosition = $derived(
+    showPhotoInfoPosition && activePosition > 0 && totalPhotos > 0,
+  );
   const isContactSheet = $derived(detailViewMode === 'contact_sheet');
   const showAnyText = $derived(
     showTitle ||
       showDescription ||
       showCaptureDate ||
       showDimensions ||
-      showLicense,
+      showLicense ||
+      showPosition,
   );
   const showClassicAdditionalStrip = $derived(
     !isContactSheet &&
@@ -521,6 +527,9 @@
     {showCaptureDate}
     {showDimensions}
     {showLicense}
+    {showPosition}
+    {activePosition}
+    {totalPhotos}
     showAdditionalStrip={showFloatingAdditionalStrip}
     {overlayChromeHidden}
     {closingChromeMs}
@@ -583,6 +592,11 @@
                     >License</span
                   >
                   {licenseText}
+                </p>
+              {/if}
+              {#if showPosition}
+                <p class="text-xs tracking-wide text-text/65">
+                  {activePosition} / {totalPhotos}
                 </p>
               {/if}
             </div>

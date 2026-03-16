@@ -13,6 +13,7 @@ export type GallerySettingsDefaults = Pick<
   | 'transition_preset'
   | 'thumbnail_entrance_preset'
   | 'thumbnail_entrance_stagger_ms'
+  | 'thumbnail_entrance_duration_ms'
   | 'preloader_preset'
   | 'nav_button_preset'
   | 'classic_detail_border_px'
@@ -51,6 +52,7 @@ export const GALLERY_SETTINGS_DEFAULTS: GallerySettingsDefaults = {
   transition_preset: 'cinematic',
   thumbnail_entrance_preset: 'cascade',
   thumbnail_entrance_stagger_ms: 40,
+  thumbnail_entrance_duration_ms: 520,
   preloader_preset: 'minimal',
   nav_button_preset: 'whisper',
   classic_detail_border_px: 0,

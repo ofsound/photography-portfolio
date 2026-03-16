@@ -27,6 +27,7 @@ type ThumbnailEntranceOrderContext = {
 type ThumbnailEntranceMotionContext = {
   rank: number;
   staggerOverrideMs: number;
+  durationOverrideMs?: number;
 };
 
 type ThumbnailEntrancePresetRuntime = {
@@ -75,10 +76,10 @@ const RUNTIMES: Record<
     durationMs: 520,
     staggerMs: 42,
     buildOrder: (tiles) => [...tiles].sort(byTopLeft).map((tile) => tile.slug),
-    buildMotion: ({ rank, staggerOverrideMs }) => ({
+    buildMotion: ({ rank, staggerOverrideMs, durationOverrideMs }) => ({
       className: 'thumb-entrance-fx--cascade',
       delayMs: rank * staggerOverrideMs,
-      durationMs: 520,
+      durationMs: durationOverrideMs ?? 520,
       staggerMs: staggerOverrideMs,
     }),
   },
@@ -103,10 +104,10 @@ const RUNTIMES: Record<
           return byTopLeft(a, b);
         })
         .map((tile) => tile.slug),
-    buildMotion: ({ rank, staggerOverrideMs }) => ({
+    buildMotion: ({ rank, staggerOverrideMs, durationOverrideMs }) => ({
       className: 'thumb-entrance-fx--lift',
       delayMs: rank * staggerOverrideMs,
-      durationMs: 500,
+      durationMs: durationOverrideMs ?? 500,
       staggerMs: staggerOverrideMs,
     }),
   },
@@ -115,10 +116,10 @@ const RUNTIMES: Record<
     durationMs: 430,
     staggerMs: 30,
     buildOrder: (tiles) => shuffle(tiles).map((tile) => tile.slug),
-    buildMotion: ({ rank, staggerOverrideMs }) => ({
+    buildMotion: ({ rank, staggerOverrideMs, durationOverrideMs }) => ({
       className: 'thumb-entrance-fx--pop',
       delayMs: rank * staggerOverrideMs,
-      durationMs: 430,
+      durationMs: durationOverrideMs ?? 430,
       staggerMs: staggerOverrideMs,
     }),
   },
@@ -127,10 +128,10 @@ const RUNTIMES: Record<
     durationMs: 560,
     staggerMs: 50,
     buildOrder: (tiles) => [...tiles].sort(byTopLeft).map((tile) => tile.slug),
-    buildMotion: ({ rank, staggerOverrideMs }) => ({
+    buildMotion: ({ rank, staggerOverrideMs, durationOverrideMs }) => ({
       className: 'thumb-entrance-fx--flip',
       delayMs: rank * staggerOverrideMs,
-      durationMs: 560,
+      durationMs: durationOverrideMs ?? 560,
       staggerMs: staggerOverrideMs,
     }),
   },

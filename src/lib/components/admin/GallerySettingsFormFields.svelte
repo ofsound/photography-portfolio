@@ -228,6 +228,23 @@
     />
   </FormField>
   <FormField
+    label={'Entrance Duration (ms)' +
+      (disableTransitionPreset ? ' (Admin)' : '')}
+    id={p('thumbnail_entrance_duration_ms')}
+    class="w-fit"
+  >
+    <FormInput
+      id={p('thumbnail_entrance_duration_ms')}
+      name="thumbnail_entrance_duration_ms"
+      type="number"
+      min="100"
+      max="1200"
+      step="10"
+      value={String(settings.thumbnail_entrance_duration_ms ?? 520)}
+      disabled={readonly || disableTransitionPreset}
+    />
+  </FormField>
+  <FormField
     label={'Loading Animation' + (disableTransitionPreset ? ' (Admin)' : '')}
     id={p('preloader_preset')}
     class="w-fit"

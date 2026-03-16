@@ -30,6 +30,7 @@ export const GALLERY_SETTINGS_FIELD_KEYS = [
   'transition_preset',
   'thumbnail_entrance_preset',
   'thumbnail_entrance_stagger_ms',
+  'thumbnail_entrance_duration_ms',
   'preloader_preset',
   'nav_button_preset',
   'classic_detail_border_px',
@@ -168,6 +169,12 @@ export const normalizeGallerySettingsForRead = (
       10,
       200,
     ),
+    thumbnail_entrance_duration_ms: clampNumber(
+      source.thumbnail_entrance_duration_ms,
+      GALLERY_SETTINGS_DEFAULTS.thumbnail_entrance_duration_ms,
+      100,
+      1200,
+    ),
     preloader_preset: preloaderPreset,
     nav_button_preset: navButtonPreset,
     classic_detail_border_px: clampNumber(
@@ -286,6 +293,8 @@ const viewerGallerySettingProjectors: {
   thumbnail_entrance_preset: (settings) => settings.thumbnail_entrance_preset,
   thumbnail_entrance_stagger_ms: (settings) =>
     settings.thumbnail_entrance_stagger_ms,
+  thumbnail_entrance_duration_ms: (settings) =>
+    settings.thumbnail_entrance_duration_ms,
   preloader_preset: (settings) => settings.preloader_preset,
   nav_button_preset: (settings) => settings.nav_button_preset,
   classic_detail_border_px: (settings) => settings.classic_detail_border_px,

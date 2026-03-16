@@ -240,6 +240,13 @@ const readPayload = (
       200,
       GALLERY_SETTINGS_DEFAULTS.thumbnail_entrance_stagger_ms,
     );
+    payload.thumbnail_entrance_duration_ms = clampNumber(
+      asOptionalNumber(form.get('thumbnail_entrance_duration_ms')) ??
+        GALLERY_SETTINGS_DEFAULTS.thumbnail_entrance_duration_ms,
+      100,
+      1200,
+      GALLERY_SETTINGS_DEFAULTS.thumbnail_entrance_duration_ms,
+    );
     payload.preloader_preset = asPreloaderPreset(form.get('preloader_preset'));
     payload.nav_button_preset = asNavButtonPreset(
       form.get('nav_button_preset'),

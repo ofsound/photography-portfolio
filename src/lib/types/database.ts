@@ -205,6 +205,7 @@ export type Database = {
           loop_gallery_navigation: boolean;
           thumbnail_entrance_preset: string;
           thumbnail_entrance_stagger_ms: number;
+          thumbnail_entrance_duration_ms: number;
           preloader_preset: string;
           nav_button_preset: string;
           theme_default: Database['public']['Enums']['theme_mode'];
@@ -250,6 +251,7 @@ export type Database = {
           loop_gallery_navigation?: boolean;
           thumbnail_entrance_preset?: string;
           thumbnail_entrance_stagger_ms?: number;
+          thumbnail_entrance_duration_ms?: number;
           preloader_preset?: string;
           nav_button_preset?: string;
           theme_default?: Database['public']['Enums']['theme_mode'];
@@ -294,6 +296,7 @@ export type Database = {
           loop_gallery_navigation?: boolean;
           thumbnail_entrance_preset?: string;
           thumbnail_entrance_stagger_ms?: number;
+          thumbnail_entrance_duration_ms?: number;
           preloader_preset?: string;
           nav_button_preset?: string;
           theme_default?: Database['public']['Enums']['theme_mode'];
@@ -826,6 +829,7 @@ export type Database = {
           singleton_id: number;
           thumbnail_entrance_preset: string;
           thumbnail_entrance_stagger_ms: number;
+          thumbnail_entrance_duration_ms: number;
           preloader_preset: string;
           nav_button_preset: string;
           theme_default: Database['public']['Enums']['theme_mode'];
@@ -881,6 +885,7 @@ export type Database = {
           singleton_id?: number;
           thumbnail_entrance_preset?: string;
           thumbnail_entrance_stagger_ms?: number;
+          thumbnail_entrance_duration_ms?: number;
           preloader_preset?: string;
           nav_button_preset?: string;
           theme_default?: Database['public']['Enums']['theme_mode'];
@@ -936,6 +941,7 @@ export type Database = {
           singleton_id?: number;
           thumbnail_entrance_preset?: string;
           thumbnail_entrance_stagger_ms?: number;
+          thumbnail_entrance_duration_ms?: number;
           preloader_preset?: string;
           nav_button_preset?: string;
           theme_default?: Database['public']['Enums']['theme_mode'];

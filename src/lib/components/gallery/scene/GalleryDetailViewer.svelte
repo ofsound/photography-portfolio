@@ -402,113 +402,123 @@
     </a>
 
     {#if canCycleGallery}
-      <!-- Prev button -->
-      <a
-        href={resolve(withCurrentSearch(prevGalleryHref!) as `/${string}`)}
-        onclick={(event: MouseEvent) => navigateNeighbor(event, 'prev')}
-        class="nav-btn nav-btn--prev nav-btn--{navButtonPreset} pointer-events-auto"
-        aria-label="Previous image"
-      >
-        {#if navButtonPreset === 'whisper'}
-          <svg
-            class="nav-btn__chevron"
-            viewBox="0 0 24 48"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1"><path d="M18 4L6 24L18 44" /></svg
-          >
-        {:else if navButtonPreset === 'lens'}
-          <span class="nav-btn__ring">
+      {#if prevGalleryHref}
+        <!-- Prev button -->
+        <a
+          href={resolve(withCurrentSearch(prevGalleryHref) as `/${string}`)}
+          onclick={(event: MouseEvent) => navigateNeighbor(event, 'prev')}
+          class="nav-btn nav-btn--prev nav-btn--{navButtonPreset} pointer-events-auto"
+          aria-label="Previous image"
+        >
+          {#if navButtonPreset === 'whisper'}
             <svg
               class="nav-btn__chevron"
               viewBox="0 0 24 48"
               fill="none"
               stroke="currentColor"
-              stroke-width="1.5"><path d="M16 8L8 24L16 40" /></svg
+              stroke-width="1"><path d="M18 4L6 24L18 44" /></svg
             >
-          </span>
-        {:else if navButtonPreset === 'filmStrip'}
-          <span class="nav-btn__strip">
-            <span class="nav-btn__sprocket"></span>
+          {:else if navButtonPreset === 'lens'}
+            <span class="nav-btn__ring">
+              <svg
+                class="nav-btn__chevron"
+                viewBox="0 0 24 48"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"><path d="M16 8L8 24L16 40" /></svg
+              >
+            </span>
+          {:else if navButtonPreset === 'filmStrip'}
+            <span class="nav-btn__strip">
+              <span class="nav-btn__sprocket"></span>
+              <svg
+                class="nav-btn__chevron"
+                viewBox="0 0 24 48"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"><path d="M16 12L8 24L16 36" /></svg
+              >
+              <span class="nav-btn__sprocket"></span>
+            </span>
+          {:else if navButtonPreset === 'cinemark'}
             <svg
               class="nav-btn__chevron"
-              viewBox="0 0 24 48"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.5"><path d="M16 12L8 24L16 36" /></svg
+              viewBox="0 0 32 48"
+              fill="currentColor"
+              ><path d="M26 4L4 24L26 44L26 38L12 24L26 10Z" /></svg
             >
-            <span class="nav-btn__sprocket"></span>
-          </span>
-        {:else if navButtonPreset === 'cinemark'}
-          <svg class="nav-btn__chevron" viewBox="0 0 32 48" fill="currentColor"
-            ><path d="M26 4L4 24L26 44L26 38L12 24L26 10Z" /></svg
-          >
-        {:else if navButtonPreset === 'gate'}
-          <span class="nav-btn__curtain">
-            <svg
-              class="nav-btn__chevron"
-              viewBox="0 0 24 48"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"><path d="M16 12L8 24L16 36" /></svg
-            >
-          </span>
-        {/if}
-      </a>
+          {:else if navButtonPreset === 'gate'}
+            <span class="nav-btn__curtain">
+              <svg
+                class="nav-btn__chevron"
+                viewBox="0 0 24 48"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"><path d="M16 12L8 24L16 36" /></svg
+              >
+            </span>
+          {/if}
+        </a>
+      {/if}
 
-      <!-- Next button -->
-      <a
-        href={resolve(withCurrentSearch(nextGalleryHref!) as `/${string}`)}
-        onclick={(event: MouseEvent) => navigateNeighbor(event, 'next')}
-        class="nav-btn nav-btn--next nav-btn--{navButtonPreset} pointer-events-auto"
-        aria-label="Next image"
-      >
-        {#if navButtonPreset === 'whisper'}
-          <svg
-            class="nav-btn__chevron"
-            viewBox="0 0 24 48"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1"><path d="M6 4L18 24L6 44" /></svg
-          >
-        {:else if navButtonPreset === 'lens'}
-          <span class="nav-btn__ring">
+      {#if nextGalleryHref}
+        <!-- Next button -->
+        <a
+          href={resolve(withCurrentSearch(nextGalleryHref) as `/${string}`)}
+          onclick={(event: MouseEvent) => navigateNeighbor(event, 'next')}
+          class="nav-btn nav-btn--next nav-btn--{navButtonPreset} pointer-events-auto"
+          aria-label="Next image"
+        >
+          {#if navButtonPreset === 'whisper'}
             <svg
               class="nav-btn__chevron"
               viewBox="0 0 24 48"
               fill="none"
               stroke="currentColor"
-              stroke-width="1.5"><path d="M8 8L16 24L8 40" /></svg
+              stroke-width="1"><path d="M6 4L18 24L6 44" /></svg
             >
-          </span>
-        {:else if navButtonPreset === 'filmStrip'}
-          <span class="nav-btn__strip">
-            <span class="nav-btn__sprocket"></span>
+          {:else if navButtonPreset === 'lens'}
+            <span class="nav-btn__ring">
+              <svg
+                class="nav-btn__chevron"
+                viewBox="0 0 24 48"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"><path d="M8 8L16 24L8 40" /></svg
+              >
+            </span>
+          {:else if navButtonPreset === 'filmStrip'}
+            <span class="nav-btn__strip">
+              <span class="nav-btn__sprocket"></span>
+              <svg
+                class="nav-btn__chevron"
+                viewBox="0 0 24 48"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"><path d="M8 12L16 24L8 36" /></svg
+              >
+              <span class="nav-btn__sprocket"></span>
+            </span>
+          {:else if navButtonPreset === 'cinemark'}
             <svg
               class="nav-btn__chevron"
-              viewBox="0 0 24 48"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.5"><path d="M8 12L16 24L8 36" /></svg
+              viewBox="0 0 32 48"
+              fill="currentColor"
+              ><path d="M6 4L28 24L6 44L6 38L20 24L6 10Z" /></svg
             >
-            <span class="nav-btn__sprocket"></span>
-          </span>
-        {:else if navButtonPreset === 'cinemark'}
-          <svg class="nav-btn__chevron" viewBox="0 0 32 48" fill="currentColor"
-            ><path d="M6 4L28 24L6 44L6 38L20 24L6 10Z" /></svg
-          >
-        {:else if navButtonPreset === 'gate'}
-          <span class="nav-btn__curtain">
-            <svg
-              class="nav-btn__chevron"
-              viewBox="0 0 24 48"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"><path d="M8 12L16 24L8 36" /></svg
-            >
-          </span>
-        {/if}
-      </a>
+          {:else if navButtonPreset === 'gate'}
+            <span class="nav-btn__curtain">
+              <svg
+                class="nav-btn__chevron"
+                viewBox="0 0 24 48"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"><path d="M8 12L16 24L8 36" /></svg
+              >
+            </span>
+          {/if}
+        </a>
+      {/if}
     {/if}
   </div>
 {/if}

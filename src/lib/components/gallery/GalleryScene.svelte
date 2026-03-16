@@ -280,9 +280,13 @@
     const rank = entranceRanks.get(slug) ?? fallbackRank;
     const staggerOverrideMs =
       data.gallerySettings?.thumbnail_entrance_stagger_ms ?? 40;
+    const durationOverrideMs =
+      data.gallerySettings?.thumbnail_entrance_duration_ms ??
+      thumbnailEntranceRuntime.durationMs;
     const motion = thumbnailEntranceRuntime.buildMotion({
       rank,
       staggerOverrideMs,
+      durationOverrideMs,
     });
     return {
       className: `thumb-entrance-fx ${motion.className}`,
@@ -426,7 +430,7 @@
   );
 
   const canCycleGallery = $derived(
-    Boolean(state.prevGalleryHref && state.nextGalleryHref),
+    Boolean(state.prevGalleryHref || state.nextGalleryHref),
   );
 
   const activePhoto = $derived(
@@ -940,8 +944,11 @@
     const configuredStaggerMs =
       data.gallerySettings?.thumbnail_entrance_stagger_ms ??
       thumbnailEntranceRuntime.staggerMs;
+    const configuredDurationMs =
+      data.gallerySettings?.thumbnail_entrance_duration_ms ??
+      thumbnailEntranceRuntime.durationMs;
     const unlockAfterMs =
-      thumbnailEntranceRuntime.durationMs +
+      configuredDurationMs +
       Math.max(state.entranceOrderCount - 1, 0) * configuredStaggerMs +
       24;
 

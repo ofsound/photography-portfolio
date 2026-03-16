@@ -26,6 +26,7 @@
     persistPhotoOrder,
     persistTaxonomy,
   } from '$lib/components/admin/photos/persist';
+  import { MEDIA_BELOW_MD } from '$lib/constants/breakpoints';
   import {
     getAdminPhotosPrefs,
     setAdminPhotosPrefs,
@@ -209,7 +210,7 @@
     const prefs = getAdminPhotosPrefs(maxDensity);
     if (prefs) density = prefs.density;
 
-    const mobileMedia = window.matchMedia('(max-width: 767px)');
+    const mobileMedia = window.matchMedia(MEDIA_BELOW_MD);
     isMobile = mobileMedia.matches;
     const onMobileChange = (e: MediaQueryListEvent) => {
       isMobile = e.matches;

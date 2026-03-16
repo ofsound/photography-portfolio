@@ -32,6 +32,7 @@
     routeKeyFor,
   } from './scene/useGalleryRouter.svelte';
   import { createGalleryTileAnimator } from './scene/useGalleryTileAnimator.svelte';
+  import { MEDIA_BELOW_MD } from '$lib/constants/breakpoints';
   import { normalizeThumbnailEntrancePreset } from '$lib/constants/thumbnail-entrance';
   import { normalizePreloaderPreset } from '$lib/constants/preloader-preset';
   import { normalizeNavButtonPreset } from '$lib/constants/nav-button-preset';
@@ -127,7 +128,7 @@
       : false;
   const isMobileViewport = () =>
     typeof window !== 'undefined'
-      ? window.matchMedia('(max-width: 767px)').matches
+      ? window.matchMedia(MEDIA_BELOW_MD).matches
       : false;
   const detectSafariBrowser = () => {
     if (typeof window === 'undefined') return false;
@@ -885,7 +886,7 @@
 
   $effect(() => {
     if (typeof window === 'undefined' || !state.mounted) return;
-    const media = window.matchMedia('(max-width: 767px)');
+    const media = window.matchMedia(MEDIA_BELOW_MD);
     const onChange = () => {
       galleryDensityStore.set(defaultDensityForViewport());
     };
@@ -1083,8 +1084,8 @@
       false}
     showPhotoInfoLicenseText={data.gallerySettings
       ?.show_photo_info_license_text ?? false}
-    showPhotoInfoPosition={data.gallerySettings
-      ?.show_photo_info_position ?? false}
+    showPhotoInfoPosition={data.gallerySettings?.show_photo_info_position ??
+      false}
     {isTransitioning}
     {canCycleGallery}
     navButtonPreset={normalizeNavButtonPreset(

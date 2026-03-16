@@ -18,6 +18,7 @@
     buildGalleryPhotoPath,
     isGalleryDetailPath,
   } from '$lib/utils/gallery-routes';
+  import { MEDIA_BELOW_MD } from '$lib/constants/breakpoints';
   import {
     DEFAULT_BRAND_CONTRAST_DARK_HEX,
     DEFAULT_BRAND_CONTRAST_LIGHT_HEX,
@@ -385,7 +386,7 @@
     if (typeof document === 'undefined' || typeof window === 'undefined')
       return;
 
-    const isMobile = window.matchMedia('(max-width: 767px)').matches;
+    const isMobile = window.matchMedia(MEDIA_BELOW_MD).matches;
 
     if (isMobile) {
       document.documentElement.style.setProperty(

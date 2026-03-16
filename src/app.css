@@ -195,6 +195,7 @@ body {
   min-width: 44px;
   min-height: 44px;
   transform: none;
+  @apply max-md:top-4 max-md:left-4;
 }
 .nav-btn__close-glyph {
   width: 16px;
@@ -229,6 +230,7 @@ body {
   transition:
     opacity 280ms ease-out,
     transform 280ms ease-out;
+  @apply max-md:hidden;
 }
 .nav-btn--whisper .nav-btn__chevron {
   width: 14px;
@@ -252,14 +254,10 @@ body {
 .nav-btn--whisper.nav-btn--close {
   padding: 12px;
   opacity: 0.65;
+  @apply max-md:flex max-md:opacity-80;
 }
 .nav-btn--whisper.nav-btn--close:hover {
   transform: translateX(-2px);
-}
-@media (max-width: 640px) {
-  .nav-btn--whisper {
-    display: none;
-  }
 }
 
 /* ── 2. LENS — Aperture ring ─────────────────────────────── */
@@ -280,6 +278,7 @@ body {
     transform 350ms cubic-bezier(0.34, 1.56, 0.64, 1),
     border-color 280ms ease-out,
     background 280ms ease-out;
+  @apply max-md:h-10 max-md:w-10;
 }
 .nav-btn--lens .nav-btn__chevron {
   width: 12px;
@@ -295,6 +294,7 @@ body {
 .nav-btn--lens.nav-btn--close .nav-btn__ring {
   width: 44px;
   height: 44px;
+  @apply max-md:h-10 max-md:w-10;
 }
 .nav-btn--lens.nav-btn--close:hover .nav-btn__ring {
   transform: scale(1.04) rotate(-8deg);
@@ -311,14 +311,8 @@ body {
   transform: scale(0.95);
   transition-duration: 80ms;
 }
-@media (max-width: 640px) {
-  .nav-btn--lens .nav-btn__ring {
-    width: 40px;
-    height: 40px;
-  }
-  .nav-btn--lens {
-    padding: 0 8px;
-  }
+.nav-btn--lens {
+  @apply max-md:px-2;
 }
 
 /* ── 3. FILM STRIP — Perforated sprocket edge ────────────── */
@@ -338,6 +332,7 @@ body {
   transition:
     transform 240ms ease-out,
     background 240ms ease-out;
+  @apply max-md:h-20 max-md:w-[30px];
 }
 .nav-btn--filmStrip.nav-btn--prev .nav-btn__strip {
   border-radius: 0 4px 4px 0;
@@ -389,16 +384,11 @@ body {
   flex-direction: row;
   border-radius: 999px;
   gap: 10px;
+  @apply max-md:h-9 max-md:w-[72px] max-md:gap-2;
 }
 .nav-btn--filmStrip.nav-btn--close:hover .nav-btn__strip {
   transform: translateY(-2px);
   background: color-mix(in srgb, var(--color-surface) 75%, transparent);
-}
-@media (max-width: 640px) {
-  .nav-btn--filmStrip .nav-btn__strip {
-    height: 80px;
-    width: 30px;
-  }
 }
 
 /* ── 4. CINEMARK — Bold typographic arrow ────────────────── */
@@ -408,6 +398,7 @@ body {
   transition:
     opacity 200ms cubic-bezier(0.2, 0, 0.4, 1),
     transform 200ms cubic-bezier(0.2, 0, 0.4, 1);
+  @apply max-md:px-5 max-md:py-4;
 }
 .nav-btn--cinemark .nav-btn__chevron {
   width: 22px;
@@ -416,6 +407,7 @@ body {
   transition:
     filter 200ms ease-out,
     transform 200ms cubic-bezier(0.2, 0, 0.4, 1);
+  @apply max-md:h-7 max-md:w-[18px];
 }
 .nav-btn--cinemark:hover {
   opacity: 0.95;
@@ -430,6 +422,7 @@ body {
     filter 200ms ease-out,
     letter-spacing 200ms cubic-bezier(0.2, 0, 0.4, 1),
     transform 200ms cubic-bezier(0.2, 0, 0.4, 1);
+  @apply max-md:text-[0.66rem] max-md:tracking-[0.18em];
 }
 .nav-btn--cinemark.nav-btn--close:hover .nav-btn__close-word {
   letter-spacing: 0.32em;
@@ -455,15 +448,6 @@ body {
   filter: invert(1);
   transition-duration: 0ms;
 }
-@media (max-width: 640px) {
-  .nav-btn--cinemark {
-    padding: 16px 20px;
-  }
-  .nav-btn--cinemark .nav-btn__chevron {
-    width: 18px;
-    height: 28px;
-  }
-}
 
 /* ── 5. GATE — Reveal curtain edge ───────────────────────── */
 .nav-btn--gate {
@@ -483,6 +467,7 @@ body {
     width 300ms ease-out,
     border-color 300ms ease-out;
   border-color: transparent;
+  @apply max-md:w-8;
 }
 .nav-btn--gate.nav-btn--prev .nav-btn__curtain {
   background: linear-gradient(
@@ -510,6 +495,7 @@ body {
 }
 .nav-btn--gate:hover .nav-btn__curtain {
   width: 56px;
+  @apply max-md:w-10;
 }
 .nav-btn--gate.nav-btn--prev:hover .nav-btn__curtain {
   background: linear-gradient(
@@ -553,6 +539,7 @@ body {
     color-mix(in srgb, var(--color-surface) 72%, transparent),
     color-mix(in srgb, var(--color-surface) 28%, transparent)
   );
+  @apply max-md:h-10 max-md:min-w-[68px] max-md:px-3 max-md:py-0;
 }
 .nav-btn--gate.nav-btn--close:hover .nav-btn__curtain {
   width: auto;
@@ -566,40 +553,6 @@ body {
 }
 .nav-btn--gate.nav-btn--close:active .nav-btn__curtain {
   width: auto;
-}
-@media (max-width: 640px) {
-  .nav-btn--gate .nav-btn__curtain {
-    width: 32px;
-  }
-  .nav-btn--gate:hover .nav-btn__curtain {
-    width: 40px;
-  }
-  .nav-btn--close {
-    top: 16px;
-    left: 16px;
-  }
-  .nav-btn--whisper.nav-btn--close {
-    display: flex;
-    opacity: 0.8;
-  }
-  .nav-btn--lens.nav-btn--close .nav-btn__ring {
-    width: 40px;
-    height: 40px;
-  }
-  .nav-btn--filmStrip.nav-btn--close .nav-btn__strip {
-    width: 72px;
-    height: 36px;
-    gap: 8px;
-  }
-  .nav-btn--cinemark.nav-btn--close .nav-btn__close-word {
-    font-size: 0.66rem;
-    letter-spacing: 0.18em;
-  }
-  .nav-btn--gate.nav-btn--close .nav-btn__curtain {
-    min-width: 68px;
-    height: 40px;
-    padding: 0 12px;
-  }
 }
 
 /* ── Nav button reduced motion ───────────────────────────── */

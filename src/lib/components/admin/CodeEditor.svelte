@@ -5,6 +5,8 @@
   import { oneDark } from '@codemirror/theme-one-dark';
   import CodeMirror from 'svelte-codemirror-editor';
 
+  import { MEDIA_BELOW_MD } from '$lib/constants/breakpoints';
+
   type Props = {
     value?: string;
     name?: string;
@@ -34,8 +36,7 @@
     document.documentElement.getAttribute('data-theme') === 'dark';
 
   const readShouldWrapLines = () =>
-    typeof window !== 'undefined' &&
-    window.matchMedia('(max-width: 639px)').matches;
+    typeof window !== 'undefined' && window.matchMedia(MEDIA_BELOW_MD).matches;
 
   let isDarkMode = $state(readIsDarkMode());
   let shouldWrapLines = $state(readShouldWrapLines());
@@ -64,7 +65,7 @@
 
     observer.observe(document.documentElement, { attributes: true });
 
-    const mediaQuery = window.matchMedia('(max-width: 639px)');
+    const mediaQuery = window.matchMedia(MEDIA_BELOW_MD);
     const onMediaQueryChange = () => {
       checkWrapMode();
     };

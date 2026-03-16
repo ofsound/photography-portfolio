@@ -38,6 +38,8 @@
     leading,
     actions,
   }: Props = $props();
+
+  const hasHeaderContent = $derived(!!(title ?? leading ?? actions));
 </script>
 
 {#if overflow}
@@ -46,6 +48,64 @@
       ? 'lg:max-h-[calc(100dvh-var(--site-header-height)-8rem)] lg:min-h-0'
       : ''}"
   >
+    {#if hasHeaderContent}
+      <AdminHeader>
+        <div class="flex items-center gap-3">
+          {#if leading}
+            {@render leading()}
+          {/if}
+          <AdminHeading>{title}</AdminHeading>
+          {#if actions}
+            {@render actions()}
+          {/if}
+        </div>
+
+        {#if subtitle}
+          <p class="mt-2 text-sm text-text-muted">{subtitle}</p>
+        {/if}
+
+        <AdminToastEmitter
+          message={formMessage}
+          type={formSuccess ? 'success' : 'error'}
+        />
+        <AdminToastEmitter
+          message={dataMessage}
+          type={dataSuccess ? 'success' : 'neutral'}
+          clearQueryMessage={clearDataMessageQuery}
+        />
+      </AdminHeader>
+    {:else}
+      <div class="mb-4">
+        <AdminToastEmitter
+          message={formMessage}
+          type={formSuccess ? 'success' : 'error'}
+        />
+        <AdminToastEmitter
+          message={dataMessage}
+          type={dataSuccess ? 'success' : 'neutral'}
+          clearQueryMessage={clearDataMessageQuery}
+        />
+      </div>
+    {/if}
+    <section class="flex flex-1 flex-col lg:min-h-0 lg:overflow-hidden">
+      <div
+        class="grid min-h-0 flex-1 grid-cols-1 grid-rows-[auto_1fr] gap-8 lg:grid-cols-[24rem_1fr] lg:grid-rows-[1fr]"
+      >
+        <div
+          class="min-w-0 {scrollListOnly
+            ? 'lg:min-h-0 lg:overflow-hidden'
+            : ''}"
+        >
+          {@render create()}
+        </div>
+        <div class="flex min-w-0 flex-col lg:min-h-0 lg:overflow-hidden">
+          {@render list()}
+        </div>
+      </div>
+    </section>
+  </div>
+{:else}
+  {#if hasHeaderContent}
     <AdminHeader>
       <div class="flex items-center gap-3">
         {#if leading}
@@ -71,49 +131,19 @@
         clearQueryMessage={clearDataMessageQuery}
       />
     </AdminHeader>
-    <section class="flex flex-1 flex-col lg:min-h-0 lg:overflow-hidden">
-      <div
-        class="grid min-h-0 flex-1 grid-cols-1 grid-rows-[auto_1fr] gap-8 lg:grid-cols-[24rem_1fr] lg:grid-rows-[1fr]"
-      >
-        <div
-          class="min-w-0 {scrollListOnly
-            ? 'lg:min-h-0 lg:overflow-hidden'
-            : ''}"
-        >
-          {@render create()}
-        </div>
-        <div class="flex min-w-0 flex-col lg:min-h-0 lg:overflow-hidden">
-          {@render list()}
-        </div>
-      </div>
-    </section>
-  </div>
-{:else}
-  <AdminHeader>
-    <div class="flex items-center gap-3">
-      {#if leading}
-        {@render leading()}
-      {/if}
-      <AdminHeading>{title}</AdminHeading>
-      {#if actions}
-        {@render actions()}
-      {/if}
+  {:else}
+    <div class="mb-4">
+      <AdminToastEmitter
+        message={formMessage}
+        type={formSuccess ? 'success' : 'error'}
+      />
+      <AdminToastEmitter
+        message={dataMessage}
+        type={dataSuccess ? 'success' : 'neutral'}
+        clearQueryMessage={clearDataMessageQuery}
+      />
     </div>
-
-    {#if subtitle}
-      <p class="mt-2 text-sm text-text-muted">{subtitle}</p>
-    {/if}
-
-    <AdminToastEmitter
-      message={formMessage}
-      type={formSuccess ? 'success' : 'error'}
-    />
-    <AdminToastEmitter
-      message={dataMessage}
-      type={dataSuccess ? 'success' : 'neutral'}
-      clearQueryMessage={clearDataMessageQuery}
-    />
-  </AdminHeader>
+  {/if}
   <section
     class="flex gap-8 {reverseColumnOrder
       ? 'flex-col-reverse lg:flex-row-reverse'

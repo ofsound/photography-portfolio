@@ -749,14 +749,6 @@
                 class="border-t border-border py-4 text-xl">Search</a
               >
             {/if}
-            {#if hasSession}
-              <a
-                href={resolve('/admin/galleries')}
-                class="border-t border-border py-4 text-xl"
-              >
-                Admin
-              </a>
-            {/if}
           </nav>
 
           {#if !isViewer && siteSettings?.allow_transition_toggle}
@@ -808,9 +800,6 @@
         {/each}
         {#if showSearchLinkInNav}
           <a href={resolve('/search')}>Search</a>
-        {/if}
-        {#if hasSession}
-          <a href={resolve('/admin/galleries')}>Admin</a>
         {/if}
       </nav>
 

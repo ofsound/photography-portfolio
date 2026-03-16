@@ -1,5 +1,6 @@
 <script lang="ts">
   import AdminButton from '$lib/components/admin/AdminButton.svelte';
+  import AdminHeading from '$lib/components/admin/AdminHeading.svelte';
   import AdminPageHeader from '$lib/components/admin/AdminPageHeader.svelte';
   import { useAdminFormState } from '$lib/components/admin/useAdminFormState.svelte';
   import FormField from '$lib/components/FormField.svelte';
@@ -108,236 +109,23 @@
 />
 
 <form method="POST" action="?/saveTypography" class="grid gap-4">
-  <div class="grid gap-3">
-    <FormField
-      label="Public Google Font Import URL"
-      id="public-font-import-url"
-      error={fieldErrors.public_font_import_url}
-    >
-      <FormInput
-        id="public-font-import-url"
-        name="public_font_import_url"
-        value={values.public_font_import_url ??
-          data.typography.public_font_import_url}
-        readonly={!isAdmin}
-      />
-    </FormField>
-
-    <FormField
-      label="Public Font Family"
-      id="public-font-family"
-      helper="Example: 'Gabarito', 'sans-serif'"
-      error={fieldErrors.public_font_family}
-    >
-      <FormInput
-        id="public-font-family"
-        name="public_font_family"
-        value={values.public_font_family ?? data.typography.public_font_family}
-        readonly={!isAdmin}
-      />
-    </FormField>
-
-    <FormField
-      label="Admin Google Font Import URL"
-      id="admin-font-import-url"
-      error={fieldErrors.admin_font_import_url}
-    >
-      <FormInput
-        id="admin-font-import-url"
-        name="admin_font_import_url"
-        value={values.admin_font_import_url ??
-          data.typography.admin_font_import_url}
-        readonly={!isAdmin}
-      />
-    </FormField>
-
-    <FormField
-      label="Admin Font Family"
-      id="admin-font-family"
-      helper="Example: 'Inter', 'sans-serif'"
-      error={fieldErrors.admin_font_family}
-    >
-      <FormInput
-        id="admin-font-family"
-        name="admin_font_family"
-        value={values.admin_font_family ?? data.typography.admin_font_family}
-        readonly={!isAdmin}
-      />
-    </FormField>
-
+  <div class="flex flex-col gap-3">
     <FormField
       label="Default Max Width (px)"
       id="default-page-max-width-px"
       helper="Default/fallback max width for /search and custom pages."
       error={fieldErrors.default_page_max_width_px}
     >
-      <FormInput
-        id="default-page-max-width-px"
-        name="default_page_max_width_px"
-        type="number"
-        min={1}
-        step={1}
-        value={values.default_page_max_width_px != null
-          ? String(values.default_page_max_width_px)
-          : String(data.typography.default_page_max_width_px)}
-        readonly={!isAdmin}
-      />
-    </FormField>
-
-    <h2
-      class="mt-2 text-sm font-semibold tracking-wide text-text-muted uppercase"
-    >
-      Brand Colors
-    </h2>
-
-    <FormField
-      label="Brand Color (Light Theme)"
-      id="brand-light-hex"
-      error={fieldErrors.brand_light_hex}
-    >
-      <div class="grid gap-2 sm:grid-cols-[3.5rem_minmax(0,1fr)]">
-        <input
-          id="brand-light-hex-picker"
-          type="color"
-          value={toColorInputValue(
-            brandLightPickerHex,
-            DEFAULT_BRAND_LIGHT_HEX,
-          )}
-          defaultValue={toColorInputValue(
-            brandLightPickerHex,
-            DEFAULT_BRAND_LIGHT_HEX,
-          )}
-          aria-label="Brand color light theme picker"
-          disabled={!isAdmin}
-          class="h-10 w-14 rounded border border-border bg-surface p-1 disabled:cursor-not-allowed disabled:opacity-60"
-          oninput={(event) => {
-            const next = (event.currentTarget as HTMLInputElement).value;
-            brandLightHexOverride = next.toLowerCase();
-          }}
-        />
+      <div class="w-[8ch]">
         <FormInput
-          id="brand-light-hex"
-          name="brand_light_hex"
-          value={brandLightHex}
-          oninput={(event) => {
-            const next = (event.currentTarget as HTMLInputElement).value;
-            brandLightHexOverride = next;
-          }}
-          placeholder={DEFAULT_BRAND_LIGHT_HEX}
-          readonly={!isAdmin}
-        />
-      </div>
-    </FormField>
-
-    <FormField
-      label="Brand Color (Dark Theme)"
-      id="brand-dark-hex"
-      error={fieldErrors.brand_dark_hex}
-    >
-      <div class="grid gap-2 sm:grid-cols-[3.5rem_minmax(0,1fr)]">
-        <input
-          id="brand-dark-hex-picker"
-          type="color"
-          value={toColorInputValue(brandDarkPickerHex, DEFAULT_BRAND_DARK_HEX)}
-          defaultValue={toColorInputValue(
-            brandDarkPickerHex,
-            DEFAULT_BRAND_DARK_HEX,
-          )}
-          aria-label="Brand color dark theme picker"
-          disabled={!isAdmin}
-          class="h-10 w-14 rounded border border-border bg-surface p-1 disabled:cursor-not-allowed disabled:opacity-60"
-          oninput={(event) => {
-            const next = (event.currentTarget as HTMLInputElement).value;
-            brandDarkHexOverride = next.toLowerCase();
-          }}
-        />
-        <FormInput
-          id="brand-dark-hex"
-          name="brand_dark_hex"
-          value={brandDarkHex}
-          oninput={(event) => {
-            const next = (event.currentTarget as HTMLInputElement).value;
-            brandDarkHexOverride = next;
-          }}
-          placeholder={DEFAULT_BRAND_DARK_HEX}
-          readonly={!isAdmin}
-        />
-      </div>
-    </FormField>
-
-    <FormField
-      label="Brand Contrast (Light Theme)"
-      id="brand-contrast-light-hex"
-      error={fieldErrors.brand_contrast_light_hex}
-    >
-      <div class="grid gap-2 sm:grid-cols-[3.5rem_minmax(0,1fr)]">
-        <input
-          id="brand-contrast-light-hex-picker"
-          type="color"
-          value={toColorInputValue(
-            brandContrastLightPickerHex,
-            DEFAULT_BRAND_CONTRAST_LIGHT_HEX,
-          )}
-          defaultValue={toColorInputValue(
-            brandContrastLightPickerHex,
-            DEFAULT_BRAND_CONTRAST_LIGHT_HEX,
-          )}
-          aria-label="Brand contrast light theme picker"
-          disabled={!isAdmin}
-          class="h-10 w-14 rounded border border-border bg-surface p-1 disabled:cursor-not-allowed disabled:opacity-60"
-          oninput={(event) => {
-            const next = (event.currentTarget as HTMLInputElement).value;
-            brandContrastLightHexOverride = next.toLowerCase();
-          }}
-        />
-        <FormInput
-          id="brand-contrast-light-hex"
-          name="brand_contrast_light_hex"
-          value={brandContrastLightHex}
-          oninput={(event) => {
-            const next = (event.currentTarget as HTMLInputElement).value;
-            brandContrastLightHexOverride = next;
-          }}
-          placeholder={DEFAULT_BRAND_CONTRAST_LIGHT_HEX}
-          readonly={!isAdmin}
-        />
-      </div>
-    </FormField>
-
-    <FormField
-      label="Brand Contrast (Dark Theme)"
-      id="brand-contrast-dark-hex"
-      error={fieldErrors.brand_contrast_dark_hex}
-    >
-      <div class="grid gap-2 sm:grid-cols-[3.5rem_minmax(0,1fr)]">
-        <input
-          id="brand-contrast-dark-hex-picker"
-          type="color"
-          value={toColorInputValue(
-            brandContrastDarkPickerHex,
-            DEFAULT_BRAND_CONTRAST_DARK_HEX,
-          )}
-          defaultValue={toColorInputValue(
-            brandContrastDarkPickerHex,
-            DEFAULT_BRAND_CONTRAST_DARK_HEX,
-          )}
-          aria-label="Brand contrast dark theme picker"
-          disabled={!isAdmin}
-          class="h-10 w-14 rounded border border-border bg-surface p-1 disabled:cursor-not-allowed disabled:opacity-60"
-          oninput={(event) => {
-            const next = (event.currentTarget as HTMLInputElement).value;
-            brandContrastDarkHexOverride = next.toLowerCase();
-          }}
-        />
-        <FormInput
-          id="brand-contrast-dark-hex"
-          name="brand_contrast_dark_hex"
-          value={brandContrastDarkHex}
-          oninput={(event) => {
-            const next = (event.currentTarget as HTMLInputElement).value;
-            brandContrastDarkHexOverride = next;
-          }}
-          placeholder={DEFAULT_BRAND_CONTRAST_DARK_HEX}
+          id="default-page-max-width-px"
+          name="default_page_max_width_px"
+          type="number"
+          min={1}
+          step={1}
+          value={values.default_page_max_width_px != null
+            ? String(values.default_page_max_width_px)
+            : String(data.typography.default_page_max_width_px)}
           readonly={!isAdmin}
         />
       </div>
@@ -362,6 +150,248 @@
         Show Search Link in Nav
       </label>
     </FormField>
+
+    <hr class="my-2 border-border" />
+
+    <AdminHeading level={2}>Site Fonts</AdminHeading>
+
+    <div class="mb-4 flex flex-col gap-3">
+      <FormField
+        label="Public Google Font Import URL"
+        id="public-font-import-url"
+        error={fieldErrors.public_font_import_url}
+      >
+        <div class="w-[80ch]">
+          <FormInput
+            id="public-font-import-url"
+            name="public_font_import_url"
+            value={values.public_font_import_url ??
+              data.typography.public_font_import_url}
+            readonly={!isAdmin}
+          />
+        </div>
+      </FormField>
+
+      <FormField
+        label="Public Font Family"
+        id="public-font-family"
+        helper="Example: 'Gabarito', 'sans-serif'"
+        error={fieldErrors.public_font_family}
+      >
+        <div class="w-[20ch]">
+          <FormInput
+            id="public-font-family"
+            name="public_font_family"
+            value={values.public_font_family ??
+              data.typography.public_font_family}
+            readonly={!isAdmin}
+          />
+        </div>
+      </FormField>
+    </div>
+
+    <FormField
+      label="Admin Google Font Import URL"
+      id="admin-font-import-url"
+      error={fieldErrors.admin_font_import_url}
+    >
+      <div class="w-[80ch]">
+        <FormInput
+          id="admin-font-import-url"
+          name="admin_font_import_url"
+          value={values.admin_font_import_url ??
+            data.typography.admin_font_import_url}
+          readonly={!isAdmin}
+        />
+      </div>
+    </FormField>
+
+    <FormField
+      label="Admin Font Family"
+      id="admin-font-family"
+      helper="Example: 'Inter', 'sans-serif'"
+      error={fieldErrors.admin_font_family}
+    >
+      <div class="w-[20ch]">
+        <FormInput
+          id="admin-font-family"
+          name="admin_font_family"
+          value={values.admin_font_family ?? data.typography.admin_font_family}
+          readonly={!isAdmin}
+        />
+      </div>
+    </FormField>
+
+    <hr class="my-2 border-border" />
+
+    <AdminHeading level={2}>Brand Colors</AdminHeading>
+
+    <div class="flex gap-3">
+      <FormField
+        label="Brand Color (Light Theme)"
+        id="brand-light-hex"
+        error={fieldErrors.brand_light_hex}
+      >
+        <div class="grid gap-2 sm:grid-cols-[3.5rem_minmax(0,1fr)]">
+          <input
+            id="brand-light-hex-picker"
+            type="color"
+            value={toColorInputValue(
+              brandLightPickerHex,
+              DEFAULT_BRAND_LIGHT_HEX,
+            )}
+            defaultValue={toColorInputValue(
+              brandLightPickerHex,
+              DEFAULT_BRAND_LIGHT_HEX,
+            )}
+            aria-label="Brand color light theme picker"
+            disabled={!isAdmin}
+            class="h-10 w-14 rounded border border-border bg-surface p-1 disabled:cursor-not-allowed disabled:opacity-60"
+            oninput={(event) => {
+              const next = (event.currentTarget as HTMLInputElement).value;
+              brandLightHexOverride = next.toLowerCase();
+            }}
+          />
+          <div class="w-[10ch]">
+            <FormInput
+              id="brand-light-hex"
+              name="brand_light_hex"
+              value={brandLightHex}
+              oninput={(event) => {
+                const next = (event.currentTarget as HTMLInputElement).value;
+                brandLightHexOverride = next;
+              }}
+              placeholder={DEFAULT_BRAND_LIGHT_HEX}
+              readonly={!isAdmin}
+            />
+          </div>
+        </div>
+      </FormField>
+      <FormField
+        label="Brand Contrast (Light Theme)"
+        id="brand-contrast-light-hex"
+        error={fieldErrors.brand_contrast_light_hex}
+      >
+        <div class="grid gap-2 sm:grid-cols-[3.5rem_minmax(0,1fr)]">
+          <input
+            id="brand-contrast-light-hex-picker"
+            type="color"
+            value={toColorInputValue(
+              brandContrastLightPickerHex,
+              DEFAULT_BRAND_CONTRAST_LIGHT_HEX,
+            )}
+            defaultValue={toColorInputValue(
+              brandContrastLightPickerHex,
+              DEFAULT_BRAND_CONTRAST_LIGHT_HEX,
+            )}
+            aria-label="Brand contrast light theme picker"
+            disabled={!isAdmin}
+            class="h-10 w-14 rounded border border-border bg-surface p-1 disabled:cursor-not-allowed disabled:opacity-60"
+            oninput={(event) => {
+              const next = (event.currentTarget as HTMLInputElement).value;
+              brandContrastLightHexOverride = next.toLowerCase();
+            }}
+          />
+          <div class="w-[10ch]">
+            <FormInput
+              id="brand-contrast-light-hex"
+              name="brand_contrast_light_hex"
+              value={brandContrastLightHex}
+              oninput={(event) => {
+                const next = (event.currentTarget as HTMLInputElement).value;
+                brandContrastLightHexOverride = next;
+              }}
+              placeholder={DEFAULT_BRAND_CONTRAST_LIGHT_HEX}
+              readonly={!isAdmin}
+            />
+          </div>
+        </div>
+      </FormField>
+    </div>
+
+    <div class="flex gap-3">
+      <FormField
+        label="Brand Color (Dark Theme)"
+        id="brand-dark-hex"
+        error={fieldErrors.brand_dark_hex}
+      >
+        <div class="grid gap-2 sm:grid-cols-[3.5rem_minmax(0,1fr)]">
+          <input
+            id="brand-dark-hex-picker"
+            type="color"
+            value={toColorInputValue(
+              brandDarkPickerHex,
+              DEFAULT_BRAND_DARK_HEX,
+            )}
+            defaultValue={toColorInputValue(
+              brandDarkPickerHex,
+              DEFAULT_BRAND_DARK_HEX,
+            )}
+            aria-label="Brand color dark theme picker"
+            disabled={!isAdmin}
+            class="h-10 w-14 rounded border border-border bg-surface p-1 disabled:cursor-not-allowed disabled:opacity-60"
+            oninput={(event) => {
+              const next = (event.currentTarget as HTMLInputElement).value;
+              brandDarkHexOverride = next.toLowerCase();
+            }}
+          />
+          <div class="w-[10ch]">
+            <FormInput
+              id="brand-dark-hex"
+              name="brand_dark_hex"
+              value={brandDarkHex}
+              oninput={(event) => {
+                const next = (event.currentTarget as HTMLInputElement).value;
+                brandDarkHexOverride = next;
+              }}
+              placeholder={DEFAULT_BRAND_DARK_HEX}
+              readonly={!isAdmin}
+            />
+          </div>
+        </div>
+      </FormField>
+
+      <FormField
+        label="Brand Contrast (Dark Theme)"
+        id="brand-contrast-dark-hex"
+        error={fieldErrors.brand_contrast_dark_hex}
+      >
+        <div class="grid gap-2 sm:grid-cols-[3.5rem_minmax(0,1fr)]">
+          <input
+            id="brand-contrast-dark-hex-picker"
+            type="color"
+            value={toColorInputValue(
+              brandContrastDarkPickerHex,
+              DEFAULT_BRAND_CONTRAST_DARK_HEX,
+            )}
+            defaultValue={toColorInputValue(
+              brandContrastDarkPickerHex,
+              DEFAULT_BRAND_CONTRAST_DARK_HEX,
+            )}
+            aria-label="Brand contrast dark theme picker"
+            disabled={!isAdmin}
+            class="h-10 w-14 rounded border border-border bg-surface p-1 disabled:cursor-not-allowed disabled:opacity-60"
+            oninput={(event) => {
+              const next = (event.currentTarget as HTMLInputElement).value;
+              brandContrastDarkHexOverride = next.toLowerCase();
+            }}
+          />
+          <div class="w-[10ch]">
+            <FormInput
+              id="brand-contrast-dark-hex"
+              name="brand_contrast_dark_hex"
+              value={brandContrastDarkHex}
+              oninput={(event) => {
+                const next = (event.currentTarget as HTMLInputElement).value;
+                brandContrastDarkHexOverride = next;
+              }}
+              placeholder={DEFAULT_BRAND_CONTRAST_DARK_HEX}
+              readonly={!isAdmin}
+            />
+          </div>
+        </div>
+      </FormField>
+    </div>
   </div>
 
   {#if isAdmin}

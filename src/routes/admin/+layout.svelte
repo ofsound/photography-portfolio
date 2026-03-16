@@ -125,7 +125,6 @@
   class="h-full min-h-0 overflow-hidden md:grid md:grid-cols-[220px_1fr]"
   style="--font-sans: var(--font-sans-admin); font-family: var(--font-sans)"
 >
-  <AdminToastViewport />
   <header
     class="fixed inset-x-0 top-0 z-[60] border-b border-border bg-surface px-4 pt-[env(safe-area-inset-top)] md:hidden"
   >
@@ -555,10 +554,11 @@
   </aside>
 
   <section
-    class="flex h-full min-h-0 flex-col overflow-y-auto overscroll-y-contain p-4 pt-[calc(var(--size-mobile-header-offset)+1rem)] md:p-6"
+    class="relative flex h-full min-h-0 flex-col overflow-y-auto overscroll-y-contain p-4 pt-[calc(var(--size-mobile-header-offset)+1rem)] md:p-6"
     data-admin-mobile-menu-root
     style="view-transition-name: admin-content"
   >
+    <AdminToastViewport contained />
     <div class="w-full md:max-w-[1200px]">
       {@render children()}
     </div>

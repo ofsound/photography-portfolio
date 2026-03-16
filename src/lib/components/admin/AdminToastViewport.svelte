@@ -10,11 +10,22 @@
 
   interface Props {
     class?: string;
+    contained?: boolean;
   }
 
-  const { class: className = '' }: Props = $props();
+  const { class: className = '', contained = false }: Props = $props();
 
   const prefersReducedMotion = new MediaQuery('prefers-reduced-motion: reduce');
+  const mdMin = new MediaQuery('(min-width: 768px)');
+
+  const positionClass = $derived(
+    contained && mdMin.current ? 'absolute' : 'fixed',
+  );
+  const topStyle = $derived(
+    contained && mdMin.current
+      ? 'top: 0.9rem'
+      : 'top: calc(var(--site-header-height, var(--size-header)) + 0.9rem)',
+  );
 
   const flyParams = $derived(
     prefersReducedMotion.current
@@ -62,8 +73,8 @@
 </script>
 
 <div
-  class={`pointer-events-none fixed left-1/2 z-70 flex w-full max-w-md -translate-x-1/2 flex-col gap-2.5 px-3 sm:px-0 ${className}`}
-  style="top: calc(var(--site-header-height, var(--size-header)) + 0.9rem)"
+  class={`pointer-events-none left-1/2 z-70 flex w-full max-w-md -translate-x-1/2 flex-col gap-2.5 px-3 sm:px-0 ${positionClass} ${className}`}
+  style={topStyle}
 >
   {#each toastEntries as toast (toast.id)}
     <div

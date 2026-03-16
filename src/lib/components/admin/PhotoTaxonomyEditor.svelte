@@ -31,30 +31,36 @@
 <AdminCard class="flex flex-col gap-4 p-3">
   <div class="grid items-start gap-3 lg:grid-cols-2">
     <div class="grid gap-2">
+      <p class="text-[10px] tracking-wider text-text-muted uppercase">
+        Categories
+      </p>
       <div class="flex flex-wrap gap-2">
         {#each categories as category (category.id)}
           <AdminButton
             size="sm"
-            variant="submit"
+            variant="default"
             type="button"
+            class="!border-zinc-600 !bg-zinc-600 !text-white hover:!border-zinc-500 hover:!bg-zinc-500"
             onclick={() => addTaxonomyDraft('category', category.id)}
           >
-            {category.name} <span class="text-[10px] opacity-60">+</span>
+            {category.name} <span class="ml-0.5 text-xs opacity-75">+</span>
           </AdminButton>
         {/each}
       </div>
     </div>
 
     <div class="grid gap-2">
+      <p class="text-[10px] tracking-wider text-text-muted uppercase">Tags</p>
       <div class="flex flex-wrap gap-2">
         {#each tags as tag (tag.id)}
           <AdminButton
             size="sm"
-            variant="submit"
+            variant="default"
             type="button"
+            class="!border-zinc-400 !bg-zinc-400 !text-white hover:!border-zinc-300 hover:!bg-zinc-300"
             onclick={() => addTaxonomyDraft('tag', tag.id)}
           >
-            {tag.name} <span class="text-[10px] opacity-60">+</span>
+            {tag.name} <span class="ml-0.5 text-xs opacity-75">+</span>
           </AdminButton>
         {/each}
       </div>
@@ -82,24 +88,28 @@
         {#each taxonomyDraftCategories as categoryId (categoryId)}
           {#if categoryById(categoryId)}
             <AdminButton
-              variant="submit"
+              variant="default"
               size="xs"
               type="button"
+              class="!border-zinc-600 !bg-zinc-600 !text-white hover:!border-zinc-500 hover:!bg-zinc-500"
               onclick={() => removeTaxonomyDraft('category', categoryId)}
             >
-              {categoryById(categoryId)?.name ?? categoryId} x
+              {categoryById(categoryId)?.name ?? categoryId}
+              <span class="ml-0.5 text-xs opacity-75">×</span>
             </AdminButton>
           {/if}
         {/each}
         {#each taxonomyDraftTags as tagId (tagId)}
           {#if tagById(tagId)}
             <AdminButton
-              variant="submit"
+              variant="default"
               size="xs"
               type="button"
+              class="!border-zinc-400 !bg-zinc-400 !text-white hover:!border-zinc-300 hover:!bg-zinc-300"
               onclick={() => removeTaxonomyDraft('tag', tagId)}
             >
-              {tagById(tagId)?.name ?? tagId} x
+              {tagById(tagId)?.name ?? tagId}
+              <span class="ml-0.5 text-xs opacity-75">×</span>
             </AdminButton>
           {/if}
         {/each}

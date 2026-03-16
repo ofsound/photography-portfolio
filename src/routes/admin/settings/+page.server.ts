@@ -129,7 +129,9 @@ export const load: PageServerLoad = async ({ locals }) => {
 
   return {
     role,
-    siteThemeDefault: normalizeThemeMode(typographyQuery.data?.site_theme_default),
+    siteThemeDefault: normalizeThemeMode(
+      typographyQuery.data?.site_theme_default,
+    ),
     typography: normalizeTypographyValues(
       (typographyQuery.data ?? {}) as Partial<TypographyValues>,
     ),

@@ -111,9 +111,7 @@
         }
       : globalSiteSettings,
   );
-  const isThemeMode = (
-    value: unknown,
-  ): value is 'light' | 'dark' | 'system' =>
+  const isThemeMode = (value: unknown): value is 'light' | 'dark' | 'system' =>
     value === 'light' || value === 'dark' || value === 'system';
   const showSearchLinkInNav = $derived(
     siteSettings?.show_search_link_in_nav ?? true,
@@ -421,7 +419,9 @@
     const pathname = page.url.pathname;
     const onAdmin = isAdminPath(pathname);
     transitionPreset = siteSettings?.transition_preset ?? 'cinematic';
-    let resolvedThemeMode: AdminThemeMode = onAdmin ? 'system' : siteThemeDefault;
+    let resolvedThemeMode: AdminThemeMode = onAdmin
+      ? 'system'
+      : siteThemeDefault;
 
     if (onAdmin) {
       const stored = localStorage.getItem('admin-theme');
@@ -441,7 +441,9 @@
     if (typeof window === 'undefined' || !hasHydratedClientPrefs) return;
     const pathname = page.url.pathname;
     const onAdmin = isAdminPath(pathname);
-    let resolvedThemeMode: AdminThemeMode = onAdmin ? 'system' : siteThemeDefault;
+    let resolvedThemeMode: AdminThemeMode = onAdmin
+      ? 'system'
+      : siteThemeDefault;
     if (onAdmin) {
       const stored = localStorage.getItem('admin-theme');
       resolvedThemeMode =

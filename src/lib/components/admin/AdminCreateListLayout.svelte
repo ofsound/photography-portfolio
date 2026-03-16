@@ -1,6 +1,5 @@
 <script lang="ts">
-  import AdminHeader from '$lib/components/admin/AdminHeader.svelte';
-  import AdminHeading from '$lib/components/admin/AdminHeading.svelte';
+  import AdminPageHeader from '$lib/components/admin/AdminPageHeader.svelte';
   import AdminToastEmitter from '$lib/components/admin/AdminToastEmitter.svelte';
 
   interface Props {
@@ -49,31 +48,17 @@
       : ''}"
   >
     {#if hasHeaderContent}
-      <AdminHeader>
-        <div class="flex items-center gap-3">
-          {#if leading}
-            {@render leading()}
-          {/if}
-          <AdminHeading>{title}</AdminHeading>
-          {#if actions}
-            {@render actions()}
-          {/if}
-        </div>
-
-        {#if subtitle}
-          <p class="mt-2 text-sm text-text-muted">{subtitle}</p>
-        {/if}
-
-        <AdminToastEmitter
-          message={formMessage}
-          type={formSuccess ? 'success' : 'error'}
-        />
-        <AdminToastEmitter
-          message={dataMessage}
-          type={dataSuccess ? 'success' : 'neutral'}
-          clearQueryMessage={clearDataMessageQuery}
-        />
-      </AdminHeader>
+      <AdminPageHeader
+        title={title ?? ''}
+        {subtitle}
+        {formMessage}
+        {formSuccess}
+        {dataMessage}
+        {dataSuccess}
+        {clearDataMessageQuery}
+        {leading}
+        {actions}
+      />
     {:else}
       <div class="mb-4">
         <AdminToastEmitter
@@ -106,31 +91,17 @@
   </div>
 {:else}
   {#if hasHeaderContent}
-    <AdminHeader>
-      <div class="flex items-center gap-3">
-        {#if leading}
-          {@render leading()}
-        {/if}
-        <AdminHeading>{title}</AdminHeading>
-        {#if actions}
-          {@render actions()}
-        {/if}
-      </div>
-
-      {#if subtitle}
-        <p class="mt-2 text-sm text-text-muted">{subtitle}</p>
-      {/if}
-
-      <AdminToastEmitter
-        message={formMessage}
-        type={formSuccess ? 'success' : 'error'}
-      />
-      <AdminToastEmitter
-        message={dataMessage}
-        type={dataSuccess ? 'success' : 'neutral'}
-        clearQueryMessage={clearDataMessageQuery}
-      />
-    </AdminHeader>
+    <AdminPageHeader
+      title={title ?? ''}
+      {subtitle}
+      {formMessage}
+      {formSuccess}
+      {dataMessage}
+      {dataSuccess}
+      {clearDataMessageQuery}
+      {leading}
+      {actions}
+    />
   {:else}
     <div class="mb-4">
       <AdminToastEmitter

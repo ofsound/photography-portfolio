@@ -4,6 +4,7 @@
   import { page } from '$app/state';
 
   import AdminCard from '$lib/components/admin/AdminCard.svelte';
+  import AdminBackLink from '$lib/components/admin/AdminBackLink.svelte';
   import AdminButton from '$lib/components/admin/AdminButton.svelte';
   import AdminCreateListLayout from '$lib/components/admin/AdminCreateListLayout.svelte';
   import AdminStatusMessage from '$lib/components/admin/AdminStatusMessage.svelte';
@@ -279,23 +280,10 @@
 />
 
 {#snippet backLink()}
-  <a
+  <AdminBackLink
     href={resolve(basePhotosPath as `/${string}`)}
-    class="-m-2 p-2 text-text-muted transition-colors hover:text-brand"
-    aria-label="Back to {data.gallery.name}"
-  >
-    <svg
-      class="size-4"
-      viewBox="0 0 16 16"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="2"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-    >
-      <path d="M10 3 5 8l5 5" />
-    </svg>
-  </a>
+    ariaLabel={`Back to ${data.gallery.name}`}
+  />
 {/snippet}
 
 {#snippet uploadQueuePanel()}

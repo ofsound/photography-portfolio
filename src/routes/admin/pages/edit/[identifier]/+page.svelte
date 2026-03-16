@@ -3,15 +3,16 @@
 
   import CodeEditor from '$lib/components/admin/CodeEditor.svelte';
   import SveditEditor from '$lib/components/admin/SveditEditor.svelte';
+  import AdminBackLink from '$lib/components/admin/AdminBackLink.svelte';
   import BackgroundImagePickerModal from '$lib/components/admin/BackgroundImagePickerModal.svelte';
   import AdminButton from '$lib/components/admin/AdminButton.svelte';
   import AdminCard from '$lib/components/admin/AdminCard.svelte';
-  import AdminStickyActionBar from '$lib/components/admin/AdminStickyActionBar.svelte';
-  import AdminHeader from '$lib/components/admin/AdminHeader.svelte';
-  import AdminHeading from '$lib/components/admin/AdminHeading.svelte';
+  import AdminPageHeader from '$lib/components/admin/AdminPageHeader.svelte';
   import AdminRevisionsDrawer from '$lib/components/admin/AdminRevisionsDrawer.svelte';
   import AdminSeoSocialDrawer from '$lib/components/admin/AdminSeoSocialDrawer.svelte';
+  import AdminStickyActionBar from '$lib/components/admin/AdminStickyActionBar.svelte';
   import AdminToastEmitter from '$lib/components/admin/AdminToastEmitter.svelte';
+  import { useAdminFormState } from '$lib/components/admin/useAdminFormState.svelte';
   import FormField from '$lib/components/FormField.svelte';
   import FormInput from '$lib/components/FormInput.svelte';
   import FormSelect from '$lib/components/FormSelect.svelte';
@@ -23,17 +24,10 @@
   } from '$lib/constants/page-visibility';
   import type { ContentRevision, HomepageImage } from '$lib/types/content';
 
-  type FormState = {
-    message?: string;
-    success?: boolean;
-    fieldErrors?: Record<string, string | undefined>;
-    values?: Record<string, string | undefined>;
-  };
-
   const { data, form } = $props();
-  const typedForm = $derived(
-    (form as FormState | null | undefined) ?? undefined,
-  );
+  const { typedForm, fieldErrors } = useAdminFormState<
+    Record<string, string | undefined>
+  >(() => form);
   const page = $derived(data.page);
   const revisions = $derived(data.revisions as ContentRevision[]);
   const images = $derived((data.images as HomepageImage[]) ?? []);
@@ -69,7 +63,6 @@
   let showBgPicker = $state(false);
   let showRawSveditJson = $state(false);
   let rawSveditJsonError = $state<string | null>(null);
-  const fieldErrors = $derived(typedForm?.fieldErrors ?? {});
   const selectedBgImage = $derived(
     formBgImageId
       ? (images.find((image) => image.id === formBgImageId) ?? null)
@@ -149,27 +142,17 @@
   };
 </script>
 
-<AdminHeader>
-  <div class="flex items-center gap-3">
-    <a
-      href={resolve('/admin/pages')}
-      class="-m-2 p-2 text-text-muted transition-colors hover:text-brand"
-      aria-label="Back to Pages"
-    >
-      <svg
-        class="size-4"
-        viewBox="0 0 16 16"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="2"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-      >
-        <path d="M10 3 5 8l5 5" />
-      </svg>
-    </a>
-    <AdminHeading>{page.title}: Edit</AdminHeading>
-  </div>
+<AdminPageHeader
+  title={`${page.title}: Edit`}
+  leading={backLink}
+  toasts={headerToasts}
+/>
+
+{#snippet backLink()}
+  <AdminBackLink href={resolve('/admin/pages')} ariaLabel="Back to Pages" />
+{/snippet}
+
+{#snippet headerToasts()}
   <AdminToastEmitter
     message={form?.message ?? data.message}
     type={form?.success === true
@@ -181,7 +164,7 @@
           : 'neutral'}
     clearQueryMessage
   />
-</AdminHeader>
+{/snippet}
 
 <form
   id="page-edit-form"

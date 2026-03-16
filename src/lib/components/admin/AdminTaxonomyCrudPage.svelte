@@ -2,9 +2,11 @@
   import AdminCard from '$lib/components/admin/AdminCard.svelte';
   import AdminButton from '$lib/components/admin/AdminButton.svelte';
   import AdminCreateListLayout from '$lib/components/admin/AdminCreateListLayout.svelte';
+  import { useAdminFormState } from '$lib/components/admin/useAdminFormState.svelte';
+  import { useAutoSlug } from '$lib/components/admin/useAutoSlug.svelte';
   import FormField from '$lib/components/FormField.svelte';
   import FormInput from '$lib/components/FormInput.svelte';
-  import { slugify } from '$lib/utils/slug';
+  import type { AdminFormState } from '$lib/types/admin-form';
 
   export type TaxonomyItem = {
     id: string;
@@ -14,12 +16,7 @@
     is_active: boolean;
   };
 
-  export type FormState = {
-    message?: string;
-    success?: boolean;
-    fieldErrors?: Record<string, string | undefined>;
-    values?: Record<string, string | undefined>;
-  };
+  export type FormState = AdminFormState<Record<string, string | undefined>>;
 
   const {
     title,
@@ -41,41 +38,25 @@
     showMobileDivider?: boolean;
   } = $props();
 
-  const typedForm = $derived(form ?? undefined);
+  const { typedForm, fieldErrors, values } = useAdminFormState<
+    Record<string, string | undefined>
+  >(() => form);
 
-  let createDraft = $state<{ name?: string; slug?: string }>({});
-  const createName = $derived(
-    createDraft.name ??
-      (typedForm?.values?.id ? '' : (typedForm?.values?.name ?? '')),
-  );
-  const createSlug = $derived(
-    createDraft.slug ??
-      (typedForm?.values?.id ? '' : (typedForm?.values?.slug ?? '')),
-  );
-  let hasManualSlugEdit = $state(false);
-  const createFieldErrors = $derived(
-    typedForm?.values?.id ? {} : (typedForm?.fieldErrors ?? {}),
-  );
-  const activeEditId = $derived(typedForm?.values?.id ?? '');
+  const createDraft = useAutoSlug();
+  const createName = $derived(values.id ? '' : createDraft.name);
+  const createSlug = $derived(values.id ? '' : createDraft.slug);
+  const createFieldErrors = $derived(values.id ? {} : fieldErrors);
+  const activeEditId = $derived(values.id ?? '');
 
-  const onCreateNameInput = (event: Event) => {
-    const value = (event.currentTarget as HTMLInputElement).value;
-    if (!hasManualSlugEdit) {
-      createDraft = { ...createDraft, name: value, slug: slugify(value) };
+  $effect(() => {
+    if (values.id) {
+      createDraft.name = '';
+      createDraft.slug = '';
       return;
     }
-    createDraft = { ...createDraft, name: value };
-  };
 
-  const onCreateSlugInput = (event: Event) => {
-    const value = (event.currentTarget as HTMLInputElement).value;
-    hasManualSlugEdit = value.trim().length > 0;
-    if (!hasManualSlugEdit) {
-      createDraft = { ...createDraft, slug: slugify(createName) };
-      return;
-    }
-    createDraft = { ...createDraft, slug: value };
-  };
+    createDraft.syncFromValues(values);
+  });
 </script>
 
 <AdminCreateListLayout
@@ -101,7 +82,7 @@
           id={`${idPrefix}-create-name`}
           name="name"
           value={createName}
-          oninput={onCreateNameInput}
+          oninput={createDraft.onNameInput}
         />
       </FormField>
       <FormField
@@ -113,7 +94,7 @@
           id={`${idPrefix}-create-slug`}
           name="slug"
           value={createSlug}
-          oninput={onCreateSlugInput}
+          oninput={createDraft.onSlugInput}
         />
       </FormField>
     </div>
@@ -121,9 +102,7 @@
       <FormInput
         id={`${idPrefix}-create-description`}
         name="description"
-        value={typedForm?.values?.id
-          ? ''
-          : (typedForm?.values?.description ?? '')}
+        value={values.id ? '' : (values.description ?? '')}
       />
     </FormField>
     {#if showCreateStatus}
@@ -162,30 +141,26 @@
           label="Name"
           id={`${idPrefix}-edit-name-${item.id}`}
           required
-          error={activeEditId === item.id
-            ? typedForm?.fieldErrors?.name
-            : undefined}
+          error={activeEditId === item.id ? fieldErrors.name : undefined}
         >
           <FormInput
             id={`${idPrefix}-edit-name-${item.id}`}
             name="name"
             value={activeEditId === item.id
-              ? (typedForm?.values?.name ?? item.name)
+              ? (values.name ?? item.name)
               : item.name}
           />
         </FormField>
         <FormField
           label="Slug"
           id={`${idPrefix}-edit-slug-${item.id}`}
-          error={activeEditId === item.id
-            ? typedForm?.fieldErrors?.slug
-            : undefined}
+          error={activeEditId === item.id ? fieldErrors.slug : undefined}
         >
           <FormInput
             id={`${idPrefix}-edit-slug-${item.id}`}
             name="slug"
             value={activeEditId === item.id
-              ? (typedForm?.values?.slug ?? item.slug)
+              ? (values.slug ?? item.slug)
               : item.slug}
           />
         </FormField>
@@ -198,7 +173,7 @@
           id={`${idPrefix}-edit-description-${item.id}`}
           name="description"
           value={activeEditId === item.id
-            ? (typedForm?.values?.description ?? '')
+            ? (values.description ?? '')
             : (item.description ?? '')}
         />
       </FormField>

@@ -5,6 +5,7 @@
   import AdminHeading from '$lib/components/admin/AdminHeading.svelte';
   import AdminSeoSocialDrawer from '$lib/components/admin/AdminSeoSocialDrawer.svelte';
   import AdminToastEmitter from '$lib/components/admin/AdminToastEmitter.svelte';
+  import { useAdminFormState } from '$lib/components/admin/useAdminFormState.svelte';
   import GallerySettingsFormFields from '$lib/components/admin/GallerySettingsFormFields.svelte';
   import FormField from '$lib/components/FormField.svelte';
   import FormInput from '$lib/components/FormInput.svelte';
@@ -16,22 +17,13 @@
   } from '$lib/constants/gallery-visibility';
   import { GALLERY_SETTINGS_DEFAULTS } from '$lib/constants/gallery-settings';
 
-  type FormState = {
-    message?: string;
-    success?: boolean;
-    fieldErrors?: Record<string, string | undefined>;
-    values?: Record<string, string | undefined>;
-  };
-
   const { data, form } = $props();
-  const typedForm = $derived(
-    (form as FormState | null | undefined) ?? undefined,
-  );
+  const { fieldErrors, values } = useAdminFormState<
+    Record<string, string | undefined>
+  >(() => form);
 
   const settings = $derived(data.settings ?? GALLERY_SETTINGS_DEFAULTS);
   const isAdmin = $derived(data.role === 'admin');
-  const fieldErrors = $derived(typedForm?.fieldErrors ?? {});
-  const values = $derived(typedForm?.values ?? {});
   const isGalleryVisibilityStatus = (
     value: unknown,
   ): value is GalleryVisibilityStatus =>
@@ -69,7 +61,12 @@
   />
 {/if}
 
-<form id="gallery-details-form" method="POST" action="?/save" class="grid gap-2 pb-32">
+<form
+  id="gallery-details-form"
+  method="POST"
+  action="?/save"
+  class="grid gap-2 pb-32"
+>
   <AdminHeading level={2}>Gallery Details</AdminHeading>
 
   <div class="mt-4 flex flex-col gap-4 sm:flex-row sm:items-start">
@@ -154,7 +151,6 @@
     ogDescription={ogDescriptionValue}
     ogImagePath={ogImagePathValue}
   />
-
 </form>
 
 <AdminStickyActionBar>

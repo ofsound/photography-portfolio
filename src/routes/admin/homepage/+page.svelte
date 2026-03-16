@@ -6,13 +6,14 @@
   import SveditEditor from '$lib/components/admin/SveditEditor.svelte';
   import AdminCard from '$lib/components/admin/AdminCard.svelte';
   import AdminButton from '$lib/components/admin/AdminButton.svelte';
-  import AdminHeader from '$lib/components/admin/AdminHeader.svelte';
-  import AdminHeading from '$lib/components/admin/AdminHeading.svelte';
   import AdminCreateListLayout from '$lib/components/admin/AdminCreateListLayout.svelte';
+  import AdminHeading from '$lib/components/admin/AdminHeading.svelte';
+  import AdminPageHeader from '$lib/components/admin/AdminPageHeader.svelte';
   import AdminRevisionsDrawer from '$lib/components/admin/AdminRevisionsDrawer.svelte';
   import AdminSeoSocialDrawer from '$lib/components/admin/AdminSeoSocialDrawer.svelte';
   import AdminSegmentedToggle from '$lib/components/admin/AdminSegmentedToggle.svelte';
   import AdminToastEmitter from '$lib/components/admin/AdminToastEmitter.svelte';
+  import { useAdminFormState } from '$lib/components/admin/useAdminFormState.svelte';
   import FormField from '$lib/components/FormField.svelte';
   import FormInput from '$lib/components/FormInput.svelte';
   import FormSelect from '$lib/components/FormSelect.svelte';
@@ -25,13 +26,6 @@
     HomepageImage,
     HomepageSlide,
   } from '$lib/types/content';
-
-  type FormState = {
-    message?: string;
-    success?: boolean;
-    fieldErrors?: Record<string, string | undefined>;
-    values?: Record<string, string | undefined>;
-  };
 
   type HomePageEditorData = {
     id: string;
@@ -57,9 +51,9 @@
 
   const { data, form } = $props();
 
-  const typedForm = $derived(
-    (form as FormState | null | undefined) ?? undefined,
-  );
+  const { typedForm, fieldErrors: heroFieldErrors } = useAdminFormState<
+    Record<string, string | undefined>
+  >(() => form);
 
   const section = $derived(
     data.section === 'hero' ? ('hero' as const) : ('slides' as const),
@@ -102,8 +96,6 @@
   let heroLoadedStateKey = $state<string | null>(null);
   let showRawSveditJson = $state(false);
   let rawSveditJsonError = $state<string | null>(null);
-
-  const heroFieldErrors = $derived(typedForm?.fieldErrors ?? {});
 
   const pushHistory = () => {
     undoStack = [...undoStack, [...selectedIds]].slice(-historyLimit);
@@ -286,16 +278,17 @@
   };
 </script>
 
-<AdminHeader>
-  <div class="flex flex-wrap items-center justify-between gap-4">
-    <AdminHeading>Homepage</AdminHeading>
+<AdminPageHeader title="Homepage" actions={headerActions} />
+
+{#snippet headerActions()}
+  <div class="ml-auto">
     <AdminSegmentedToggle
       segments={sections}
       activeKey={section}
       ariaLabel="Homepage admin sections"
     />
   </div>
-</AdminHeader>
+{/snippet}
 
 {#if section === 'slides'}
   <AdminCreateListLayout

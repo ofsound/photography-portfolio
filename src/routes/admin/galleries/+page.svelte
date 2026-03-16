@@ -2,11 +2,14 @@
   import { resolve } from '$app/paths';
   import { invalidateAll } from '$app/navigation';
   import { DragDropProvider } from '@dnd-kit/svelte';
-  import { createSortable, isSortable } from '@dnd-kit/svelte/sortable';
+  import { createSortable } from '@dnd-kit/svelte/sortable';
   import AdminButton from '$lib/components/admin/AdminButton.svelte';
   import AdminCard from '$lib/components/admin/AdminCard.svelte';
   import AdminCreateListLayout from '$lib/components/admin/AdminCreateListLayout.svelte';
   import AdminHeading from '$lib/components/admin/AdminHeading.svelte';
+  import { useAdminFormState } from '$lib/components/admin/useAdminFormState.svelte';
+  import { useAutoSlug } from '$lib/components/admin/useAutoSlug.svelte';
+  import { useSortableOrder } from '$lib/components/admin/useSortableOrder.svelte';
   import FormField from '$lib/components/FormField.svelte';
   import FormInput from '$lib/components/FormInput.svelte';
   import FormSelect from '$lib/components/FormSelect.svelte';
@@ -16,19 +19,11 @@
     type GalleryVisibilityStatus,
   } from '$lib/constants/gallery-visibility';
   import { buildGalleryPath } from '$lib/utils/gallery-routes';
-  import { slugify } from '$lib/utils/slug';
-
-  type FormState = {
-    message?: string;
-    success?: boolean;
-    fieldErrors?: Record<string, string | undefined>;
-    values?: Record<string, string | undefined>;
-  };
 
   const { data, form } = $props();
-  const typedForm = $derived(
-    (form as FormState | null | undefined) ?? undefined,
-  );
+  const { typedForm, fieldErrors: createFieldErrors } = useAdminFormState<
+    Record<string, string | undefined>
+  >(() => form);
 
   type GalleryCard = {
     id: string;
@@ -48,13 +43,16 @@
   );
 
   const galleryCardById = $derived(new Map(galleryCards.map((c) => [c.id, c])));
-
-  let pendingOrder = $state<string[] | null>(null);
-  let isSavingOrder = $state(false);
-
-  const orderedCardIds = $derived(
-    pendingOrder ?? galleryCards.map((card) => card.id),
-  );
+  const galleryOrder = useSortableOrder({
+    getBaseIds: () => galleryCards.map((card) => card.id),
+    persist: async (next) => {
+      await persistOrder(next);
+    },
+    onPersisted: async () => {
+      await invalidateAll();
+    },
+  });
+  const orderedCardIds = $derived(galleryOrder.orderedIds);
 
   const orderedCards = $derived(
     orderedCardIds
@@ -62,32 +60,13 @@
       .filter((card): card is GalleryCard => Boolean(card)),
   );
 
-  let createName = $state('');
-  let createSlug = $state('');
+  const createDraft = useAutoSlug();
   let createVisibilityStatus = $state<GalleryVisibilityStatus>('public');
-  let hasManualSlugEdit = $state(false);
-  const createFieldErrors = $derived(typedForm?.fieldErrors ?? {});
-
-  const onCreateNameInput = () => {
-    if (!hasManualSlugEdit) {
-      createSlug = slugify(createName);
-    }
-  };
-
-  const onCreateSlugInput = (event: Event) => {
-    const value = (event.currentTarget as HTMLInputElement).value.trim();
-    hasManualSlugEdit = value.length > 0;
-    if (!hasManualSlugEdit) {
-      createSlug = slugify(createName);
-    }
-  };
 
   $effect(() => {
-    const nextName = typedForm?.values?.name;
-    const nextSlug = typedForm?.values?.slug;
+    createDraft.syncFromValues(typedForm?.values);
+
     const nextVisibility = typedForm?.values?.visibility_status;
-    if (typeof nextName === 'string') createName = nextName;
-    if (typeof nextSlug === 'string') createSlug = nextSlug;
     if (
       nextVisibility === 'public' ||
       nextVisibility === 'unlisted' ||
@@ -108,37 +87,6 @@
 
     return response.ok;
   };
-
-  async function onGalleryDragEnd(event: unknown) {
-    if (isSavingOrder) return;
-
-    const e = event as { canceled?: boolean; operation?: { source: unknown } };
-    if (e.canceled || !e.operation?.source) return;
-
-    const source = e.operation.source as Parameters<typeof isSortable>[0];
-    if (!isSortable(source)) return;
-
-    const { initialIndex, index } = source as {
-      initialIndex: number;
-      index: number;
-    };
-
-    if (initialIndex === index) return;
-
-    const next = [...orderedCardIds];
-    const [removed] = next.splice(initialIndex, 1);
-    next.splice(index, 0, removed);
-    pendingOrder = next;
-
-    isSavingOrder = true;
-    try {
-      await persistOrder(next);
-      await invalidateAll();
-    } finally {
-      isSavingOrder = false;
-      pendingOrder = null;
-    }
-  }
 </script>
 
 <AdminCreateListLayout
@@ -169,8 +117,8 @@
       <FormInput
         id="gallery-create-name"
         name="name"
-        bind:value={createName}
-        oninput={onCreateNameInput}
+        bind:value={createDraft.name}
+        oninput={createDraft.onNameInput}
       />
     </FormField>
     <FormField
@@ -181,8 +129,8 @@
       <FormInput
         id="gallery-create-slug"
         name="slug"
-        bind:value={createSlug}
-        oninput={onCreateSlugInput}
+        bind:value={createDraft.slug}
+        oninput={createDraft.onSlugInput}
       />
     </FormField>
     <FormField label="Status" id="gallery-create-visibility_status">
@@ -203,7 +151,7 @@
 {/snippet}
 
 {#snippet galleryList()}
-  <DragDropProvider onDragEnd={onGalleryDragEnd}>
+  <DragDropProvider onDragEnd={galleryOrder.onDragEnd}>
     <ul class="grid gap-3">
       {#each orderedCards as card, index (card.id)}
         {@const sortable = createSortable({ id: card.id, index })}

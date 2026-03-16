@@ -2,11 +2,14 @@
   import { resolve } from '$app/paths';
   import { invalidateAll } from '$app/navigation';
   import { DragDropProvider } from '@dnd-kit/svelte';
-  import { createSortable, isSortable } from '@dnd-kit/svelte/sortable';
+  import { createSortable } from '@dnd-kit/svelte/sortable';
   import AdminButton from '$lib/components/admin/AdminButton.svelte';
   import AdminCard from '$lib/components/admin/AdminCard.svelte';
   import AdminCreateListLayout from '$lib/components/admin/AdminCreateListLayout.svelte';
   import AdminHeading from '$lib/components/admin/AdminHeading.svelte';
+  import { useAdminFormState } from '$lib/components/admin/useAdminFormState.svelte';
+  import { useAutoSlug } from '$lib/components/admin/useAutoSlug.svelte';
+  import { useSortableOrder } from '$lib/components/admin/useSortableOrder.svelte';
   import FormField from '$lib/components/FormField.svelte';
   import FormInput from '$lib/components/FormInput.svelte';
   import FormSelect from '$lib/components/FormSelect.svelte';
@@ -14,19 +17,11 @@
     PAGE_VISIBILITY_LABELS,
     type PageVisibilityStatus,
   } from '$lib/constants/page-visibility';
-  import { slugify } from '$lib/utils/slug';
-
-  type FormState = {
-    message?: string;
-    success?: boolean;
-    fieldErrors?: Record<string, string | undefined>;
-    values?: Record<string, string | undefined>;
-  };
 
   const { data, form } = $props();
-  const typedForm = $derived(
-    (form as FormState | null | undefined) ?? undefined,
-  );
+  const { typedForm, fieldErrors: createFieldErrors } = useAdminFormState<
+    Record<string, string | undefined>
+  >(() => form);
 
   type PageCard = {
     id: string;
@@ -48,13 +43,16 @@
   );
 
   const pageCardById = $derived(new Map(pageCards.map((c) => [c.id, c])));
-
-  let pendingOrder = $state<string[] | null>(null);
-  let isSavingOrder = $state(false);
-
-  const orderedCardIds = $derived(
-    pendingOrder ?? pageCards.map((card) => card.id),
-  );
+  const pageOrder = useSortableOrder({
+    getBaseIds: () => pageCards.map((card) => card.id),
+    persist: async (next) => {
+      await persistOrder(next);
+    },
+    onPersisted: async () => {
+      await invalidateAll();
+    },
+  });
+  const orderedCardIds = $derived(pageOrder.orderedIds);
 
   const orderedPages = $derived(
     orderedCardIds
@@ -62,32 +60,16 @@
       .filter((card): card is PageCard => Boolean(card)),
   );
 
-  let createTitle = $state('');
-  let createSlug = $state('');
-  let hasManualSlugEdit = $state(false);
+  const createDraft = useAutoSlug();
   let createEditorMode = $state<'code' | 'svedit'>('code');
-  const createFieldErrors = $derived(typedForm?.fieldErrors ?? {});
-
-  const onCreateTitleInput = () => {
-    if (!hasManualSlugEdit) {
-      createSlug = slugify(createTitle);
-    }
-  };
-
-  const onCreateSlugInput = (event: Event) => {
-    const value = (event.currentTarget as HTMLInputElement).value.trim();
-    hasManualSlugEdit = value.length > 0;
-    if (!hasManualSlugEdit) {
-      createSlug = slugify(createTitle);
-    }
-  };
 
   $effect(() => {
-    const nextTitle = typedForm?.values?.title;
-    const nextSlug = typedForm?.values?.slug;
+    createDraft.syncFromValues(typedForm?.values, {
+      name: 'title',
+      slug: 'slug',
+    });
+
     const nextEditorMode = typedForm?.values?.editor_mode;
-    if (typeof nextTitle === 'string') createTitle = nextTitle;
-    if (typeof nextSlug === 'string') createSlug = nextSlug;
     if (nextEditorMode === 'code' || nextEditorMode === 'svedit') {
       createEditorMode = nextEditorMode;
     }
@@ -104,37 +86,6 @@
 
     return response.ok;
   };
-
-  async function onPageDragEnd(event: unknown) {
-    if (isSavingOrder) return;
-
-    const e = event as { canceled?: boolean; operation?: { source: unknown } };
-    if (e.canceled || !e.operation?.source) return;
-
-    const source = e.operation.source as Parameters<typeof isSortable>[0];
-    if (!isSortable(source)) return;
-
-    const { initialIndex, index } = source as {
-      initialIndex: number;
-      index: number;
-    };
-
-    if (initialIndex === index) return;
-
-    const next = [...orderedCardIds];
-    const [removed] = next.splice(initialIndex, 1);
-    next.splice(index, 0, removed);
-    pendingOrder = next;
-
-    isSavingOrder = true;
-    try {
-      await persistOrder(next);
-      await invalidateAll();
-    } finally {
-      isSavingOrder = false;
-      pendingOrder = null;
-    }
-  }
 </script>
 
 <AdminCreateListLayout
@@ -161,8 +112,8 @@
       <FormInput
         id="page-create-title"
         name="title"
-        bind:value={createTitle}
-        oninput={onCreateTitleInput}
+        bind:value={createDraft.name}
+        oninput={createDraft.onNameInput}
       />
     </FormField>
     <FormField
@@ -173,8 +124,8 @@
       <FormInput
         id="page-create-slug"
         name="slug"
-        bind:value={createSlug}
-        oninput={onCreateSlugInput}
+        bind:value={createDraft.slug}
+        oninput={createDraft.onSlugInput}
       />
     </FormField>
     <FormField label="Editor mode" id="page-create-editor_mode">
@@ -197,7 +148,7 @@
   {#if orderedPages.length === 0}
     <p class="mt-2 text-sm text-text-muted">No pages yet.</p>
   {:else}
-    <DragDropProvider onDragEnd={onPageDragEnd}>
+    <DragDropProvider onDragEnd={pageOrder.onDragEnd}>
       <ul class="grid gap-3">
         {#each orderedPages as page, index (page.id)}
           {@const sortable = createSortable({ id: page.id, index })}

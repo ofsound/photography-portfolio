@@ -1,17 +1,14 @@
 <script lang="ts">
   import AdminCard from '$lib/components/admin/AdminCard.svelte';
-  import AdminHeader from '$lib/components/admin/AdminHeader.svelte';
-  import AdminHeading from '$lib/components/admin/AdminHeading.svelte';
+  import AdminPageHeader from '$lib/components/admin/AdminPageHeader.svelte';
 
   const { data } = $props();
 </script>
 
-<AdminHeader>
-  <AdminHeading>Audit Log</AdminHeading>
-  <p class="mt-2 text-sm text-text-muted">
-    Most recent {data.logs.length} entries.
-  </p>
-</AdminHeader>
+<AdminPageHeader
+  title="Audit Log"
+  subtitle={`Most recent ${data.logs.length} entries.`}
+/>
 
 <AdminCard class="overflow-x-auto !bg-transparent">
   <table class="min-w-full border-collapse text-left text-xs">

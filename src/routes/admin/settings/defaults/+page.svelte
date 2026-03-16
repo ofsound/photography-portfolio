@@ -1,8 +1,6 @@
 <script lang="ts">
-  import AdminHeader from '$lib/components/admin/AdminHeader.svelte';
   import AdminButton from '$lib/components/admin/AdminButton.svelte';
-  import AdminHeading from '$lib/components/admin/AdminHeading.svelte';
-  import AdminToastEmitter from '$lib/components/admin/AdminToastEmitter.svelte';
+  import AdminPageHeader from '$lib/components/admin/AdminPageHeader.svelte';
   import GallerySettingsFormFields from '$lib/components/admin/GallerySettingsFormFields.svelte';
 
   import { GALLERY_SETTINGS_DEFAULTS } from '$lib/constants/gallery-settings';
@@ -13,16 +11,11 @@
   const isAdmin = $derived(data.role === 'admin');
 </script>
 
-<AdminHeader>
-  <AdminHeading>Default Gallery Settings</AdminHeading>
-
-  {#if form?.message}
-    <AdminToastEmitter
-      message={form.message}
-      type={form && 'success' in form && form.success ? 'success' : 'error'}
-    />
-  {/if}
-</AdminHeader>
+<AdminPageHeader
+  title="Default Gallery Settings"
+  formMessage={form?.message}
+  formSuccess={form?.success === true}
+/>
 
 <form method="POST" action="?/save" class="grid gap-4">
   <GallerySettingsFormFields

@@ -1,8 +1,7 @@
 <script lang="ts">
-  import AdminHeader from '$lib/components/admin/AdminHeader.svelte';
   import AdminButton from '$lib/components/admin/AdminButton.svelte';
-  import AdminHeading from '$lib/components/admin/AdminHeading.svelte';
-  import AdminToastEmitter from '$lib/components/admin/AdminToastEmitter.svelte';
+  import AdminPageHeader from '$lib/components/admin/AdminPageHeader.svelte';
+  import { useAdminFormState } from '$lib/components/admin/useAdminFormState.svelte';
   import FormField from '$lib/components/FormField.svelte';
   import FormInput from '$lib/components/FormInput.svelte';
   import {
@@ -14,31 +13,22 @@
     normalizeHexColor,
   } from '$lib/constants/theme-colors';
 
-  type FormState = {
-    message?: string;
-    success?: boolean;
-    fieldErrors?: Record<string, string | undefined>;
-    values?: {
-      public_font_import_url?: string;
-      public_font_family?: string;
-      admin_font_import_url?: string;
-      admin_font_family?: string;
-      show_search_link_in_nav?: boolean;
-      default_page_max_width_px?: number | null;
-      brand_light_hex?: string;
-      brand_dark_hex?: string;
-      brand_contrast_light_hex?: string;
-      brand_contrast_dark_hex?: string;
-    };
+  type SettingsFormValues = {
+    public_font_import_url?: string;
+    public_font_family?: string;
+    admin_font_import_url?: string;
+    admin_font_family?: string;
+    show_search_link_in_nav?: boolean;
+    default_page_max_width_px?: number | null;
+    brand_light_hex?: string;
+    brand_dark_hex?: string;
+    brand_contrast_light_hex?: string;
+    brand_contrast_dark_hex?: string;
   };
-
   const { data, form } = $props();
-  const typedForm = $derived(
-    (form as FormState | null | undefined) ?? undefined,
+  const { fieldErrors, values } = useAdminFormState<SettingsFormValues>(
+    () => form,
   );
-
-  const fieldErrors = $derived(typedForm?.fieldErrors ?? {});
-  const values = $derived(typedForm?.values ?? {});
   const isAdmin = $derived(data.role === 'admin');
   const getValue = (value: string | boolean | undefined) =>
     typeof value === 'string' ? value : undefined;
@@ -111,16 +101,11 @@
   );
 </script>
 
-<AdminHeader>
-  <AdminHeading>Site Settings</AdminHeading>
-
-  {#if form?.message}
-    <AdminToastEmitter
-      message={form.message}
-      type={form && 'success' in form && form.success ? 'success' : 'error'}
-    />
-  {/if}
-</AdminHeader>
+<AdminPageHeader
+  title="Site Settings"
+  formMessage={form?.message}
+  formSuccess={form?.success === true}
+/>
 
 <form method="POST" action="?/saveTypography" class="grid gap-4">
   <div class="grid gap-3">

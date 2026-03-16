@@ -144,7 +144,6 @@
   />
 
   <hr class="my-8 border-border" />
-  <AdminHeading class="mb-4" level={2}>Gallery Settings</AdminHeading>
 
   <GallerySettingsFormFields
     {settings}

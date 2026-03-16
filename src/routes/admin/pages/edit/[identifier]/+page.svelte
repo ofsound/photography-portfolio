@@ -4,8 +4,9 @@
   import CodeEditor from '$lib/components/admin/CodeEditor.svelte';
   import SveditEditor from '$lib/components/admin/SveditEditor.svelte';
   import BackgroundImagePickerModal from '$lib/components/admin/BackgroundImagePickerModal.svelte';
-  import AdminCard from '$lib/components/admin/AdminCard.svelte';
   import AdminButton from '$lib/components/admin/AdminButton.svelte';
+  import AdminCard from '$lib/components/admin/AdminCard.svelte';
+  import AdminStickyActionBar from '$lib/components/admin/AdminStickyActionBar.svelte';
   import AdminHeader from '$lib/components/admin/AdminHeader.svelte';
   import AdminHeading from '$lib/components/admin/AdminHeading.svelte';
   import AdminRevisionsDrawer from '$lib/components/admin/AdminRevisionsDrawer.svelte';
@@ -404,26 +405,19 @@
   />
 </form>
 
-<div
-  class="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-surface/95 px-4 pt-3 backdrop-blur md:left-[220px] md:px-6"
-  style="padding-bottom: env(safe-area-inset-bottom)"
->
-  <div class="w-full md:max-w-[1200px]">
-    <AdminCard class="flex flex-wrap items-center gap-3 p-3">
-      <AdminButton type="submit" variant="submit" form="page-edit-form"
-        >Save</AdminButton
-      >
-      <AdminButton
-        type="submit"
-        variant="danger"
-        form="page-edit-form"
-        formaction="?/delete"
-        formmethod="POST"
-        onclick={confirmDelete}>Delete</AdminButton
-      >
-    </AdminCard>
-  </div>
-</div>
+<AdminStickyActionBar>
+  <AdminButton type="submit" variant="submit" form="page-edit-form"
+    >Save</AdminButton
+  >
+  <AdminButton
+    type="submit"
+    variant="danger"
+    form="page-edit-form"
+    formaction="?/delete"
+    formmethod="POST"
+    onclick={confirmDelete}>Delete</AdminButton
+  >
+</AdminStickyActionBar>
 
 {#if showBgPicker}
   <BackgroundImagePickerModal

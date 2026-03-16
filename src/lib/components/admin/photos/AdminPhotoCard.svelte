@@ -5,6 +5,7 @@
   import { fade, slide } from 'svelte/transition';
 
   import AdminButton from '$lib/components/admin/AdminButton.svelte';
+  import AdminStickyActionBar from '$lib/components/admin/AdminStickyActionBar.svelte';
   import AdminHeading from '$lib/components/admin/AdminHeading.svelte';
   import AdminSeoSocialDrawer from '$lib/components/admin/AdminSeoSocialDrawer.svelte';
   import AdminPhotoCardCompact from '$lib/components/admin/photos/AdminPhotoCardCompact.svelte';
@@ -175,7 +176,7 @@
 </script>
 
 {#if editorOnly}
-  <article class="relative grid gap-3 rounded">
+  <article class="relative grid gap-3 rounded pb-32">
     <div
       transition:slide={{
         duration: SLIDE_DURATION,
@@ -362,61 +363,55 @@
         </div>
       </div>
 
-      <div
-        transition:fade={{
-          duration: FADE_DURATION,
-          delay: 4 * STAGGER_MS,
-          easing: quintOut,
-        }}
-        class="mt-8 flex flex-wrap items-center justify-center gap-2"
-      >
+    </div>
+  </article>
+
+  <AdminStickyActionBar>
+    <AdminButton
+      form="photo-update-form-{photoFormId}"
+      variant="submit"
+      type="submit"
+    >
+      {photoStatus === 'draft' || isDraft ? 'Save Draft' : 'Save'}
+    </AdminButton>
+    {#if !isDraft}
+      {#if photoStatus === 'draft'}
         <AdminButton
           form="photo-update-form-{photoFormId}"
           variant="submit"
           type="submit"
+          formaction="?/publish"
         >
-          {photoStatus === 'draft' || isDraft ? 'Save Draft' : 'Save'}
+          Publish
         </AdminButton>
-        {#if !isDraft}
-          {#if photoStatus === 'draft'}
-            <AdminButton
-              form="photo-update-form-{photoFormId}"
-              variant="submit"
-              type="submit"
-              formaction="?/publish"
-            >
-              Publish
-            </AdminButton>
-          {/if}
-          {#if photoStatus === 'published'}
-            <AdminButton
-              form="photo-update-form-{photoFormId}"
-              variant="danger"
-              type="submit"
-              formaction="?/archive"
-              onclick={(e: MouseEvent) => {
-                if (
-                  !window.confirm(
-                    'Are you sure you want to archive this photo?',
-                  )
-                ) {
-                  e.preventDefault();
-                }
-              }}>Archive</AdminButton
-            >
-          {/if}
-          {#if photoStatus === 'archived'}
-            <AdminButton
-              form="photo-update-form-{photoFormId}"
-              type="submit"
-              variant="submit"
-              formaction="?/restore">Restore</AdminButton
-            >
-          {/if}
-        {/if}
-      </div>
-    </div>
-  </article>
+      {/if}
+      {#if photoStatus === 'published'}
+        <AdminButton
+          form="photo-update-form-{photoFormId}"
+          variant="danger"
+          type="submit"
+          formaction="?/archive"
+          onclick={(e: MouseEvent) => {
+            if (
+              !window.confirm(
+                'Are you sure you want to archive this photo?',
+              )
+            ) {
+              e.preventDefault();
+            }
+          }}>Archive</AdminButton
+        >
+      {/if}
+      {#if photoStatus === 'archived'}
+        <AdminButton
+          form="photo-update-form-{photoFormId}"
+          type="submit"
+          variant="submit"
+          formaction="?/restore">Restore</AdminButton
+        >
+      {/if}
+    {/if}
+  </AdminStickyActionBar>
 {:else}
   <AdminPhotoCardCompact
     {photo}

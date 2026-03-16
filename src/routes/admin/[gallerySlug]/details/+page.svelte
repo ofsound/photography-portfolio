@@ -1,5 +1,6 @@
 <script lang="ts">
   import AdminButton from '$lib/components/admin/AdminButton.svelte';
+  import AdminStickyActionBar from '$lib/components/admin/AdminStickyActionBar.svelte';
   import AdminGalleryNav from '$lib/components/admin/AdminGalleryNav.svelte';
   import AdminHeading from '$lib/components/admin/AdminHeading.svelte';
   import AdminSeoSocialDrawer from '$lib/components/admin/AdminSeoSocialDrawer.svelte';
@@ -68,7 +69,7 @@
   />
 {/if}
 
-<form method="POST" action="?/save" class="grid gap-2">
+<form id="gallery-details-form" method="POST" action="?/save" class="grid gap-2 pb-32">
   <AdminHeading level={2}>Gallery Details</AdminHeading>
 
   <div class="mt-4 flex flex-col gap-4 sm:flex-row sm:items-start">
@@ -154,22 +155,23 @@
     ogImagePath={ogImagePathValue}
   />
 
-  <div class="mt-6 flex flex-wrap items-center gap-2">
-    <AdminButton type="submit" variant="submit">Save Details</AdminButton>
-    {#if isAdmin}
-      <AdminButton
-        type="button"
-        variant="danger"
-        onclick={() => {
-          if (confirm('Are you sure you want to delete this gallery?')) {
-            const f = document.createElement('form');
-            f.method = 'POST';
-            f.action = '?/delete';
-            document.body.appendChild(f);
-            f.submit();
-          }
-        }}>Delete Gallery</AdminButton
-      >
-    {/if}
-  </div>
 </form>
+
+<AdminStickyActionBar>
+  <AdminButton type="submit" variant="submit" form="gallery-details-form"
+    >Save Details</AdminButton
+  >
+  {#if isAdmin}
+    <AdminButton
+      type="submit"
+      variant="danger"
+      form="gallery-details-form"
+      formaction="?/delete"
+      onclick={(e: MouseEvent) => {
+        if (!confirm('Are you sure you want to delete this gallery?')) {
+          e.preventDefault();
+        }
+      }}>Delete Gallery</AdminButton
+    >
+  {/if}
+</AdminStickyActionBar>

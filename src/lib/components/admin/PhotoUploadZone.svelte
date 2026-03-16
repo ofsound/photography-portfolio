@@ -4,27 +4,19 @@
   import AdminCard from '$lib/components/admin/AdminCard.svelte';
   import AdminButton from '$lib/components/admin/AdminButton.svelte';
   import AdminHeading from '$lib/components/admin/AdminHeading.svelte';
-  import FormField from '$lib/components/FormField.svelte';
-  import FormInput from '$lib/components/FormInput.svelte';
-  import FormSelect from '$lib/components/FormSelect.svelte';
 
   const {
     photoId,
     galleryId = '',
-    existingImageCount = 0,
     draftTitle = '',
     draftSlug = '',
   } = $props<{
     photoId: string;
     galleryId?: string;
-    existingImageCount?: number;
     draftTitle?: string;
     draftSlug?: string;
   }>();
 
-  const defaultKind = $derived(
-    existingImageCount === 0 ? 'lead' : 'additional',
-  );
   let fileName = $state<string | null>(null);
   let uploading = $state(false);
 
@@ -74,41 +66,7 @@
           {fileName ?? 'No file chosen'}
         </span>
       </div>
-      <div class="grid gap-2 sm:grid-cols-2 sm:items-center">
-        <FormField
-          label="Image Type"
-          id={`photo-upload-kind-${photoId}`}
-          labelSrOnly
-        >
-          <FormSelect
-            id={`photo-upload-kind-${photoId}`}
-            name="kind"
-            value={defaultKind}
-          >
-            <option value="lead">Lead image</option>
-            <option value="additional">Additional image</option>
-          </FormSelect>
-        </FormField>
-        <FormField
-          label="Alt text"
-          id={`photo-upload-alt-text-${photoId}`}
-          optional
-        >
-          <FormInput id={`photo-upload-alt-text-${photoId}`} name="alt_text" />
-        </FormField>
-      </div>
     </div>
-    <p class="text-xs text-text-muted">
-      {#if defaultKind === 'lead'}
-        First image defaults to <strong>Lead</strong>
-        (cover). Subsequent uploads default to Additional.
-      {:else}
-        Choose <strong>Additional image</strong>
-        for gallery uploads. Use
-        <strong>Lead image</strong>
-        only for the cover.
-      {/if}
-    </p>
     <div class="flex justify-center">
       <AdminButton type="submit" disabled={uploading}>
         {uploading ? 'Uploading…' : 'Upload'}

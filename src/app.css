@@ -71,7 +71,8 @@ body {
 
 .thumb-entrance-fx--cascade,
 .thumb-entrance-fx--lift,
-.thumb-entrance-fx--pop {
+.thumb-entrance-fx--pop,
+.thumb-entrance-fx--flip {
   animation-delay: var(--thumb-entrance-delay, 0ms);
   animation-duration: var(--thumb-entrance-duration, 520ms);
   animation-fill-mode: both;
@@ -91,6 +92,11 @@ body {
   animation-name: thumb-entrance-pop;
   animation-timing-function: cubic-bezier(0.18, 0.9, 0.2, 1);
   transform-origin: center center;
+}
+
+.thumb-entrance-fx--flip {
+  animation-name: thumb-entrance-flip;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 @keyframes thumb-entrance-cascade {
@@ -129,6 +135,18 @@ body {
   }
 }
 
+@keyframes thumb-entrance-flip {
+  from {
+    opacity: 0;
+    transform: perspective(800px) rotateY(90deg);
+  }
+
+  to {
+    opacity: 1;
+    transform: perspective(800px) rotateY(0deg);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .thumb-entrance-fx--await {
     opacity: 1;
@@ -136,7 +154,8 @@ body {
 
   .thumb-entrance-fx--cascade,
   .thumb-entrance-fx--lift,
-  .thumb-entrance-fx--pop {
+  .thumb-entrance-fx--pop,
+  .thumb-entrance-fx--flip {
     animation: none;
     opacity: 1;
     transform: none;

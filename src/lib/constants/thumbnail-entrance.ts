@@ -14,6 +14,11 @@ export const THUMBNAIL_ENTRANCE_PRESET_OPTIONS = [
     label: 'Pop',
     description: 'Random reveal with scale-in from 60%.',
   },
+  {
+    id: 'flip',
+    label: 'Flip',
+    description: 'Playing-card reveal rotating around a vertical axis.',
+  },
 ] as const;
 
 export type ThumbnailEntrancePreset =

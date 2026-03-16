@@ -43,6 +43,7 @@
   import type {
     ActiveRoute,
     DetailViewMode,
+    FloatingPanelPosition,
     GalleryImage,
     PhotographInfoMode,
     ViewerData,
@@ -268,7 +269,12 @@
     }
 
     const rank = entranceRanks.get(slug) ?? fallbackRank;
-    const motion = thumbnailEntranceRuntime.buildMotion({ rank });
+    const staggerOverrideMs =
+      data.gallerySettings?.thumbnail_entrance_stagger_ms ?? 40;
+    const motion = thumbnailEntranceRuntime.buildMotion({
+      rank,
+      staggerOverrideMs,
+    });
     return {
       className: `thumb-entrance-fx ${motion.className}`,
       style: `--thumb-entrance-delay: ${motion.delayMs}ms; --thumb-entrance-duration: ${motion.durationMs}ms;`,
@@ -316,6 +322,18 @@
     return data.gallerySettings?.show_photograph_info === false
       ? 'hidden'
       : 'floating';
+  });
+
+  const floatingPanelPosition = $derived.by<FloatingPanelPosition>(() => {
+    const configured = data.gallerySettings?.floating_panel_position;
+    if (
+      configured === 'bottom_left' ||
+      configured === 'top_right' ||
+      configured === 'bottom_right'
+    ) {
+      return configured;
+    }
+    return 'bottom_left';
   });
 
   tileAnimator = createGalleryTileAnimator({
@@ -1044,6 +1062,7 @@
     {transitionPhase}
     {overlayChromeHidden}
     {photographInfoMode}
+    {floatingPanelPosition}
     classicDetailHInsetPct={detailViewMode === 'classic'
       ? (data.gallerySettings?.classic_detail_h_inset_pct ?? 0)
       : 0}

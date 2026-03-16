@@ -29,6 +29,7 @@ export const GALLERY_SETTINGS_FIELD_KEYS = [
   'uniform_thumb_ratio',
   'transition_preset',
   'thumbnail_entrance_preset',
+  'thumbnail_entrance_stagger_ms',
   'preloader_preset',
   'nav_button_preset',
   'classic_detail_border_px',
@@ -43,6 +44,7 @@ export const GALLERY_SETTINGS_FIELD_KEYS = [
   'contact_sheet_mobile_intensity_pct',
   'allow_transition_toggle',
   'photograph_info_mode',
+  'floating_panel_position',
   'show_photo_info_title',
   'show_photo_info_description',
   'show_photo_info_capture_date',
@@ -158,6 +160,12 @@ export const normalizeGallerySettingsForRead = (
     transition_preset:
       source.transition_preset ?? GALLERY_SETTINGS_DEFAULTS.transition_preset,
     thumbnail_entrance_preset: thumbnailEntrancePreset,
+    thumbnail_entrance_stagger_ms: clampNumber(
+      source.thumbnail_entrance_stagger_ms,
+      GALLERY_SETTINGS_DEFAULTS.thumbnail_entrance_stagger_ms,
+      10,
+      200,
+    ),
     preloader_preset: preloaderPreset,
     nav_button_preset: navButtonPreset,
     classic_detail_border_px: clampNumber(
@@ -226,6 +234,9 @@ export const normalizeGallerySettingsForRead = (
     photograph_info_mode:
       source.photograph_info_mode ??
       GALLERY_SETTINGS_DEFAULTS.photograph_info_mode,
+    floating_panel_position:
+      source.floating_panel_position ??
+      GALLERY_SETTINGS_DEFAULTS.floating_panel_position,
     show_photo_info_title:
       source.show_photo_info_title ??
       GALLERY_SETTINGS_DEFAULTS.show_photo_info_title,
@@ -265,6 +276,8 @@ const viewerGallerySettingProjectors: {
   uniform_thumb_ratio: (settings) => settings.uniform_thumb_ratio,
   transition_preset: (settings) => settings.transition_preset,
   thumbnail_entrance_preset: (settings) => settings.thumbnail_entrance_preset,
+  thumbnail_entrance_stagger_ms: (settings) =>
+    settings.thumbnail_entrance_stagger_ms,
   preloader_preset: (settings) => settings.preloader_preset,
   nav_button_preset: (settings) => settings.nav_button_preset,
   classic_detail_border_px: (settings) => settings.classic_detail_border_px,
@@ -282,6 +295,7 @@ const viewerGallerySettingProjectors: {
     settings.contact_sheet_mobile_intensity_pct,
   allow_transition_toggle: (settings) => settings.allow_transition_toggle,
   photograph_info_mode: (settings) => settings.photograph_info_mode,
+  floating_panel_position: (settings) => settings.floating_panel_position,
   show_photo_info_title: (settings) => settings.show_photo_info_title,
   show_photo_info_description: (settings) =>
     settings.show_photo_info_description,

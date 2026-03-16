@@ -12,6 +12,7 @@ export type GallerySettingsDefaults = Pick<
   | 'uniform_thumb_ratio'
   | 'transition_preset'
   | 'thumbnail_entrance_preset'
+  | 'thumbnail_entrance_stagger_ms'
   | 'preloader_preset'
   | 'nav_button_preset'
   | 'classic_detail_border_px'
@@ -26,6 +27,7 @@ export type GallerySettingsDefaults = Pick<
   | 'contact_sheet_mobile_intensity_pct'
   | 'allow_transition_toggle'
   | 'photograph_info_mode'
+  | 'floating_panel_position'
   | 'show_photo_info_title'
   | 'show_photo_info_description'
   | 'show_photo_info_capture_date'
@@ -46,6 +48,7 @@ export const GALLERY_SETTINGS_DEFAULTS: GallerySettingsDefaults = {
   uniform_thumb_ratio: 1,
   transition_preset: 'cinematic',
   thumbnail_entrance_preset: 'cascade',
+  thumbnail_entrance_stagger_ms: 40,
   preloader_preset: 'minimal',
   nav_button_preset: 'whisper',
   classic_detail_border_px: 0,
@@ -60,6 +63,7 @@ export const GALLERY_SETTINGS_DEFAULTS: GallerySettingsDefaults = {
   contact_sheet_mobile_intensity_pct: 55,
   allow_transition_toggle: true,
   photograph_info_mode: 'floating',
+  floating_panel_position: 'bottom_left',
   show_photo_info_title: true,
   show_photo_info_description: true,
   show_photo_info_capture_date: false,

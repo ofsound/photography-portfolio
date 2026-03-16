@@ -79,6 +79,13 @@ const asPhotographInfoMode = (value: FormDataEntryValue | null) => {
     : 'floating';
 };
 
+const asFloatingPanelPosition = (value: FormDataEntryValue | null) => {
+  const pos = asString(value, 'bottom_left');
+  return pos === 'bottom_left' || pos === 'top_right' || pos === 'bottom_right'
+    ? pos
+    : 'bottom_left';
+};
+
 const readPayload = (
   form: FormData,
   role: 'admin' | 'editor',
@@ -197,6 +204,9 @@ const readPayload = (
     ),
     allow_transition_toggle: asBoolean(form.get('allow_transition_toggle')),
     photograph_info_mode: photographInfoMode,
+    floating_panel_position: asFloatingPanelPosition(
+      form.get('floating_panel_position'),
+    ),
     show_photo_info_title: asBoolean(form.get('show_photo_info_title')),
     show_photo_info_description: asBoolean(
       form.get('show_photo_info_description'),
@@ -220,6 +230,13 @@ const readPayload = (
     );
     payload.thumbnail_entrance_preset = asThumbnailEntrancePreset(
       form.get('thumbnail_entrance_preset'),
+    );
+    payload.thumbnail_entrance_stagger_ms = clampNumber(
+      asOptionalNumber(form.get('thumbnail_entrance_stagger_ms')) ??
+        GALLERY_SETTINGS_DEFAULTS.thumbnail_entrance_stagger_ms,
+      10,
+      200,
+      GALLERY_SETTINGS_DEFAULTS.thumbnail_entrance_stagger_ms,
     );
     payload.preloader_preset = asPreloaderPreset(form.get('preloader_preset'));
     payload.nav_button_preset = asNavButtonPreset(

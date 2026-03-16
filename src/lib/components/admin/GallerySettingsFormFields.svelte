@@ -211,6 +211,23 @@
     </FormSelect>
   </FormField>
   <FormField
+    label={'Entrance Stagger (ms)' +
+      (disableTransitionPreset ? ' (Admin)' : '')}
+    id={p('thumbnail_entrance_stagger_ms')}
+    class="w-fit"
+  >
+    <FormInput
+      id={p('thumbnail_entrance_stagger_ms')}
+      name="thumbnail_entrance_stagger_ms"
+      type="number"
+      min="10"
+      max="200"
+      step="5"
+      value={String(settings.thumbnail_entrance_stagger_ms ?? 40)}
+      disabled={readonly || disableTransitionPreset}
+    />
+  </FormField>
+  <FormField
     label={'Loading Animation' + (disableTransitionPreset ? ' (Admin)' : '')}
     id={p('preloader_preset')}
     class="w-fit"
@@ -535,6 +552,26 @@
       <option value="bottom_dock">bottom dock</option>
     </FormSelect>
   </FormField>
+
+  {#if settings.photograph_info_mode !== 'hidden'}
+    <FormField
+      label="Floating Panel Position"
+      id={p('floating_panel_position')}
+      class="w-fit"
+    >
+      <FormSelect
+        name="floating_panel_position"
+        id={p('floating_panel_position')}
+        value={settings.floating_panel_position}
+        disabled={readonly}
+        class="w-auto"
+      >
+        <option value="bottom_left">bottom left</option>
+        <option value="top_right">top right</option>
+        <option value="bottom_right">bottom right</option>
+      </FormSelect>
+    </FormField>
+  {/if}
 
   <FormField
     label="Photograph Info Fields"

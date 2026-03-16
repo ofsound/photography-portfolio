@@ -26,6 +26,7 @@ type ThumbnailEntranceOrderContext = {
 
 type ThumbnailEntranceMotionContext = {
   rank: number;
+  staggerOverrideMs: number;
 };
 
 type ThumbnailEntrancePresetRuntime = {
@@ -74,11 +75,11 @@ const RUNTIMES: Record<
     durationMs: 520,
     staggerMs: 42,
     buildOrder: (tiles) => [...tiles].sort(byTopLeft).map((tile) => tile.slug),
-    buildMotion: ({ rank }) => ({
+    buildMotion: ({ rank, staggerOverrideMs }) => ({
       className: 'thumb-entrance-fx--cascade',
-      delayMs: rank * 42,
+      delayMs: rank * staggerOverrideMs,
       durationMs: 520,
-      staggerMs: 42,
+      staggerMs: staggerOverrideMs,
     }),
   },
   lift: {
@@ -102,11 +103,11 @@ const RUNTIMES: Record<
           return byTopLeft(a, b);
         })
         .map((tile) => tile.slug),
-    buildMotion: ({ rank }) => ({
+    buildMotion: ({ rank, staggerOverrideMs }) => ({
       className: 'thumb-entrance-fx--lift',
-      delayMs: rank * 36,
+      delayMs: rank * staggerOverrideMs,
       durationMs: 500,
-      staggerMs: 36,
+      staggerMs: staggerOverrideMs,
     }),
   },
   pop: {
@@ -114,11 +115,23 @@ const RUNTIMES: Record<
     durationMs: 430,
     staggerMs: 30,
     buildOrder: (tiles) => shuffle(tiles).map((tile) => tile.slug),
-    buildMotion: ({ rank }) => ({
+    buildMotion: ({ rank, staggerOverrideMs }) => ({
       className: 'thumb-entrance-fx--pop',
-      delayMs: rank * 30,
+      delayMs: rank * staggerOverrideMs,
       durationMs: 430,
-      staggerMs: 30,
+      staggerMs: staggerOverrideMs,
+    }),
+  },
+  flip: {
+    id: 'flip',
+    durationMs: 560,
+    staggerMs: 50,
+    buildOrder: (tiles) => [...tiles].sort(byTopLeft).map((tile) => tile.slug),
+    buildMotion: ({ rank, staggerOverrideMs }) => ({
+      className: 'thumb-entrance-fx--flip',
+      delayMs: rank * staggerOverrideMs,
+      durationMs: 560,
+      staggerMs: staggerOverrideMs,
     }),
   },
 };

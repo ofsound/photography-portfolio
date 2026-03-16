@@ -5,11 +5,13 @@
   import { photoPublicUrl } from '$lib/utils/storage-url';
 
   import type { GalleryPhoto } from '$lib/types/content';
+  import type { FloatingPanelPosition } from './gallery-scene.types';
 
   type PortalAction = (node: HTMLElement) => { destroy: () => void };
 
   const {
     activePhoto,
+    position,
     titleText,
     descriptionText,
     captureDateText,
@@ -29,6 +31,7 @@
     portal,
   } = $props<{
     activePhoto: GalleryPhoto;
+    position: FloatingPanelPosition;
     titleText: string;
     descriptionText: string;
     captureDateText: string;
@@ -55,11 +58,22 @@
       showDimensions ||
       showLicense,
   );
+
+  const positionClasses = $derived.by(() => {
+    switch (position) {
+      case 'top_right':
+        return 'top-4 right-4 sm:top-6 sm:right-6';
+      case 'bottom_right':
+        return 'bottom-4 right-4 sm:bottom-6 sm:right-6';
+      default:
+        return 'bottom-4 left-4 sm:bottom-6 sm:left-6';
+    }
+  });
 </script>
 
 <aside
   use:portal
-  class="chrome-panel fixed bottom-4 left-4 z-[80] grid w-[min(92vw,40rem)] rounded-xl border border-border-strong px-4 py-4 shadow-xl transition-opacity ease-out sm:bottom-6 sm:left-6"
+  class="chrome-panel fixed z-[80] grid w-[min(92vw,40rem)] rounded-xl border border-border-strong px-4 py-4 shadow-xl transition-opacity ease-out {positionClasses}"
   class:opacity-0={overlayChromeHidden}
   style="transition-duration: {closingChromeMs}ms"
 >
@@ -77,7 +91,7 @@
             </h1>
           {/if}
           {#if showDescription}
-            <p class="text-sm leading-relaxed text-text/85">
+            <p class="text-base leading-relaxed text-text/85">
               {descriptionText}
             </p>
           {/if}

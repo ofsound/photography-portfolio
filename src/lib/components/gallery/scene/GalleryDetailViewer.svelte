@@ -17,6 +17,7 @@
   import type { GalleryPhoto } from '$lib/types/content';
   import type {
     DetailViewMode,
+    FloatingPanelPosition,
     PhotographInfoMode,
   } from './gallery-scene.types';
 
@@ -34,6 +35,7 @@
     transitionPhase,
     overlayChromeHidden,
     photographInfoMode,
+    floatingPanelPosition,
     showPhotoInfoTitle,
     showPhotoInfoDescription,
     showPhotoInfoCaptureDate,
@@ -70,6 +72,7 @@
     transitionPhase: string;
     overlayChromeHidden: boolean;
     photographInfoMode: PhotographInfoMode;
+    floatingPanelPosition: FloatingPanelPosition;
     showPhotoInfoTitle: boolean;
     showPhotoInfoDescription: boolean;
     showPhotoInfoCaptureDate: boolean;
@@ -507,6 +510,7 @@
 {#if showFloatingInfo}
   <PhotoInfoPanel
     {activePhoto}
+    position={floatingPanelPosition}
     {titleText}
     {descriptionText}
     {captureDateText}
@@ -550,7 +554,7 @@
                 </h1>
               {/if}
               {#if showDescription}
-                <p class="text-sm leading-relaxed text-text/85">
+                <p class="text-base leading-relaxed text-text/85">
                   {descriptionText}
                 </p>
               {/if}

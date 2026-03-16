@@ -188,6 +188,7 @@ export type Database = {
           grid_desktop_default: number;
           grid_mobile_default: number;
           id: string;
+          floating_panel_position: Database['public']['Enums']['floating_panel_position'];
           max_content_width_px: number | null;
           nav_order: number;
           photograph_info_mode: Database['public']['Enums']['photograph_info_mode'];
@@ -201,6 +202,7 @@ export type Database = {
           show_in_nav: boolean;
           show_thumbnail_zoom_hover: boolean;
           thumbnail_entrance_preset: string;
+          thumbnail_entrance_stagger_ms: number;
           preloader_preset: string;
           nav_button_preset: string;
           theme_default: Database['public']['Enums']['theme_mode'];
@@ -229,6 +231,7 @@ export type Database = {
           grid_desktop_default?: number;
           grid_mobile_default?: number;
           id?: string;
+          floating_panel_position?: Database['public']['Enums']['floating_panel_position'];
           max_content_width_px?: number | null;
           nav_order?: number;
           photograph_info_mode?: Database['public']['Enums']['photograph_info_mode'];
@@ -242,6 +245,7 @@ export type Database = {
           show_in_nav?: boolean;
           show_thumbnail_zoom_hover?: boolean;
           thumbnail_entrance_preset?: string;
+          thumbnail_entrance_stagger_ms?: number;
           preloader_preset?: string;
           nav_button_preset?: string;
           theme_default?: Database['public']['Enums']['theme_mode'];
@@ -269,6 +273,7 @@ export type Database = {
           grid_desktop_default?: number;
           grid_mobile_default?: number;
           id?: string;
+          floating_panel_position?: Database['public']['Enums']['floating_panel_position'];
           max_content_width_px?: number | null;
           nav_order?: number;
           photograph_info_mode?: Database['public']['Enums']['photograph_info_mode'];
@@ -282,6 +287,7 @@ export type Database = {
           show_in_nav?: boolean;
           show_thumbnail_zoom_hover?: boolean;
           thumbnail_entrance_preset?: string;
+          thumbnail_entrance_stagger_ms?: number;
           preloader_preset?: string;
           nav_button_preset?: string;
           theme_default?: Database['public']['Enums']['theme_mode'];
@@ -796,6 +802,7 @@ export type Database = {
           homepage_zoom_strength_pct: number;
           homepage_pan_strength_pct: number;
           homepage_transition_duration_ms: number;
+          floating_panel_position: Database['public']['Enums']['floating_panel_position'];
           max_content_width_px: number | null;
           photograph_info_mode: Database['public']['Enums']['photograph_info_mode'];
           public_font_family: string;
@@ -810,6 +817,7 @@ export type Database = {
           show_thumbnail_zoom_hover: boolean;
           singleton_id: number;
           thumbnail_entrance_preset: string;
+          thumbnail_entrance_stagger_ms: number;
           preloader_preset: string;
           nav_button_preset: string;
           theme_default: Database['public']['Enums']['theme_mode'];
@@ -847,6 +855,7 @@ export type Database = {
           homepage_zoom_strength_pct?: number;
           homepage_pan_strength_pct?: number;
           homepage_transition_duration_ms?: number;
+          floating_panel_position?: Database['public']['Enums']['floating_panel_position'];
           max_content_width_px?: number | null;
           photograph_info_mode?: Database['public']['Enums']['photograph_info_mode'];
           public_font_family?: string;
@@ -861,6 +870,7 @@ export type Database = {
           show_thumbnail_zoom_hover?: boolean;
           singleton_id?: number;
           thumbnail_entrance_preset?: string;
+          thumbnail_entrance_stagger_ms?: number;
           preloader_preset?: string;
           nav_button_preset?: string;
           theme_default?: Database['public']['Enums']['theme_mode'];
@@ -898,6 +908,7 @@ export type Database = {
           homepage_zoom_strength_pct?: number;
           homepage_pan_strength_pct?: number;
           homepage_transition_duration_ms?: number;
+          floating_panel_position?: Database['public']['Enums']['floating_panel_position'];
           max_content_width_px?: number | null;
           photograph_info_mode?: Database['public']['Enums']['photograph_info_mode'];
           public_font_family?: string;
@@ -912,6 +923,7 @@ export type Database = {
           show_thumbnail_zoom_hover?: boolean;
           singleton_id?: number;
           thumbnail_entrance_preset?: string;
+          thumbnail_entrance_stagger_ms?: number;
           preloader_preset?: string;
           nav_button_preset?: string;
           theme_default?: Database['public']['Enums']['theme_mode'];
@@ -1028,6 +1040,7 @@ export type Database = {
       app_role: 'admin' | 'editor';
       asset_kind: 'lead' | 'additional';
       detail_view_mode: 'classic' | 'contact_sheet';
+      floating_panel_position: 'bottom_left' | 'top_right' | 'bottom_right';
       photograph_info_mode: 'hidden' | 'floating' | 'bottom_dock';
       gallery_settings_scope: 'gallery' | 'all';
       gallery_visibility_status: 'public' | 'unlisted' | 'archived';
@@ -1171,6 +1184,7 @@ export const Constants = {
       app_role: ['admin', 'editor'],
       asset_kind: ['lead', 'additional'],
       detail_view_mode: ['classic', 'contact_sheet'],
+      floating_panel_position: ['bottom_left', 'top_right', 'bottom_right'],
       photograph_info_mode: ['hidden', 'floating', 'bottom_dock'],
       gallery_settings_scope: ['gallery', 'all'],
       gallery_visibility_status: ['public', 'unlisted', 'archived'],

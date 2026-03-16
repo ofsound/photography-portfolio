@@ -479,7 +479,6 @@
     <PhotoUploadZone
       photoId={isDraft ? 'draft' : photo.id}
       galleryId={photo.gallery_id}
-      existingImageCount={images.length}
       {draftTitle}
       {draftSlug}
     />

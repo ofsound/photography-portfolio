@@ -36,7 +36,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
     locals.supabase
       .from('homepage_slides')
       .select(
-        'id, position, photo_images:photo_image_id(delivery_storage_path, alt_text)',
+        'id, position, photo_images:photo_image_id(delivery_storage_path, alt_text, photos:photo_id(title))',
       )
       .eq('is_active', true)
       .order('position', { ascending: true }),
@@ -67,7 +67,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
     slideDurationMs,
     clampInt(
       settingsQuery.data?.homepage_transition_duration_ms ??
-        DEFAULT_TRANSITION_DURATION_MS,
+      DEFAULT_TRANSITION_DURATION_MS,
       TRANSITION_DURATION_MIN_MS,
       TRANSITION_DURATION_MAX_MS,
     ),
@@ -102,7 +102,10 @@ export const load: PageServerLoad = async ({ locals, url }) => {
       return {
         id: row.id,
         imagePath: photoPublicUrl(image.delivery_storage_path, 2200),
-        altText: image.alt_text ?? 'Homepage slide',
+        altText:
+          image.alt_text ??
+          (image.photos as { title?: string } | null)?.title ??
+          'Homepage slide',
       };
     })
     .filter(

@@ -392,7 +392,7 @@
         value={filters.q}
         type="search"
         placeholder="Title, description, gallery, category, tag"
-        class="w-full rounded-sm border border-border-strong bg-transparent px-4 py-3 text-sm transition-colors outline-none placeholder:text-text-muted focus:border-text"
+        class="w-full rounded-sm border border-border-strong bg-transparent px-4 py-3 text-base transition-colors outline-none placeholder:text-text-muted focus:border-text md:text-sm"
         oninput={updateQuery}
       />
     </label>
@@ -403,7 +403,7 @@
       </span>
       <select
         value={filters.gallery}
-        class="w-full rounded-sm border border-border-strong bg-transparent px-4 py-3 text-sm transition-colors outline-none focus:border-text"
+        class="w-full rounded-sm border border-border-strong bg-transparent px-4 py-3 text-base transition-colors outline-none focus:border-text md:text-sm"
         onchange={updateGallery}
       >
         <option value="">All public galleries</option>
@@ -419,7 +419,7 @@
       </span>
       <select
         value={filters.category}
-        class="w-full rounded-sm border border-border-strong bg-transparent px-4 py-3 text-sm transition-colors outline-none focus:border-text"
+        class="w-full rounded-sm border border-border-strong bg-transparent px-4 py-3 text-base transition-colors outline-none focus:border-text md:text-sm"
         onchange={updateCategory}
       >
         <option value="">All categories</option>
@@ -435,7 +435,7 @@
       </span>
       <select
         value={filters.tag}
-        class="w-full rounded-sm border border-border-strong bg-transparent px-4 py-3 text-sm transition-colors outline-none focus:border-text"
+        class="w-full rounded-sm border border-border-strong bg-transparent px-4 py-3 text-base transition-colors outline-none focus:border-text md:text-sm"
         onchange={updateTag}
       >
         <option value="">All tags</option>

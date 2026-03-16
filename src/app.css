@@ -24,6 +24,12 @@ body {
   font-family: var(--font-sans);
 }
 
+@media (max-width: 767px) {
+  #transition-mobile {
+    font-size: 1rem;
+  }
+}
+
 .chrome-panel {
   backdrop-filter: blur(12px);
   background: color-mix(in srgb, var(--color-surface) 78%, transparent);

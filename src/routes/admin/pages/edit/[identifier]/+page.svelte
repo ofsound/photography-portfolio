@@ -143,7 +143,7 @@
 </script>
 
 <AdminPageHeader
-  title={`${page.title}: Edit`}
+  title={`${page.title}`}
   leading={backLink}
   toasts={headerToasts}
 />

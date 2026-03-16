@@ -42,7 +42,7 @@
       {min}
       {max}
       {value}
-      class="h-6 w-8 [appearance:textfield] rounded border border-border-strong bg-transparent py-0.5 text-center text-xs tabular-nums [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+      class="h-6 w-8 [appearance:textfield] rounded border border-border-strong bg-transparent py-0.5 text-center text-base tabular-nums md:text-xs [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
       aria-label={label}
       oninput={handleInput}
       onchange={handleChange}

@@ -384,12 +384,18 @@
   const syncSiteHeaderHeight = () => {
     if (typeof document === 'undefined' || typeof window === 'undefined')
       return;
+
+    if (isAdminRoute) {
+      document.documentElement.style.setProperty('--site-header-height', '0px');
+      return;
+    }
+
     const isMobile = window.matchMedia('(max-width: 767px)').matches;
 
     if (isMobile) {
       document.documentElement.style.setProperty(
         '--site-header-height',
-        isAdminRoute ? '0px' : 'var(--size-mobile-header-offset)',
+        'var(--size-mobile-header-offset)',
       );
       return;
     }
@@ -400,6 +406,17 @@
       `${siteHeaderEl.getBoundingClientRect().height}px`,
     );
   };
+
+  const desktopHeaderClass = $derived(
+    `sticky top-0 z-40 hidden border-b border-border bg-surface px-4 transition-opacity duration-(--duration-chrome) ease-out ${
+      isAdminRoute ? '' : 'md:block'
+    }`,
+  );
+  const mainClass = $derived(
+    isAdminRoute
+      ? 'relative z-0 h-[100dvh] overflow-hidden'
+      : 'relative z-0 min-h-screen pt-[var(--site-header-height)] lg:min-h-[calc(100vh-var(--site-header-height))] lg:pt-0',
+  );
 
   $effect(() => {
     if (typeof window === 'undefined' || hasHydratedClientPrefs) return;
@@ -777,7 +794,7 @@
 
   <header
     bind:this={siteHeaderEl}
-    class="sticky top-0 z-40 hidden border-b border-border bg-surface px-4 transition-opacity duration-(--duration-chrome) ease-out md:block"
+    class={desktopHeaderClass}
     class:opacity-0={chromeHidden}
   >
     <div class="mx-auto flex w-full items-center justify-between gap-3">
@@ -966,9 +983,7 @@
     </div>
   </header>
 
-  <main
-    class="relative z-0 min-h-screen pt-[var(--site-header-height)] lg:min-h-[calc(100vh-var(--site-header-height))] lg:pt-0"
-  >
+  <main class={mainClass}>
     {@render children()}
   </main>
 </div>

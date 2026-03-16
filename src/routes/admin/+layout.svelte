@@ -122,7 +122,7 @@
 </script>
 
 <div
-  class="min-h-screen md:grid md:h-[calc(100vh-var(--site-header-height))] md:min-h-0 md:grid-cols-[220px_1fr]"
+  class="h-full min-h-0 overflow-hidden md:grid md:grid-cols-[220px_1fr]"
   style="--font-sans: var(--font-sans-admin); font-family: var(--font-sans)"
 >
   <header
@@ -554,7 +554,7 @@
   </aside>
 
   <section
-    class="flex min-h-screen flex-col p-4 pt-[calc(var(--size-mobile-header-offset)+1rem)] md:min-h-0 md:overflow-y-auto md:p-6"
+    class="flex h-full min-h-0 flex-col overflow-y-auto overscroll-y-contain p-4 pt-[calc(var(--size-mobile-header-offset)+1rem)] md:p-6"
     data-admin-mobile-menu-root
     style="view-transition-name: admin-content"
   >

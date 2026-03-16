@@ -43,7 +43,6 @@ export const GALLERY_SETTINGS_FIELD_KEYS = [
   'contact_sheet_travel_z_px',
   'contact_sheet_target_fill_pct',
   'contact_sheet_mobile_intensity_pct',
-  'allow_transition_toggle',
   'photograph_info_mode',
   'floating_panel_position',
   'show_photo_info_title',
@@ -107,7 +106,7 @@ export const normalizeGallerySettingsForRead = (
 
   const thumbnailEntrancePreset = normalizeThumbnailEntrancePreset(
     source.thumbnail_entrance_preset ??
-      GALLERY_SETTINGS_DEFAULTS.thumbnail_entrance_preset,
+    GALLERY_SETTINGS_DEFAULTS.thumbnail_entrance_preset,
   );
   warnPresetCoercion(
     'thumbnail_entrance_preset',
@@ -158,7 +157,7 @@ export const normalizeGallerySettingsForRead = (
       source.gallery_gap_px ?? GALLERY_SETTINGS_DEFAULTS.gallery_gap_px,
     uniform_thumb_ratio: normalizeThumbCropAspect(
       source.uniform_thumb_ratio ??
-        GALLERY_SETTINGS_DEFAULTS.uniform_thumb_ratio,
+      GALLERY_SETTINGS_DEFAULTS.uniform_thumb_ratio,
     ),
     transition_preset:
       source.transition_preset ?? GALLERY_SETTINGS_DEFAULTS.transition_preset,
@@ -237,9 +236,6 @@ export const normalizeGallerySettingsForRead = (
       0,
       100,
     ),
-    allow_transition_toggle:
-      source.allow_transition_toggle ??
-      GALLERY_SETTINGS_DEFAULTS.allow_transition_toggle,
     photograph_info_mode:
       source.photograph_info_mode ??
       GALLERY_SETTINGS_DEFAULTS.photograph_info_mode,
@@ -311,7 +307,6 @@ const viewerGallerySettingProjectors: {
     settings.contact_sheet_target_fill_pct,
   contact_sheet_mobile_intensity_pct: (settings) =>
     settings.contact_sheet_mobile_intensity_pct,
-  allow_transition_toggle: (settings) => settings.allow_transition_toggle,
   photograph_info_mode: (settings) => settings.photograph_info_mode,
   floating_panel_position: (settings) => settings.floating_panel_position,
   show_photo_info_title: (settings) => settings.show_photo_info_title,

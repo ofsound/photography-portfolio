@@ -25,7 +25,6 @@ declare global {
         transition_preset: 'cinematic' | 'snappy' | 'experimental';
         thumbnail_entrance_preset: ThumbnailEntrancePreset;
         preloader_preset: PreloaderPreset;
-        allow_transition_toggle: boolean;
         show_photograph_info: boolean;
         show_search_link_in_nav: boolean;
         default_page_max_width_px: number;
@@ -34,4 +33,4 @@ declare global {
   }
 }
 
-export {};
+export { };

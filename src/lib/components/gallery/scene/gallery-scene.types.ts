@@ -61,7 +61,6 @@ export type ViewerData = {
     contact_sheet_travel_z_px?: number | null;
     contact_sheet_target_fill_pct?: number | null;
     contact_sheet_mobile_intensity_pct?: number | null;
-    allow_transition_toggle?: boolean | null;
     photograph_info_mode?: PhotographInfoMode | null;
     show_photo_info_title?: boolean | null;
     show_photo_info_description?: boolean | null;

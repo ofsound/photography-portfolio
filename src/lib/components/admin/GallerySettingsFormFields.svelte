@@ -29,9 +29,21 @@
   const p = (name: string) => `${idPrefix}${name}`;
   let layoutMode = $state('uniform');
   let uniformThumbRatio = $state('1');
+  let detailViewMode = $state('classic');
+  let photographInfoMode = $state('floating');
   $effect(() => {
     layoutMode = settings.gallery_layout_mode ?? 'uniform';
     uniformThumbRatio = String(settings.uniform_thumb_ratio);
+    detailViewMode = settings.detail_view_mode ?? 'classic';
+    photographInfoMode = settings.photograph_info_mode ?? 'floating';
+  });
+  $effect(() => {
+    if (
+      detailViewMode === 'contact_sheet' &&
+      photographInfoMode === 'bottom_dock'
+    ) {
+      photographInfoMode = 'floating';
+    }
   });
   const selectedNavButtonPreset = $derived(
     normalizeNavButtonPreset(settings.nav_button_preset),
@@ -82,6 +94,25 @@
           name="uniform_thumb_ratio"
           value={uniformThumbRatio}
         />
+      {/if}
+      {#if layoutMode === 'uniform' || layoutMode === 'masonry'}
+        <FormField
+          label="Max Width (px)"
+          id={p('max_content_width_px')}
+          class="w-28"
+        >
+          <FormInput
+            id={p('max_content_width_px')}
+            name="max_content_width_px"
+            type="number"
+            value={settings.max_content_width_px != null
+              ? String(settings.max_content_width_px)
+              : ''}
+            {readonly}
+          />
+        </FormField>
+      {:else}
+        <input type="hidden" name="max_content_width_px" value="" />
       {/if}
     </div>
 
@@ -207,11 +238,11 @@
     </FormField>
   </AdminCard>
 
-  <AdminCard variant="gradient" class="grid gap-3 p-3">
+  <AdminCard variant="gradient" class="flex flex-col gap-5 p-3">
     <AdminHeading level={2}>Gallery Settings</AdminHeading>
 
     <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
-      <FormField label="Gallery Theme" id={p('theme_default')} class="w-fit">
+      <FormField label="Color Theme" id={p('theme_default')} class="w-fit">
         <FormSelect
           name="theme_default"
           id={p('theme_default')}
@@ -228,7 +259,7 @@
         <FormSelect
           name="detail_view_mode"
           id={p('detail_view_mode')}
-          value={settings.detail_view_mode}
+          bind:value={detailViewMode}
           disabled={readonly}
           class="w-auto"
         >
@@ -236,41 +267,9 @@
           <option value="contact_sheet">contact sheet</option>
         </FormSelect>
       </FormField>
-      <FormField
-        label="Max Width (px)"
-        id={p('max_content_width_px')}
-        class="w-28"
-      >
-        <FormInput
-          id={p('max_content_width_px')}
-          name="max_content_width_px"
-          type="number"
-          value={settings.max_content_width_px != null
-            ? String(settings.max_content_width_px)
-            : ''}
-          {readonly}
-        />
-      </FormField>
     </div>
 
     <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
-      <FormField
-        label={'Transition' + (disableTransitionPreset ? ' (Admin)' : '')}
-        id={p('transition_preset')}
-        class="w-fit"
-      >
-        <FormSelect
-          name="transition_preset"
-          id={p('transition_preset')}
-          value={settings.transition_preset}
-          disabled={readonly || disableTransitionPreset}
-          class="w-auto"
-        >
-          <option value="cinematic">cinematic</option>
-          <option value="snappy">snappy</option>
-          <option value="experimental">experimental</option>
-        </FormSelect>
-      </FormField>
       <FormField
         label={'Loading Animation' +
           (disableTransitionPreset ? ' (Admin)' : '')}
@@ -289,6 +288,409 @@
           {/each}
         </FormSelect>
       </FormField>
+
+      <FormField
+        label={'Transition' + (disableTransitionPreset ? ' (Admin)' : '')}
+        id={p('transition_preset')}
+        class="w-fit"
+      >
+        <FormSelect
+          name="transition_preset"
+          id={p('transition_preset')}
+          value={settings.transition_preset}
+          disabled={readonly || disableTransitionPreset}
+          class="w-auto"
+        >
+          <option value="cinematic">cinematic</option>
+          <option value="snappy">snappy</option>
+          <option value="experimental">experimental</option>
+        </FormSelect>
+      </FormField>
+    </div>
+
+    {#if detailViewMode === 'classic'}
+      <AdminCard class="grid gap-3 p-3">
+        <div class="grid gap-1">
+          <p class="text-xs font-medium tracking-wide text-text uppercase">
+            Classic Detail Letterbox Inset
+          </p>
+        </div>
+
+        <div class="flex flex-col gap-3">
+          <div
+            class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end"
+          >
+            <FormField
+              label="Horizontal Inset (%)"
+              id={p('classic_detail_h_inset_pct')}
+              class="w-fit"
+            >
+              <div class="w-[6ch]">
+                <FormInput
+                  id={p('classic_detail_h_inset_pct')}
+                  name="classic_detail_h_inset_pct"
+                  type="number"
+                  step="1"
+                  min="0"
+                  max="50"
+                  value={String(settings.classic_detail_h_inset_pct)}
+                  {readonly}
+                />
+              </div>
+            </FormField>
+            <FormField
+              label="Vertical Inset (%)"
+              id={p('classic_detail_v_inset_pct')}
+              class="w-fit"
+            >
+              <div class="w-[6ch]">
+                <FormInput
+                  id={p('classic_detail_v_inset_pct')}
+                  name="classic_detail_v_inset_pct"
+                  type="number"
+                  step="1"
+                  min="0"
+                  max="50"
+                  value={String(settings.classic_detail_v_inset_pct)}
+                  {readonly}
+                />
+              </div>
+            </FormField>
+          </div>
+          <div
+            class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end"
+          >
+            <FormField
+              label="Vertical Position (%)"
+              id={p('classic_detail_v_position_pct')}
+              class="w-fit"
+            >
+              <div class="w-[6ch]">
+                <FormInput
+                  id={p('classic_detail_v_position_pct')}
+                  name="classic_detail_v_position_pct"
+                  type="number"
+                  step="1"
+                  min="0"
+                  max="100"
+                  value={String(settings.classic_detail_v_position_pct)}
+                  {readonly}
+                />
+              </div>
+            </FormField>
+            <FormField
+              label="Border Width (px)"
+              id={p('classic_detail_border_px')}
+              class="w-fit"
+            >
+              <div class="w-[6ch]">
+                <FormInput
+                  id={p('classic_detail_border_px')}
+                  name="classic_detail_border_px"
+                  type="number"
+                  step="1"
+                  min="0"
+                  max="50"
+                  value={String(settings.classic_detail_border_px)}
+                  {readonly}
+                />
+              </div>
+            </FormField>
+          </div>
+        </div>
+      </AdminCard>
+    {:else}
+      <input
+        type="hidden"
+        name="classic_detail_h_inset_pct"
+        value={String(settings.classic_detail_h_inset_pct)}
+      />
+      <input
+        type="hidden"
+        name="classic_detail_v_inset_pct"
+        value={String(settings.classic_detail_v_inset_pct)}
+      />
+      <input
+        type="hidden"
+        name="classic_detail_v_position_pct"
+        value={String(settings.classic_detail_v_position_pct)}
+      />
+      <input
+        type="hidden"
+        name="classic_detail_border_px"
+        value={String(settings.classic_detail_border_px)}
+      />
+    {/if}
+
+    {#if detailViewMode === 'contact_sheet'}
+      <AdminCard class="grid gap-3 p-3">
+        <div class="grid gap-1">
+          <p class="text-xs font-medium tracking-wide text-text uppercase">
+            Contact Sheet Viewer
+          </p>
+        </div>
+
+        <div class="flex flex-col gap-3">
+          <div
+            class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end"
+          >
+            <FormField
+              label="Perspective (px)"
+              id={p('contact_sheet_perspective_px')}
+              class="w-fit"
+            >
+              <div class="w-[8ch]">
+                <FormInput
+                  id={p('contact_sheet_perspective_px')}
+                  name="contact_sheet_perspective_px"
+                  type="number"
+                  min="200"
+                  max="4000"
+                  value={String(settings.contact_sheet_perspective_px)}
+                  {readonly}
+                />
+              </div>
+            </FormField>
+            <FormField
+              label="Rotate X (deg)"
+              id={p('contact_sheet_rotate_x_deg')}
+              class="w-fit"
+            >
+              <div class="w-[6ch]">
+                <FormInput
+                  id={p('contact_sheet_rotate_x_deg')}
+                  name="contact_sheet_rotate_x_deg"
+                  type="number"
+                  step="1"
+                  min="0"
+                  max="45"
+                  value={String(settings.contact_sheet_rotate_x_deg)}
+                  {readonly}
+                />
+              </div>
+            </FormField>
+            <FormField
+              label="Rotate Y (deg)"
+              id={p('contact_sheet_rotate_y_deg')}
+              class="w-fit"
+            >
+              <div class="w-[6ch]">
+                <FormInput
+                  id={p('contact_sheet_rotate_y_deg')}
+                  name="contact_sheet_rotate_y_deg"
+                  type="number"
+                  step="1"
+                  min="0"
+                  max="45"
+                  value={String(settings.contact_sheet_rotate_y_deg)}
+                  {readonly}
+                />
+              </div>
+            </FormField>
+          </div>
+          <div
+            class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end"
+          >
+            <FormField
+              label="Travel Z (px)"
+              id={p('contact_sheet_travel_z_px')}
+              class="w-fit"
+            >
+              <div class="w-[9ch]">
+                <FormInput
+                  id={p('contact_sheet_travel_z_px')}
+                  name="contact_sheet_travel_z_px"
+                  type="number"
+                  min="0"
+                  max="1000"
+                  value={String(settings.contact_sheet_travel_z_px)}
+                  {readonly}
+                />
+              </div>
+            </FormField>
+            <FormField
+              label="Target Fill"
+              id={p('contact_sheet_target_fill_pct')}
+              class="w-fit"
+            >
+              <div class="w-[7ch]">
+                <FormInput
+                  id={p('contact_sheet_target_fill_pct')}
+                  name="contact_sheet_target_fill_pct"
+                  type="number"
+                  step="0.01"
+                  min="0.1"
+                  max="0.95"
+                  value={String(settings.contact_sheet_target_fill_pct)}
+                  {readonly}
+                />
+              </div>
+            </FormField>
+            <FormField
+              label="Mobile Intensity (%)"
+              id={p('contact_sheet_mobile_intensity_pct')}
+              class="w-fit"
+            >
+              <div class="w-[6ch]">
+                <FormInput
+                  id={p('contact_sheet_mobile_intensity_pct')}
+                  name="contact_sheet_mobile_intensity_pct"
+                  type="number"
+                  min="0"
+                  max="100"
+                  value={String(settings.contact_sheet_mobile_intensity_pct)}
+                  {readonly}
+                />
+              </div>
+            </FormField>
+          </div>
+        </div>
+      </AdminCard>
+    {:else}
+      <input
+        type="hidden"
+        name="contact_sheet_perspective_px"
+        value={String(settings.contact_sheet_perspective_px)}
+      />
+      <input
+        type="hidden"
+        name="contact_sheet_rotate_x_deg"
+        value={String(settings.contact_sheet_rotate_x_deg)}
+      />
+      <input
+        type="hidden"
+        name="contact_sheet_rotate_y_deg"
+        value={String(settings.contact_sheet_rotate_y_deg)}
+      />
+      <input
+        type="hidden"
+        name="contact_sheet_travel_z_px"
+        value={String(settings.contact_sheet_travel_z_px)}
+      />
+      <input
+        type="hidden"
+        name="contact_sheet_target_fill_pct"
+        value={String(settings.contact_sheet_target_fill_pct)}
+      />
+      <input
+        type="hidden"
+        name="contact_sheet_mobile_intensity_pct"
+        value={String(settings.contact_sheet_mobile_intensity_pct)}
+      />
+    {/if}
+  </AdminCard>
+
+  <AdminCard variant="gradient" class="flex flex-col gap-5 p-3">
+    <AdminHeading level={2}>Info Settings</AdminHeading>
+
+    <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
+      <FormField label="Show Info" id={p('photograph_info_mode')} class="w-fit">
+        <FormSelect
+          name="photograph_info_mode"
+          id={p('photograph_info_mode')}
+          bind:value={photographInfoMode}
+          disabled={readonly}
+          class="w-auto"
+        >
+          <option value="hidden">hidden</option>
+          <option value="floating">floating</option>
+          {#if detailViewMode !== 'contact_sheet'}
+            <option value="bottom_dock">bottom dock</option>
+          {/if}
+        </FormSelect>
+      </FormField>
+
+      {#if photographInfoMode === 'floating'}
+        <FormField
+          label="Floating Panel Position"
+          id={p('floating_panel_position')}
+          class="w-fit"
+        >
+          <FormSelect
+            name="floating_panel_position"
+            id={p('floating_panel_position')}
+            value={settings.floating_panel_position}
+            disabled={readonly}
+            class="w-auto"
+          >
+            <option value="bottom_left">bottom left</option>
+            <option value="top_right">top right</option>
+            <option value="bottom_right">bottom right</option>
+          </FormSelect>
+        </FormField>
+      {/if}
+    </div>
+
+    <FormField label="Visible Elements" id={p('show_photo_info_title')}>
+      <AdminCard class="grid w-60 gap-2 p-3">
+        <label class="flex items-center gap-2 text-sm">
+          <input
+            id={p('show_photo_info_title')}
+            type="checkbox"
+            name="show_photo_info_title"
+            checked={settings.show_photo_info_title}
+            disabled={readonly}
+          />
+          Show title
+        </label>
+        <label class="flex items-center gap-2 text-sm">
+          <input
+            id={p('show_photo_info_description')}
+            type="checkbox"
+            name="show_photo_info_description"
+            checked={settings.show_photo_info_description}
+            disabled={readonly}
+          />
+          Show description
+        </label>
+        <label class="flex items-center gap-2 text-sm">
+          <input
+            id={p('show_photo_info_capture_date')}
+            type="checkbox"
+            name="show_photo_info_capture_date"
+            checked={settings.show_photo_info_capture_date}
+            disabled={readonly}
+          />
+          Show capture date
+        </label>
+        <label class="flex items-center gap-2 text-sm">
+          <input
+            id={p('show_photo_info_dimensions')}
+            type="checkbox"
+            name="show_photo_info_dimensions"
+            checked={settings.show_photo_info_dimensions}
+            disabled={readonly}
+          />
+          Show dimensions
+        </label>
+        <label class="flex items-center gap-2 text-sm">
+          <input
+            id={p('show_photo_info_license_text')}
+            type="checkbox"
+            name="show_photo_info_license_text"
+            checked={settings.show_photo_info_license_text}
+            disabled={readonly}
+          />
+          Show license
+        </label>
+        <label class="flex items-center gap-2 text-sm">
+          <input
+            id={p('show_photo_info_position')}
+            type="checkbox"
+            name="show_photo_info_position"
+            checked={settings.show_photo_info_position}
+            disabled={readonly}
+          />
+          Show position (1/N)
+        </label>
+      </AdminCard>
+    </FormField>
+  </AdminCard>
+
+  <AdminCard variant="gradient" class="flex flex-col gap-5 p-3">
+    <AdminHeading level={2}>Nav Settings</AdminHeading>
+
+    <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
       <FormField
         label={'Nav Button Style' + (disableTransitionPreset ? ' (Admin)' : '')}
         id={p('nav_button_preset')}
@@ -311,335 +713,21 @@
       </FormField>
     </div>
 
-    <AdminCard class="grid gap-3 p-3">
-      <div class="grid gap-1">
-        <p class="text-xs font-medium tracking-wide text-text uppercase">
-          Classic Detail Letterbox Inset
-        </p>
-        <p class="text-xs text-text-muted">
-          Shrinks the promoted image in classic detail view, centering it with
-          letterbox padding. Applied when Detail Viewer is set to classic.
-        </p>
-      </div>
-
-      <div class="grid gap-3 sm:grid-cols-4">
-        <FormField
-          label="Horizontal Inset (%)"
-          id={p('classic_detail_h_inset_pct')}
-          class="w-full"
-        >
-          <FormInput
-            id={p('classic_detail_h_inset_pct')}
-            name="classic_detail_h_inset_pct"
-            type="number"
-            step="0.5"
-            min="0"
-            max="50"
-            value={String(settings.classic_detail_h_inset_pct)}
-            {readonly}
-          />
-        </FormField>
-        <FormField
-          label="Vertical Inset (%)"
-          id={p('classic_detail_v_inset_pct')}
-          class="w-full"
-        >
-          <FormInput
-            id={p('classic_detail_v_inset_pct')}
-            name="classic_detail_v_inset_pct"
-            type="number"
-            step="0.5"
-            min="0"
-            max="50"
-            value={String(settings.classic_detail_v_inset_pct)}
-            {readonly}
-          />
-        </FormField>
-        <FormField
-          label="Vertical Position (%)"
-          id={p('classic_detail_v_position_pct')}
-          hint="0 = top, 50 = center, 100 = bottom"
-          class="w-full"
-        >
-          <FormInput
-            id={p('classic_detail_v_position_pct')}
-            name="classic_detail_v_position_pct"
-            type="number"
-            step="1"
-            min="0"
-            max="100"
-            value={String(settings.classic_detail_v_position_pct)}
-            {readonly}
-          />
-        </FormField>
-        <FormField
-          label="Border Width (px)"
-          id={p('classic_detail_border_px')}
-          hint="0 = no border"
-          class="w-full"
-        >
-          <FormInput
-            id={p('classic_detail_border_px')}
-            name="classic_detail_border_px"
-            type="number"
-            step="1"
-            min="0"
-            max="50"
-            value={String(settings.classic_detail_border_px)}
-            {readonly}
-          />
-        </FormField>
-      </div>
-    </AdminCard>
-
-    <AdminCard class="grid gap-3 p-3">
-      <div class="grid gap-1">
-        <p class="text-xs font-medium tracking-wide text-text uppercase">
-          Contact Sheet Viewer
-        </p>
-        <p class="text-xs text-text-muted">
-          Applied when Detail Viewer is set to contact sheet.
-        </p>
-      </div>
-
-      <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        <FormField
-          label="Perspective (px)"
-          id={p('contact_sheet_perspective_px')}
-          class="w-full"
-        >
-          <FormInput
-            id={p('contact_sheet_perspective_px')}
-            name="contact_sheet_perspective_px"
-            type="number"
-            min="200"
-            max="4000"
-            value={String(settings.contact_sheet_perspective_px)}
-            {readonly}
-          />
-        </FormField>
-        <FormField
-          label="Rotate X (deg)"
-          id={p('contact_sheet_rotate_x_deg')}
-          class="w-full"
-        >
-          <FormInput
-            id={p('contact_sheet_rotate_x_deg')}
-            name="contact_sheet_rotate_x_deg"
-            type="number"
-            step="0.1"
-            min="0"
-            max="45"
-            value={String(settings.contact_sheet_rotate_x_deg)}
-            {readonly}
-          />
-        </FormField>
-        <FormField
-          label="Rotate Y (deg)"
-          id={p('contact_sheet_rotate_y_deg')}
-          class="w-full"
-        >
-          <FormInput
-            id={p('contact_sheet_rotate_y_deg')}
-            name="contact_sheet_rotate_y_deg"
-            type="number"
-            step="0.1"
-            min="0"
-            max="45"
-            value={String(settings.contact_sheet_rotate_y_deg)}
-            {readonly}
-          />
-        </FormField>
-        <FormField
-          label="Travel Z (px)"
-          id={p('contact_sheet_travel_z_px')}
-          class="w-full"
-        >
-          <FormInput
-            id={p('contact_sheet_travel_z_px')}
-            name="contact_sheet_travel_z_px"
-            type="number"
-            min="0"
-            max="1000"
-            value={String(settings.contact_sheet_travel_z_px)}
-            {readonly}
-          />
-        </FormField>
-        <FormField
-          label="Target Fill"
-          id={p('contact_sheet_target_fill_pct')}
-          class="w-full"
-        >
-          <FormInput
-            id={p('contact_sheet_target_fill_pct')}
-            name="contact_sheet_target_fill_pct"
-            type="number"
-            step="0.01"
-            min="0.1"
-            max="0.95"
-            value={String(settings.contact_sheet_target_fill_pct)}
-            {readonly}
-          />
-        </FormField>
-        <FormField
-          label="Mobile Intensity (%)"
-          id={p('contact_sheet_mobile_intensity_pct')}
-          class="w-full"
-        >
-          <FormInput
-            id={p('contact_sheet_mobile_intensity_pct')}
-            name="contact_sheet_mobile_intensity_pct"
-            type="number"
-            min="0"
-            max="100"
-            value={String(settings.contact_sheet_mobile_intensity_pct)}
-            {readonly}
-          />
-        </FormField>
-      </div>
-    </AdminCard>
-
-    <div class="mt-4 flex flex-col gap-3">
-      <FormField
-        label="Allow Transition Toggle"
-        id={p('allow_transition_toggle')}
-        labelSrOnly
-      >
-        <label class="flex items-center gap-2 text-sm">
-          <input
-            id={p('allow_transition_toggle')}
-            type="checkbox"
-            name="allow_transition_toggle"
-            checked={settings.allow_transition_toggle}
-            disabled={readonly}
-          />
-          Enable toggle in gallery UI
-        </label>
-      </FormField>
-
-      <FormField
-        label="Loop Gallery Navigation"
-        id={p('loop_gallery_navigation')}
-        labelSrOnly
-      >
-        <label class="flex items-center gap-2 text-sm">
-          <input
-            id={p('loop_gallery_navigation')}
-            type="checkbox"
-            name="loop_gallery_navigation"
-            checked={settings.loop_gallery_navigation}
-            disabled={readonly}
-          />
-          Loop gallery navigation
-        </label>
-      </FormField>
-
-      <FormField
-        label="Show Photograph Info"
-        id={p('photograph_info_mode')}
-        class="w-fit"
-      >
-        <FormSelect
-          name="photograph_info_mode"
-          id={p('photograph_info_mode')}
-          value={settings.photograph_info_mode}
+    <FormField
+      label="Loop Gallery Navigation"
+      id={p('loop_gallery_navigation')}
+      labelSrOnly
+    >
+      <label class="flex items-center gap-2 text-sm">
+        <input
+          id={p('loop_gallery_navigation')}
+          type="checkbox"
+          name="loop_gallery_navigation"
+          checked={settings.loop_gallery_navigation}
           disabled={readonly}
-          class="w-auto"
-        >
-          <option value="hidden">hidden</option>
-          <option value="floating">floating</option>
-          <option value="bottom_dock">bottom dock</option>
-        </FormSelect>
-      </FormField>
-
-      {#if settings.photograph_info_mode !== 'hidden'}
-        <FormField
-          label="Floating Panel Position"
-          id={p('floating_panel_position')}
-          class="w-fit"
-        >
-          <FormSelect
-            name="floating_panel_position"
-            id={p('floating_panel_position')}
-            value={settings.floating_panel_position}
-            disabled={readonly}
-            class="w-auto"
-          >
-            <option value="bottom_left">bottom left</option>
-            <option value="top_right">top right</option>
-            <option value="bottom_right">bottom right</option>
-          </FormSelect>
-        </FormField>
-      {/if}
-
-      <FormField
-        label="Photograph Info Fields"
-        id={p('show_photo_info_title')}
-        labelSrOnly
-      >
-        <AdminCard class="grid gap-2 p-3">
-          <label class="flex items-center gap-2 text-sm">
-            <input
-              id={p('show_photo_info_title')}
-              type="checkbox"
-              name="show_photo_info_title"
-              checked={settings.show_photo_info_title}
-              disabled={readonly}
-            />
-            Show title
-          </label>
-          <label class="flex items-center gap-2 text-sm">
-            <input
-              id={p('show_photo_info_description')}
-              type="checkbox"
-              name="show_photo_info_description"
-              checked={settings.show_photo_info_description}
-              disabled={readonly}
-            />
-            Show description
-          </label>
-          <label class="flex items-center gap-2 text-sm">
-            <input
-              id={p('show_photo_info_capture_date')}
-              type="checkbox"
-              name="show_photo_info_capture_date"
-              checked={settings.show_photo_info_capture_date}
-              disabled={readonly}
-            />
-            Show capture date
-          </label>
-          <label class="flex items-center gap-2 text-sm">
-            <input
-              id={p('show_photo_info_dimensions')}
-              type="checkbox"
-              name="show_photo_info_dimensions"
-              checked={settings.show_photo_info_dimensions}
-              disabled={readonly}
-            />
-            Show dimensions
-          </label>
-          <label class="flex items-center gap-2 text-sm">
-            <input
-              id={p('show_photo_info_license_text')}
-              type="checkbox"
-              name="show_photo_info_license_text"
-              checked={settings.show_photo_info_license_text}
-              disabled={readonly}
-            />
-            Show license
-          </label>
-          <label class="flex items-center gap-2 text-sm">
-            <input
-              id={p('show_photo_info_position')}
-              type="checkbox"
-              name="show_photo_info_position"
-              checked={settings.show_photo_info_position}
-              disabled={readonly}
-            />
-            Show position (1/N)
-          </label>
-        </AdminCard>
-      </FormField>
-    </div>
+        />
+        Loop gallery navigation
+      </label>
+    </FormField>
   </AdminCard>
 </div>

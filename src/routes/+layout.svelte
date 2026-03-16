@@ -99,7 +99,6 @@
       null) as {
       theme_default?: 'light' | 'dark' | 'system' | null;
       transition_preset?: 'cinematic' | 'snappy' | 'experimental' | null;
-      allow_transition_toggle?: boolean | null;
     } | null,
   );
   const siteSettings = $derived(
@@ -372,16 +371,6 @@
       : 'system') as 'light' | 'dark' | 'system',
   );
 
-  const updateTransitionPreset = (
-    preset: 'cinematic' | 'snappy' | 'experimental',
-  ) => {
-    transitionPreset = preset;
-    if (siteSettings?.allow_transition_toggle) {
-      localStorage.setItem('transition-preset', preset);
-    }
-    applyTransitionPreset();
-  };
-
   const syncSiteHeaderHeight = () => {
     if (typeof document === 'undefined' || typeof window === 'undefined')
       return;
@@ -428,19 +417,6 @@
           : siteThemeDefault;
     }
     adminThemeModeStore.set(resolvedThemeMode);
-
-    if (siteSettings?.allow_transition_toggle) {
-      const storedPreset = localStorage.getItem('transition-preset');
-      if (
-        storedPreset === 'cinematic' ||
-        storedPreset === 'snappy' ||
-        storedPreset === 'experimental'
-      ) {
-        transitionPreset = storedPreset;
-      }
-    } else {
-      localStorage.removeItem('transition-preset');
-    }
 
     applyTransitionPreset();
     applyTheme(resolvedThemeMode);
@@ -497,9 +473,7 @@
 
   $effect(() => {
     if (typeof document === 'undefined') return;
-    if (!siteSettings?.allow_transition_toggle) {
-      transitionPreset = siteSettings?.transition_preset ?? transitionPreset;
-    }
+    transitionPreset = siteSettings?.transition_preset ?? 'cinematic';
     applyTransitionPreset();
   });
 
@@ -750,29 +724,6 @@
               >
             {/if}
           </nav>
-
-          {#if !isViewer && siteSettings?.allow_transition_toggle}
-            <div class="grid gap-2 pt-3">
-              <label
-                for="transition-mobile"
-                class="text-xs tracking-widest uppercase">Motion</label
-              >
-              <select
-                id="transition-mobile"
-                class="h-10 rounded border border-border-strong bg-transparent px-3 text-sm"
-                bind:value={transitionPreset}
-                onchange={(event) =>
-                  updateTransitionPreset(
-                    (event.currentTarget as HTMLSelectElement)
-                      .value as typeof transitionPreset,
-                  )}
-              >
-                <option value="cinematic">Cinematic</option>
-                <option value="snappy">Snappy</option>
-                <option value="experimental">Experimental</option>
-              </select>
-            </div>
-          {/if}
         </MobileDropdownMenu>
       </div>
     </div>
@@ -830,25 +781,6 @@
         {/if}
       {:else}
         <div class="flex items-center justify-end gap-2">
-          {#if siteSettings?.allow_transition_toggle}
-            <label for="transition" class="text-xs tracking-widest uppercase"
-              >Motion</label
-            >
-            <select
-              id="transition"
-              class="rounded border border-border-strong bg-transparent px-2 py-1 text-xs"
-              bind:value={transitionPreset}
-              onchange={(event) =>
-                updateTransitionPreset(
-                  (event.currentTarget as HTMLSelectElement)
-                    .value as typeof transitionPreset,
-                )}
-            >
-              <option value="cinematic">Cinematic</option>
-              <option value="snappy">Snappy</option>
-              <option value="experimental">Experimental</option>
-            </select>
-          {/if}
           {#if publicSveditEditable}
             <button
               type="button"
@@ -908,9 +840,6 @@
             {/if}
           {/if}
           {#if adminPublicPath}
-            {#if siteSettings?.allow_transition_toggle}
-              <span class="h-6 w-px bg-border" aria-hidden="true"></span>
-            {/if}
             <a
               href={resolve(adminPublicPath as `/${string}`)}
               class="inline-flex h-6 w-6 items-center justify-center rounded border border-transparent transition-colors hover:border-border hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
@@ -937,7 +866,7 @@
             </a>
           {/if}
           {#if adminEditorPath}
-            {#if siteSettings?.allow_transition_toggle || publicSveditEditable}
+            {#if publicSveditEditable}
               <span class="h-6 w-px bg-border" aria-hidden="true"></span>
             {/if}
             <a

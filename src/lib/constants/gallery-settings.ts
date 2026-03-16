@@ -26,7 +26,6 @@ export type GallerySettingsDefaults = Pick<
   | 'contact_sheet_travel_z_px'
   | 'contact_sheet_target_fill_pct'
   | 'contact_sheet_mobile_intensity_pct'
-  | 'allow_transition_toggle'
   | 'photograph_info_mode'
   | 'floating_panel_position'
   | 'show_photo_info_title'
@@ -65,7 +64,6 @@ export const GALLERY_SETTINGS_DEFAULTS: GallerySettingsDefaults = {
   contact_sheet_travel_z_px: 96,
   contact_sheet_target_fill_pct: 0.38,
   contact_sheet_mobile_intensity_pct: 55,
-  allow_transition_toggle: true,
   photograph_info_mode: 'floating',
   floating_panel_position: 'bottom_left',
   show_photo_info_title: true,

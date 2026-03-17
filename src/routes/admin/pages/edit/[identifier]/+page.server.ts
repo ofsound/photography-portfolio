@@ -111,20 +111,20 @@ export const load: PageServerLoad = async ({ locals, params, url }) => {
         position: number;
         delivery_storage_path: string | null;
         photos?:
-          | {
-              title?: string;
-              slug?: string;
-              galleries?:
-                | { visibility_status?: string }
-                | Array<{ visibility_status?: string }>;
-            }
-          | Array<{
-              title?: string;
-              slug?: string;
-              galleries?:
-                | { visibility_status?: string }
-                | Array<{ visibility_status?: string }>;
-            }>;
+        | {
+          title?: string;
+          slug?: string;
+          galleries?:
+          | { visibility_status?: string }
+          | Array<{ visibility_status?: string }>;
+        }
+        | Array<{
+          title?: string;
+          slug?: string;
+          galleries?:
+          | { visibility_status?: string }
+          | Array<{ visibility_status?: string }>;
+        }>;
       }) => {
         const photo = Array.isArray(row.photos) ? row.photos[0] : row.photos;
         const gallery = Array.isArray(photo?.galleries)
@@ -170,26 +170,7 @@ export const actions: Actions = {
     if (await isGallerySlugTaken(locals, result.payload.slug)) {
       return failForm('Slug conflicts with an existing gallery.', {
         fieldErrors: { slug: 'Slug conflicts with an existing gallery.' },
-        values: {
-          id,
-          title: asString(form.get('title')).trim(),
-          slug: asString(form.get('slug')).trim(),
-          visibility_status: asString(form.get('visibility_status')).trim(),
-          editor_mode: asString(form.get('editor_mode')).trim(),
-          seo_title: asString(form.get('seo_title')).trim(),
-          seo_description: asString(form.get('seo_description')).trim(),
-          og_title: asString(form.get('og_title')).trim(),
-          og_description: asString(form.get('og_description')).trim(),
-          og_image_path: asString(form.get('og_image_path')).trim(),
-          bg_image_id: asString(form.get('bg_image_id')).trim(),
-          bg_image_fixed: form.get('bg_image_fixed') === 'on' ? 'on' : '',
-          max_width_override_px: asString(
-            form.get('max_width_override_px'),
-          ).trim(),
-          html_content: asString(form.get('html_content')),
-          css_module: asString(form.get('css_module')),
-          svedit_doc: asString(form.get('svedit_doc')),
-        },
+        values: result.values,
       });
     }
 
@@ -267,8 +248,8 @@ export const actions: Actions = {
     }
     const visibilityStatus = (
       visibilityRaw === 'public' ||
-      visibilityRaw === 'unlisted' ||
-      visibilityRaw === 'draft'
+        visibilityRaw === 'unlisted' ||
+        visibilityRaw === 'draft'
         ? visibilityRaw
         : null
     ) as PageVisibilityStatus | null;
@@ -330,7 +311,7 @@ export const actions: Actions = {
         : null,
       bg_image_id:
         typeof snapshot.bg_image_id === 'string' &&
-        UUID_REGEX.test(snapshot.bg_image_id)
+          UUID_REGEX.test(snapshot.bg_image_id)
           ? snapshot.bg_image_id
           : null,
       bg_image_fixed: snapshot.bg_image_fixed === true,

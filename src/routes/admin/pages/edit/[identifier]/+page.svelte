@@ -19,6 +19,10 @@
   import FormTextarea from '$lib/components/FormTextarea.svelte';
   import { photoPublicUrl } from '$lib/utils/storage-url';
   import {
+    PAGE_BACKGROUND_OPTIONS,
+    type PageBackgroundBehavior,
+  } from '$lib/constants/page-background';
+  import {
     PAGE_VISIBILITY_OPTIONS,
     type PageVisibilityStatus,
   } from '$lib/constants/page-visibility';
@@ -63,7 +67,9 @@
     data.siteSettings?.default_page_max_width_px ?? DEFAULT_PAGE_MAX_WIDTH_PX,
   );
   let formBgImageId = $state<string | null>(initialPage().bg_image_id ?? null);
-  let formBgImageFixed = $state(initialPage().bg_image_fixed ?? false);
+  let formBgImageFixed = $state<PageBackgroundBehavior>(
+    initialPage().bg_image_fixed ? 'fixed' : 'scroll',
+  );
   let showBgPicker = $state(false);
   let showRawSveditJson = $state(false);
   let rawSveditJsonError = $state<string | null>(null);
@@ -98,13 +104,18 @@
     if (typeof values.bg_image_id === 'string') {
       formBgImageId = values.bg_image_id.trim() || null;
     }
-    if (values.bg_image_fixed === 'on' || values.bg_image_fixed === 'true') {
-      formBgImageFixed = true;
+    if (
+      values.bg_image_fixed === 'on' ||
+      values.bg_image_fixed === 'true' ||
+      values.bg_image_fixed === 'fixed'
+    ) {
+      formBgImageFixed = 'fixed';
     } else if (
       values.bg_image_fixed === '' ||
-      values.bg_image_fixed === 'false'
+      values.bg_image_fixed === 'false' ||
+      values.bg_image_fixed === 'scroll'
     ) {
-      formBgImageFixed = false;
+      formBgImageFixed = 'scroll';
     }
     if (typeof values.html_content === 'string')
       formHtmlContent = values.html_content;
@@ -179,12 +190,6 @@
   <input type="hidden" name="id" value={page.id} />
   <input type="hidden" name="original_identifier" value={data.identifier} />
   <input type="hidden" name="bg_image_id" value={formBgImageId ?? ''} />
-  <input
-    type="hidden"
-    name="bg_image_fixed"
-    value={formBgImageFixed ? 'on' : ''}
-  />
-
   <div class="grid gap-3 sm:grid-cols-2">
     <FormField
       label="Title"
@@ -278,17 +283,30 @@
         />
         <p class="max-w-52 truncate">{selectedBgImage.photo_title}</p>
       </div>
-      <div class="flex items-center gap-2">
-        <input
-          type="checkbox"
-          id="page-edit-bg_image_fixed"
-          bind:checked={formBgImageFixed}
-          class="size-4 accent-brand"
-        />
-        <label for="page-edit-bg_image_fixed" class="text-xs">
-          Fixed background — background stays fixed while content scrolls
-        </label>
-      </div>
+      <FormField label="Background behavior" id="page-edit-bg_image_fixed">
+        <div class="grid gap-2">
+          {#each PAGE_BACKGROUND_OPTIONS as option (option.value)}
+            <label
+              class="flex cursor-pointer items-start gap-3 rounded border border-border bg-surface p-3 transition-colors hover:border-border-strong"
+            >
+              <input
+                type="radio"
+                name="bg_image_fixed"
+                id={`bg-behavior-${option.value}`}
+                value={option.value}
+                bind:group={formBgImageFixed}
+                class="mt-1 size-4 accent-brand"
+              />
+              <span class="grid gap-1">
+                <span class="text-sm font-medium text-text">{option.label}</span
+                >
+                <span class="text-xs text-text-muted">{option.description}</span
+                >
+              </span>
+            </label>
+          {/each}
+        </div>
+      </FormField>
     {:else if formBgImageId}
       <p class="text-xs text-text-muted">
         Selected image is no longer available in picker results.

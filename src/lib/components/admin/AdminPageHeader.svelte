@@ -14,7 +14,6 @@
     leading?: import('svelte').Snippet;
     actions?: import('svelte').Snippet;
     toasts?: import('svelte').Snippet;
-    afterHeader?: import('svelte').Snippet;
   }
 
   const {
@@ -28,7 +27,6 @@
     leading,
     actions,
     toasts,
-    afterHeader,
   }: Props = $props();
 </script>
 
@@ -59,9 +57,5 @@
       type={dataSuccess ? 'success' : 'neutral'}
       clearQueryMessage={clearDataMessageQuery}
     />
-  {/if}
-
-  {#if afterHeader}
-    {@render afterHeader()}
   {/if}
 </AdminHeader>

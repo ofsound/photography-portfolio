@@ -53,13 +53,13 @@ export const validateCmsPageSlug = (slug: string) => {
 export const pagePayloadFromForm = async (
   form: FormData,
 ): Promise<
-  | { ok: true; payload: PagePayload }
+  | { ok: true; payload: PagePayload; values: FormValues }
   | {
-    ok: false;
-    message: string;
-    fieldErrors?: FieldErrors;
-    values?: FormValues;
-  }
+      ok: false;
+      message: string;
+      fieldErrors?: FieldErrors;
+      values?: FormValues;
+    }
 > => {
   const kind: PageKind = 'custom';
   const title = asString(form.get('title')).trim();
@@ -168,8 +168,8 @@ export const pagePayloadFromForm = async (
   const sveditDocResult =
     editorMode === 'svedit'
       ? parseSveditPageDocument(
-        rawSveditDoc || createDefaultSveditPageDocument(),
-      )
+          rawSveditDoc || createDefaultSveditPageDocument(),
+        )
       : null;
 
   if (sveditDocResult && !sveditDocResult.ok) {
@@ -224,5 +224,6 @@ export const pagePayloadFromForm = async (
       max_width_override_px: maxWidthOverridePx,
       deleted_at: null,
     },
+    values,
   };
 };

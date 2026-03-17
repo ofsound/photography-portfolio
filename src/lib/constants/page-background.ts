@@ -5,14 +5,14 @@ export const PAGE_BACKGROUND_OPTIONS: Array<{
   label: string;
   description: string;
 }> = [
-    {
-      value: 'scroll',
-      label: 'Scroll',
-      description: 'Background moves as you scroll. Image stretches full height.',
-    },
-    {
-      value: 'fixed',
-      label: 'Fixed',
-      description: 'Background stays fixed while content scrolls.',
-    },
-  ];
+  {
+    value: 'scroll',
+    label: 'Scroll',
+    description: 'Background moves as you scroll. Image stretches full height.',
+  },
+  {
+    value: 'fixed',
+    label: 'Fixed',
+    description: 'Background stays fixed while content scrolls.',
+  },
+];

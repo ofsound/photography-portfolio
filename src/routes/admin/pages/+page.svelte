@@ -134,7 +134,7 @@
         id="page-create-editor_mode"
         bind:value={createEditorMode}
       >
-        <option value="code">HTML + Scoped CSS</option>
+        <option value="code">HTML and CSS</option>
         <option value="svedit">Svedit</option>
       </FormSelect>
     </FormField>

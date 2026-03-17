@@ -338,7 +338,7 @@
             id="homepage-hero-editor_mode"
             bind:value={heroEditorMode}
           >
-            <option value="code">HTML + Scoped CSS</option>
+            <option value="code">HTML and CSS</option>
             <option value="svedit">Svedit</option>
           </FormSelect>
         </FormField>
@@ -366,7 +366,7 @@
       {#if heroEditorMode === 'code'}
         {#key heroEditorSeed}
           <FormField
-            label="HTML"
+            label="HTML and Tailwind"
             id="homepage-hero-html_content"
             error={heroFieldErrors.html_content}
             class="min-w-0"
@@ -378,11 +378,7 @@
               lines={15}
             />
           </FormField>
-          <FormField
-            label="Scoped CSS"
-            id="homepage-hero-css_module"
-            class="min-w-0"
-          >
+          <FormField label="CSS" id="homepage-hero-css_module" class="min-w-0">
             <CodeEditor
               name="css_module"
               bind:value={heroCssModule}

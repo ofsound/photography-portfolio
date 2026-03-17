@@ -58,6 +58,10 @@
       ? String(initialPage().max_width_override_px)
       : '',
   );
+  const DEFAULT_PAGE_MAX_WIDTH_PX = 1280;
+  const siteDefaultMaxWidth = $derived(
+    data.siteSettings?.default_page_max_width_px ?? DEFAULT_PAGE_MAX_WIDTH_PX,
+  );
   let formBgImageId = $state<string | null>(initialPage().bg_image_id ?? null);
   let formBgImageFixed = $state(initialPage().bg_image_fixed ?? false);
   let showBgPicker = $state(false);
@@ -215,7 +219,7 @@
         id="page-edit-editor_mode"
         bind:value={formEditorMode}
       >
-        <option value="code">HTML + Scoped CSS</option>
+        <option value="code">HTML and CSS</option>
         <option value="svedit">Svedit</option>
       </FormSelect>
     </FormField>
@@ -224,7 +228,7 @@
   <FormField
     label="Max Width Override (px)"
     id="page-edit-max_width_override_px"
-    helper="Optional. Leave blank to use the site default."
+    helper="Optional. Leave blank to use the site default ({siteDefaultMaxWidth}px)."
     error={fieldErrors.max_width_override_px}
   >
     <FormInput
@@ -295,7 +299,7 @@
 
   {#if formEditorMode === 'code'}
     <FormField
-      label="HTML"
+      label="HTML and Tailwind"
       id="page-edit-html_content"
       error={fieldErrors.html_content}
       class="min-w-0"
@@ -307,7 +311,7 @@
         lines={15}
       />
     </FormField>
-    <FormField label="Scoped CSS" id="page-edit-css_module" class="min-w-0">
+    <FormField label="CSS" id="page-edit-css_module" class="min-w-0">
       <CodeEditor
         name="css_module"
         bind:value={formCssModule}

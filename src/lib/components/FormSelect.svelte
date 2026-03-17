@@ -20,6 +20,7 @@
     class?: string;
     disabled?: boolean;
     form?: string;
+    onchange?: (event: Event & { currentTarget: HTMLSelectElement }) => void;
     children: Snippet;
   };
 
@@ -33,6 +34,7 @@
     class: className = '',
     disabled = false,
     form,
+    onchange,
     children,
   }: Props = $props();
 
@@ -59,6 +61,7 @@
   {id}
   {name}
   bind:value
+  {onchange}
   required={isRequired}
   class={fullClass}
   {disabled}

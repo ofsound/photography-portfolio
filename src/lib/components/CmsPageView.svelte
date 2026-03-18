@@ -54,11 +54,13 @@
       ? 'w-full'
       : 'mx-auto w-full px-5 py-14',
   );
-  const codeArticleClass = $derived(
-    layoutVariant === 'homepage-overlay'
-      ? 'prose flow-root max-w-none'
-      : 'prose mt-6 flow-root max-w-none',
-  );
+  const codeArticleClass = $derived.by(() => {
+    const base = 'flow-root max-w-none prose';
+    if (layoutVariant === 'homepage-overlay') {
+      return `${base} text-text`;
+    }
+    return `${base} mt-6`;
+  });
   const editableSveditSectionClass = $derived(
     layoutVariant === 'homepage-overlay'
       ? 'w-full'

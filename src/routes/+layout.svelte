@@ -172,7 +172,18 @@
   let siteHeaderEl: HTMLElement | null = null;
   let publicMobileMenuOpen = $state(false);
 
+  $effect(() => {
+    if (typeof window === 'undefined') return;
+    const media = window.matchMedia(MEDIA_BELOW_MD);
+    const listener = () => {
+      // isMobile check inside effects if needed
+    };
+    media.addEventListener('change', listener);
+    return () => media.removeEventListener('change', listener);
+  });
+
   const isViewer = $derived(isViewerRoute(page.url.pathname));
+  const isHomePage = $derived(page.url.pathname === '/');
   const isAdminRoute = $derived(isAdminPath(page.url.pathname));
   const cmsRole = $derived(
     ((data as Record<string, unknown> | null)?.cmsRole ?? null) as
@@ -389,10 +400,17 @@
     const isMobile = window.matchMedia(MEDIA_BELOW_MD).matches;
 
     if (isMobile) {
-      document.documentElement.style.setProperty(
-        '--site-header-height',
-        'var(--size-mobile-header-offset)',
-      );
+      if (isHomePage && !isAdminRoute) {
+        document.documentElement.style.setProperty(
+          '--site-header-height',
+          '0px',
+        );
+      } else {
+        document.documentElement.style.setProperty(
+          '--site-header-height',
+          'var(--size-mobile-header-offset)',
+        );
+      }
       return;
     }
 
@@ -403,14 +421,24 @@
     );
   };
 
-  const desktopHeaderClass = $derived(
-    'sticky top-0 z-40 hidden border-b border-border bg-surface px-4 transition-opacity duration-(--duration-chrome) ease-out md:block',
-  );
-  const mainClass = $derived(
-    isAdminRoute
-      ? 'relative z-0 h-[100dvh] overflow-hidden md:h-[calc(100dvh-var(--site-header-height))]'
-      : 'relative z-0 min-h-screen pt-[var(--site-header-height)] lg:min-h-[calc(100vh-var(--site-header-height))] lg:pt-0',
-  );
+  const desktopHeaderClass = $derived.by(() => {
+    const base =
+      'sticky top-0 z-40 hidden border-b px-4 text-text transition-opacity duration-(--duration-chrome) ease-out md:block';
+    if (isHomePage) {
+      return `${base} border-transparent bg-transparent`;
+    }
+    return `${base} border-border bg-surface`;
+  });
+  const mainClass = $derived.by(() => {
+    if (isAdminRoute) {
+      return 'relative z-0 h-[100dvh] overflow-hidden md:h-[calc(100dvh-var(--site-header-height))]';
+    }
+    const base = 'relative z-0 min-h-screen';
+    if (isHomePage) {
+      return `${base} pt-0 lg:min-h-[calc(100vh-var(--site-header-height))] lg:pt-0`;
+    }
+    return `${base} pt-[var(--site-header-height)] lg:min-h-[calc(100vh-var(--site-header-height))] lg:pt-0`;
+  });
 
   $effect(() => {
     if (typeof window === 'undefined' || hasHydratedClientPrefs) return;
@@ -602,9 +630,14 @@
 
 <div class="min-h-screen bg-bg text-text">
   <header
-    class="fixed inset-x-0 top-0 z-[60] border-b border-border bg-surface px-4 pt-[env(safe-area-inset-top)] transition-opacity duration-(--duration-chrome) ease-out md:hidden"
+    class="fixed inset-x-0 top-0 z-[60] border-b px-4 pt-[env(safe-area-inset-top)] text-text transition-opacity duration-(--duration-chrome) ease-out md:hidden"
+    class:bg-surface={!isHomePage}
+    class:border-border={!isHomePage}
+    class:bg-transparent={isHomePage}
+    class:border-transparent={isHomePage}
     class:hidden={isAdminRoute}
     class:opacity-0={chromeHidden}
+    data-theme={isHomePage ? 'light' : undefined}
   >
     <div
       class="mx-auto flex h-[var(--size-mobile-header)] w-full items-center justify-between gap-3"
@@ -756,6 +789,7 @@
     bind:this={siteHeaderEl}
     class={desktopHeaderClass}
     class:opacity-0={chromeHidden}
+    data-theme={isHomePage ? 'light' : undefined}
   >
     <div class="mx-auto flex w-full items-center justify-between gap-3">
       <nav

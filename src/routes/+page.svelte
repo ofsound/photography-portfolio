@@ -3,6 +3,7 @@
 
   import CmsPageView from '$lib/components/CmsPageView.svelte';
   import HomeSlideshow from '$lib/components/HomeSlideshow.svelte';
+
   import { resolveSeoOgMeta } from '$lib/utils/seo-meta';
 
   const { data, form } = $props();
@@ -56,7 +57,7 @@
   {/if}
 </svelte:head>
 
-<div class="relative">
+<div class="relative bg-bg text-text" data-theme="light">
   <HomeSlideshow
     slides={data.slides}
     slideDurationMs={data.slideDurationMs}
@@ -66,7 +67,10 @@
   />
 
   {#if showHero && heroPage}
-    <div class="pointer-events-none absolute inset-0 z-20 overflow-hidden">
+    <div
+      class="pointer-events-none absolute inset-0 z-20 overflow-hidden text-text"
+      data-theme="light"
+    >
       <div class="relative h-full px-5">
         <div
           class="pointer-events-auto absolute top-0 left-1/2 w-full max-w-6xl -translate-x-1/2 -translate-y-1/2"

@@ -151,16 +151,93 @@ export const load: PageServerLoad = async ({ locals }) => {
 };
 
 export const actions: Actions = {
-  saveSiteTheme: async ({ locals, request }) => {
+  saveSettings: async ({ locals, request }) => {
     const role = await getCmsRole(locals);
     if (role !== 'admin' && role !== 'editor') {
       return fail(403, {
-        message: 'Only admins and editors can update site color theme.',
+        message: 'Only admins and editors can update site settings.',
       });
     }
 
     const form = await request.formData();
     const siteThemeDefault = normalizeThemeMode(form.get('site_theme_default'));
+    const transitionPreset = normalizeTransitionPreset(
+      form.get('transition_preset'),
+    );
+
+    const updateValues: Record<string, unknown> = {
+      site_theme_default: siteThemeDefault,
+      transition_preset: transitionPreset,
+    };
+
+    const typographyValues = readTypographyFormValues(form);
+    const fieldErrors: Record<string, string | undefined> = {};
+
+    if (role === 'admin') {
+      if (
+        !isAllowedGoogleFontsImportUrl(typographyValues.public_font_import_url)
+      ) {
+        fieldErrors.public_font_import_url = 'Must be a Google Fonts css2 URL.';
+      }
+
+      if (
+        !isAllowedGoogleFontsImportUrl(typographyValues.admin_font_import_url)
+      ) {
+        fieldErrors.admin_font_import_url = 'Must be a Google Fonts css2 URL.';
+      }
+
+      if (!isSafeFontFamilyDefinition(typographyValues.public_font_family)) {
+        fieldErrors.public_font_family =
+          'Invalid font-family value. Avoid CSS control characters.';
+      }
+
+      if (!isSafeFontFamilyDefinition(typographyValues.admin_font_family)) {
+        fieldErrors.admin_font_family =
+          'Invalid font-family value. Avoid CSS control characters.';
+      }
+
+      if (
+        typographyValues.default_page_max_width_px == null ||
+        !Number.isInteger(typographyValues.default_page_max_width_px) ||
+        typographyValues.default_page_max_width_px <= 0
+      ) {
+        fieldErrors.default_page_max_width_px =
+          'Must be a positive whole number.';
+      }
+
+      if (!isValidHexColor(typographyValues.brand_light_hex)) {
+        fieldErrors.brand_light_hex = 'Must be a valid hex color (#RRGGBB).';
+      }
+
+      if (!isValidHexColor(typographyValues.brand_dark_hex)) {
+        fieldErrors.brand_dark_hex = 'Must be a valid hex color (#RRGGBB).';
+      }
+
+      if (!isValidHexColor(typographyValues.brand_contrast_light_hex)) {
+        fieldErrors.brand_contrast_light_hex =
+          'Must be a valid hex color (#RRGGBB).';
+      }
+
+      if (!isValidHexColor(typographyValues.brand_contrast_dark_hex)) {
+        fieldErrors.brand_contrast_dark_hex =
+          'Must be a valid hex color (#RRGGBB).';
+      }
+
+      if (Object.keys(fieldErrors).length > 0) {
+        return fail(400, {
+          message: 'Please fix the highlighted settings fields.',
+          fieldErrors,
+          values: {
+            ...typographyValues,
+            site_theme_default: siteThemeDefault,
+            transition_preset: transitionPreset,
+          },
+        });
+      }
+
+      const normalizedTypography = normalizeTypographyValues(typographyValues);
+      Object.assign(updateValues, normalizedTypography);
+    }
 
     const syncStateQuery = await locals.supabase
       .from('site_settings')
@@ -174,12 +251,6 @@ export const actions: Actions = {
       });
     }
 
-    const updateValues: {
-      site_theme_default: ThemeMode;
-      theme_default?: ThemeMode;
-    } = {
-      site_theme_default: siteThemeDefault,
-    };
     if (!syncStateQuery.data?.gallery_theme_default_is_overridden) {
       updateValues.theme_default = siteThemeDefault;
     }
@@ -192,123 +263,11 @@ export const actions: Actions = {
     if (update.error) {
       return fail(400, {
         message: update.error.message,
-      });
-    }
-
-    return { success: true, message: 'Site color theme saved.' };
-  },
-  saveTransition: async ({ locals, request }) => {
-    const role = await getCmsRole(locals);
-    if (role !== 'admin' && role !== 'editor') {
-      return fail(403, {
-        message: 'Only admins and editors can update site transitions.',
-      });
-    }
-
-    const form = await request.formData();
-    const transitionPreset = normalizeTransitionPreset(
-      form.get('transition_preset'),
-    );
-
-    const update = await locals.supabase
-      .from('site_settings')
-      .update({ transition_preset: transitionPreset })
-      .eq('singleton_id', 1);
-
-    if (update.error) {
-      return fail(400, {
-        message: update.error.message,
-      });
-    }
-
-    return { success: true, message: 'Site transition saved.' };
-  },
-  saveTypography: async ({ locals, request }) => {
-    const role = await getCmsRole(locals);
-    if (role !== 'admin') {
-      return fail(403, {
-        message: 'Only admins can update typography settings.',
-      });
-    }
-
-    const form = await request.formData();
-    const values = readTypographyFormValues(form);
-    const fieldErrors: Record<string, string | undefined> = {};
-
-    if (!isAllowedGoogleFontsImportUrl(values.public_font_import_url)) {
-      fieldErrors.public_font_import_url = 'Must be a Google Fonts css2 URL.';
-    }
-
-    if (!isAllowedGoogleFontsImportUrl(values.admin_font_import_url)) {
-      fieldErrors.admin_font_import_url = 'Must be a Google Fonts css2 URL.';
-    }
-
-    if (!isSafeFontFamilyDefinition(values.public_font_family)) {
-      fieldErrors.public_font_family =
-        'Invalid font-family value. Avoid CSS control characters.';
-    }
-
-    if (!isSafeFontFamilyDefinition(values.admin_font_family)) {
-      fieldErrors.admin_font_family =
-        'Invalid font-family value. Avoid CSS control characters.';
-    }
-
-    if (
-      values.default_page_max_width_px == null ||
-      !Number.isInteger(values.default_page_max_width_px) ||
-      values.default_page_max_width_px <= 0
-    ) {
-      fieldErrors.default_page_max_width_px =
-        'Must be a positive whole number.';
-    }
-
-    if (!isValidHexColor(values.brand_light_hex)) {
-      fieldErrors.brand_light_hex = 'Must be a valid hex color (#RRGGBB).';
-    }
-
-    if (!isValidHexColor(values.brand_dark_hex)) {
-      fieldErrors.brand_dark_hex = 'Must be a valid hex color (#RRGGBB).';
-    }
-
-    if (!isValidHexColor(values.brand_contrast_light_hex)) {
-      fieldErrors.brand_contrast_light_hex =
-        'Must be a valid hex color (#RRGGBB).';
-    }
-
-    if (!isValidHexColor(values.brand_contrast_dark_hex)) {
-      fieldErrors.brand_contrast_dark_hex =
-        'Must be a valid hex color (#RRGGBB).';
-    }
-
-    if (
-      fieldErrors.public_font_import_url ||
-      fieldErrors.admin_font_import_url ||
-      fieldErrors.public_font_family ||
-      fieldErrors.admin_font_family ||
-      fieldErrors.default_page_max_width_px ||
-      fieldErrors.brand_light_hex ||
-      fieldErrors.brand_dark_hex ||
-      fieldErrors.brand_contrast_light_hex ||
-      fieldErrors.brand_contrast_dark_hex
-    ) {
-      return fail(400, {
-        message: 'Please fix the highlighted settings fields.',
-        fieldErrors,
-        values,
-      });
-    }
-
-    const updateValues = normalizeTypographyValues(values);
-
-    const update = await locals.supabase
-      .from('site_settings')
-      .update(updateValues)
-      .eq('singleton_id', 1);
-
-    if (update.error) {
-      return fail(400, {
-        message: update.error.message,
-        values,
+        values: {
+          ...typographyValues,
+          site_theme_default: siteThemeDefault,
+          transition_preset: transitionPreset,
+        },
       });
     }
 

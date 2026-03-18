@@ -8,10 +8,9 @@
   import AdminButton from '$lib/components/admin/AdminButton.svelte';
   import AdminCreateListLayout from '$lib/components/admin/AdminCreateListLayout.svelte';
   import AdminHeading from '$lib/components/admin/AdminHeading.svelte';
-  import AdminPageHeader from '$lib/components/admin/AdminPageHeader.svelte';
+  import AdminHomepageNav from '$lib/components/admin/AdminHomepageNav.svelte';
   import AdminRevisionsDrawer from '$lib/components/admin/AdminRevisionsDrawer.svelte';
   import AdminSeoSocialDrawer from '$lib/components/admin/AdminSeoSocialDrawer.svelte';
-  import AdminSegmentedToggle from '$lib/components/admin/AdminSegmentedToggle.svelte';
   import AdminToastEmitter from '$lib/components/admin/AdminToastEmitter.svelte';
   import { useAdminFormState } from '$lib/components/admin/useAdminFormState.svelte';
   import FormField from '$lib/components/FormField.svelte';
@@ -278,15 +277,14 @@
   };
 </script>
 
-<AdminPageHeader title="Homepage" actions={headerActions} />
-
-{#snippet headerActions()}
-  <AdminSegmentedToggle
-    segments={sections}
-    activeKey={section}
-    ariaLabel="Homepage admin sections"
-  />
-{/snippet}
+<AdminHomepageNav
+  title="Homepage"
+  segments={sections}
+  activeKey={section}
+  ariaLabel="Homepage admin sections"
+  backHref="/admin"
+  backAriaLabel="Back to Admin"
+/>
 
 {#if section === 'slides'}
   <AdminCreateListLayout

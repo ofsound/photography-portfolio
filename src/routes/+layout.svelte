@@ -169,15 +169,15 @@
     'cinematic',
   );
   let hasHydratedClientPrefs = $state(false);
+  let isMobile = $state(false);
   let siteHeaderEl: HTMLElement | null = null;
   let publicMobileMenuOpen = $state(false);
 
   $effect(() => {
     if (typeof window === 'undefined') return;
     const media = window.matchMedia(MEDIA_BELOW_MD);
-    const listener = () => {
-      // isMobile check inside effects if needed
-    };
+    isMobile = media.matches;
+    const listener = (e: MediaQueryListEvent) => (isMobile = e.matches);
     media.addEventListener('change', listener);
     return () => media.removeEventListener('change', listener);
   });
@@ -637,7 +637,7 @@
     class:border-transparent={isHomePage}
     class:hidden={isAdminRoute}
     class:opacity-0={chromeHidden}
-    data-theme={isHomePage ? 'light' : undefined}
+    data-theme={isMobile && isHomePage ? 'light' : undefined}
   >
     <div
       class="mx-auto flex h-[var(--size-mobile-header)] w-full items-center justify-between gap-3"
@@ -789,7 +789,6 @@
     bind:this={siteHeaderEl}
     class={desktopHeaderClass}
     class:opacity-0={chromeHidden}
-    data-theme={isHomePage ? 'light' : undefined}
   >
     <div class="mx-auto flex w-full items-center justify-between gap-3">
       <nav

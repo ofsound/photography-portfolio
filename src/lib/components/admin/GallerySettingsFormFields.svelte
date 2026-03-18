@@ -400,7 +400,11 @@
           {/each}
         </FormSelect>
       </FormField>
+    </div>
 
+    <div
+      class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:gap-5"
+    >
       <FormField
         label="Promote Duration (ms)"
         id={p('thumbnail_promote_duration_ms')}

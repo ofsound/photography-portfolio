@@ -72,10 +72,10 @@
   ]);
 
   let selectedIds = $state<string[]>([]);
-  let slideDurationMs = $state<number>(4000);
-  let transitionDurationMs = $state<number>(2000);
-  let zoomStrengthPct = $state<number>(5);
-  let panStrengthPct = $state<number>(80);
+  let slideDurationMsStr = $state('4000');
+  let transitionDurationMsStr = $state('2000');
+  let zoomStrengthPctStr = $state('5');
+  let panStrengthPctStr = $state('80');
   let undoStack = $state<string[][]>([]);
   let redoStack = $state<string[][]>([]);
   const historyLimit = 100;
@@ -120,10 +120,10 @@
 
   $effect(() => {
     selectedIds = slides.map((slide) => slide.photo_image_id);
-    slideDurationMs = data.slideDurationMs;
-    transitionDurationMs = data.transitionDurationMs;
-    zoomStrengthPct = data.zoomStrengthPct;
-    panStrengthPct = data.panStrengthPct;
+    slideDurationMsStr = String(data.slideDurationMs);
+    transitionDurationMsStr = String(data.transitionDurationMs);
+    zoomStrengthPctStr = String(data.zoomStrengthPct);
+    panStrengthPctStr = String(data.panStrengthPct);
     undoStack = [];
     redoStack = [];
   });
@@ -578,7 +578,7 @@
         <FormField
           label="Duration (ms)"
           id="homepage-slide-duration-ms"
-          hint="Leave blank to use defaults; provided values are clamped."
+          hint="Default 4000ms. Range: 1000–30000ms."
           class="w-fit"
         >
           <FormInput
@@ -586,14 +586,14 @@
             class="max-w-[80px] bg-transparent tracking-normal normal-case"
             type="text"
             name="slide_duration_ms"
-            value={String(slideDurationMs)}
+            bind:value={slideDurationMsStr}
             oninput={sanitizeNumericInput}
           />
         </FormField>
         <FormField
           label="Transition (ms)"
           id="homepage-transition-duration-ms"
-          hint="Leave blank to use defaults; provided values are clamped."
+          hint="Default 2000ms. Range: 200–10000ms (max = slide duration)."
           class="w-fit"
         >
           <FormInput
@@ -601,7 +601,7 @@
             class="max-w-[80px] bg-transparent tracking-normal normal-case"
             type="text"
             name="transition_duration_ms"
-            value={String(transitionDurationMs)}
+            bind:value={transitionDurationMsStr}
             oninput={sanitizeNumericInput}
           />
         </FormField>
@@ -616,7 +616,7 @@
             class="max-w-[80px] bg-transparent tracking-normal normal-case"
             type="text"
             name="zoom_strength_pct"
-            value={String(zoomStrengthPct)}
+            bind:value={zoomStrengthPctStr}
             oninput={sanitizeNumericInput}
           />
         </FormField>
@@ -631,7 +631,7 @@
             class="max-w-[80px] bg-transparent tracking-normal normal-case"
             type="text"
             name="pan_strength_pct"
-            value={String(panStrengthPct)}
+            bind:value={panStrengthPctStr}
             oninput={sanitizeNumericInput}
           />
         </FormField>

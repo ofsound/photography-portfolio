@@ -1,5 +1,6 @@
 <script lang="ts">
   import { page } from '$app/state';
+  import { fade } from 'svelte/transition';
 
   import CmsPageView from '$lib/components/CmsPageView.svelte';
   import { resolveSeoOgMeta } from '$lib/utils/seo-meta';
@@ -75,6 +76,22 @@
       (Boolean(data.initialPublicEditMode) ||
         page.url.searchParams.get('edit') === '1'),
   );
+
+  let bgLoaded = $state(false);
+
+  $effect(() => {
+    const bgUrl = data.customPage?.bg_image_url;
+    if (!bgUrl) return;
+    bgLoaded = false;
+    const timeout = setTimeout(() => {
+      bgLoaded = true;
+    }, 5000);
+    return () => clearTimeout(timeout);
+  });
+
+  function markBgLoaded() {
+    bgLoaded = true;
+  }
 </script>
 
 <svelte:head>
@@ -123,14 +140,21 @@
           alt=""
           aria-hidden="true"
           class="fixed inset-0 z-0 h-full w-full object-cover"
+          onload={markBgLoaded}
+          onerror={markBgLoaded}
         />
-        <div class="relative z-10 min-h-screen">
-          <CmsPageView
-            page={data.customPage}
-            editable={isEditMode}
-            maxWidthPx={customPageMaxWidthPx}
-          />
-        </div>
+        {#if bgLoaded}
+          <div
+            class="relative z-10 min-h-screen"
+            transition:fade={{ duration: 400 }}
+          >
+            <CmsPageView
+              page={data.customPage}
+              editable={isEditMode}
+              maxWidthPx={customPageMaxWidthPx}
+            />
+          </div>
+        {/if}
       </div>
     {:else}
       <div class="relative min-h-screen">
@@ -139,14 +163,18 @@
           alt=""
           aria-hidden="true"
           class="absolute inset-0 h-full w-full object-cover"
+          onload={markBgLoaded}
+          onerror={markBgLoaded}
         />
-        <div class="relative z-10">
-          <CmsPageView
-            page={data.customPage}
-            editable={isEditMode}
-            maxWidthPx={customPageMaxWidthPx}
-          />
-        </div>
+        {#if bgLoaded}
+          <div class="relative z-10" transition:fade={{ duration: 400 }}>
+            <CmsPageView
+              page={data.customPage}
+              editable={isEditMode}
+              maxWidthPx={customPageMaxWidthPx}
+            />
+          </div>
+        {/if}
       </div>
     {/if}
   {:else}

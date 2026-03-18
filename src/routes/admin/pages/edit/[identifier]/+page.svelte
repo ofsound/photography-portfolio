@@ -249,7 +249,7 @@
     />
   </FormField>
 
-  <AdminCard class="grid gap-3 p-3">
+  <AdminCard variant="gradient" class="grid gap-3 p-3">
     <div class="flex flex-wrap items-center justify-between gap-2">
       <div>
         <p class="text-xs tracking-widest uppercase">Page Background</p>

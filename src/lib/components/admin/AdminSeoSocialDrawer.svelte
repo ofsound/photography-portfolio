@@ -58,6 +58,7 @@
 <AdminDrawerCard
   id={drawerId}
   title="SEO &amp; Social"
+  variant="gradient"
   subtitle={`${filledCount}/${fieldCount} fields filled`}
   errorMessage={hasErrors ? 'Fix SEO/OG validation errors.' : undefined}
   {storageKey}

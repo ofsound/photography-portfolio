@@ -27,7 +27,12 @@
 </script>
 
 {#if hasRevisions}
-  <AdminDrawerCard {id} title="Recent Revisions" {storageKey}>
+  <AdminDrawerCard
+    {id}
+    title="Recent Revisions"
+    variant="gradient"
+    {storageKey}
+  >
     <div class="grid gap-2">
       {#each displayRevisions as rev (rev.id)}
         <div class="flex flex-wrap items-center justify-between gap-2 text-xs">

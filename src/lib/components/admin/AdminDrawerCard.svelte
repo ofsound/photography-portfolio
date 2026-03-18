@@ -3,6 +3,8 @@
 
   import AdminCard from '$lib/components/admin/AdminCard.svelte';
 
+  import type { AdminCardVariant } from '$lib/styles/admin-cards';
+
   type Props = {
     id: string;
     title: string;
@@ -10,6 +12,7 @@
     errorMessage?: string;
     storageKey?: string;
     defaultOpen?: boolean;
+    variant?: AdminCardVariant;
     children?: Snippet;
   };
 
@@ -20,6 +23,7 @@
     errorMessage,
     storageKey,
     defaultOpen = false,
+    variant = 'default',
     children,
   }: Props = $props();
 
@@ -45,11 +49,11 @@
   };
 </script>
 
-<AdminCard class="grid gap-3">
+<AdminCard {variant} class="grid gap-3">
   <button
     id={toggleButtonId}
     type="button"
-    class="flex w-full cursor-pointer flex-wrap items-center justify-between gap-3 px-3 py-3 text-left transition-colors hover:bg-surface-muted"
+    class="flex w-full cursor-pointer flex-wrap items-center justify-between gap-3 px-3 py-3 text-left"
     aria-expanded={isOpen}
     aria-controls={panelId}
     onclick={toggle}

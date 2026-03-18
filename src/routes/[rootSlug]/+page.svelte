@@ -3,7 +3,7 @@
 
   import CmsPageView from '$lib/components/CmsPageView.svelte';
   import { resolveSeoOgMeta } from '$lib/utils/seo-meta';
-  import { photoPublicUrl } from '$lib/utils/storage-url';
+  import { photoPublicUrl, toOgImageUrl } from '$lib/utils/storage-url';
 
   const { data, form } = $props();
   const DEFAULT_PAGE_MAX_WIDTH_PX = 1280;
@@ -50,7 +50,7 @@
       seoDescription: data.galleryScope.seoDescription,
       ogTitle: data.galleryScope.ogTitle,
       ogDescription: data.galleryScope.ogDescription,
-      ogImagePath: data.galleryScope.ogImagePath,
+      ogImagePath: toOgImageUrl(data.galleryScope.ogImagePath),
       fallbackOgImagePath: firstLeadImagePath
         ? photoPublicUrl(firstLeadImagePath, 1600)
         : null,
@@ -65,7 +65,7 @@
       seoDescription: data.customPage.seo_description,
       ogTitle: data.customPage.og_title,
       ogDescription: data.customPage.og_description,
-      ogImagePath: data.customPage.og_image_path,
+      ogImagePath: toOgImageUrl(data.customPage.og_image_path),
       fallbackOgImagePath: data.customPage.bg_image_url,
     });
   });

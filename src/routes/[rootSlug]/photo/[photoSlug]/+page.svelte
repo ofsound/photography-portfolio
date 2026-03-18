@@ -1,6 +1,6 @@
 <script lang="ts">
   import { resolveSeoOgMeta } from '$lib/utils/seo-meta';
-  import { photoPublicUrl } from '$lib/utils/storage-url';
+  import { photoPublicUrl, toOgImageUrl } from '$lib/utils/storage-url';
 
   const { data } = $props();
 
@@ -33,7 +33,7 @@
       seoDescription: activePhoto.seo_description,
       ogTitle: activePhoto.og_title,
       ogDescription: activePhoto.og_description,
-      ogImagePath: activePhoto.og_image_path,
+      ogImagePath: toOgImageUrl(activePhoto.og_image_path),
       fallbackOgImagePath: fallbackImagePath
         ? photoPublicUrl(fallbackImagePath, 1600)
         : null,

@@ -5,6 +5,7 @@
   import HomeSlideshow from '$lib/components/HomeSlideshow.svelte';
 
   import { resolveSeoOgMeta } from '$lib/utils/seo-meta';
+  import { toOgImageUrl } from '$lib/utils/storage-url';
 
   const { data, form } = $props();
 
@@ -26,7 +27,7 @@
       seoDescription: heroPage.seo_description,
       ogTitle: heroPage.og_title,
       ogDescription: heroPage.og_description,
-      ogImagePath: heroPage.og_image_path,
+      ogImagePath: toOgImageUrl(heroPage.og_image_path),
       fallbackOgImagePath: heroPage.bg_image_url,
     });
   });

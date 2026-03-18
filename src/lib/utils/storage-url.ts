@@ -22,6 +22,18 @@ function getStorageClient() {
 }
 
 /**
+ * Converts an og_image_path (storage path or absolute URL) to an absolute URL
+ * suitable for og:image. Storage paths are resolved via photoPublicUrl;
+ * paths already starting with http:// or https:// are returned as-is.
+ */
+export function toOgImageUrl(path: string | null | undefined): string | null {
+  const p = typeof path === 'string' ? path.trim() : '';
+  if (!p) return null;
+  if (/^https?:\/\//i.test(p)) return p;
+  return photoPublicUrl(p, 1600);
+}
+
+/**
  * Returns the public URL for an image in the photos bucket.
  * Uses Supabase client getPublicUrl for consistency and future-proofing.
  * Pass width for on-the-fly image transforms (Supabase Pro+).

@@ -263,7 +263,7 @@ export const promoteTile = async ({
     } else {
       const rectTiming: KeyframeAnimationOptions = {
         duration: durationMs,
-        easing: 'linear',
+        easing,
         fill: 'forwards',
       };
       const imgTiming: KeyframeAnimationOptions = {

@@ -152,7 +152,9 @@
 <div class="grid gap-6">
   <AdminCard variant="gradient" class="flex flex-col gap-5 p-3">
     <AdminHeading level={2}>Thumbnail Settings</AdminHeading>
-    <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
+    <div
+      class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:gap-5"
+    >
       <FormField
         label="Layout Mode"
         id={p('gallery_layout_mode')}
@@ -217,7 +219,9 @@
       {/if}
     </div>
 
-    <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
+    <div
+      class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:gap-5"
+    >
       <FormField
         label="Desktop Columns"
         id={p('grid_desktop_default')}
@@ -263,7 +267,9 @@
       </FormField>
     </div>
 
-    <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
+    <div
+      class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:gap-5"
+    >
       <FormField
         label={'Entrance Animation' +
           (disableTransitionPreset ? ' (Admin)' : '')}
@@ -342,7 +348,9 @@
   <AdminCard variant="gradient" class="flex flex-col gap-5 p-3">
     <AdminHeading level={2}>Gallery Settings</AdminHeading>
 
-    <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
+    <div
+      class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:gap-5"
+    >
       <FormField label={colorThemeLabel} id={p('theme_default')} class="w-fit">
         <FormSelect
           name="theme_default"
@@ -371,7 +379,9 @@
       </FormField>
     </div>
 
-    <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
+    <div
+      class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:gap-5"
+    >
       <FormField
         label={'Loading Animation' +
           (disableTransitionPreset ? ' (Admin)' : '')}
@@ -431,7 +441,9 @@
       </FormField>
     </div>
 
-    <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
+    <div
+      class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:gap-5"
+    >
       <FormField
         label="Demote Duration (ms)"
         id={p('thumbnail_demote_duration_ms')}
@@ -482,7 +494,7 @@
 
         <div class="flex flex-col gap-3">
           <div
-            class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end"
+            class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:gap-5"
           >
             <FormField
               label="Horizontal Inset (%)"
@@ -522,7 +534,7 @@
             </FormField>
           </div>
           <div
-            class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end"
+            class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:gap-5"
           >
             <FormField
               label="Vertical Position (%)"
@@ -596,7 +608,7 @@
 
         <div class="flex flex-col gap-3">
           <div
-            class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end"
+            class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:gap-5"
           >
             <FormField
               label="Perspective (px)"
@@ -653,7 +665,7 @@
             </FormField>
           </div>
           <div
-            class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end"
+            class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:gap-5"
           >
             <FormField
               label="Travel Z (px)"
@@ -747,7 +759,9 @@
   <AdminCard variant="gradient" class="flex flex-col gap-5 p-3">
     <AdminHeading level={2}>Info Settings</AdminHeading>
 
-    <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
+    <div
+      class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:gap-5"
+    >
       <FormField label="Show Info" id={p('photograph_info_mode')} class="w-fit">
         <FormSelect
           name="photograph_info_mode"
@@ -855,7 +869,9 @@
   <AdminCard variant="gradient" class="flex flex-col gap-5 p-3">
     <AdminHeading level={2}>Nav Settings</AdminHeading>
 
-    <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
+    <div
+      class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:gap-5"
+    >
       <FormField
         label={'Nav Button Style' + (disableTransitionPreset ? ' (Admin)' : '')}
         id={p('nav_button_preset')}

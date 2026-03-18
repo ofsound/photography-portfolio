@@ -554,6 +554,8 @@
     galleryDensityStore.set(defaultDensityForViewport());
     state.pageSize = data.pageSize;
     layoutModeStore.set(data.layoutMode);
+    state.widthMode = data.widthMode;
+    state.gap = data.gap;
   };
 
   const gotoPhotoRoute = async (slug: string, imageId?: string | null) => {

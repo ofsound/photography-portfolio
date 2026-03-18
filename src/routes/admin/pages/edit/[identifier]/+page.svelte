@@ -178,6 +178,9 @@
           ? 'success'
           : 'neutral'}
     clearQueryMessage
+    links={form?.success === true || data.messageSuccess
+      ? { viewPage: resolve(`/${page.slug}`) }
+      : undefined}
   />
 {/snippet}
 

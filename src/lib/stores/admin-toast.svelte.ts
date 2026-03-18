@@ -2,6 +2,11 @@ import { SvelteMap } from 'svelte/reactivity';
 
 export type ToastType = 'success' | 'error' | 'neutral';
 
+export type ToastLinks = {
+  viewPage?: string;
+  viewGallery?: string;
+};
+
 export type ToastEntry = {
   id: number;
   message: string;
@@ -9,12 +14,14 @@ export type ToastEntry = {
   sticky: boolean;
   durationMs: number;
   createdAt: number;
+  links?: ToastLinks;
 };
 
 type PushToastInput = {
   message: string;
   type?: ToastType;
   source?: string;
+  links?: ToastLinks;
 };
 
 const MAX_VISIBLE_TOASTS = 3;
@@ -92,6 +99,7 @@ export const pushAdminToast = (input: PushToastInput) => {
     sticky: type === 'error',
     durationMs: type === 'error' ? 0 : AUTO_DISMISS_MS,
     createdAt: Date.now(),
+    links: input.links,
   };
 
   adminToastEntries.unshift(toast);

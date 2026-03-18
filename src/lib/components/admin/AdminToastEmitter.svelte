@@ -7,6 +7,7 @@
 <script lang="ts">
   import {
     pushAdminToast,
+    type ToastLinks,
     type ToastType,
   } from '$lib/stores/admin-toast.svelte';
 
@@ -15,6 +16,7 @@
     type?: ToastType;
     source?: string;
     clearQueryMessage?: boolean;
+    links?: ToastLinks;
   }
 
   const {
@@ -22,6 +24,7 @@
     type = 'neutral',
     source,
     clearQueryMessage = false,
+    links,
   }: Props = $props();
 
   const fallbackSource = nextEmitterSource();
@@ -44,6 +47,7 @@
       message: normalizedMessage,
       type,
       source: emitterSource,
+      links,
     });
 
     if (clearQueryMessage && typeof window !== 'undefined') {

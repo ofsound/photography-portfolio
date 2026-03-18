@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { resolve } from '$app/paths';
+
   import AdminButton from '$lib/components/admin/AdminButton.svelte';
   import AdminStickyActionBar from '$lib/components/admin/AdminStickyActionBar.svelte';
   import AdminGalleryNav from '$lib/components/admin/AdminGalleryNav.svelte';
@@ -58,6 +60,9 @@
   <AdminToastEmitter
     message={form.message}
     type={form && 'success' in form && form.success ? 'success' : 'error'}
+    links={form && 'success' in form && form.success
+      ? { viewGallery: resolve(`/${data.gallery.slug}`) }
+      : undefined}
   />
 {/if}
 

@@ -1,6 +1,7 @@
 <script lang="ts">
   import AdminPageHeader from '$lib/components/admin/AdminPageHeader.svelte';
   import AdminToastEmitter from '$lib/components/admin/AdminToastEmitter.svelte';
+  import type { ToastLinks } from '$lib/stores/admin-toast.svelte';
 
   interface Props {
     title?: string;
@@ -10,6 +11,7 @@
     dataMessage?: string | null;
     dataSuccess?: boolean;
     clearDataMessageQuery?: boolean;
+    toastLinks?: ToastLinks;
     overflow?: boolean;
     scrollListOnly?: boolean;
     reverseColumnOrder?: boolean;
@@ -28,6 +30,7 @@
     dataMessage,
     dataSuccess = false,
     clearDataMessageQuery = false,
+    toastLinks,
     overflow = false,
     scrollListOnly = false,
     reverseColumnOrder = false,
@@ -56,6 +59,7 @@
         {dataMessage}
         {dataSuccess}
         {clearDataMessageQuery}
+        {toastLinks}
         {leading}
         {actions}
       />
@@ -64,11 +68,13 @@
         <AdminToastEmitter
           message={formMessage}
           type={formSuccess ? 'success' : 'error'}
+          links={formSuccess ? toastLinks : undefined}
         />
         <AdminToastEmitter
           message={dataMessage}
           type={dataSuccess ? 'success' : 'neutral'}
           clearQueryMessage={clearDataMessageQuery}
+          links={dataSuccess ? toastLinks : undefined}
         />
       </div>
     {/if}
@@ -99,6 +105,7 @@
       {dataMessage}
       {dataSuccess}
       {clearDataMessageQuery}
+      {toastLinks}
       {leading}
       {actions}
     />
@@ -107,11 +114,13 @@
       <AdminToastEmitter
         message={formMessage}
         type={formSuccess ? 'success' : 'error'}
+        links={formSuccess ? toastLinks : undefined}
       />
       <AdminToastEmitter
         message={dataMessage}
         type={dataSuccess ? 'success' : 'neutral'}
         clearQueryMessage={clearDataMessageQuery}
+        links={dataSuccess ? toastLinks : undefined}
       />
     </div>
   {/if}

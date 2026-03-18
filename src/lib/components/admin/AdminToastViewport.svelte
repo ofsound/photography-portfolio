@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { resolve } from '$app/paths';
   import { MediaQuery } from 'svelte/reactivity';
   import { fade, fly } from 'svelte/transition';
   import {
@@ -107,7 +108,38 @@
           />
         </svg>
 
-        <p class="text-[13px] leading-5 text-text">{toast.message}</p>
+        <div class="min-w-0">
+          <p class="text-[13px] leading-5 text-text">{toast.message}</p>
+          {#if toast.links && (toast.links.viewPage || toast.links.viewGallery)}
+            <p
+              class="mt-1.5 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[12px]"
+            >
+              {#if toast.links.viewPage}
+                <a
+                  href={resolve(toast.links.viewPage as `/${string}`)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="text-brand hover:underline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand"
+                >
+                  View Page
+                </a>
+              {/if}
+              {#if toast.links.viewPage && toast.links.viewGallery}
+                <span class="text-text-muted" aria-hidden="true">·</span>
+              {/if}
+              {#if toast.links.viewGallery}
+                <a
+                  href={resolve(toast.links.viewGallery as `/${string}`)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="text-brand hover:underline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand"
+                >
+                  View Gallery
+                </a>
+              {/if}
+            </p>
+          {/if}
+        </div>
 
         <button
           type="button"

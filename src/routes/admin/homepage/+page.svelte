@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { resolve } from '$app/paths';
   import { DragDropProvider } from '@dnd-kit/svelte';
   import { createSortable, isSortable } from '@dnd-kit/svelte/sortable';
 
@@ -290,6 +291,7 @@
   <AdminCreateListLayout
     formMessage={form?.message}
     formSuccess={form?.success}
+    toastLinks={form?.success ? { viewPage: resolve('/') } : undefined}
     overflow
     scrollListOnly={section === 'slides'}
     create={selectedSlidesPanel}
@@ -299,6 +301,9 @@
   <AdminToastEmitter
     message={form?.message}
     type={form && 'success' in form && form.success ? 'success' : 'error'}
+    links={form && 'success' in form && form.success
+      ? { viewPage: resolve('/') }
+      : undefined}
   />
 
   {#if homePage}

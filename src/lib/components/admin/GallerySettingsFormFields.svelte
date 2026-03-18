@@ -816,7 +816,7 @@
             checked={settings.show_photo_info_capture_date}
             disabled={readonly}
           />
-          Show capture date
+          Show date
         </label>
         <label class="flex items-center gap-2 text-sm">
           <input

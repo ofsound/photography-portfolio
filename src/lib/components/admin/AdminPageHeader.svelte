@@ -2,6 +2,7 @@
   import AdminHeader from '$lib/components/admin/AdminHeader.svelte';
   import AdminHeading from '$lib/components/admin/AdminHeading.svelte';
   import AdminToastEmitter from '$lib/components/admin/AdminToastEmitter.svelte';
+  import type { ToastLinks } from '$lib/stores/admin-toast.svelte';
 
   interface Props {
     title: string;
@@ -11,6 +12,7 @@
     dataMessage?: string | null;
     dataSuccess?: boolean;
     clearDataMessageQuery?: boolean;
+    toastLinks?: ToastLinks;
     leading?: import('svelte').Snippet;
     actions?: import('svelte').Snippet;
     toasts?: import('svelte').Snippet;
@@ -24,6 +26,7 @@
     dataMessage,
     dataSuccess = false,
     clearDataMessageQuery = false,
+    toastLinks,
     leading,
     actions,
     toasts,
@@ -51,11 +54,13 @@
     <AdminToastEmitter
       message={formMessage}
       type={formSuccess ? 'success' : 'error'}
+      links={formSuccess ? toastLinks : undefined}
     />
     <AdminToastEmitter
       message={dataMessage}
       type={dataSuccess ? 'success' : 'neutral'}
       clearQueryMessage={clearDataMessageQuery}
+      links={dataSuccess ? toastLinks : undefined}
     />
   {/if}
 </AdminHeader>

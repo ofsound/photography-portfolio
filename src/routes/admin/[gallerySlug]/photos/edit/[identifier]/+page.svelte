@@ -32,6 +32,11 @@
   });
 
   const gallerySlug = $derived(data.gallery.slug);
+  const photoSlug = $derived(data.photo?.slug ?? '');
+  const toastLinks = $derived({
+    viewPage: resolve(`/${gallerySlug}/photo/${photoSlug}`),
+    viewGallery: resolve(`/${gallerySlug}`),
+  });
 </script>
 
 <AdminPageHeader title="Edit Photo" leading={backLink} toasts={headerToasts} />
@@ -47,11 +52,13 @@
   <AdminToastEmitter
     message={form?.message}
     type={form && 'success' in form && form.success ? 'success' : 'error'}
+    links={form && 'success' in form && form.success ? toastLinks : undefined}
   />
   <AdminToastEmitter
     message={data.message}
     type={data.messageSuccess ? 'success' : 'neutral'}
     clearQueryMessage
+    links={data.messageSuccess ? toastLinks : undefined}
   />
   {#if hasPendingConversions}
     <p class="mt-2 text-xs text-text-muted">

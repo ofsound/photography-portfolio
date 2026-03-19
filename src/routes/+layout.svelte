@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { goto, invalidateAll, onNavigate } from '$app/navigation';
+  import { goto } from '$app/navigation';
   import { resolve } from '$app/paths';
   import { page } from '$app/state';
 
@@ -9,31 +9,20 @@
     setGalleryTransitionContext,
     type GalleryTransitionPhase,
   } from '$lib/context/gallery-transition';
+  import { createBrandStyles } from '$lib/stores/useBrandStyles.svelte';
+  import { createConversionPoller } from '$lib/stores/useConversionPoller.svelte';
+  import { createSiteHeader } from '$lib/stores/useSiteHeader.svelte';
+  import { createThemeManager } from '$lib/stores/useTheme.svelte';
+  import { createViewTransitions } from '$lib/stores/useViewTransitions.svelte';
   import {
-    adminThemeModeStore,
-    type AdminThemeMode,
-  } from '$lib/stores/admin-theme-mode.svelte';
+    resolveAdminEditorPath,
+    resolveAdminPublicPath,
+  } from '$lib/utils/admin-public-paths';
   import {
     buildGalleryPath,
-    buildGalleryPhotoPath,
     isGalleryDetailPath,
   } from '$lib/utils/gallery-routes';
   import { MEDIA_BELOW_MD } from '$lib/constants/breakpoints';
-  import {
-    DEFAULT_BRAND_CONTRAST_DARK_HEX,
-    DEFAULT_BRAND_CONTRAST_LIGHT_HEX,
-    DEFAULT_BRAND_DARK_HEX,
-    DEFAULT_BRAND_LIGHT_HEX,
-    normalizeHexColor,
-  } from '$lib/constants/theme-colors';
-  import {
-    DEFAULT_ADMIN_FONT_FAMILY,
-    DEFAULT_ADMIN_FONT_IMPORT_URL,
-    DEFAULT_PUBLIC_FONT_FAMILY,
-    DEFAULT_PUBLIC_FONT_IMPORT_URL,
-    normalizeFontFamilyDefinition,
-    normalizeFontImportUrl,
-  } from '$lib/constants/typography-settings';
 
   import type { LayoutData } from './$types';
 
@@ -44,12 +33,32 @@
     children: import('svelte').Snippet;
   }>();
 
-  const isDetailRoute = (pathname: string) => isGalleryDetailPath(pathname);
+  // --- Route helpers ---
+
   const isAdminPath = (pathname: string) =>
     pathname === '/admin' || pathname.startsWith('/admin/');
 
+  const allGallerySlugs = $derived(
+    new Set(((data?.allGallerySlugs ?? []) as string[]).filter(Boolean)),
+  );
+
+  const isViewerRoute = (pathname: string) => {
+    const segments = pathname.split('/').filter(Boolean);
+    if (segments.length === 0) return false;
+
+    const rootSlug = segments[0];
+    const isGalleryRoot = rootSlug === 'all' || allGallerySlugs.has(rootSlug);
+    if (!isGalleryRoot) return false;
+
+    return (
+      segments.length === 1 || (segments.length >= 3 && segments[1] === 'photo')
+    );
+  };
+
+  // --- Gallery transition context ---
+
   let phase = $state<GalleryTransitionPhase>(
-    isDetailRoute(page.url.pathname) ? 'open' : 'idle',
+    isGalleryDetailPath(page.url.pathname) ? 'open' : 'idle',
   );
   setGalleryTransitionContext(
     () => phase,
@@ -64,6 +73,9 @@
       phase === 'closing-chrome' ||
       phase === 'closing-scale',
   );
+
+  // --- Nav data ---
+
   const navPages = $derived(
     (data?.navPages ?? []) as Array<{
       id: string;
@@ -80,21 +92,9 @@
       nav_order: number;
     }>,
   );
-  const allGallerySlugs = $derived(
-    new Set(((data?.allGallerySlugs ?? []) as string[]).filter(Boolean)),
-  );
-  const isViewerRoute = (pathname: string) => {
-    const segments = pathname.split('/').filter(Boolean);
-    if (segments.length === 0) return false;
 
-    const rootSlug = segments[0];
-    const isGalleryRoot = rootSlug === 'all' || allGallerySlugs.has(rootSlug);
-    if (!isGalleryRoot) return false;
+  // --- Settings ---
 
-    return (
-      segments.length === 1 || (segments.length >= 3 && segments[1] === 'photo')
-    );
-  };
   const globalSiteSettings = $derived(data?.siteSettings ?? null);
   const viewerGallerySettings = $derived(
     ((page.data as Record<string, unknown> | null)?.gallerySettings ??
@@ -110,77 +110,41 @@
         }
       : globalSiteSettings,
   );
-  const isThemeMode = (value: unknown): value is 'light' | 'dark' | 'system' =>
-    value === 'light' || value === 'dark' || value === 'system';
   const showSearchLinkInNav = $derived(
     siteSettings?.show_search_link_in_nav ?? true,
   );
-  const publicFontImportUrl = $derived(
-    normalizeFontImportUrl(
-      siteSettings?.public_font_import_url,
-      DEFAULT_PUBLIC_FONT_IMPORT_URL,
-    ),
-  );
-  const adminFontImportUrl = $derived(
-    normalizeFontImportUrl(
-      siteSettings?.admin_font_import_url,
-      DEFAULT_ADMIN_FONT_IMPORT_URL,
-    ),
-  );
-  const publicFontFamily = $derived(
-    normalizeFontFamilyDefinition(
-      siteSettings?.public_font_family,
-      DEFAULT_PUBLIC_FONT_FAMILY,
-    ),
-  );
-  const adminFontFamily = $derived(
-    normalizeFontFamilyDefinition(
-      siteSettings?.admin_font_family,
-      DEFAULT_ADMIN_FONT_FAMILY,
-    ),
-  );
-  const brandLightHex = $derived(
-    normalizeHexColor(siteSettings?.brand_light_hex, DEFAULT_BRAND_LIGHT_HEX),
-  );
-  const brandDarkHex = $derived(
-    normalizeHexColor(siteSettings?.brand_dark_hex, DEFAULT_BRAND_DARK_HEX),
-  );
-  const brandContrastLightHex = $derived(
-    normalizeHexColor(
-      siteSettings?.brand_contrast_light_hex,
-      DEFAULT_BRAND_CONTRAST_LIGHT_HEX,
-    ),
-  );
-  const brandContrastDarkHex = $derived(
-    normalizeHexColor(
-      siteSettings?.brand_contrast_dark_hex,
-      DEFAULT_BRAND_CONTRAST_DARK_HEX,
-    ),
-  );
-  const fontImportUrls = $derived.by(() => {
-    const unique = new Set([publicFontImportUrl, adminFontImportUrl]);
-    return [...unique];
-  });
-  const hasSession = $derived(Boolean(data?.session));
-  const pendingConversionCount = $derived(
-    (data?.pendingConversionCount as number) ?? 0,
-  );
-  let transitionPreset = $state<'cinematic' | 'snappy' | 'experimental'>(
-    'cinematic',
-  );
-  let hasHydratedClientPrefs = $state(false);
-  let isMobile = $state(false);
-  let siteHeaderEl: HTMLElement | null = null;
-  let publicMobileMenuOpen = $state(false);
 
+  // --- Extracted modules ---
+
+  const theme = createThemeManager({
+    getGlobalSiteSettings: () => globalSiteSettings,
+    getViewerGallerySettings: () => viewerGallerySettings,
+    isViewerRoute,
+  });
+
+  const brand = createBrandStyles(() => siteSettings);
+
+  const header = createSiteHeader();
+
+  createConversionPoller(
+    () => Boolean(data?.session),
+    () => (data?.pendingConversionCount as number) ?? 0,
+  );
+
+  createViewTransitions(isViewerRoute);
+
+  // --- Mobile detection ---
+
+  let isMobile = $state(false);
   $effect(() => {
-    if (typeof window === 'undefined') return;
     const media = window.matchMedia(MEDIA_BELOW_MD);
     isMobile = media.matches;
     const listener = (e: MediaQueryListEvent) => (isMobile = e.matches);
     media.addEventListener('change', listener);
     return () => media.removeEventListener('change', listener);
   });
+
+  // --- Route-derived state ---
 
   const isViewer = $derived(isViewerRoute(page.url.pathname));
   const isHomePage = $derived(page.url.pathname === '/');
@@ -194,6 +158,9 @@
   const canAccessPublicEditor = $derived(
     cmsRole === 'admin' || cmsRole === 'editor',
   );
+
+  // --- Public edit mode ---
+
   const currentRouteData = $derived(
     (page.data as Record<string, unknown> | null) ?? null,
   );
@@ -217,131 +184,8 @@
   const publicEditModeEnabled = $derived(
     publicSveditEditable && page.url.searchParams.get('edit') === '1',
   );
-  const encodePathSegment = (segment: string) => {
-    try {
-      return encodeURIComponent(decodeURIComponent(segment));
-    } catch {
-      return encodeURIComponent(segment);
-    }
-  };
-  const adminEditorPath = $derived.by(() => {
-    if (!canAccessPublicEditor) return null;
 
-    const pathname = page.url.pathname;
-    if (isAdminPath(pathname) || pathname.startsWith('/auth/')) {
-      return null;
-    }
-    if (pathname === '/auth' || pathname === '/search') return null;
-
-    const segments = pathname.split('/').filter(Boolean);
-    if (segments.length === 0) return '/admin/homepage';
-
-    const rootSlug = segments[0];
-    const rootSlugEncoded = encodePathSegment(rootSlug);
-
-    if (segments.length === 1) {
-      if (allGallerySlugs.has(rootSlug)) {
-        return `/admin/${rootSlugEncoded}/details`;
-      }
-      return `/admin/pages/edit/${rootSlugEncoded}`;
-    }
-
-    if (
-      segments[1] === 'photo' &&
-      segments[2] &&
-      allGallerySlugs.has(rootSlug)
-    ) {
-      return `/admin/${rootSlugEncoded}/photos/edit/${encodePathSegment(segments[2])}`;
-    }
-
-    if (segments[1] === 'feed' && allGallerySlugs.has(rootSlug)) {
-      return `/admin/${rootSlugEncoded}/details`;
-    }
-
-    return null;
-  });
-  const adminPublicPath = $derived.by(() => {
-    if (!isAdminRoute) return null;
-
-    const pathname = page.url.pathname;
-    const segments = pathname.split('/').filter(Boolean);
-    if (segments[0] !== 'admin') return null;
-
-    if (segments.length === 2 && segments[1] === 'homepage') {
-      return '/';
-    }
-
-    const typedData = (page.data as Record<string, unknown> | null) ?? null;
-    const pageData = (typedData?.page as { slug?: string } | null) ?? null;
-    const galleryData =
-      (typedData?.gallery as { slug?: string } | null) ?? null;
-    const photoData = (typedData?.photo as { slug?: string } | null) ?? null;
-
-    if (
-      segments.length === 4 &&
-      segments[1] === 'pages' &&
-      segments[2] === 'edit' &&
-      pageData?.slug
-    ) {
-      return `/${encodePathSegment(pageData.slug)}`;
-    }
-
-    if (
-      segments.length === 3 &&
-      segments[2] === 'details' &&
-      galleryData?.slug
-    ) {
-      return buildGalleryPath(galleryData.slug);
-    }
-
-    if (
-      segments.length === 3 &&
-      segments[2] === 'photos' &&
-      galleryData?.slug
-    ) {
-      return buildGalleryPath(galleryData.slug);
-    }
-
-    if (
-      segments.length === 5 &&
-      segments[2] === 'photos' &&
-      segments[3] === 'edit' &&
-      galleryData?.slug &&
-      photoData?.slug
-    ) {
-      return buildGalleryPhotoPath(galleryData.slug, photoData.slug);
-    }
-
-    return null;
-  });
-
-  $effect(() => {
-    if (typeof document === 'undefined') return;
-    document.documentElement.style.setProperty(
-      '--font-sans-public',
-      publicFontFamily,
-    );
-    document.documentElement.style.setProperty(
-      '--font-sans-admin',
-      adminFontFamily,
-    );
-    document.documentElement.style.setProperty(
-      '--color-brand-light',
-      brandLightHex,
-    );
-    document.documentElement.style.setProperty(
-      '--color-brand-dark',
-      brandDarkHex,
-    );
-    document.documentElement.style.setProperty(
-      '--color-brand-contrast-light',
-      brandContrastLightHex,
-    );
-    document.documentElement.style.setProperty(
-      '--color-brand-contrast-dark',
-      brandContrastDarkHex,
-    );
-  });
+  let publicMobileMenuOpen = $state(false);
 
   const setPublicEditMode = (next: boolean) => {
     if (!publicSveditEditable) return;
@@ -358,68 +202,19 @@
     goto(resolve(target as `/${string}`), { replaceState: true });
   };
 
-  const applyTransitionPreset = () => {
-    document.documentElement.dataset.vtPreset = transitionPreset;
-  };
+  // --- Admin/public path switching ---
 
-  const clearTransitionMeta = () => {
-    delete document.documentElement.dataset.vt;
-    delete document.documentElement.dataset.vtDirection;
-    delete document.documentElement.dataset.vtReduced;
-  };
+  const adminEditorPath = $derived.by(() => {
+    if (!canAccessPublicEditor) return null;
+    return resolveAdminEditorPath(page.url.pathname, allGallerySlugs);
+  });
 
-  const applyTheme = (mode: AdminThemeMode) => {
-    const isDarkSystem = window.matchMedia(
-      '(prefers-color-scheme: dark)',
-    ).matches;
-    const active = mode === 'system' ? (isDarkSystem ? 'dark' : 'light') : mode;
-    document.documentElement.setAttribute('data-theme', active);
-    document.documentElement.style.colorScheme = active;
-  };
+  const adminPublicPath = $derived.by(() => {
+    if (!isAdminRoute) return null;
+    return resolveAdminPublicPath(page.url.pathname, currentRouteData);
+  });
 
-  const publicSiteThemeDefault = $derived(
-    isThemeMode(globalSiteSettings?.site_theme_default)
-      ? globalSiteSettings.site_theme_default
-      : 'system',
-  );
-  const galleryRouteThemeDefault = $derived(
-    isThemeMode(viewerGallerySettings?.theme_default)
-      ? viewerGallerySettings.theme_default
-      : null,
-  );
-  const siteThemeDefault = $derived(
-    isViewerRoute(page.url.pathname) && galleryRouteThemeDefault
-      ? galleryRouteThemeDefault
-      : publicSiteThemeDefault,
-  );
-
-  const syncSiteHeaderHeight = () => {
-    if (typeof document === 'undefined' || typeof window === 'undefined')
-      return;
-
-    const isMobile = window.matchMedia(MEDIA_BELOW_MD).matches;
-
-    if (isMobile) {
-      if (isHomePage && !isAdminRoute) {
-        document.documentElement.style.setProperty(
-          '--site-header-height',
-          '0px',
-        );
-      } else {
-        document.documentElement.style.setProperty(
-          '--site-header-height',
-          'var(--size-mobile-header-offset)',
-        );
-      }
-      return;
-    }
-
-    if (!siteHeaderEl) return;
-    document.documentElement.style.setProperty(
-      '--site-header-height',
-      `${siteHeaderEl.getBoundingClientRect().height}px`,
-    );
-  };
+  // --- Header classes ---
 
   const desktopHeaderClass = $derived.by(() => {
     const base =
@@ -439,163 +234,14 @@
     }
     return `${base} pt-[var(--site-header-height)] lg:min-h-[calc(100vh-var(--site-header-height))] lg:pt-0`;
   });
-
-  $effect(() => {
-    if (typeof window === 'undefined' || hasHydratedClientPrefs) return;
-
-    const pathname = page.url.pathname;
-    const onAdmin = isAdminPath(pathname);
-    transitionPreset = globalSiteSettings?.transition_preset ?? 'cinematic';
-    let resolvedThemeMode: AdminThemeMode = onAdmin
-      ? 'system'
-      : siteThemeDefault;
-
-    if (onAdmin) {
-      const stored = localStorage.getItem('admin-theme');
-      resolvedThemeMode =
-        stored === 'light' || stored === 'dark' || stored === 'system'
-          ? stored
-          : 'system';
-    }
-    adminThemeModeStore.set(resolvedThemeMode);
-
-    applyTransitionPreset();
-    applyTheme(resolvedThemeMode);
-    hasHydratedClientPrefs = true;
-  });
-
-  $effect(() => {
-    if (typeof window === 'undefined' || !hasHydratedClientPrefs) return;
-    const pathname = page.url.pathname;
-    const onAdmin = isAdminPath(pathname);
-    let resolvedThemeMode: AdminThemeMode = onAdmin
-      ? 'system'
-      : siteThemeDefault;
-    if (onAdmin) {
-      const stored = localStorage.getItem('admin-theme');
-      resolvedThemeMode =
-        stored === 'light' || stored === 'dark' || stored === 'system'
-          ? stored
-          : 'system';
-    }
-    adminThemeModeStore.set(resolvedThemeMode);
-    applyTheme(resolvedThemeMode);
-  });
-
-  $effect(() => {
-    if (typeof window === 'undefined' || !hasHydratedClientPrefs) return;
-    if (!isAdminPath(page.url.pathname)) return;
-    const selectedThemeMode = adminThemeModeStore.value;
-    localStorage.setItem('admin-theme', selectedThemeMode);
-    applyTheme(selectedThemeMode);
-  });
-
-  $effect(() => {
-    if (typeof window === 'undefined') return;
-    if (!hasSession || pendingConversionCount <= 0) return;
-
-    const timer = setInterval(() => {
-      invalidateAll();
-    }, 8000);
-
-    return () => clearInterval(timer);
-  });
-
-  $effect(() => {
-    if (typeof window === 'undefined') return;
-    const media = window.matchMedia('(prefers-color-scheme: dark)');
-    const listener = () => {
-      if (adminThemeModeStore.value === 'system') {
-        applyTheme('system');
-      }
-    };
-
-    media.addEventListener('change', listener);
-    return () => media.removeEventListener('change', listener);
-  });
-
-  $effect(() => {
-    if (typeof document === 'undefined') return;
-    transitionPreset = globalSiteSettings?.transition_preset ?? 'cinematic';
-    applyTransitionPreset();
-  });
-
-  $effect(() => {
-    if (typeof window === 'undefined') return;
-    syncSiteHeaderHeight();
-    const observer = siteHeaderEl
-      ? new ResizeObserver(syncSiteHeaderHeight)
-      : null;
-    if (observer && siteHeaderEl) {
-      observer.observe(siteHeaderEl);
-    }
-    window.addEventListener('resize', syncSiteHeaderHeight);
-    return () => {
-      observer?.disconnect();
-      window.removeEventListener('resize', syncSiteHeaderHeight);
-    };
-  });
-
-  $effect(() => {
-    const pathname = page.url.pathname;
-    if (pathname) {
-      syncSiteHeaderHeight();
-    }
-  });
-
-  onNavigate((navigation) => {
-    const fromPath = navigation.from?.url.pathname ?? window.location.pathname;
-    const toPath = navigation.to?.url.pathname ?? fromPath;
-
-    // Gallery and photo routes use a persistent same-node animator, not View Transitions.
-    if (isViewerRoute(fromPath) || isViewerRoute(toPath)) {
-      return;
-    }
-
-    // Admin nav: skip View Transitions so rapid clicks always register and lead to route changes.
-    if (isAdminPath(fromPath) || isAdminPath(toPath)) {
-      return;
-    }
-
-    if (!document.startViewTransition) {
-      return;
-    }
-
-    const reducedMotion = window.matchMedia(
-      '(prefers-reduced-motion: reduce)',
-    ).matches;
-
-    document.documentElement.dataset.vt = 'default';
-    delete document.documentElement.dataset.vtDirection;
-    if (reducedMotion) {
-      document.documentElement.dataset.vtReduced = '1';
-    } else {
-      delete document.documentElement.dataset.vtReduced;
-    }
-
-    return new Promise((resolve) => {
-      const transition = document.startViewTransition(async () => {
-        resolve();
-        try {
-          await navigation.complete;
-        } catch {
-          // If the navigation is cancelled, the VT is aborted anyway.
-        }
-      });
-
-      transition.finished.finally(() => {
-        clearTransitionMeta();
-      });
-    });
-  });
 </script>
 
 <svelte:head>
   <script
-    data-brand-light={brandLightHex}
-    data-brand-dark={brandDarkHex}
-    data-brand-contrast-light={brandContrastLightHex}
-    data-brand-contrast-dark={brandContrastDarkHex}
+    data-brand-light={brand.brandLightHex}
+    data-brand-dark={brand.brandDarkHex}
+    data-brand-contrast-light={brand.brandContrastLightHex}
+    data-brand-contrast-dark={brand.brandContrastDarkHex}
   >
     {
       const script = document.currentScript;
@@ -620,10 +266,10 @@
       }
     }
   </script>
-  <meta name="site-theme-default" content={siteThemeDefault} />
-  <meta name="site-font-public-family" content={publicFontFamily} />
-  <meta name="site-font-admin-family" content={adminFontFamily} />
-  {#each fontImportUrls as fontImportUrl (fontImportUrl)}
+  <meta name="site-theme-default" content={theme.siteThemeDefault} />
+  <meta name="site-font-public-family" content={brand.publicFontFamily} />
+  <meta name="site-font-admin-family" content={brand.adminFontFamily} />
+  {#each brand.fontImportUrls as fontImportUrl (fontImportUrl)}
     <link rel="stylesheet" href={fontImportUrl} />
   {/each}
 </svelte:head>
@@ -786,7 +432,7 @@
   </header>
 
   <header
-    bind:this={siteHeaderEl}
+    bind:this={header.el}
     class={desktopHeaderClass}
     class:opacity-0={chromeHidden}
   >

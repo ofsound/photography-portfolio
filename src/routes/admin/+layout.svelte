@@ -5,73 +5,18 @@
   import AdminThemeToggle from '$lib/components/admin/AdminThemeToggle.svelte';
   import AdminToastViewport from '$lib/components/admin/AdminToastViewport.svelte';
   import MobileDropdownMenu from '$lib/components/navigation/MobileDropdownMenu.svelte';
-  import {
-    buildGalleryPath,
-    buildGalleryPhotoPath,
-  } from '$lib/utils/gallery-routes';
+
+  import { resolveAdminPublicPath } from '$lib/utils/admin-public-paths';
 
   const { data, children } = $props();
   let adminMobileMenuOpen = $state(false);
 
-  const encodePathSegment = (segment: string) => {
-    try {
-      return encodeURIComponent(decodeURIComponent(segment));
-    } catch {
-      return encodeURIComponent(segment);
-    }
-  };
-  const adminPublicPath = $derived.by(() => {
-    const pathname = page.url.pathname;
-    const segments = pathname.split('/').filter(Boolean);
-    if (segments[0] !== 'admin') return null;
-
-    if (segments.length === 2 && segments[1] === 'homepage') {
-      return '/';
-    }
-
-    const typedData = (page.data as Record<string, unknown> | null) ?? null;
-    const pageData = (typedData?.page as { slug?: string } | null) ?? null;
-    const galleryData =
-      (typedData?.gallery as { slug?: string } | null) ?? null;
-    const photoData = (typedData?.photo as { slug?: string } | null) ?? null;
-
-    if (
-      segments.length === 4 &&
-      segments[1] === 'pages' &&
-      segments[2] === 'edit' &&
-      pageData?.slug
-    ) {
-      return `/${encodePathSegment(pageData.slug)}`;
-    }
-
-    if (
-      segments.length === 3 &&
-      segments[2] === 'details' &&
-      galleryData?.slug
-    ) {
-      return buildGalleryPath(galleryData.slug);
-    }
-
-    if (
-      segments.length === 3 &&
-      segments[2] === 'photos' &&
-      galleryData?.slug
-    ) {
-      return buildGalleryPath(galleryData.slug);
-    }
-
-    if (
-      segments.length === 5 &&
-      segments[2] === 'photos' &&
-      segments[3] === 'edit' &&
-      galleryData?.slug &&
-      photoData?.slug
-    ) {
-      return buildGalleryPhotoPath(galleryData.slug, photoData.slug);
-    }
-
-    return null;
-  });
+  const adminPublicPath = $derived.by(() =>
+    resolveAdminPublicPath(
+      page.url.pathname,
+      (page.data as Record<string, unknown> | null) ?? null,
+    ),
+  );
 
   const links = $derived.by(() => {
     const list = [

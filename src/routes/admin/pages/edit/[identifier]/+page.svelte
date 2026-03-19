@@ -242,95 +242,96 @@
   </div>
 
   <div class="grid gap-3">
-    <AdminCard
-      variant="gradient"
-      class={[
-        'grid gap-3 p-3',
-        selectedBgImage?.delivery_storage_path
-          ? 'md:grid-cols-2 md:items-start md:gap-4'
-          : '',
-      ]
-        .filter(Boolean)
-        .join(' ')}
-    >
-      <div class="grid min-w-0 gap-3">
-        <div>
-          <AdminHeading level={3}>Page Background</AdminHeading>
-          <p class="text-xs text-text-muted">Select a published lead image.</p>
-        </div>
-
-        <div class="flex flex-wrap items-center gap-2">
-          <AdminButton
-            type="button"
-            size="sm"
-            onclick={() => (showBgPicker = true)}>Choose</AdminButton
-          >
-          <AdminButton
-            type="button"
-            size="sm"
-            variant="default"
-            disabled={!formBgImageId}
-            onclick={() => {
-              formBgImageId = null;
-            }}>Remove</AdminButton
-          >
-        </div>
-
-        {#if fieldErrors.bg_image_id}
-          <p class="text-xs text-red-600">{fieldErrors.bg_image_id}</p>
-        {/if}
-
-        {#if selectedBgImage && selectedBgImage.delivery_storage_path}
-          <div class="grid w-fit max-w-full gap-2 text-xs">
-            <img
-              src={photoPublicUrl(selectedBgImage.delivery_storage_path, 220)}
-              alt={selectedBgImage.photo_title}
-              class="h-20 w-28 rounded object-cover"
-            />
-            <p class="max-w-52 truncate">{selectedBgImage.photo_title}</p>
-          </div>
-        {:else if formBgImageId}
-          <p class="text-xs text-text-muted">
-            Selected image is no longer available in picker results.
-          </p>
-          <p class="text-xs text-text-subtle">ID: {formBgImageId}</p>
-        {/if}
+    <AdminCard variant="gradient" class="grid gap-3 p-3">
+      <div class="mb-3 flex flex-col gap-2">
+        <AdminHeading level={3}>Page Background</AdminHeading>
+        <p class="text-xs text-text-muted">Select a published lead image.</p>
       </div>
 
-      {#if selectedBgImage && selectedBgImage.delivery_storage_path}
-        <div class="min-w-0">
-          <FormField
-            label="Background behavior"
-            id="page-edit-bg_image_fixed"
-            class="min-w-0"
-          >
-            <div class="grid gap-2">
-              {#each PAGE_BACKGROUND_OPTIONS as option (option.value)}
-                <label
-                  class="flex cursor-pointer items-start gap-3 rounded border border-border bg-surface p-3 transition-colors hover:border-border-strong"
-                >
-                  <input
-                    type="radio"
-                    name="bg_image_fixed"
-                    id={`bg-behavior-${option.value}`}
-                    value={option.value}
-                    bind:group={formBgImageFixed}
-                    class="mt-1 size-4 accent-brand"
-                  />
-                  <span class="grid min-w-0 gap-1">
-                    <span class="text-sm font-medium text-text"
-                      >{option.label}</span
-                    >
-                    <span class="text-xs text-text-muted"
-                      >{option.description}</span
-                    >
-                  </span>
-                </label>
-              {/each}
+      <div
+        class={[
+          'grid min-w-0 gap-3',
+          selectedBgImage?.delivery_storage_path
+            ? 'md:grid-cols-2 md:items-start md:gap-4'
+            : '',
+        ]
+          .filter(Boolean)
+          .join(' ')}
+      >
+        <div class="grid min-w-0 gap-3">
+          <div class="flex flex-wrap items-center gap-2">
+            <AdminButton
+              type="button"
+              size="sm"
+              onclick={() => (showBgPicker = true)}>Choose</AdminButton
+            >
+            <AdminButton
+              type="button"
+              size="sm"
+              variant="default"
+              disabled={!formBgImageId}
+              onclick={() => {
+                formBgImageId = null;
+              }}>Remove</AdminButton
+            >
+          </div>
+
+          {#if fieldErrors.bg_image_id}
+            <p class="text-xs text-red-600">{fieldErrors.bg_image_id}</p>
+          {/if}
+
+          {#if selectedBgImage && selectedBgImage.delivery_storage_path}
+            <div class="grid w-fit max-w-full gap-2 text-xs">
+              <img
+                src={photoPublicUrl(selectedBgImage.delivery_storage_path, 220)}
+                alt={selectedBgImage.photo_title}
+                class="h-20 w-28 rounded object-cover"
+              />
+              <p class="max-w-52 truncate">{selectedBgImage.photo_title}</p>
             </div>
-          </FormField>
+          {:else if formBgImageId}
+            <p class="text-xs text-text-muted">
+              Selected image is no longer available in picker results.
+            </p>
+            <p class="text-xs text-text-subtle">ID: {formBgImageId}</p>
+          {/if}
         </div>
-      {/if}
+
+        {#if selectedBgImage && selectedBgImage.delivery_storage_path}
+          <div class="min-w-0">
+            <FormField
+              label="Background behavior"
+              id="page-edit-bg_image_fixed"
+              class="min-w-0"
+            >
+              <div class="grid gap-2">
+                {#each PAGE_BACKGROUND_OPTIONS as option (option.value)}
+                  <label
+                    class="flex cursor-pointer items-start gap-3 rounded border border-border bg-surface p-3 transition-colors hover:border-border-strong"
+                  >
+                    <input
+                      type="radio"
+                      name="bg_image_fixed"
+                      id={`bg-behavior-${option.value}`}
+                      value={option.value}
+                      bind:group={formBgImageFixed}
+                      class="mt-1 size-4 accent-brand"
+                    />
+                    <span class="grid min-w-0 gap-1">
+                      <span class="text-sm font-medium text-text"
+                        >{option.label}</span
+                      >
+                      <span class="text-xs text-text-muted"
+                        >{option.description}</span
+                      >
+                    </span>
+                  </label>
+                {/each}
+              </div>
+            </FormField>
+          </div>
+        {/if}
+      </div>
     </AdminCard>
 
     <div class="grid gap-3 md:grid-cols-2 md:items-start">

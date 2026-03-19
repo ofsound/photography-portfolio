@@ -3,6 +3,9 @@
   import { resolve } from '$app/paths';
   import { page } from '$app/state';
 
+  import { FileText, Pencil, Save } from '@lucide/svelte';
+
+  import IconSveditEdit from '$lib/components/icons/IconSveditEdit.svelte';
   import MobileDropdownMenu from '$lib/components/navigation/MobileDropdownMenu.svelte';
 
   import {
@@ -303,32 +306,10 @@
               : 'Enter public edit mode'}
             onclick={() => setPublicEditMode(!publicEditModeEnabled)}
           >
-            <svg
+            <IconSveditEdit
+              active={publicEditModeEnabled}
               class="size-4.5 overflow-visible"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              aria-hidden="true"
-            >
-              {#if publicEditModeEnabled}
-                <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6z" />
-                <circle cx="12" cy="12" r="3" />
-              {:else}
-                <path d="M16.5 3.5a2.12 2.12 0 113 3L7 19l-4 1 1-4z" />
-                <text
-                  x="13.5"
-                  y="20.5"
-                  font-size="9"
-                  font-family="sans-serif"
-                  font-weight="bold"
-                  fill="currentColor"
-                  stroke="none">SV</text
-                >
-              {/if}
-            </svg>
+            />
           </button>
           {#if publicEditModeEnabled}
             <button
@@ -338,22 +319,7 @@
               aria-label="Save public page changes"
               title="Save public page changes"
             >
-              <svg
-                class="size-4.5"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                aria-hidden="true"
-              >
-                <path
-                  d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"
-                />
-                <path d="M17 21v-8H7v8" />
-                <path d="M7 3v5h8" />
-              </svg>
+              <Save class="size-4.5" />
             </button>
           {/if}
           {#if adminEditorPath}
@@ -367,19 +333,7 @@
             aria-label="Edit current page in admin"
             title="Edit current page in admin"
           >
-            <svg
-              class="size-4.5"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              aria-hidden="true"
-            >
-              <path d="M12 20h9" />
-              <path d="M16.5 3.5a2.12 2.12 0 113 3L7 19l-4 1 1-4z" />
-            </svg>
+            <Pencil class="size-4.5" />
           </a>
         {/if}
 
@@ -459,19 +413,7 @@
               aria-label="Edit current page in admin"
               title="Edit current page in admin"
             >
-              <svg
-                class="size-3.5"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                aria-hidden="true"
-              >
-                <path d="M12 20h9" />
-                <path d="M16.5 3.5a2.12 2.12 0 113 3L7 19l-4 1 1-4z" />
-              </svg>
+              <Pencil class="size-3.5" />
             </a>
           </div>
         {/if}
@@ -489,32 +431,10 @@
                 : 'Enter public edit mode'}
               onclick={() => setPublicEditMode(!publicEditModeEnabled)}
             >
-              <svg
+              <IconSveditEdit
+                active={publicEditModeEnabled}
                 class="size-3.5 overflow-visible"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                aria-hidden="true"
-              >
-                {#if publicEditModeEnabled}
-                  <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6z" />
-                  <circle cx="12" cy="12" r="3" />
-                {:else}
-                  <path d="M16.5 3.5a2.12 2.12 0 113 3L7 19l-4 1 1-4z" />
-                  <text
-                    x="13.5"
-                    y="20.5"
-                    font-size="9"
-                    font-family="sans-serif"
-                    font-weight="bold"
-                    fill="currentColor"
-                    stroke="none">SV</text
-                  >
-                {/if}
-              </svg>
+              />
             </button>
             {#if publicEditModeEnabled}
               <button
@@ -524,22 +444,7 @@
                 aria-label="Save public page changes"
                 title="Save public page changes"
               >
-                <svg
-                  class="size-3.5"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  aria-hidden="true"
-                >
-                  <path
-                    d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"
-                  />
-                  <path d="M17 21v-8H7v8" />
-                  <path d="M7 3v5h8" />
-                </svg>
+                <Save class="size-3.5" />
               </button>
             {/if}
           {/if}
@@ -550,23 +455,7 @@
               aria-label="View public page"
               title="View public page"
             >
-              <svg
-                class="size-3.5"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                aria-hidden="true"
-              >
-                <path
-                  d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
-                />
-                <path d="M14 2v6h6" />
-                <path d="M8 13h8" />
-                <path d="M8 17h8" />
-              </svg>
+              <FileText class="size-3.5" />
             </a>
           {/if}
           {#if adminEditorPath}
@@ -579,19 +468,7 @@
               aria-label="Edit current page in admin"
               title="Edit current page in admin"
             >
-              <svg
-                class="size-3.5"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                aria-hidden="true"
-              >
-                <path d="M12 20h9" />
-                <path d="M16.5 3.5a2.12 2.12 0 113 3L7 19l-4 1 1-4z" />
-              </svg>
+              <Pencil class="size-3.5" />
             </a>
           {/if}
         </div>

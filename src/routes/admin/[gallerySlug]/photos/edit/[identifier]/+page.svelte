@@ -1,13 +1,16 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
   import { resolve } from '$app/paths';
   import { invalidateAll } from '$app/navigation';
 
   import AdminBackLink from '$lib/components/admin/AdminBackLink.svelte';
   import AdminPageHeader from '$lib/components/admin/AdminPageHeader.svelte';
   import AdminToastEmitter from '$lib/components/admin/AdminToastEmitter.svelte';
+  import { useAdminFormState } from '$lib/components/admin/useAdminFormState.svelte';
   import AdminSinglePhotoEditor from '$lib/components/admin/photos/AdminSinglePhotoEditor.svelte';
 
   const { data, form } = $props();
+  const { message, success } = useAdminFormState(() => form);
   let isPollingInFlight = $state(false);
   const hasPendingConversions = $derived(
     ((data.pendingConversionCount as number) ?? 0) > 0,
@@ -23,7 +26,7 @@
     }
   };
 
-  $effect(() => {
+  onMount(() => {
     if (!hasPendingConversions) return;
     const intervalId = setInterval(() => {
       void pollPendingConversions();
@@ -50,9 +53,9 @@
 
 {#snippet headerToasts()}
   <AdminToastEmitter
-    message={form?.message}
-    type={form && 'success' in form && form.success ? 'success' : 'error'}
-    links={form && 'success' in form && form.success ? toastLinks : undefined}
+    {message}
+    type={success ? 'success' : 'error'}
+    links={success ? toastLinks : undefined}
   />
   <AdminToastEmitter
     message={data.message}

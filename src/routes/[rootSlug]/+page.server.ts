@@ -1,93 +1,93 @@
 import { fail, redirect, type Actions } from '@sveltejs/kit';
-import { superValidate, message } from 'sveltekit-superforms';
+import { superValidate, message } from 'sveltekit-superforms/server';
 import { zod4 } from 'sveltekit-superforms/adapters';
 
 import { getCmsRole } from '$lib/server/admin-helpers';
 import {
-	createDefaultSveditPageDocument,
-	parseSveditPageDocument,
-	SVEDIT_PAGE_SCHEMA_VERSION,
+  createDefaultSveditPageDocument,
+  parseSveditPageDocument,
+  SVEDIT_PAGE_SCHEMA_VERSION,
 } from '$lib/svedit/page-document';
 import { sveditSaveSchema } from '$lib/schemas/svedit';
 
 import type { PageServerLoad } from './$types';
 
 const canEditPublicPages = async (locals: App.Locals) => {
-	const role = await getCmsRole(locals);
-	return role === 'admin' || role === 'editor';
+  const role = await getCmsRole(locals);
+  return role === 'admin' || role === 'editor';
 };
 
 export const load: PageServerLoad = async ({ locals, url }) => {
-	const canEdit = await canEditPublicPages(locals);
-	const sveditForm = await superValidate(zod4(sveditSaveSchema));
-	return {
-		canEditPublicPages: canEdit,
-		initialPublicEditMode:
-			canEdit && Boolean(url.searchParams.get('edit') === '1'),
-		sveditForm,
-	};
+  const canEdit = await canEditPublicPages(locals);
+  const sveditForm = await superValidate(zod4(sveditSaveSchema));
+  return {
+    canEditPublicPages: canEdit,
+    initialPublicEditMode:
+      canEdit && Boolean(url.searchParams.get('edit') === '1'),
+    sveditForm,
+  };
 };
 
 export const actions: Actions = {
-	save: async ({ locals, request, params }) => {
-		const canEdit = await canEditPublicPages(locals);
-		if (!canEdit) {
-			return fail(403, { message: 'Editor access required.' });
-		}
+  save: async ({ locals, request, params }) => {
+    const canEdit = await canEditPublicPages(locals);
+    if (!canEdit) {
+      return fail(403, { message: 'Editor access required.' });
+    }
 
-		const form = await superValidate(request, zod4(sveditSaveSchema));
-		if (!form.valid) {
-			return message(form, 'Validation failed.', { status: 400 });
-		}
+    const form = await superValidate(request, zod4(sveditSaveSchema));
+    if (!form.valid) {
+      return message(form, 'Validation failed.', { status: 400 });
+    }
 
-		const slug = params.rootSlug ?? '';
-		const rawSveditDoc = form.data.svedit_doc;
+    const slug = params.rootSlug ?? '';
+    const rawSveditDoc = form.data.svedit_doc;
 
-		const pageResult = await locals.supabase
-			.from('pages')
-			.select('id, editor_mode')
-			.eq('slug', slug)
-			.is('deleted_at', null)
-			.neq('kind', 'home')
-			.maybeSingle();
+    const pageResult = await locals.supabase
+      .from('pages')
+      .select('id, editor_mode')
+      .eq('slug', slug)
+      .is('deleted_at', null)
+      .neq('kind', 'home')
+      .maybeSingle();
 
-		if (pageResult.error) {
-			return fail(500, { message: pageResult.error.message });
-		}
+    if (pageResult.error) {
+      return fail(500, { message: pageResult.error.message });
+    }
 
-		if (!pageResult.data) {
-			return fail(404, { message: 'Page not found.' });
-		}
+    if (!pageResult.data) {
+      return fail(404, { message: 'Page not found.' });
+    }
 
-		if (pageResult.data.editor_mode !== 'svedit') {
-			return fail(400, {
-				message: 'Public edit mode is only available for Svedit pages.',
-			});
-		}
+    if (pageResult.data.editor_mode !== 'svedit') {
+      return fail(400, {
+        message: 'Public edit mode is only available for Svedit pages.',
+      });
+    }
 
-		const docResult = parseSveditPageDocument(
-			rawSveditDoc || createDefaultSveditPageDocument(),
-		);
-		if (!docResult.ok) {
-			return fail(400, { message: docResult.message });
-		}
+    const docResult = parseSveditPageDocument(
+      rawSveditDoc || createDefaultSveditPageDocument(),
+    );
+    if (!docResult.ok) {
+      return fail(400, { message: docResult.message });
+    }
 
-		const updateResult = await locals.supabase
-			.from('pages')
-			.update({
-				svedit_doc: docResult.document,
-				svedit_schema_version: SVEDIT_PAGE_SCHEMA_VERSION,
-			})
-			.eq('id', pageResult.data.id)
-			.neq('kind', 'home');
+    const updateResult = await locals.supabase
+      .from('pages')
+      .update({
+        svedit_doc: docResult.document,
+        svedit_schema_version: SVEDIT_PAGE_SCHEMA_VERSION,
+      })
+      .eq('id', pageResult.data.id)
+      .neq('kind', 'home');
 
-		if (updateResult.error) {
-			return fail(400, { message: updateResult.error.message });
-		}
+    if (updateResult.error) {
+      return fail(400, { message: updateResult.error.message });
+    }
 
-		const next = new URL(request.url);
-		next.searchParams.set('edit', '1');
+    const next = new URL(request.url);
+    next.searchParams.set('edit', '1');
 
-		throw redirect(303, `${next.pathname}${next.search}`);
-	},
+    throw redirect(303, `${next.pathname}${next.search}`);
+  },
 };

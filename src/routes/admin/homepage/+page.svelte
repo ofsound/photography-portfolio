@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { untrack } from 'svelte';
   import { resolve } from '$app/paths';
   import { DragDropProvider } from '@dnd-kit/svelte';
   import { createSortable, isSortable } from '@dnd-kit/svelte/sortable';
@@ -51,9 +52,12 @@
 
   const { data, form } = $props();
 
-  const { typedForm, fieldErrors: heroFieldErrors } = useAdminFormState<
-    Record<string, string | undefined>
-  >(() => form);
+  const {
+    typedForm,
+    fieldErrors: heroFieldErrors,
+    message: formMessage,
+    success: formSuccess,
+  } = useAdminFormState<Record<string, string | undefined>>(() => form);
 
   const section = $derived(
     data.section === 'hero' ? ('hero' as const) : ('slides' as const),
@@ -71,29 +75,100 @@
     { key: 'hero', label: 'Hero', href: '/admin/homepage?section=hero' },
   ]);
 
-  let selectedIds = $state<string[]>([]);
-  let slideDurationMsStr = $state('4000');
-  let transitionDurationMsStr = $state('2000');
-  let zoomStrengthPctStr = $state('5');
-  let panStrengthPctStr = $state('80');
+  const initialSelectedIds = untrack(() =>
+    slides.map((slide) => slide.photo_image_id),
+  );
+  const initialSlideDurationMs = untrack(() => String(data.slideDurationMs));
+  const initialTransitionDurationMs = untrack(() =>
+    String(data.transitionDurationMs),
+  );
+  const initialZoomStrengthPct = untrack(() => String(data.zoomStrengthPct));
+  const initialPanStrengthPct = untrack(() => String(data.panStrengthPct));
+  const initialHeroValues = untrack(() => typedForm?.values ?? {});
+  const initialHomePage = untrack(() => homePage);
+
+  let selectedIds = $state<string[]>(initialSelectedIds);
+  let slideDurationMsStr = $state(initialSlideDurationMs);
+  let transitionDurationMsStr = $state(initialTransitionDurationMs);
+  let zoomStrengthPctStr = $state(initialZoomStrengthPct);
+  let panStrengthPctStr = $state(initialPanStrengthPct);
   let undoStack = $state<string[][]>([]);
   let redoStack = $state<string[][]>([]);
   const historyLimit = 100;
 
-  let heroVisibilityStatus = $state<'public' | 'draft'>('draft');
-  let heroTitle = $state('');
-  let heroEditorMode = $state<'code' | 'svedit'>('code');
-  let heroHtmlContent = $state('');
-  let heroCssModule = $state('');
-  let heroSveditDoc = $state('');
-  let heroVerticalAlignmentPct = $state(50);
-  let heroSeoTitle = $state('');
-  let heroSeoDescription = $state('');
-  let heroOgTitle = $state('');
-  let heroOgDescription = $state('');
-  let heroOgImagePath = $state('');
-  let heroEditorSeed = $state(0);
-  let heroLoadedStateKey = $state<string | null>(null);
+  let heroVisibilityStatus = $state<'public' | 'draft'>(
+    initialHeroValues.visibility_status === 'public' ||
+      initialHeroValues.visibility_status === 'draft'
+      ? initialHeroValues.visibility_status
+      : initialHomePage?.visibility_status === 'public'
+        ? 'public'
+        : 'draft',
+  );
+  let heroTitle = $state(
+    typeof initialHeroValues.title === 'string'
+      ? initialHeroValues.title
+      : (initialHomePage?.title ?? ''),
+  );
+  let heroEditorMode = $state<'code' | 'svedit'>(
+    initialHeroValues.editor_mode === 'code' ||
+      initialHeroValues.editor_mode === 'svedit'
+      ? initialHeroValues.editor_mode
+      : initialHomePage?.editor_mode === 'svedit'
+        ? 'svedit'
+        : 'code',
+  );
+  let heroHtmlContent = $state(
+    typeof initialHeroValues.html_content === 'string'
+      ? initialHeroValues.html_content
+      : (initialHomePage?.html_content ?? ''),
+  );
+  let heroCssModule = $state(
+    typeof initialHeroValues.css_module === 'string'
+      ? initialHeroValues.css_module
+      : (initialHomePage?.css_module ?? ''),
+  );
+  let heroSveditDoc = $state(
+    typeof initialHeroValues.svedit_doc === 'string'
+      ? initialHeroValues.svedit_doc
+      : initialHomePage?.svedit_doc
+        ? JSON.stringify(initialHomePage.svedit_doc, null, 2)
+        : '',
+  );
+  let heroVerticalAlignmentPct = $state(
+    typeof initialHeroValues.hero_vertical_alignment_pct === 'string'
+      ? clampHeroVerticalAlignmentPct(
+          Number(initialHeroValues.hero_vertical_alignment_pct),
+        )
+      : clampHeroVerticalAlignmentPct(
+          initialHomePage?.hero_vertical_alignment_pct ?? 50,
+        ),
+  );
+  let heroSeoTitle = $state(
+    typeof initialHeroValues.seo_title === 'string'
+      ? initialHeroValues.seo_title
+      : (initialHomePage?.seo_title ?? ''),
+  );
+  let heroSeoDescription = $state(
+    typeof initialHeroValues.seo_description === 'string'
+      ? initialHeroValues.seo_description
+      : (initialHomePage?.seo_description ?? ''),
+  );
+  let heroOgTitle = $state(
+    typeof initialHeroValues.og_title === 'string'
+      ? initialHeroValues.og_title
+      : (initialHomePage?.og_title ?? ''),
+  );
+  let heroOgDescription = $state(
+    typeof initialHeroValues.og_description === 'string'
+      ? initialHeroValues.og_description
+      : (initialHomePage?.og_description ?? ''),
+  );
+  let heroOgImagePath = $state(
+    typeof initialHeroValues.og_image_path === 'string'
+      ? initialHeroValues.og_image_path
+      : (initialHomePage?.og_image_path ?? ''),
+  );
+  const heroEditorSeed = 0;
   let showRawSveditJson = $state(false);
   let rawSveditJsonError = $state<string | null>(null);
 
@@ -117,86 +192,6 @@
     undoStack = [...undoStack, [...selectedIds]].slice(-historyLimit);
     selectedIds = [...next];
   };
-
-  $effect(() => {
-    selectedIds = slides.map((slide) => slide.photo_image_id);
-    slideDurationMsStr = String(data.slideDurationMs);
-    transitionDurationMsStr = String(data.transitionDurationMs);
-    zoomStrengthPctStr = String(data.zoomStrengthPct);
-    panStrengthPctStr = String(data.panStrengthPct);
-    undoStack = [];
-    redoStack = [];
-  });
-
-  $effect(() => {
-    const currentHomePage = homePage;
-    if (!currentHomePage) return;
-    const nextLoadedStateKey = `${currentHomePage.id}:${currentHomePage.updated_at}`;
-    if (heroLoadedStateKey === nextLoadedStateKey) return;
-    heroLoadedStateKey = nextLoadedStateKey;
-
-    heroVisibilityStatus =
-      currentHomePage.visibility_status === 'public' ? 'public' : 'draft';
-    heroTitle = currentHomePage.title ?? '';
-    heroEditorMode =
-      currentHomePage.editor_mode === 'svedit' ? 'svedit' : 'code';
-    heroHtmlContent = currentHomePage.html_content ?? '';
-    heroCssModule = currentHomePage.css_module ?? '';
-    heroSveditDoc = currentHomePage.svedit_doc
-      ? JSON.stringify(currentHomePage.svedit_doc, null, 2)
-      : '';
-    heroVerticalAlignmentPct = clampHeroVerticalAlignmentPct(
-      currentHomePage.hero_vertical_alignment_pct ?? 50,
-    );
-    heroSeoTitle = currentHomePage.seo_title ?? '';
-    heroSeoDescription = currentHomePage.seo_description ?? '';
-    heroOgTitle = currentHomePage.og_title ?? '';
-    heroOgDescription = currentHomePage.og_description ?? '';
-    heroOgImagePath = currentHomePage.og_image_path ?? '';
-    showRawSveditJson = false;
-    rawSveditJsonError = null;
-    heroEditorSeed += 1;
-  });
-
-  $effect(() => {
-    const values = typedForm?.values;
-    if (!values) return;
-
-    if (
-      values.visibility_status === 'public' ||
-      values.visibility_status === 'draft'
-    ) {
-      heroVisibilityStatus = values.visibility_status;
-    }
-    if (typeof values.title === 'string') heroTitle = values.title;
-    if (values.editor_mode === 'code' || values.editor_mode === 'svedit') {
-      heroEditorMode = values.editor_mode;
-    }
-    if (typeof values.html_content === 'string')
-      heroHtmlContent = values.html_content;
-    if (typeof values.css_module === 'string')
-      heroCssModule = values.css_module;
-    if (typeof values.svedit_doc === 'string')
-      heroSveditDoc = values.svedit_doc;
-    if (typeof values.hero_vertical_alignment_pct === 'string') {
-      heroVerticalAlignmentPct = clampHeroVerticalAlignmentPct(
-        Number(values.hero_vertical_alignment_pct),
-      );
-    }
-    if (typeof values.seo_title === 'string') heroSeoTitle = values.seo_title;
-    if (typeof values.seo_description === 'string') {
-      heroSeoDescription = values.seo_description;
-    }
-    if (typeof values.og_title === 'string') {
-      heroOgTitle = values.og_title;
-    }
-    if (typeof values.og_description === 'string') {
-      heroOgDescription = values.og_description;
-    }
-    if (typeof values.og_image_path === 'string') {
-      heroOgImagePath = values.og_image_path;
-    }
-  });
 
   const formatRawSveditJson = () => {
     const value = heroSveditDoc.trim();
@@ -289,9 +284,9 @@
 
 {#if section === 'slides'}
   <AdminCreateListLayout
-    formMessage={form?.message}
-    formSuccess={form?.success}
-    toastLinks={form?.success ? { viewPage: resolve('/') } : undefined}
+    {formMessage}
+    {formSuccess}
+    toastLinks={formSuccess ? { viewPage: resolve('/') } : undefined}
     overflow
     scrollListOnly={section === 'slides'}
     create={selectedSlidesPanel}
@@ -299,11 +294,9 @@
   />
 {:else}
   <AdminToastEmitter
-    message={form?.message}
-    type={form && 'success' in form && form.success ? 'success' : 'error'}
-    links={form && 'success' in form && form.success
-      ? { viewPage: resolve('/') }
-      : undefined}
+    message={formMessage}
+    type={formSuccess ? 'success' : 'error'}
+    links={formSuccess ? { viewPage: resolve('/') } : undefined}
   />
 
   {#if homePage}

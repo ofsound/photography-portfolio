@@ -5,7 +5,6 @@ import {
   compileCmsTailwindCss,
   CmsTailwindCompileError,
 } from '$lib/server/cms-tailwind';
-import type { FieldErrors, FormValues } from '$lib/server/form-errors';
 import { RESERVED_SLUGS } from '$lib/server/reserved-slugs';
 import {
   createDefaultSveditPageDocument,
@@ -17,6 +16,8 @@ type PageKind = Database['public']['Enums']['page_kind'];
 type PageEditorMode = Database['public']['Enums']['page_editor_mode'];
 export type PageVisibilityStatus =
   Database['public']['Enums']['page_visibility_status'];
+type FieldErrors = Record<string, string | undefined>;
+type FormValues = Record<string, string>;
 
 type PagePayload = {
   title: string;

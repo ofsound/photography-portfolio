@@ -10,6 +10,7 @@
   import AdminGalleryNav from '$lib/components/admin/AdminGalleryNav.svelte';
   import AdminHeading from '$lib/components/admin/AdminHeading.svelte';
   import AdminToastEmitter from '$lib/components/admin/AdminToastEmitter.svelte';
+  import { useAdminFormState } from '$lib/components/admin/useAdminFormState.svelte';
   import PhotoTaxonomyEditor from '$lib/components/admin/PhotoTaxonomyEditor.svelte';
   import AdminPhotoCard from '$lib/components/admin/photos/AdminPhotoCard.svelte';
   import AdminPhotoCardCompact from '$lib/components/admin/photos/AdminPhotoCardCompact.svelte';
@@ -73,16 +74,6 @@
     maxDensity?: number;
   };
 
-  type PhotosPageForm =
-    | {
-        message?: string;
-        success?: boolean;
-        fieldErrors?: Record<string, string | undefined>;
-        values?: Record<string, string | undefined>;
-      }
-    | null
-    | undefined;
-
   const {
     data,
     form,
@@ -90,10 +81,13 @@
     allRouteBasePath = '/admin/library',
   } = $props<{
     data: PhotosPageData;
-    form?: PhotosPageForm;
+    form?: unknown;
     allScopeLabel?: string;
     allRouteBasePath?: string;
   }>();
+  const { typedForm, message, success } = useAdminFormState<
+    Record<string, string | undefined>
+  >(() => form);
 
   const photos = $derived<AdminPhoto[]>(data.photos);
   const categories = $derived<AdminCategory[]>(data.categories);
@@ -431,10 +425,7 @@
   </AdminHeader>
 {/if}
 
-<AdminToastEmitter
-  message={form?.message}
-  type={form?.success ? 'success' : 'error'}
-/>
+<AdminToastEmitter {message} type={success ? 'success' : 'error'} />
 
 {#if hasVisiblePendingConversions}
   <p class="mt-2 text-xs text-text-muted">
@@ -517,7 +508,7 @@
                     onTogglePhotoSelected={togglePhotoSelected}
                     {onAdditionalReorder}
                     isDraggingPhoto={sortable.isDragging}
-                    formState={form ?? undefined}
+                    formState={typedForm ?? undefined}
                   />
                 </li>
               {:else}
@@ -537,7 +528,7 @@
                     onTogglePhotoSelected={togglePhotoSelected}
                     {onAdditionalReorder}
                     isDraggingPhoto={false}
-                    formState={form ?? undefined}
+                    formState={typedForm ?? undefined}
                   />
                 </li>
               {/if}

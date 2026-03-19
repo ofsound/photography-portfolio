@@ -20,7 +20,7 @@
   import { GALLERY_SETTINGS_DEFAULTS } from '$lib/constants/gallery-settings';
 
   const { data, form } = $props();
-  const { fieldErrors, values } = useAdminFormState<
+  const { fieldErrors, values, message, success } = useAdminFormState<
     Record<string, string | undefined>
   >(() => form);
 
@@ -56,11 +56,11 @@
   currentView="details"
 />
 
-{#if form?.message}
+{#if message}
   <AdminToastEmitter
-    message={form.message}
-    type={form && 'success' in form && form.success ? 'success' : 'error'}
-    links={form && 'success' in form && form.success
+    {message}
+    type={success ? 'success' : 'error'}
+    links={success
       ? { viewGallery: resolve(`/${data.gallery.slug}`) }
       : undefined}
   />

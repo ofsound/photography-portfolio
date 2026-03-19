@@ -1,12 +1,15 @@
 <script lang="ts">
+  import { onMount, untrack } from 'svelte';
   import { page } from '$app/state';
   import { fade } from 'svelte/transition';
 
+  import { useAdminFormState } from '$lib/components/admin/useAdminFormState.svelte';
   import CmsPageView from '$lib/components/CmsPageView.svelte';
   import { resolveSeoOgMeta } from '$lib/utils/seo-meta';
   import { photoPublicUrl, toOgImageUrl } from '$lib/utils/storage-url';
 
   const { data, form } = $props();
+  const { message } = useAdminFormState(() => form);
   const DEFAULT_PAGE_MAX_WIDTH_PX = 1280;
 
   const toPositiveInteger = (value: unknown) => {
@@ -77,12 +80,10 @@
         page.url.searchParams.get('edit') === '1'),
   );
 
-  let bgLoaded = $state(false);
+  let bgLoaded = $state(untrack(() => !data.customPage?.bg_image_url));
 
-  $effect(() => {
-    const bgUrl = data.customPage?.bg_image_url;
-    if (!bgUrl) return;
-    bgLoaded = false;
+  onMount(() => {
+    if (!data.customPage?.bg_image_url) return;
     const timeout = setTimeout(() => {
       bgLoaded = true;
     }, 5000);
@@ -122,12 +123,12 @@
   {/if}
 </svelte:head>
 
-{#if form?.message}
+{#if message}
   <p
     class="mx-auto mt-4 w-full px-5 text-sm text-red-600"
     style={customPageContainerStyle}
   >
-    {form.message}
+    {message}
   </p>
 {/if}
 

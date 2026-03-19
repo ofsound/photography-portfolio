@@ -3,11 +3,13 @@
 
   import CmsPageView from '$lib/components/CmsPageView.svelte';
   import HomeSlideshow from '$lib/components/HomeSlideshow.svelte';
+  import { useAdminFormState } from '$lib/components/admin/useAdminFormState.svelte';
 
   import { resolveSeoOgMeta } from '$lib/utils/seo-meta';
   import { toOgImageUrl } from '$lib/utils/storage-url';
 
   const { data, form } = $props();
+  const { message } = useAdminFormState(() => form);
 
   const heroPage = $derived(data.heroPage);
   const canEditPublicly = $derived(Boolean(data.canEditPublicPages));
@@ -78,8 +80,8 @@
           style={`top: ${heroVerticalAlignmentPct}%`}
         >
           <div class="w-full">
-            {#if form?.message}
-              <p class="mb-4 text-sm text-red-600">{form.message}</p>
+            {#if message}
+              <p class="mb-4 text-sm text-red-600">{message}</p>
             {/if}
 
             <CmsPageView

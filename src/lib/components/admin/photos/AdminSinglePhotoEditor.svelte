@@ -1,5 +1,7 @@
 <script lang="ts">
+  import { untrack } from 'svelte';
   import { invalidateAll } from '$app/navigation';
+  import { useAdminFormState } from '$lib/components/admin/useAdminFormState.svelte';
   import AdminPhotoCard from '$lib/components/admin/photos/AdminPhotoCard.svelte';
   import {
     persistAdditionalOrder,
@@ -24,11 +26,11 @@
       selectedTagIds: string[];
       photoConversionState: 'no-images' | 'pending' | 'ready' | 'mixed';
     };
-    form?: {
-      fieldErrors?: Record<string, string | undefined>;
-      values?: Record<string, string | undefined>;
-    } | null;
+    form?: unknown;
   }>();
+  const { typedForm } = useAdminFormState<Record<string, string | undefined>>(
+    () => form,
+  );
 
   const photo = $derived(data.photo);
   const categories = $derived(data.categories);
@@ -42,18 +44,13 @@
       .filter((image: AdminPhotoImage) => image.kind === 'additional')
       .sort((a: AdminPhotoImage, b: AdminPhotoImage) => a.position - b.position)
       .map((image: AdminPhotoImage) => image.id);
+  const initialCategoryIds = untrack(() => [...serverCategoryIds]);
+  const initialTagIds = untrack(() => [...serverTagIds]);
 
   let selectedPhotoIds = $state<string[]>([]);
-  let orderedAdditional = $state<string[]>([]);
-  let selectedCategoryIds = $state<string[]>([]);
-  let selectedTagIds = $state<string[]>([]);
-
-  $effect(() => {
-    orderedAdditional = baseAdditionalOrder();
-    selectedPhotoIds = [];
-    selectedCategoryIds = serverCategoryIds;
-    selectedTagIds = serverTagIds;
-  });
+  let orderedAdditional = $state<string[]>(baseAdditionalOrder());
+  let selectedCategoryIds = $state<string[]>(initialCategoryIds);
+  let selectedTagIds = $state<string[]>(initialTagIds);
 
   const onTogglePhotoSelected = (photoId: string, checked: boolean) => {
     if (checked) {
@@ -114,6 +111,6 @@
     {onTogglePhotoSelected}
     {onAdditionalReorder}
     editorOnly={true}
-    formState={form ?? undefined}
+    formState={typedForm ?? undefined}
   />
 </section>

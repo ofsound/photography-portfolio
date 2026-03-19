@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { untrack } from 'svelte';
   import { resolve } from '$app/paths';
 
   import CodeEditor from '$lib/components/admin/CodeEditor.svelte';
@@ -29,46 +30,108 @@
   import type { ContentRevision, HomepageImage } from '$lib/types/content';
 
   const { data, form } = $props();
-  const { typedForm, fieldErrors } = useAdminFormState<
-    Record<string, string | undefined>
-  >(() => form);
+  const {
+    typedForm,
+    fieldErrors,
+    message: formMessage,
+    success: formSuccess,
+  } = useAdminFormState<Record<string, string | undefined>>(() => form);
   const page = $derived(data.page);
   const revisions = $derived(data.revisions as ContentRevision[]);
   const images = $derived((data.images as HomepageImage[]) ?? []);
-  const initialPage = () => data.page;
+  const formValues = untrack(() => typedForm?.values ?? {});
+  const initialPage = untrack(() => page);
 
-  let formTitle = $state(initialPage().title);
-  let formSlug = $state(initialPage().slug);
+  let formTitle = $state(
+    typeof formValues.title === 'string' ? formValues.title : initialPage.title,
+  );
+  let formSlug = $state(
+    typeof formValues.slug === 'string' ? formValues.slug : initialPage.slug,
+  );
   let formVisibilityStatus = $state<PageVisibilityStatus>(
-    initialPage().visibility_status,
+    formValues.visibility_status === 'draft' ||
+      formValues.visibility_status === 'public' ||
+      formValues.visibility_status === 'unlisted'
+      ? formValues.visibility_status
+      : initialPage.visibility_status,
   );
-  let formSeoTitle = $state(initialPage().seo_title ?? '');
+  let formSeoTitle = $state(
+    typeof formValues.seo_title === 'string'
+      ? formValues.seo_title
+      : (initialPage.seo_title ?? ''),
+  );
   let formEditorMode = $state<'code' | 'svedit'>(
-    initialPage().editor_mode === 'svedit' ? 'svedit' : 'code',
+    formValues.editor_mode === 'code' || formValues.editor_mode === 'svedit'
+      ? formValues.editor_mode
+      : initialPage.editor_mode === 'svedit'
+        ? 'svedit'
+        : 'code',
   );
-  let formHtmlContent = $state(initialPage().html_content ?? '');
-  let formCssModule = $state(initialPage().css_module ?? '');
+  let formHtmlContent = $state(
+    typeof formValues.html_content === 'string'
+      ? formValues.html_content
+      : (initialPage.html_content ?? ''),
+  );
+  let formCssModule = $state(
+    typeof formValues.css_module === 'string'
+      ? formValues.css_module
+      : (initialPage.css_module ?? ''),
+  );
   let formSveditDoc = $state(
-    initialPage().svedit_doc
-      ? JSON.stringify(initialPage().svedit_doc, null, 2)
-      : '',
+    typeof formValues.svedit_doc === 'string'
+      ? formValues.svedit_doc
+      : initialPage.svedit_doc
+        ? JSON.stringify(initialPage.svedit_doc, null, 2)
+        : '',
   );
-  let formSeoDescription = $state(initialPage().seo_description ?? '');
-  let formOgTitle = $state(initialPage().og_title ?? '');
-  let formOgDescription = $state(initialPage().og_description ?? '');
-  let formOgImagePath = $state(initialPage().og_image_path ?? '');
+  let formSeoDescription = $state(
+    typeof formValues.seo_description === 'string'
+      ? formValues.seo_description
+      : (initialPage.seo_description ?? ''),
+  );
+  let formOgTitle = $state(
+    typeof formValues.og_title === 'string'
+      ? formValues.og_title
+      : (initialPage.og_title ?? ''),
+  );
+  let formOgDescription = $state(
+    typeof formValues.og_description === 'string'
+      ? formValues.og_description
+      : (initialPage.og_description ?? ''),
+  );
+  let formOgImagePath = $state(
+    typeof formValues.og_image_path === 'string'
+      ? formValues.og_image_path
+      : (initialPage.og_image_path ?? ''),
+  );
   let formMaxWidthOverride = $state(
-    initialPage().max_width_override_px != null
-      ? String(initialPage().max_width_override_px)
-      : '',
+    typeof formValues.max_width_override_px === 'string'
+      ? formValues.max_width_override_px
+      : initialPage.max_width_override_px != null
+        ? String(initialPage.max_width_override_px)
+        : '',
   );
   const DEFAULT_PAGE_MAX_WIDTH_PX = 1280;
   const siteDefaultMaxWidth = $derived(
     data.siteSettings?.default_page_max_width_px ?? DEFAULT_PAGE_MAX_WIDTH_PX,
   );
-  let formBgImageId = $state<string | null>(initialPage().bg_image_id ?? null);
+  let formBgImageId = $state<string | null>(
+    typeof formValues.bg_image_id === 'string'
+      ? formValues.bg_image_id.trim() || null
+      : (initialPage.bg_image_id ?? null),
+  );
   let formBgImageFixed = $state<PageBackgroundBehavior>(
-    initialPage().bg_image_fixed ? 'fixed' : 'scroll',
+    formValues.bg_image_fixed === 'on' ||
+      formValues.bg_image_fixed === 'true' ||
+      formValues.bg_image_fixed === 'fixed'
+      ? 'fixed'
+      : formValues.bg_image_fixed === '' ||
+          formValues.bg_image_fixed === 'false' ||
+          formValues.bg_image_fixed === 'scroll'
+        ? 'scroll'
+        : initialPage.bg_image_fixed
+          ? 'fixed'
+          : 'scroll',
   );
   let showBgPicker = $state(false);
   let showRawSveditJson = $state(false);
@@ -78,62 +141,6 @@
       ? (images.find((image) => image.id === formBgImageId) ?? null)
       : null,
   );
-
-  $effect(() => {
-    const values = typedForm?.values;
-    if (!values) return;
-
-    if (typeof values.title === 'string') formTitle = values.title;
-    if (typeof values.slug === 'string') formSlug = values.slug;
-    if (typeof values.seo_title === 'string') formSeoTitle = values.seo_title;
-    if (typeof values.seo_description === 'string') {
-      formSeoDescription = values.seo_description;
-    }
-    if (typeof values.og_title === 'string') {
-      formOgTitle = values.og_title;
-    }
-    if (typeof values.og_description === 'string') {
-      formOgDescription = values.og_description;
-    }
-    if (typeof values.og_image_path === 'string') {
-      formOgImagePath = values.og_image_path;
-    }
-    if (typeof values.max_width_override_px === 'string') {
-      formMaxWidthOverride = values.max_width_override_px;
-    }
-    if (typeof values.bg_image_id === 'string') {
-      formBgImageId = values.bg_image_id.trim() || null;
-    }
-    if (
-      values.bg_image_fixed === 'on' ||
-      values.bg_image_fixed === 'true' ||
-      values.bg_image_fixed === 'fixed'
-    ) {
-      formBgImageFixed = 'fixed';
-    } else if (
-      values.bg_image_fixed === '' ||
-      values.bg_image_fixed === 'false' ||
-      values.bg_image_fixed === 'scroll'
-    ) {
-      formBgImageFixed = 'scroll';
-    }
-    if (typeof values.html_content === 'string')
-      formHtmlContent = values.html_content;
-    if (typeof values.css_module === 'string')
-      formCssModule = values.css_module;
-    if (typeof values.svedit_doc === 'string')
-      formSveditDoc = values.svedit_doc;
-    if (
-      values.visibility_status === 'draft' ||
-      values.visibility_status === 'public' ||
-      values.visibility_status === 'unlisted'
-    ) {
-      formVisibilityStatus = values.visibility_status;
-    }
-    if (values.editor_mode === 'code' || values.editor_mode === 'svedit') {
-      formEditorMode = values.editor_mode;
-    }
-  });
 
   const formatRawSveditJson = () => {
     const value = formSveditDoc.trim();
@@ -169,16 +176,16 @@
 
 {#snippet headerToasts()}
   <AdminToastEmitter
-    message={form?.message ?? data.message}
-    type={form?.success === true
+    message={formMessage ?? data.message}
+    type={formSuccess
       ? 'success'
-      : form?.message
+      : formMessage
         ? 'error'
         : data.messageSuccess
           ? 'success'
           : 'neutral'}
     clearQueryMessage
-    links={form?.success === true || data.messageSuccess
+    links={formSuccess || data.messageSuccess
       ? { viewPage: resolve(`/${page.slug}`) }
       : undefined}
   />

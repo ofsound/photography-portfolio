@@ -10,7 +10,8 @@
     "eslint"
   ],
   "ignoreDependencies": [
-    "@sveltejs/eslint-config"
+    "@sveltejs/eslint-config",
+    "@valibot/to-json-schema"
   ],
   "ignoreIssues": {
     "src/lib/types/database.ts": [

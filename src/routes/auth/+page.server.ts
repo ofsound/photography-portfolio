@@ -23,8 +23,8 @@ export const actions: Actions = {
       return message(
         form,
         form.errors.email?.[0] ??
-        form.errors.password?.[0] ??
-        'Validation failed.',
+          form.errors.password?.[0] ??
+          'Validation failed.',
         { status: 400 },
       );
     }

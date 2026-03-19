@@ -15,8 +15,8 @@
   import { createThemeManager } from '$lib/stores/useTheme.svelte';
   import { createViewTransitions } from '$lib/stores/useViewTransitions.svelte';
   import {
+    computeAdminPublicPath,
     resolveAdminEditorPath,
-    resolveAdminPublicPath,
   } from '$lib/utils/admin-public-paths';
   import {
     buildGalleryPath,
@@ -211,7 +211,7 @@
 
   const adminPublicPath = $derived.by(() => {
     if (!isAdminRoute) return null;
-    return resolveAdminPublicPath(page.url.pathname, currentRouteData);
+    return computeAdminPublicPath(page.url.pathname, currentRouteData);
   });
 
   // --- Header classes ---

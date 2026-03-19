@@ -50,7 +50,7 @@ export function resolveAdminEditorPath(
 
 type PageData = Record<string, unknown> | null;
 
-export function resolveAdminPublicPath(
+export function computeAdminPublicPath(
   pathname: string,
   pageData: PageData,
 ): string | null {

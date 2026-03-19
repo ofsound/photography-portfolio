@@ -1,5 +1,4 @@
 <script lang="ts">
-  /* eslint-disable svelte/no-navigation-without-resolve -- external/fragment use raw href; internal use resolve(href) */
   import { resolve } from '$app/paths';
 
   import {
@@ -38,10 +37,20 @@
   const isLabel = $derived(as === 'label');
   const isLink = $derived(Boolean(href) || as === 'a');
   const isSelectedTab = $derived(isLink && selected === true);
+  const isExternalHref = $derived(
+    href != null &&
+      (href.startsWith('http') ||
+        href.startsWith('//') ||
+        href.startsWith('mailto:')),
+  );
+  const isFragmentHref = $derived(href != null && href.startsWith('#'));
+  const isResolvedLink = $derived(
+    isLink && href != null && !isExternalHref && !isFragmentHref,
+  );
 
   const classes = $derived(
     [
-      variant === 'link' ? '' : sizeClasses[size as Size],
+      sizeClasses[size as Size],
       variantClasses[variant as Variant],
       variant === 'default' && selected === true
         ? 'bg-border hover:!border-admin-btn-border hover:!bg-border active:!border-admin-btn-border active:!bg-border'
@@ -69,19 +78,34 @@
   <span role="tab" aria-selected="true" {...commonAttrs} {...restProps}
     >{@render children?.()}</span
   >
-{:else if isLink}
+{:else if isResolvedLink}
   <a
-    href={href == null
-      ? '#'
-      : href.startsWith('http') ||
-          href.startsWith('//') ||
-          href.startsWith('mailto:')
-        ? href
-        : resolve(href)}
+    href={resolve(href as `/${string}`)}
     {...commonAttrs}
     aria-disabled={disabled}
     {onclick}
     {...restProps}>{@render children?.()}</a
+  >
+{:else if isExternalHref}
+  <a
+    {href}
+    rel="external"
+    {...commonAttrs}
+    aria-disabled={disabled}
+    {onclick}
+    {...restProps}>{@render children?.()}</a
+  >
+{:else if isFragmentHref}
+  <a
+    href={`#${(href as string).slice(1)}`}
+    {...commonAttrs}
+    aria-disabled={disabled}
+    {onclick}
+    {...restProps}>{@render children?.()}</a
+  >
+{:else if isLink}
+  <a {...commonAttrs} aria-disabled={disabled} {onclick} {...restProps}
+    >{@render children?.()}</a
   >
 {:else}
   <button {type} {disabled} {...commonAttrs} {onclick} {...restProps}

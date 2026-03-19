@@ -1,297 +1,276 @@
-import { fail, redirect, type Actions } from '@sveltejs/kit';
-import { asOptionalDate, asString, toSlug } from '$lib/server/admin-helpers';
+import { redirect, type Actions } from '@sveltejs/kit';
+import { superValidate, message } from 'sveltekit-superforms';
+import { zod4 } from 'sveltekit-superforms/adapters';
+
+import { toSlug } from '$lib/server/admin-helpers';
 import {
-  failForm,
-  type FieldErrors,
-  type FormValues,
-} from '$lib/server/form-errors';
+	photoCreateSchema,
+	photoUpdateSchema,
+	photoStatusSchema,
+} from '$lib/schemas/photo';
 
 type MinimalDraftSeed = {
-  title?: string;
-  slug?: string;
-  galleryId?: string;
+	title?: string;
+	slug?: string;
+	galleryId?: string;
 };
 
 const draftStatusMigrationHint =
-  'Database schema is missing draft photo status. Apply migration 20260302_photo_draft_status.sql and retry.';
+	'Database schema is missing draft photo status. Apply migration 20260302_photo_draft_status.sql and retry.';
 
 const normalizeDraftStatusErrorMessage = (message: string) =>
-  message.includes('invalid input value for enum publish_status') &&
-  message.includes('"draft"')
-    ? draftStatusMigrationHint
-    : message;
+	message.includes('invalid input value for enum publish_status') &&
+		message.includes('"draft"')
+		? draftStatusMigrationHint
+		: message;
 
-/** Creates a minimal photo row for draft (e.g. on first upload). Returns the new id or throws. */
 export async function createMinimalDraftPhoto(
-  locals: App.Locals,
-  seed: MinimalDraftSeed = {},
+	locals: App.Locals,
+	seed: MinimalDraftSeed = {},
 ): Promise<{ id: string }> {
-  if (!seed.galleryId) {
-    throw new Error('Missing gallery scope for draft creation.');
-  }
-  const galleryId = seed.galleryId;
+	if (!seed.galleryId) {
+		throw new Error('Missing gallery scope for draft creation.');
+	}
+	const galleryId = seed.galleryId;
 
-  const fallbackTitle = 'New Photo';
-  const title = seed.title?.trim() || fallbackTitle;
-  const slugBase = toSlug(seed.slug?.trim() || title, 'photo');
-  const makeSlug = (withSuffix: boolean) =>
-    withSuffix
-      ? `${slugBase}-${Math.random().toString(36).slice(2, 8)}`
-      : slugBase;
+	const fallbackTitle = 'New Photo';
+	const title = seed.title?.trim() || fallbackTitle;
+	const slugBase = toSlug(seed.slug?.trim() || title, 'photo');
+	const makeSlug = (withSuffix: boolean) =>
+		withSuffix
+			? `${slugBase}-${Math.random().toString(36).slice(2, 8)}`
+			: slugBase;
 
-  const insertDraft = async (slug: string) =>
-    locals.supabase
-      .from('photos')
-      .insert({
-        gallery_id: galleryId,
-        title,
-        slug,
-        capture_date: null,
-        description: null,
-        dimensions: null,
-        license_text: null,
-        seo_title: null,
-        seo_description: null,
-        og_title: null,
-        og_description: null,
-        og_image_path: null,
-        status: 'draft',
-        deleted_at: null,
-      })
-      .select('id')
-      .single();
+	const insertDraft = async (slug: string) =>
+		locals.supabase
+			.from('photos')
+			.insert({
+				gallery_id: galleryId,
+				title,
+				slug,
+				capture_date: null,
+				description: null,
+				dimensions: null,
+				license_text: null,
+				seo_title: null,
+				seo_description: null,
+				og_title: null,
+				og_description: null,
+				og_image_path: null,
+				status: 'draft',
+				deleted_at: null,
+			})
+			.select('id')
+			.single();
 
-  let insertResult = await insertDraft(makeSlug(false));
+	let insertResult = await insertDraft(makeSlug(false));
 
-  // Retry once with a randomized suffix to avoid slug collisions for common titles.
-  if (insertResult.error?.code === '23505') {
-    insertResult = await insertDraft(makeSlug(true));
-  }
+	if (insertResult.error?.code === '23505') {
+		insertResult = await insertDraft(makeSlug(true));
+	}
 
-  if (insertResult.error || !insertResult.data) {
-    throw new Error(
-      normalizeDraftStatusErrorMessage(
-        insertResult.error?.message ?? 'Failed to create draft photo.',
-      ),
-    );
-  }
-  return { id: insertResult.data.id };
+	if (insertResult.error || !insertResult.data) {
+		throw new Error(
+			normalizeDraftStatusErrorMessage(
+				insertResult.error?.message ?? 'Failed to create draft photo.',
+			),
+		);
+	}
+	return { id: insertResult.data.id };
 }
 
 type PhotoPayload = {
-  title: string;
-  slug: string;
-  capture_date: string | null;
-  description: string | null;
-  dimensions: string | null;
-  license_text: string | null;
-  seo_title: string | null;
-  seo_description: string | null;
-  og_title: string | null;
-  og_description: string | null;
-  og_image_path: string | null;
+	title: string;
+	slug: string;
+	capture_date: string | null;
+	description: string | null;
+	dimensions: string | null;
+	license_text: string | null;
+	seo_title: string | null;
+	seo_description: string | null;
+	og_title: string | null;
+	og_description: string | null;
+	og_image_path: string | null;
 };
 
-const upsertPhotoPayload = (
-  form: FormData,
-):
-  | { ok: true; payload: PhotoPayload }
-  | {
-      ok: false;
-      message: string;
-      fieldErrors?: FieldErrors;
-      values?: FormValues;
-    } => {
-  const title = asString(form.get('title')).trim();
-  const slugInput = asString(form.get('slug')).trim();
-  const values: FormValues = {
-    title,
-    slug: slugInput,
-    capture_date: asString(form.get('capture_date')).trim(),
-    description: asString(form.get('description')).trim(),
-    dimensions: asString(form.get('dimensions')).trim(),
-    license_text: asString(form.get('license_text')).trim(),
-    seo_title: asString(form.get('seo_title')).trim(),
-    seo_description: asString(form.get('seo_description')).trim(),
-    og_title: asString(form.get('og_title')).trim(),
-    og_description: asString(form.get('og_description')).trim(),
-    og_image_path: asString(form.get('og_image_path')).trim(),
-  };
-
-  if (!title) {
-    return {
-      ok: false,
-      message: 'Title is required.',
-      fieldErrors: { title: 'Title is required.' },
-      values,
-    };
-  }
-
-  return {
-    ok: true,
-    payload: {
-      title,
-      slug: toSlug(slugInput || title, 'photo'),
-      capture_date: asOptionalDate(form.get('capture_date')),
-      description: asString(form.get('description')).trim() || null,
-      dimensions: asString(form.get('dimensions')).trim() || null,
-      license_text: asString(form.get('license_text')).trim() || null,
-      seo_title: asString(form.get('seo_title')).trim() || null,
-      seo_description: asString(form.get('seo_description')).trim() || null,
-      og_title: asString(form.get('og_title')).trim() || null,
-      og_description: asString(form.get('og_description')).trim() || null,
-      og_image_path: asString(form.get('og_image_path')).trim() || null,
-    },
-  };
-};
+const buildPhotoPayload = (data: {
+	title: string;
+	slug: string;
+	capture_date: string;
+	description: string;
+	dimensions: string;
+	license_text: string;
+	seo_title: string;
+	seo_description: string;
+	og_title: string;
+	og_description: string;
+	og_image_path: string;
+}): PhotoPayload => ({
+	title: data.title,
+	slug: toSlug(data.slug || data.title, 'photo'),
+	capture_date: data.capture_date || null,
+	description: data.description || null,
+	dimensions: data.dimensions || null,
+	license_text: data.license_text || null,
+	seo_title: data.seo_title || null,
+	seo_description: data.seo_description || null,
+	og_title: data.og_title || null,
+	og_description: data.og_description || null,
+	og_image_path: data.og_image_path || null,
+});
 
 export const photoCoreActions: Actions = {
-  create: async ({ locals, request }) => {
-    const form = await request.formData();
-    const galleryId = asString(form.get('gallery_id')).trim();
-    if (!galleryId) {
-      return fail(400, { message: 'Missing gallery scope.' });
-    }
-    const result = upsertPhotoPayload(form);
+	create: async ({ locals, request }) => {
+		const form = await superValidate(request, zod4(photoCreateSchema));
+		if (!form.valid) {
+			const firstError =
+				form.errors.gallery_id?.[0] ??
+				form.errors.title?.[0] ??
+				'Validation failed.';
+			return message(form, firstError, { status: 400 });
+		}
 
-    if (!result.ok) {
-      return failForm(result.message, {
-        fieldErrors: result.fieldErrors,
-        values: result.values,
-      });
-    }
+		const payload = buildPhotoPayload(form.data);
 
-    const { error } = await locals.supabase.from('photos').insert({
-      gallery_id: galleryId,
-      ...result.payload,
-      status: 'draft',
-      deleted_at: null,
-    });
+		const { error } = await locals.supabase.from('photos').insert({
+			gallery_id: form.data.gallery_id,
+			...payload,
+			status: 'draft',
+			deleted_at: null,
+		});
 
-    if (error)
-      return fail(400, {
-        message: normalizeDraftStatusErrorMessage(error.message),
-      });
-    return { success: true, message: 'Draft created.' };
-  },
+		if (error)
+			return message(form, normalizeDraftStatusErrorMessage(error.message), {
+				status: 400,
+			});
+		return message(form, 'Draft created.');
+	},
 
-  update: async ({ locals, params, request }) => {
-    const form = await request.formData();
-    const id = asString(form.get('id'));
-    const galleryId = asString(form.get('gallery_id'));
-    if (!id) return fail(400, { message: 'Missing photo id.' });
+	update: async ({ locals, params, request }) => {
+		const form = await superValidate(request, zod4(photoUpdateSchema));
+		if (!form.valid) {
+			const firstError =
+				form.errors.id?.[0] ?? form.errors.title?.[0] ?? 'Validation failed.';
+			return message(form, firstError, { status: 400 });
+		}
 
-    const result = upsertPhotoPayload(form);
-    if (!result.ok) {
-      return failForm(result.message, {
-        fieldErrors: result.fieldErrors,
-        values: result.values
-          ? {
-              ...result.values,
-              id,
-            }
-          : { id },
-      });
-    }
+		const { id, gallery_id: galleryId, redirect_to_gallery } = form.data;
+		const payload = buildPhotoPayload(form.data);
 
-    let query = locals.supabase
-      .from('photos')
-      .update({ ...result.payload, updated_at: new Date().toISOString() })
-      .eq('id', id);
-    if (galleryId) query = query.eq('gallery_id', galleryId);
-    const { error } = await query;
+		let query = locals.supabase
+			.from('photos')
+			.update({ ...payload, updated_at: new Date().toISOString() })
+			.eq('id', id);
+		if (galleryId) query = query.eq('gallery_id', galleryId);
+		const { error } = await query;
 
-    if (error) return fail(400, { message: error.message });
-    if (form.get('redirect_to_gallery') === '1' && params?.gallerySlug) {
-      throw redirect(303, `/admin/${params.gallerySlug}/photos`);
-    }
-    return { success: true, message: 'Photo updated.' };
-  },
+		if (error) return message(form, error.message, { status: 400 });
+		if (redirect_to_gallery === '1' && params?.gallerySlug) {
+			throw redirect(303, `/admin/${params.gallerySlug}/photos`);
+		}
+		return message(form, 'Photo updated.');
+	},
 
-  archive: async ({ locals, params, request }) => {
-    const form = await request.formData();
-    const id = asString(form.get('id'));
-    const galleryId = asString(form.get('gallery_id'));
-    let query = locals.supabase
-      .from('photos')
-      .update({ status: 'archived', deleted_at: new Date().toISOString() })
-      .eq('id', id);
-    if (galleryId) query = query.eq('gallery_id', galleryId);
-    const { error } = await query;
+	archive: async ({ locals, params, request }) => {
+		const form = await superValidate(request, zod4(photoStatusSchema));
+		if (!form.valid) {
+			return message(form, 'Missing photo id.', { status: 400 });
+		}
 
-    if (error) return fail(400, { message: error.message });
-    if (params?.gallerySlug) {
-      throw redirect(303, `/admin/${params.gallerySlug}/photos`);
-    }
-    return { success: true, message: 'Photo archived.' };
-  },
+		const { id, gallery_id: galleryId } = form.data;
+		let query = locals.supabase
+			.from('photos')
+			.update({
+				status: 'archived',
+				deleted_at: new Date().toISOString(),
+			})
+			.eq('id', id);
+		if (galleryId) query = query.eq('gallery_id', galleryId);
+		const { error } = await query;
 
-  publish: async ({ locals, request }) => {
-    const form = await request.formData();
-    const id = asString(form.get('id'));
-    const galleryId = asString(form.get('gallery_id'));
-    if (!id) return fail(400, { message: 'Missing photo id.' });
+		if (error) return message(form, error.message, { status: 400 });
+		if (params?.gallerySlug) {
+			throw redirect(303, `/admin/${params.gallerySlug}/photos`);
+		}
+		return message(form, 'Photo archived.');
+	},
 
-    let photoQuery = locals.supabase
-      .from('photos')
-      .select('id, title, status, deleted_at')
-      .eq('id', id);
-    if (galleryId) photoQuery = photoQuery.eq('gallery_id', galleryId);
-    const { data: photo, error: photoError } = await photoQuery.maybeSingle();
-    if (photoError) return fail(400, { message: photoError.message });
-    if (!photo) return fail(404, { message: 'Photo not found.' });
-    if (photo.status === 'archived' || photo.deleted_at) {
-      return fail(400, {
-        message: 'Restore this photo to draft before publishing.',
-      });
-    }
-    if (!photo.title.trim())
-      return fail(400, { message: 'Title is required before publishing.' });
+	publish: async ({ locals, request }) => {
+		const form = await superValidate(request, zod4(photoStatusSchema));
+		if (!form.valid) {
+			return message(form, 'Missing photo id.', { status: 400 });
+		}
 
-    const { data: lead, error: leadError } = await locals.supabase
-      .from('photo_images')
-      .select('id, delivery_storage_path')
-      .eq('photo_id', id)
-      .eq('kind', 'lead')
-      .maybeSingle();
+		const { id, gallery_id: galleryId } = form.data;
 
-    if (leadError) return fail(400, { message: leadError.message });
-    if (!lead)
-      return fail(400, { message: 'Set a lead image before publishing.' });
-    if (!lead.delivery_storage_path) {
-      return fail(400, {
-        message:
-          'Lead image is still processing. Wait until conversion finishes.',
-      });
-    }
+		let photoQuery = locals.supabase
+			.from('photos')
+			.select('id, title, status, deleted_at')
+			.eq('id', id);
+		if (galleryId) photoQuery = photoQuery.eq('gallery_id', galleryId);
+		const { data: photo, error: photoError } = await photoQuery.maybeSingle();
+		if (photoError) return message(form, photoError.message, { status: 400 });
+		if (!photo) return message(form, 'Photo not found.', { status: 404 });
+		if (photo.status === 'archived' || photo.deleted_at) {
+			return message(form, 'Restore this photo to draft before publishing.', {
+				status: 400,
+			});
+		}
+		if (!photo.title.trim())
+			return message(form, 'Title is required before publishing.', {
+				status: 400,
+			});
 
-    let updateQuery = locals.supabase
-      .from('photos')
-      .update({
-        status: 'published',
-        deleted_at: null,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', id);
-    if (galleryId) updateQuery = updateQuery.eq('gallery_id', galleryId);
-    const { error } = await updateQuery;
+		const { data: lead, error: leadError } = await locals.supabase
+			.from('photo_images')
+			.select('id, delivery_storage_path')
+			.eq('photo_id', id)
+			.eq('kind', 'lead')
+			.maybeSingle();
 
-    if (error) return fail(400, { message: error.message });
-    return { success: true, message: 'Photo published.' };
-  },
+		if (leadError) return message(form, leadError.message, { status: 400 });
+		if (!lead)
+			return message(form, 'Set a lead image before publishing.', {
+				status: 400,
+			});
+		if (!lead.delivery_storage_path) {
+			return message(
+				form,
+				'Lead image is still processing. Wait until conversion finishes.',
+				{ status: 400 },
+			);
+		}
 
-  restore: async ({ locals, request }) => {
-    const form = await request.formData();
-    const id = asString(form.get('id'));
-    const galleryId = asString(form.get('gallery_id'));
-    let query = locals.supabase
-      .from('photos')
-      .update({ status: 'draft', deleted_at: null })
-      .eq('id', id);
-    if (galleryId) query = query.eq('gallery_id', galleryId);
-    const { error } = await query;
+		let updateQuery = locals.supabase
+			.from('photos')
+			.update({
+				status: 'published',
+				deleted_at: null,
+				updated_at: new Date().toISOString(),
+			})
+			.eq('id', id);
+		if (galleryId) updateQuery = updateQuery.eq('gallery_id', galleryId);
+		const { error } = await updateQuery;
 
-    if (error) return fail(400, { message: error.message });
-    return { success: true, message: 'Photo restored to draft.' };
-  },
+		if (error) return message(form, error.message, { status: 400 });
+		return message(form, 'Photo published.');
+	},
+
+	restore: async ({ locals, request }) => {
+		const form = await superValidate(request, zod4(photoStatusSchema));
+		if (!form.valid) {
+			return message(form, 'Missing photo id.', { status: 400 });
+		}
+
+		const { id, gallery_id: galleryId } = form.data;
+		let query = locals.supabase
+			.from('photos')
+			.update({ status: 'draft', deleted_at: null })
+			.eq('id', id);
+		if (galleryId) query = query.eq('gallery_id', galleryId);
+		const { error } = await query;
+
+		if (error) return message(form, error.message, { status: 400 });
+		return message(form, 'Photo restored to draft.');
+	},
 };

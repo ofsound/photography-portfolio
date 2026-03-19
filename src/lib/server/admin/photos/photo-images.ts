@@ -1,349 +1,394 @@
 import { fail, type Actions } from '@sveltejs/kit';
+import { superValidate, message } from 'sveltekit-superforms';
+import { zod4 } from 'sveltekit-superforms/adapters';
+
 import {
-  allowedUploadMimes,
-  asOptionalNumber,
-  asString,
-  mimeToExtension,
-  parseUuidList,
-  storageSourcePath,
+	allowedUploadMimes,
+	mimeToExtension,
+	parseUuidList,
+	storageSourcePath,
 } from '$lib/server/admin-helpers';
 import { loadGalleryCropConfigByGalleryId } from '$lib/server/admin/photos/gallery-crop-config';
 import { normalizePhotoImagePositions } from '$lib/server/admin/photos/shared';
+import {
+	reorderAdditionalImagesSchema,
+	setLeadSchema,
+	removeImageSchema,
+	saveThumbCropSchema,
+	clearThumbCropSchema,
+} from '$lib/schemas/photo';
 
 export async function uploadImageWithForm(
-  locals: App.Locals,
-  form: FormData,
+	locals: App.Locals,
+	form: FormData,
 ): Promise<{ success: true; message: string } | ReturnType<typeof fail>> {
-  const photoId = asString(form.get('photo_id'));
-  const galleryId = asString(form.get('gallery_id'));
-  const kind = asString(form.get('kind'), 'additional') as
-    | 'lead'
-    | 'additional';
-  const altText = asString(form.get('alt_text')).trim() || undefined;
-  const imageFile = form.get('image_file');
+	const photoId = String(form.get('photo_id') ?? '');
+	const galleryId = String(form.get('gallery_id') ?? '');
+	const kind = (String(form.get('kind') ?? '') || 'additional') as
+		| 'lead'
+		| 'additional';
+	const altText = String(form.get('alt_text') ?? '').trim() || undefined;
+	const imageFile = form.get('image_file');
 
-  if (!photoId) return fail(400, { message: 'Missing photo id.' });
-  if (galleryId) {
-    const guard = await locals.supabase
-      .from('photos')
-      .select('id')
-      .eq('id', photoId)
-      .eq('gallery_id', galleryId)
-      .maybeSingle();
-    if (guard.error) return fail(400, { message: guard.error.message });
-    if (!guard.data)
-      return fail(404, { message: 'Photo not found in this gallery.' });
-  }
-  if (!(imageFile instanceof File) || !imageFile.size) {
-    return fail(400, { message: 'Select an image file.' });
-  }
+	if (!photoId) return fail(400, { message: 'Missing photo id.' });
+	if (galleryId) {
+		const guard = await locals.supabase
+			.from('photos')
+			.select('id')
+			.eq('id', photoId)
+			.eq('gallery_id', galleryId)
+			.maybeSingle();
+		if (guard.error) return fail(400, { message: guard.error.message });
+		if (!guard.data)
+			return fail(404, { message: 'Photo not found in this gallery.' });
+	}
+	if (!(imageFile instanceof File) || !imageFile.size) {
+		return fail(400, { message: 'Select an image file.' });
+	}
 
-  const mimeType = imageFile.type || 'image/jpeg';
-  if (!allowedUploadMimes.has(mimeType)) {
-    return fail(400, { message: `Unsupported image type: ${mimeType}` });
-  }
+	const mimeType = imageFile.type || 'image/jpeg';
+	if (!allowedUploadMimes.has(mimeType)) {
+		return fail(400, { message: `Unsupported image type: ${mimeType}` });
+	}
 
-  const ext = mimeToExtension(mimeType);
-  const filename = imageFile.name?.includes('.')
-    ? imageFile.name
-    : `upload.${ext}`;
-  const sourcePath = storageSourcePath(photoId, filename);
+	const ext = mimeToExtension(mimeType);
+	const filename = imageFile.name?.includes('.')
+		? imageFile.name
+		: `upload.${ext}`;
+	const sourcePath = storageSourcePath(photoId, filename);
 
-  const { data: lastImage } = await locals.supabase
-    .from('photo_images')
-    .select('position')
-    .eq('photo_id', photoId)
-    .order('position', { ascending: false })
-    .limit(1)
-    .maybeSingle();
+	const { data: lastImage } = await locals.supabase
+		.from('photo_images')
+		.select('position')
+		.eq('photo_id', photoId)
+		.order('position', { ascending: false })
+		.limit(1)
+		.maybeSingle();
 
-  const nextPosition = (lastImage?.position ?? -1) + 1;
+	const nextPosition = (lastImage?.position ?? -1) + 1;
 
-  const { error: uploadError } = await locals.supabase.storage
-    .from('photos')
-    .upload(sourcePath, imageFile, {
-      contentType: mimeType,
-      upsert: false,
-    });
+	const { error: uploadError } = await locals.supabase.storage
+		.from('photos')
+		.upload(sourcePath, imageFile, {
+			contentType: mimeType,
+			upsert: false,
+		});
 
-  if (uploadError) {
-    return fail(400, { message: uploadError.message });
-  }
+	if (uploadError) {
+		return fail(400, { message: uploadError.message });
+	}
 
-  const { error: rowError } = await locals.supabase.rpc('insert_photo_image', {
-    p_photo_id: photoId,
-    p_source_path: sourcePath,
-    p_source_mime: mimeType,
-    p_source_bytes: imageFile.size,
-    p_kind: kind,
-    p_position: nextPosition,
-    p_alt_text: altText,
-  });
+	const { error: rowError } = await locals.supabase.rpc('insert_photo_image', {
+		p_photo_id: photoId,
+		p_source_path: sourcePath,
+		p_source_mime: mimeType,
+		p_source_bytes: imageFile.size,
+		p_kind: kind,
+		p_position: nextPosition,
+		p_alt_text: altText,
+	});
 
-  if (rowError) {
-    await locals.supabase.storage.from('photos').remove([sourcePath]);
-    return fail(400, { message: rowError.message });
-  }
+	if (rowError) {
+		await locals.supabase.storage.from('photos').remove([sourcePath]);
+		return fail(400, { message: rowError.message });
+	}
 
-  return {
-    success: true,
-    message: 'Image uploaded. Conversion runs asynchronously.',
-  };
+	return {
+		success: true,
+		message: 'Image uploaded. Conversion runs asynchronously.',
+	};
 }
 
 export const photoImageActions: Actions = {
-  reorderAdditionalImages: async ({ locals, request }) => {
-    const form = await request.formData();
-    const photoId = asString(form.get('photo_id'));
-    const galleryId = asString(form.get('gallery_id'));
-    const orderedImageIds = parseUuidList(
-      asString(form.get('ordered_image_ids')),
-    );
+	reorderAdditionalImages: async ({ locals, request }) => {
+		const form = await superValidate(
+			request,
+			zod4(reorderAdditionalImagesSchema),
+		);
+		if (!form.valid) {
+			return message(form, 'Missing photo id.', { status: 400 });
+		}
 
-    if (!photoId) return fail(400, { message: 'Missing photo id.' });
-    if (galleryId) {
-      const guard = await locals.supabase
-        .from('photos')
-        .select('id')
-        .eq('id', photoId)
-        .eq('gallery_id', galleryId)
-        .maybeSingle();
-      if (guard.error) return fail(400, { message: guard.error.message });
-      if (!guard.data)
-        return fail(404, { message: 'Photo not found in this gallery.' });
-    }
+		const { photo_id: photoId, gallery_id: galleryId } = form.data;
+		const orderedImageIds = parseUuidList(form.data.ordered_image_ids);
 
-    const { error } = await locals.supabase.rpc('reorder_additional_images', {
-      p_photo_id: photoId,
-      p_ordered_image_ids: orderedImageIds,
-    });
-    if (error) return fail(400, { message: error.message });
+		if (galleryId) {
+			const guard = await locals.supabase
+				.from('photos')
+				.select('id')
+				.eq('id', photoId)
+				.eq('gallery_id', galleryId)
+				.maybeSingle();
+			if (guard.error) return fail(400, { message: guard.error.message });
+			if (!guard.data)
+				return fail(404, {
+					message: 'Photo not found in this gallery.',
+				});
+		}
 
-    return { success: true, message: 'Additional image order saved.' };
-  },
+		const { error } = await locals.supabase.rpc('reorder_additional_images', {
+			p_photo_id: photoId,
+			p_ordered_image_ids: orderedImageIds,
+		});
+		if (error) return fail(400, { message: error.message });
 
-  uploadImage: async ({ locals, request }) => {
-    const form = await request.formData();
-    return uploadImageWithForm(locals, form);
-  },
+		return { success: true, message: 'Additional image order saved.' };
+	},
 
-  setLead: async ({ locals, request }) => {
-    const form = await request.formData();
-    const photoId = asString(form.get('photo_id'));
-    const imageId = asString(form.get('image_id'));
-    const galleryId = asString(form.get('gallery_id'));
+	uploadImage: async ({ locals, request }) => {
+		const form = await request.formData();
+		return uploadImageWithForm(locals, form);
+	},
 
-    if (!photoId || !imageId)
-      return fail(400, { message: 'Missing image or photo id.' });
-    if (galleryId) {
-      const guard = await locals.supabase
-        .from('photos')
-        .select('id')
-        .eq('id', photoId)
-        .eq('gallery_id', galleryId)
-        .maybeSingle();
-      if (guard.error) return fail(400, { message: guard.error.message });
-      if (!guard.data)
-        return fail(404, { message: 'Photo not found in this gallery.' });
-    }
+	setLead: async ({ locals, request }) => {
+		const form = await superValidate(request, zod4(setLeadSchema));
+		if (!form.valid) {
+			return message(form, 'Missing image or photo id.', { status: 400 });
+		}
 
-    const { error } = await locals.supabase.rpc('set_lead_image', {
-      p_photo_id: photoId,
-      p_image_id: imageId,
-    });
+		const {
+			photo_id: photoId,
+			image_id: imageId,
+			gallery_id: galleryId,
+		} = form.data;
 
-    if (error) return fail(400, { message: error.message });
+		if (galleryId) {
+			const guard = await locals.supabase
+				.from('photos')
+				.select('id')
+				.eq('id', photoId)
+				.eq('gallery_id', galleryId)
+				.maybeSingle();
+			if (guard.error) return fail(400, { message: guard.error.message });
+			if (!guard.data)
+				return fail(404, {
+					message: 'Photo not found in this gallery.',
+				});
+		}
 
-    return { success: true, message: 'Lead image updated.' };
-  },
+		const { error } = await locals.supabase.rpc('set_lead_image', {
+			p_photo_id: photoId,
+			p_image_id: imageId,
+		});
 
-  removeImage: async ({ locals, request }) => {
-    const form = await request.formData();
-    const imageId = asString(form.get('image_id'));
-    const galleryId = asString(form.get('gallery_id'));
+		if (error) return fail(400, { message: error.message });
 
-    const { data: image, error: imageError } = await locals.supabase
-      .from('photo_images')
-      .select('id, photo_id, kind, source_storage_path, delivery_storage_path')
-      .eq('id', imageId)
-      .maybeSingle();
+		return { success: true, message: 'Lead image updated.' };
+	},
 
-    if (imageError || !image) return fail(404, { message: 'Image not found.' });
-    if (galleryId) {
-      const guard = await locals.supabase
-        .from('photos')
-        .select('id')
-        .eq('id', image.photo_id)
-        .eq('gallery_id', galleryId)
-        .maybeSingle();
-      if (guard.error) return fail(400, { message: guard.error.message });
-      if (!guard.data)
-        return fail(404, { message: 'Photo not found in this gallery.' });
-    }
+	removeImage: async ({ locals, request }) => {
+		const form = await superValidate(request, zod4(removeImageSchema));
+		if (!form.valid) {
+			return message(form, 'Missing image id.', { status: 400 });
+		}
 
-    const { error: deleteError } = await locals.supabase
-      .from('photo_images')
-      .delete()
-      .eq('id', imageId);
-    if (deleteError) return fail(400, { message: deleteError.message });
+		const { image_id: imageId, gallery_id: galleryId } = form.data;
 
-    const pathsToRemove = [
-      image.source_storage_path,
-      image.delivery_storage_path,
-    ].filter(Boolean) as string[];
-    if (pathsToRemove.length) {
-      await locals.supabase.storage.from('photos').remove(pathsToRemove);
-    }
+		const { data: image, error: imageError } = await locals.supabase
+			.from('photo_images')
+			.select('id, photo_id, kind, source_storage_path, delivery_storage_path')
+			.eq('id', imageId)
+			.maybeSingle();
 
-    if (image.kind === 'lead') {
-      const { data: replacement } = await locals.supabase
-        .from('photo_images')
-        .select('id')
-        .eq('photo_id', image.photo_id)
-        .order('position', { ascending: true })
-        .limit(1)
-        .maybeSingle();
+		if (imageError || !image) return fail(404, { message: 'Image not found.' });
+		if (galleryId) {
+			const guard = await locals.supabase
+				.from('photos')
+				.select('id')
+				.eq('id', image.photo_id)
+				.eq('gallery_id', galleryId)
+				.maybeSingle();
+			if (guard.error) return fail(400, { message: guard.error.message });
+			if (!guard.data)
+				return fail(404, {
+					message: 'Photo not found in this gallery.',
+				});
+		}
 
-      if (replacement) {
-        await locals.supabase
-          .from('photo_images')
-          .update({ kind: 'lead' })
-          .eq('id', replacement.id);
-      }
-    }
+		const { error: deleteError } = await locals.supabase
+			.from('photo_images')
+			.delete()
+			.eq('id', imageId);
+		if (deleteError) return fail(400, { message: deleteError.message });
 
-    const normalizeResult = await normalizePhotoImagePositions(
-      locals,
-      image.photo_id,
-    );
-    if (!normalizeResult.ok) {
-      return fail(400, { message: normalizeResult.message });
-    }
+		const pathsToRemove = [
+			image.source_storage_path,
+			image.delivery_storage_path,
+		].filter(Boolean) as string[];
+		if (pathsToRemove.length) {
+			await locals.supabase.storage.from('photos').remove(pathsToRemove);
+		}
 
-    return { success: true, message: 'Image removed.' };
-  },
+		if (image.kind === 'lead') {
+			const { data: replacement } = await locals.supabase
+				.from('photo_images')
+				.select('id')
+				.eq('photo_id', image.photo_id)
+				.order('position', { ascending: true })
+				.limit(1)
+				.maybeSingle();
 
-  saveThumbCrop: async ({ locals, request }) => {
-    const form = await request.formData();
-    const photoId = asString(form.get('photo_id'));
-    const imageId = asString(form.get('image_id'));
-    const galleryId = asString(form.get('gallery_id'));
-    const cropX = asOptionalNumber(form.get('thumb_crop_x'));
-    const cropY = asOptionalNumber(form.get('thumb_crop_y'));
-    const cropZoom = asOptionalNumber(form.get('thumb_crop_zoom'));
+			if (replacement) {
+				await locals.supabase
+					.from('photo_images')
+					.update({ kind: 'lead' })
+					.eq('id', replacement.id);
+			}
+		}
 
-    if (!photoId || !imageId)
-      return fail(400, { message: 'Missing photo or image id.' });
+		const normalizeResult = await normalizePhotoImagePositions(
+			locals,
+			image.photo_id,
+		);
+		if (!normalizeResult.ok) {
+			return fail(400, { message: normalizeResult.message });
+		}
 
-    let targetGalleryId: string;
-    if (galleryId) {
-      const guard = await locals.supabase
-        .from('photos')
-        .select('id, gallery_id')
-        .eq('id', photoId)
-        .eq('gallery_id', galleryId)
-        .maybeSingle();
-      if (guard.error) return fail(400, { message: guard.error.message });
-      if (!guard.data)
-        return fail(404, { message: 'Photo not found in this gallery.' });
-      targetGalleryId = guard.data.gallery_id ?? galleryId;
-    } else {
-      const photoQuery = await locals.supabase
-        .from('photos')
-        .select('gallery_id')
-        .eq('id', photoId)
-        .maybeSingle();
-      if (photoQuery.error)
-        return fail(400, { message: photoQuery.error.message });
-      if (!photoQuery.data) return fail(404, { message: 'Photo not found.' });
-      targetGalleryId = photoQuery.data.gallery_id;
-    }
+		return { success: true, message: 'Image removed.' };
+	},
 
-    const { data: image, error: loadError } = await locals.supabase
-      .from('photo_images')
-      .select('id, kind')
-      .eq('id', imageId)
-      .eq('photo_id', photoId)
-      .maybeSingle();
+	saveThumbCrop: async ({ locals, request }) => {
+		const form = await superValidate(request, zod4(saveThumbCropSchema));
+		if (!form.valid) {
+			return message(form, 'Missing photo or image id.', { status: 400 });
+		}
 
-    if (loadError || !image) return fail(404, { message: 'Image not found.' });
-    if (image.kind !== 'lead')
-      return fail(400, {
-        message: 'Thumbnail crop applies only to lead images.',
-      });
+		const {
+			photo_id: photoId,
+			image_id: imageId,
+			gallery_id: galleryId,
+		} = form.data;
+		const cropX = form.data.thumb_crop_x
+			? Number(form.data.thumb_crop_x)
+			: null;
+		const cropY = form.data.thumb_crop_y
+			? Number(form.data.thumb_crop_y)
+			: null;
+		const cropZoom = form.data.thumb_crop_zoom
+			? Number(form.data.thumb_crop_zoom)
+			: null;
 
-    const galleryCropConfigByGalleryId = await loadGalleryCropConfigByGalleryId(
-      {
-        locals,
-        galleryIds: [targetGalleryId],
-        route: '/admin/photos',
-      },
-    );
-    if (
-      galleryCropConfigByGalleryId[targetGalleryId]?.layoutMode !== 'uniform'
-    ) {
-      return fail(400, {
-        message: 'Thumbnail crop is only available for uniform galleries.',
-      });
-    }
+		let targetGalleryId: string;
+		if (galleryId) {
+			const guard = await locals.supabase
+				.from('photos')
+				.select('id, gallery_id')
+				.eq('id', photoId)
+				.eq('gallery_id', galleryId)
+				.maybeSingle();
+			if (guard.error) return fail(400, { message: guard.error.message });
+			if (!guard.data)
+				return fail(404, {
+					message: 'Photo not found in this gallery.',
+				});
+			targetGalleryId = guard.data.gallery_id ?? galleryId;
+		} else {
+			const photoQuery = await locals.supabase
+				.from('photos')
+				.select('gallery_id')
+				.eq('id', photoId)
+				.maybeSingle();
+			if (photoQuery.error)
+				return fail(400, { message: photoQuery.error.message });
+			if (!photoQuery.data) return fail(404, { message: 'Photo not found.' });
+			targetGalleryId = photoQuery.data.gallery_id;
+		}
 
-    const updates: Record<string, number | null> = {};
-    if (cropX != null && cropX >= 0 && cropX <= 1) updates.thumb_crop_x = cropX;
-    if (cropY != null && cropY >= 0 && cropY <= 1) updates.thumb_crop_y = cropY;
-    if (cropZoom != null && cropZoom >= 1) updates.thumb_crop_zoom = cropZoom;
+		const { data: image, error: loadError } = await locals.supabase
+			.from('photo_images')
+			.select('id, kind')
+			.eq('id', imageId)
+			.eq('photo_id', photoId)
+			.maybeSingle();
 
-    const { error: updateError } = await locals.supabase
-      .from('photo_images')
-      .update(updates)
-      .eq('id', imageId)
-      .eq('photo_id', photoId);
+		if (loadError || !image) return fail(404, { message: 'Image not found.' });
+		if (image.kind !== 'lead')
+			return fail(400, {
+				message: 'Thumbnail crop applies only to lead images.',
+			});
 
-    if (updateError) return fail(400, { message: updateError.message });
+		const galleryCropConfigByGalleryId = await loadGalleryCropConfigByGalleryId(
+			{
+				locals,
+				galleryIds: [targetGalleryId],
+				route: '/admin/photos',
+			},
+		);
+		if (
+			galleryCropConfigByGalleryId[targetGalleryId]?.layoutMode !== 'uniform'
+		) {
+			return fail(400, {
+				message: 'Thumbnail crop is only available for uniform galleries.',
+			});
+		}
 
-    return { success: true, message: 'Thumbnail crop saved.' };
-  },
+		const updates: Record<string, number | null> = {};
+		if (cropX != null && cropX >= 0 && cropX <= 1) updates.thumb_crop_x = cropX;
+		if (cropY != null && cropY >= 0 && cropY <= 1) updates.thumb_crop_y = cropY;
+		if (cropZoom != null && cropZoom >= 1) updates.thumb_crop_zoom = cropZoom;
 
-  clearThumbCrop: async ({ locals, request }) => {
-    const form = await request.formData();
-    const photoId = asString(form.get('photo_id'));
-    const imageId = asString(form.get('image_id'));
-    const galleryId = asString(form.get('gallery_id'));
+		const { error: updateError } = await locals.supabase
+			.from('photo_images')
+			.update(updates)
+			.eq('id', imageId)
+			.eq('photo_id', photoId);
 
-    if (!photoId || !imageId)
-      return fail(400, { message: 'Missing photo or image id.' });
-    if (galleryId) {
-      const guard = await locals.supabase
-        .from('photos')
-        .select('id')
-        .eq('id', photoId)
-        .eq('gallery_id', galleryId)
-        .maybeSingle();
-      if (guard.error) return fail(400, { message: guard.error.message });
-      if (!guard.data)
-        return fail(404, { message: 'Photo not found in this gallery.' });
-    }
+		if (updateError) return fail(400, { message: updateError.message });
 
-    const { data: image, error: loadError } = await locals.supabase
-      .from('photo_images')
-      .select('id, kind')
-      .eq('id', imageId)
-      .eq('photo_id', photoId)
-      .maybeSingle();
+		return { success: true, message: 'Thumbnail crop saved.' };
+	},
 
-    if (loadError || !image) return fail(404, { message: 'Image not found.' });
-    if (image.kind !== 'lead')
-      return fail(400, {
-        message: 'Thumbnail crop applies only to lead images.',
-      });
+	clearThumbCrop: async ({ locals, request }) => {
+		const form = await superValidate(request, zod4(clearThumbCropSchema));
+		if (!form.valid) {
+			return message(form, 'Missing photo or image id.', { status: 400 });
+		}
 
-    const { error: updateError } = await locals.supabase
-      .from('photo_images')
-      .update({ thumb_crop_x: null, thumb_crop_y: null, thumb_crop_zoom: null })
-      .eq('id', imageId)
-      .eq('photo_id', photoId);
+		const {
+			photo_id: photoId,
+			image_id: imageId,
+			gallery_id: galleryId,
+		} = form.data;
 
-    if (updateError) return fail(400, { message: updateError.message });
+		if (galleryId) {
+			const guard = await locals.supabase
+				.from('photos')
+				.select('id')
+				.eq('id', photoId)
+				.eq('gallery_id', galleryId)
+				.maybeSingle();
+			if (guard.error) return fail(400, { message: guard.error.message });
+			if (!guard.data)
+				return fail(404, {
+					message: 'Photo not found in this gallery.',
+				});
+		}
 
-    return { success: true, message: 'Thumbnail crop cleared.' };
-  },
+		const { data: image, error: loadError } = await locals.supabase
+			.from('photo_images')
+			.select('id, kind')
+			.eq('id', imageId)
+			.eq('photo_id', photoId)
+			.maybeSingle();
+
+		if (loadError || !image) return fail(404, { message: 'Image not found.' });
+		if (image.kind !== 'lead')
+			return fail(400, {
+				message: 'Thumbnail crop applies only to lead images.',
+			});
+
+		const { error: updateError } = await locals.supabase
+			.from('photo_images')
+			.update({
+				thumb_crop_x: null,
+				thumb_crop_y: null,
+				thumb_crop_zoom: null,
+			})
+			.eq('id', imageId)
+			.eq('photo_id', photoId);
+
+		if (updateError) return fail(400, { message: updateError.message });
+
+		return { success: true, message: 'Thumbnail crop cleared.' };
+	},
 };

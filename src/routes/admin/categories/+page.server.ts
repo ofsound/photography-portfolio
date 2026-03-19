@@ -1,120 +1,111 @@
-import { fail, type Actions } from '@sveltejs/kit';
+import type { Actions } from '@sveltejs/kit';
+import { superValidate, message } from 'sveltekit-superforms';
+import { zod4 } from 'sveltekit-superforms/adapters';
+
+import { toSlug } from '$lib/server/admin-helpers';
 import {
-  asBoolean,
-  asString,
-  assertTitle,
-  toSlug,
-} from '$lib/server/admin-helpers';
-import { failForm } from '$lib/server/form-errors';
+	categoryCreateSchema,
+	categoryUpdateSchema,
+	categoryRemoveSchema,
+} from '$lib/schemas/category';
 import { throwLoaderError } from '$lib/server/load-error';
+
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals }) => {
-  const categoriesQuery = await locals.supabase
-    .from('categories')
-    .select('id, slug, name, description, is_active, updated_at')
-    .order('name', { ascending: true });
+	const categoriesQuery = await locals.supabase
+		.from('categories')
+		.select('id, slug, name, description, is_active, updated_at')
+		.order('name', { ascending: true });
 
-  if (categoriesQuery.error) {
-    throwLoaderError(
-      { route: '/admin/categories', operation: 'load categories' },
-      categoriesQuery.error,
-    );
-  }
+	if (categoriesQuery.error) {
+		throwLoaderError(
+			{ route: '/admin/categories', operation: 'load categories' },
+			categoriesQuery.error,
+		);
+	}
 
-  return { categories: categoriesQuery.data ?? [] };
+	const [createForm, updateForm, removeForm] = await Promise.all([
+		superValidate(zod4(categoryCreateSchema)),
+		superValidate(zod4(categoryUpdateSchema)),
+		superValidate(zod4(categoryRemoveSchema)),
+	]);
+
+	return {
+		categories: categoriesQuery.data ?? [],
+		createForm,
+		updateForm,
+		removeForm,
+	};
 };
 
 export const actions: Actions = {
-  create: async ({ locals, request }) => {
-    const form = await request.formData();
-    const name = asString(form.get('name')).trim();
-    const slugInput = asString(form.get('slug')).trim();
-    const description = asString(form.get('description')).trim() || null;
-    const isActive = form.has('is_active')
-      ? asBoolean(form.get('is_active'))
-      : true;
+	create: async ({ locals, request }) => {
+		const form = await superValidate(request, zod4(categoryCreateSchema));
+		if (!form.valid) {
+			return message(form, 'Title/name is required.', { status: 400 });
+		}
 
-    const titleError = assertTitle(name);
-    if (titleError) {
-      return failForm(titleError, {
-        fieldErrors: { name: titleError },
-        values: { name, slug: slugInput, description: description ?? '' },
-      });
-    }
+		const { name, slug: slugInput, description, is_active } = form.data;
+		const slug = toSlug(slugInput || name, 'category');
 
-    const slug = toSlug(slugInput || name, 'category');
+		const { error } = await locals.supabase.from('categories').insert({
+			name,
+			slug,
+			description: description || null,
+			is_active,
+		});
 
-    const { error } = await locals.supabase.from('categories').insert({
-      name,
-      slug,
-      description,
-      is_active: isActive,
-    });
+		if (error) {
+			return message(form, error.message, { status: 400 });
+		}
 
-    if (error) {
-      return fail(400, { message: error.message });
-    }
+		return message(form, 'Category created.');
+	},
 
-    return { success: true, message: 'Category created.' };
-  },
+	update: async ({ locals, request }) => {
+		const form = await superValidate(request, zod4(categoryUpdateSchema));
+		if (!form.valid) {
+			const firstError =
+				form.errors.id?.[0] ?? form.errors.name?.[0] ?? 'Validation failed.';
+			return message(form, firstError, { status: 400 });
+		}
 
-  update: async ({ locals, request }) => {
-    const form = await request.formData();
-    const id = asString(form.get('id'));
-    const name = asString(form.get('name')).trim();
-    const slugInput = asString(form.get('slug')).trim();
-    const description = asString(form.get('description')).trim() || null;
-    const isActive = asBoolean(form.get('is_active'));
+		const { id, name, slug: slugInput, description, is_active } = form.data;
+		const slug = toSlug(slugInput || name, 'category');
 
-    if (!id) {
-      return fail(400, { message: 'Missing category id.' });
-    }
+		const { error } = await locals.supabase
+			.from('categories')
+			.update({
+				name,
+				slug,
+				description: description || null,
+				is_active,
+			})
+			.eq('id', id);
 
-    const titleError = assertTitle(name);
-    if (titleError) {
-      return failForm(titleError, {
-        fieldErrors: { name: titleError },
-        values: { id, name, slug: slugInput, description: description ?? '' },
-      });
-    }
+		if (error) {
+			return message(form, error.message, { status: 400 });
+		}
 
-    const slug = toSlug(slugInput || name, 'category');
+		return message(form, 'Category updated.');
+	},
 
-    const { error } = await locals.supabase
-      .from('categories')
-      .update({
-        name,
-        slug,
-        description,
-        is_active: isActive,
-      })
-      .eq('id', id);
+	remove: async ({ locals, request }) => {
+		const form = await superValidate(request, zod4(categoryRemoveSchema));
+		if (!form.valid) {
+			return message(form, 'Missing category id.', { status: 400 });
+		}
 
-    if (error) {
-      return fail(400, { message: error.message });
-    }
+		const { error } = await locals.supabase
+			.from('categories')
+			.delete()
+			.eq('id', form.data.id);
 
-    return { success: true, message: 'Category updated.' };
-  },
+		if (error) {
+			return message(form, error.message, { status: 400 });
+		}
 
-  remove: async ({ locals, request }) => {
-    const form = await request.formData();
-    const id = asString(form.get('id'));
-
-    if (!id) {
-      return fail(400, { message: 'Missing category id.' });
-    }
-
-    const { error } = await locals.supabase
-      .from('categories')
-      .delete()
-      .eq('id', id);
-
-    if (error) {
-      return fail(400, { message: error.message });
-    }
-
-    return { success: true, message: 'Category removed.' };
-  },
+		return message(form, 'Category removed.');
+	},
 };

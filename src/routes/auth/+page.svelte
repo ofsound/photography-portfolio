@@ -6,15 +6,15 @@
   import FormInput from '$lib/components/FormInput.svelte';
 
   const { data, form } = $props();
-  const fieldErrors = $derived(form?.fieldErrors ?? {});
-  const values = $derived(form?.values ?? {});
+  const errors = $derived(form?.form?.errors ?? {});
+  const formData = $derived(form?.form?.data);
 </script>
 
 <section class="mx-auto grid w-full max-w-lg gap-4 px-5 py-14">
   <AdminToastViewport />
   <AdminToastEmitter
-    message={form?.message}
-    type={form && 'success' in form && form.success ? 'success' : 'error'}
+    message={form?.form?.message}
+    type={form?.form?.valid ? 'success' : 'error'}
     source="auth:status-message"
   />
 
@@ -40,20 +40,20 @@
         label="Email"
         id="auth-email"
         required
-        error={fieldErrors.email}
+        error={errors.email?.[0]}
       >
         <FormInput
           id="auth-email"
           name="email"
           type="email"
-          value={values.email ?? ''}
+          value={formData?.email ?? ''}
         />
       </FormField>
       <FormField
         label="Password"
         id="auth-password"
         required
-        error={fieldErrors.password}
+        error={errors.password?.[0]}
       >
         <FormInput id="auth-password" name="password" type="password" />
       </FormField>

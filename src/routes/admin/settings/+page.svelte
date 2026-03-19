@@ -2,7 +2,6 @@
   import AdminButton from '$lib/components/admin/AdminButton.svelte';
   import AdminHeading from '$lib/components/admin/AdminHeading.svelte';
   import AdminPageHeader from '$lib/components/admin/AdminPageHeader.svelte';
-  import { useAdminFormState } from '$lib/components/admin/useAdminFormState.svelte';
   import FormField from '$lib/components/FormField.svelte';
   import FormInput from '$lib/components/FormInput.svelte';
   import FormSelect from '$lib/components/FormSelect.svelte';
@@ -30,9 +29,16 @@
     brand_contrast_dark_hex?: string;
   };
   const { data, form } = $props();
-  const { fieldErrors, values } = useAdminFormState<SettingsFormValues>(
-    () => form,
-  );
+  const sfForm = $derived(form?.form);
+  const fieldErrors = $derived.by(() => {
+    const errs = sfForm?.errors ?? {};
+    const result: Record<string, string | undefined> = {};
+    for (const [key, val] of Object.entries(errs)) {
+      result[key] = Array.isArray(val) ? val[0] : undefined;
+    }
+    return result;
+  });
+  const values = $derived((sfForm?.data ?? {}) as Partial<SettingsFormValues>);
   const isAdmin = $derived(data.role === 'admin');
   const canEditSiteTheme = $derived(
     data.role === 'admin' || data.role === 'editor',
@@ -127,8 +133,8 @@
 
 <AdminPageHeader
   title="Site Settings"
-  formMessage={form?.message}
-  formSuccess={form?.success === true}
+  formMessage={sfForm?.message as string | undefined}
+  formSuccess={sfForm?.valid === true}
 />
 
 <form method="POST" action="?/saveSettings" class="grid gap-4">

@@ -1,45 +1,42 @@
 import { redirect, type Actions } from '@sveltejs/kit';
-import { failForm } from '$lib/server/form-errors';
+import { superValidate, message } from 'sveltekit-superforms';
+import { zod4 } from 'sveltekit-superforms/adapters';
+
+import { loginSchema } from '$lib/schemas/auth';
+
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals }) => {
-  const { session, user } = await locals.safeGetSession();
-  return {
-    session,
-    userEmail: user?.email ?? null,
-  };
+	const { session, user } = await locals.safeGetSession();
+	const form = await superValidate(zod4(loginSchema));
+	return {
+		session,
+		userEmail: user?.email ?? null,
+		form,
+	};
 };
 
 export const actions: Actions = {
-  login: async ({ locals, request }) => {
-    const form = await request.formData();
-    const email = String(form.get('email') ?? '').trim();
-    const password = String(form.get('password') ?? '');
+	login: async ({ locals, request }) => {
+		const form = await superValidate(request, zod4(loginSchema));
+		if (!form.valid) {
+			return message(form, 'Email and password are required.', { status: 400 });
+		}
 
-    if (!email || !password) {
-      return failForm('Email and password are required.', {
-        fieldErrors: {
-          email: !email ? 'Email is required.' : undefined,
-          password: !password ? 'Password is required.' : undefined,
-        },
-        values: { email },
-      });
-    }
+		const { error } = await locals.supabase.auth.signInWithPassword({
+			email: form.data.email,
+			password: form.data.password,
+		});
 
-    const { error } = await locals.supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+		if (error) {
+			return message(form, error.message, { status: 400 });
+		}
 
-    if (error) {
-      return failForm(error.message);
-    }
+		throw redirect(303, '/admin/galleries');
+	},
 
-    throw redirect(303, '/admin/galleries');
-  },
-
-  logout: async ({ locals }) => {
-    await locals.supabase.auth.signOut();
-    throw redirect(303, '/');
-  },
+	logout: async ({ locals }) => {
+		await locals.supabase.auth.signOut();
+		throw redirect(303, '/');
+	},
 };

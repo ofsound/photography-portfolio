@@ -43,7 +43,9 @@
     "codemirror": "^6.0.2",
     "sanitize-html": "^2.17.1",
     "svedit": "^0.6.4",
-    "svelte-codemirror-editor": "^2.1.0"
+    "svelte-codemirror-editor": "^2.1.0",
+    "sveltekit-superforms": "^2.30.0",
+    "zod": "^4.3.6"
   },
   "engines": {
     "node": "22.x || 24.x"

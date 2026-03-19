@@ -7,7 +7,6 @@
   import AdminCard from '$lib/components/admin/AdminCard.svelte';
   import AdminCreateListLayout from '$lib/components/admin/AdminCreateListLayout.svelte';
   import AdminHeading from '$lib/components/admin/AdminHeading.svelte';
-  import { useAdminFormState } from '$lib/components/admin/useAdminFormState.svelte';
   import { useAutoSlug } from '$lib/components/admin/useAutoSlug.svelte';
   import { useSortableOrder } from '$lib/components/admin/useSortableOrder.svelte';
   import FormField from '$lib/components/FormField.svelte';
@@ -19,9 +18,25 @@
   } from '$lib/constants/page-visibility';
 
   const { data, form } = $props();
-  const { typedForm, fieldErrors: createFieldErrors } = useAdminFormState<
-    Record<string, string | undefined>
-  >(() => form);
+  const sfForm = $derived(form?.form);
+  const formMessage = $derived(
+    (sfForm?.message as string | undefined) ?? form?.message,
+  );
+  const formSuccess = $derived(
+    sfForm?.valid ??
+      (form && 'success' in form ? Boolean(form.success) : false),
+  );
+  const createFieldErrors = $derived.by(() => {
+    if (form && 'fieldErrors' in form) {
+      return (form.fieldErrors ?? {}) as Record<string, string | undefined>;
+    }
+    const errs = sfForm?.errors ?? {};
+    const result: Record<string, string | undefined> = {};
+    for (const [key, val] of Object.entries(errs)) {
+      result[key] = Array.isArray(val) ? val[0] : undefined;
+    }
+    return result;
+  });
 
   type PageCard = {
     id: string;
@@ -64,12 +79,20 @@
   let createEditorMode = $state<'code' | 'svedit'>('code');
 
   $effect(() => {
-    createDraft.syncFromValues(typedForm?.values, {
-      name: 'title',
-      slug: 'slug',
-    });
+    const vals =
+      form && 'values' in form
+        ? (form.values as Record<string, string | undefined>)
+        : sfForm?.data
+          ? (sfForm.data as unknown as Record<string, string | undefined>)
+          : undefined;
+    if (vals) {
+      createDraft.syncFromValues(vals, {
+        name: 'title',
+        slug: 'slug',
+      });
+    }
 
-    const nextEditorMode = typedForm?.values?.editor_mode;
+    const nextEditorMode = vals?.editor_mode;
     if (nextEditorMode === 'code' || nextEditorMode === 'svedit') {
       createEditorMode = nextEditorMode;
     }
@@ -90,8 +113,8 @@
 
 <AdminCreateListLayout
   title="Pages"
-  formMessage={form?.message}
-  formSuccess={form?.success}
+  {formMessage}
+  {formSuccess}
   dataMessage={data.message}
   dataSuccess={data.messageSuccess}
   clearDataMessageQuery

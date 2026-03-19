@@ -5,12 +5,6 @@ export const toSlug = (source: string, fallback = 'item') => {
   return value || fallback;
 };
 
-export const asOptionalDate = (value: FormDataEntryValue | null) => {
-  if (typeof value !== 'string') return null;
-  const trimmed = value.trim();
-  return trimmed.length ? trimmed : null;
-};
-
 export const asOptionalNumber = (value: FormDataEntryValue | null) => {
   if (typeof value !== 'string') return null;
   const trimmed = value.trim();
@@ -35,9 +29,6 @@ export const parseUuidList = (raw: string) =>
         item,
       ),
     );
-
-export const assertTitle = (title: string) =>
-  !title.trim() ? 'Title/name is required.' : null;
 
 export const storageSourcePath = (photoId: string, filename: string) => {
   const safeName = filename

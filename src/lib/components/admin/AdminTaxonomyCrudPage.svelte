@@ -2,11 +2,9 @@
   import AdminCard from '$lib/components/admin/AdminCard.svelte';
   import AdminButton from '$lib/components/admin/AdminButton.svelte';
   import AdminCreateListLayout from '$lib/components/admin/AdminCreateListLayout.svelte';
-  import { useAdminFormState } from '$lib/components/admin/useAdminFormState.svelte';
   import { useAutoSlug } from '$lib/components/admin/useAutoSlug.svelte';
   import FormField from '$lib/components/FormField.svelte';
   import FormInput from '$lib/components/FormInput.svelte';
-  import type { AdminFormState } from '$lib/types/admin-form';
 
   export type TaxonomyItem = {
     id: string;
@@ -15,8 +13,6 @@
     description: string | null;
     is_active: boolean;
   };
-
-  export type FormState = AdminFormState<Record<string, string | undefined>>;
 
   const {
     title,
@@ -32,15 +28,38 @@
     singularLabel: string;
     idPrefix: string;
     items: TaxonomyItem[];
-    form?: FormState | null | undefined;
+    form?: Record<string, unknown> | null | undefined;
     reverseColumnOrder?: boolean;
     showCreateStatus?: boolean;
     showMobileDivider?: boolean;
   } = $props();
 
-  const { typedForm, fieldErrors, values } = useAdminFormState<
-    Record<string, string | undefined>
-  >(() => form);
+  const sfForm = $derived(
+    form && 'form' in form
+      ? (form.form as {
+          message?: unknown;
+          valid?: boolean;
+          errors?: Record<string, string[]>;
+          data?: Record<string, unknown>;
+        })
+      : undefined,
+  );
+
+  const formMessage = $derived(sfForm?.message as string | undefined);
+  const formSuccess = $derived(sfForm?.valid ?? false);
+
+  const fieldErrors = $derived.by(() => {
+    const errs = sfForm?.errors ?? {};
+    const result: Record<string, string | undefined> = {};
+    for (const [key, val] of Object.entries(errs)) {
+      result[key] = Array.isArray(val) ? val[0] : undefined;
+    }
+    return result;
+  });
+
+  const values = $derived(
+    (sfForm?.data ?? {}) as Record<string, string | undefined>,
+  );
 
   const createDraft = useAutoSlug();
   const createName = $derived(values.id ? '' : createDraft.name);
@@ -61,8 +80,8 @@
 
 <AdminCreateListLayout
   {title}
-  formMessage={typedForm?.message}
-  formSuccess={typedForm?.success}
+  {formMessage}
+  {formSuccess}
   {reverseColumnOrder}
   {showMobileDivider}
   create={createForm}

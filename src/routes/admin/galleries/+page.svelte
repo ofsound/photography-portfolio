@@ -7,7 +7,6 @@
   import AdminCard from '$lib/components/admin/AdminCard.svelte';
   import AdminCreateListLayout from '$lib/components/admin/AdminCreateListLayout.svelte';
   import AdminHeading from '$lib/components/admin/AdminHeading.svelte';
-  import { useAdminFormState } from '$lib/components/admin/useAdminFormState.svelte';
   import { useAutoSlug } from '$lib/components/admin/useAutoSlug.svelte';
   import { useSortableOrder } from '$lib/components/admin/useSortableOrder.svelte';
   import FormField from '$lib/components/FormField.svelte';
@@ -21,9 +20,17 @@
   import { buildGalleryPath } from '$lib/utils/gallery-routes';
 
   const { data, form } = $props();
-  const { typedForm, fieldErrors: createFieldErrors } = useAdminFormState<
-    Record<string, string | undefined>
-  >(() => form);
+  const sfForm = $derived(form?.form);
+  const formMessage = $derived(sfForm?.message as string | undefined);
+  const formSuccess = $derived(sfForm?.valid ?? false);
+  const createFieldErrors = $derived.by(() => {
+    const errs = sfForm?.errors ?? {};
+    const result: Record<string, string | undefined> = {};
+    for (const [key, val] of Object.entries(errs)) {
+      result[key] = Array.isArray(val) ? val[0] : undefined;
+    }
+    return result;
+  });
 
   type GalleryCard = {
     id: string;
@@ -64,9 +71,15 @@
   let createVisibilityStatus = $state<GalleryVisibilityStatus>('public');
 
   $effect(() => {
-    createDraft.syncFromValues(typedForm?.values);
+    const sfData = sfForm?.data;
+    if (sfData) {
+      createDraft.syncFromValues(sfData as Record<string, string | undefined>);
+    }
 
-    const nextVisibility = typedForm?.values?.visibility_status;
+    const nextVisibility =
+      sfData && 'visibility_status' in sfData
+        ? sfData.visibility_status
+        : undefined;
     if (
       nextVisibility === 'public' ||
       nextVisibility === 'unlisted' ||
@@ -91,8 +104,8 @@
 
 <AdminCreateListLayout
   title="Galleries"
-  formMessage={form?.message}
-  formSuccess={form?.success}
+  {formMessage}
+  {formSuccess}
   reverseColumnOrder
   showMobileDivider
   create={createForm}

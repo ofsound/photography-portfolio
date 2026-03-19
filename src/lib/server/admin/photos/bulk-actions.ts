@@ -1,4 +1,4 @@
-import { fail, type Actions } from '@sveltejs/kit';
+import { type Actions } from '@sveltejs/kit';
 import { superValidate, message } from 'sveltekit-superforms/server';
 import { zod4 } from 'sveltekit-superforms/adapters';
 
@@ -21,7 +21,7 @@ export const bulkPhotoActions: Actions = {
     const photoIds = parseUuidList(form.data.selected_photo_ids);
     const galleryId = form.data.gallery_id;
     if (!photoIds.length)
-      return fail(400, { message: 'Select at least one photo.' });
+      return message(form, 'Select at least one photo.', { status: 400 });
 
     let photosQuery = locals.supabase
       .from('photos')
@@ -42,8 +42,8 @@ export const bulkPhotoActions: Actions = {
     const { data: photos, error: photosError } = photosResult;
     const { data: leads, error: leadsError } = leadsResult;
 
-    if (photosError) return fail(400, { message: photosError.message });
-    if (leadsError) return fail(400, { message: leadsError.message });
+    if (photosError) return message(form, photosError.message, { status: 400 });
+    if (leadsError) return message(form, leadsError.message, { status: 400 });
 
     const leadByPhotoId = new Map(
       (leads ?? []).map((row) => [row.photo_id, row]),
@@ -60,10 +60,11 @@ export const bulkPhotoActions: Actions = {
     }
 
     if (!publishable.length) {
-      return fail(400, {
-        message:
-          'No selected photos are publishable. Publish requires a title and a converted lead image.',
-      });
+      return message(
+        form,
+        'No selected photos are publishable. Publish requires a title and a converted lead image.',
+        { status: 400 },
+      );
     }
 
     let updateQuery = locals.supabase
@@ -73,7 +74,7 @@ export const bulkPhotoActions: Actions = {
     if (galleryId) updateQuery = updateQuery.eq('gallery_id', galleryId);
     const { error } = await updateQuery;
 
-    if (error) return fail(400, { message: error.message });
+    if (error) return message(form, error.message, { status: 400 });
 
     const skipped = photoIds.length - publishable.length;
     return {
@@ -94,7 +95,7 @@ export const bulkPhotoActions: Actions = {
     const photoIds = parseUuidList(form.data.selected_photo_ids);
     const galleryId = form.data.gallery_id;
     if (!photoIds.length)
-      return fail(400, { message: 'Select at least one photo.' });
+      return message(form, 'Select at least one photo.', { status: 400 });
 
     let query = locals.supabase
       .from('photos')
@@ -106,7 +107,7 @@ export const bulkPhotoActions: Actions = {
     if (galleryId) query = query.eq('gallery_id', galleryId);
     const { error } = await query;
 
-    if (error) return fail(400, { message: error.message });
+    if (error) return message(form, error.message, { status: 400 });
     return {
       success: true,
       message: `Archived ${photoIds.length} photo(s).`,
@@ -122,7 +123,7 @@ export const bulkPhotoActions: Actions = {
     const photoIds = parseUuidList(form.data.selected_photo_ids);
     const galleryId = form.data.gallery_id;
     if (!photoIds.length)
-      return fail(400, { message: 'Select at least one photo.' });
+      return message(form, 'Select at least one photo.', { status: 400 });
 
     let query = locals.supabase
       .from('photos')
@@ -131,7 +132,7 @@ export const bulkPhotoActions: Actions = {
     if (galleryId) query = query.eq('gallery_id', galleryId);
     const { error } = await query;
 
-    if (error) return fail(400, { message: error.message });
+    if (error) return message(form, error.message, { status: 400 });
     return {
       success: true,
       message: `Restored ${photoIds.length} photo(s) to draft.`,
@@ -146,13 +147,15 @@ export const bulkPhotoActions: Actions = {
 
     const galleryId = form.data.gallery_id;
     if (form.data.showArchived !== '1') {
-      return fail(400, {
-        message: 'Delete is only allowed when viewing archived photos.',
-      });
+      return message(
+        form,
+        'Delete is only allowed when viewing archived photos.',
+        { status: 400 },
+      );
     }
     const photoIds = parseUuidList(form.data.selected_photo_ids);
     if (!photoIds.length)
-      return fail(400, { message: 'Select at least one photo.' });
+      return message(form, 'Select at least one photo.', { status: 400 });
 
     let photosQuery = locals.supabase
       .from('photos')
@@ -161,14 +164,14 @@ export const bulkPhotoActions: Actions = {
     if (galleryId) photosQuery = photosQuery.eq('gallery_id', galleryId);
     const { data: photos, error: photosError } = await photosQuery;
 
-    if (photosError) return fail(400, { message: photosError.message });
+    if (photosError) return message(form, photosError.message, { status: 400 });
     const notArchived = (photos ?? []).filter(
       (p: { status: string; deleted_at: string | null }) =>
         p.status !== 'archived' || p.deleted_at == null,
     );
     if (notArchived.length > 0) {
-      return fail(400, {
-        message: 'Only archived photos can be permanently deleted.',
+      return message(form, 'Only archived photos can be permanently deleted.', {
+        status: 400,
       });
     }
 
@@ -178,7 +181,7 @@ export const bulkPhotoActions: Actions = {
       .in('photo_id', photoIds);
     const { data: images, error: imagesError } = await imagesQuery;
 
-    if (imagesError) return fail(400, { message: imagesError.message });
+    if (imagesError) return message(form, imagesError.message, { status: 400 });
 
     const pathsToRemove = (images ?? []).flatMap(
       (row: {
@@ -191,7 +194,8 @@ export const bulkPhotoActions: Actions = {
       const { error: storageError } = await locals.supabase.storage
         .from('photos')
         .remove(pathsToRemove);
-      if (storageError) return fail(400, { message: storageError.message });
+      if (storageError)
+        return message(form, storageError.message, { status: 400 });
     }
 
     let deleteQuery = locals.supabase
@@ -200,7 +204,7 @@ export const bulkPhotoActions: Actions = {
       .in('id', photoIds);
     if (galleryId) deleteQuery = deleteQuery.eq('gallery_id', galleryId);
     const { error: deleteError } = await deleteQuery;
-    if (deleteError) return fail(400, { message: deleteError.message });
+    if (deleteError) return message(form, deleteError.message, { status: 400 });
     return {
       success: true,
       message: `Deleted ${photoIds.length} photo(s) and their files.`,
@@ -219,13 +223,13 @@ export const bulkPhotoActions: Actions = {
 
     const orderedIds = parseUuidList(form.data.ordered_photo_ids);
     if (!orderedIds.length)
-      return fail(400, { message: 'No photo IDs provided.' });
+      return message(form, 'No photo IDs provided.', { status: 400 });
 
     const { error } = await locals.supabase.rpc('reorder_gallery_photos', {
       p_gallery_id: form.data.gallery_id,
       p_ordered_photo_ids: orderedIds,
     });
-    if (error) return fail(400, { message: error.message });
+    if (error) return message(form, error.message, { status: 400 });
 
     return { success: true, message: 'Photo order saved.' };
   },
@@ -242,7 +246,7 @@ export const bulkPhotoActions: Actions = {
 
     const photoIds = parseUuidList(form.data.selected_photo_ids);
     if (!photoIds.length) {
-      return fail(400, { message: 'Select at least one photo.' });
+      return message(form, 'Select at least one photo.', { status: 400 });
     }
 
     try {
@@ -264,10 +268,11 @@ export const bulkPhotoActions: Actions = {
             : `Moved ${result.moved} photo(s) (${result.updated} updated).`,
       };
     } catch (cause) {
-      return fail(400, {
-        message:
-          cause instanceof Error ? cause.message : 'Failed to move photos.',
-      });
+      return message(
+        form,
+        cause instanceof Error ? cause.message : 'Failed to move photos.',
+        { status: 400 },
+      );
     }
   },
 };

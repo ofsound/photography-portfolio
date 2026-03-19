@@ -1,4 +1,4 @@
-import { error, fail, redirect, type Actions } from '@sveltejs/kit';
+import { error, redirect, type Actions } from '@sveltejs/kit';
 import { message, setError, superValidate } from 'sveltekit-superforms/server';
 import { zod4 } from 'sveltekit-superforms/adapters';
 
@@ -133,20 +133,20 @@ export const load: PageServerLoad = async ({ locals, params, url }) => {
         position: number;
         delivery_storage_path: string | null;
         photos?:
-          | {
-              title?: string;
-              slug?: string;
-              galleries?:
-                | { visibility_status?: string }
-                | Array<{ visibility_status?: string }>;
-            }
-          | Array<{
-              title?: string;
-              slug?: string;
-              galleries?:
-                | { visibility_status?: string }
-                | Array<{ visibility_status?: string }>;
-            }>;
+        | {
+          title?: string;
+          slug?: string;
+          galleries?:
+          | { visibility_status?: string }
+          | Array<{ visibility_status?: string }>;
+        }
+        | Array<{
+          title?: string;
+          slug?: string;
+          galleries?:
+          | { visibility_status?: string }
+          | Array<{ visibility_status?: string }>;
+        }>;
       }) => {
         const photo = Array.isArray(row.photos) ? row.photos[0] : row.photos;
         const gallery = Array.isArray(photo?.galleries)
@@ -217,7 +217,7 @@ export const actions: Actions = {
       .neq('kind', 'home');
 
     if (updateResult.error)
-      return fail(400, { message: updateResult.error.message });
+      return message(form, updateResult.error.message, { status: 400 });
 
     const originalIdentifier = form.data.original_identifier.trim();
     if (UUID_REGEX.test(originalIdentifier)) {
@@ -244,7 +244,7 @@ export const actions: Actions = {
       .eq('id', form.data.id)
       .neq('kind', 'home');
 
-    if (deleteError) return fail(400, { message: deleteError.message });
+    if (deleteError) return message(form, deleteError.message, { status: 400 });
 
     redirectToList('Page deleted.');
   },
@@ -262,7 +262,7 @@ export const actions: Actions = {
     const { id } = form.data;
     const revisionId = Number(form.data.revision_id);
     if (!Number.isFinite(revisionId))
-      return fail(400, { message: 'Invalid revision id.' });
+      return message(form, 'Invalid revision id.', { status: 400 });
 
     const { data: revision, error: revisionError } = await locals.supabase
       .from('content_revisions')
@@ -273,32 +273,33 @@ export const actions: Actions = {
       .maybeSingle();
 
     if (revisionError || !revision)
-      return fail(404, { message: 'Revision not found.' });
+      return message(form, 'Revision not found.', { status: 404 });
 
     const snapshot = revision.snapshot as Record<string, unknown>;
     const kindVal = String(snapshot.kind ?? 'custom');
     if (kindVal === 'home')
-      return fail(400, {
-        message: 'Cannot roll back homepage from this route.',
+      return message(form, 'Cannot roll back homepage from this route.', {
+        status: 400,
       });
 
     const visibilityRaw = String(snapshot.visibility_status ?? '').trim();
     if (!visibilityRaw) {
-      return fail(400, {
-        message:
-          'This revision predates page visibility_status and cannot be rolled back.',
-      });
+      return message(
+        form,
+        'This revision predates page visibility_status and cannot be rolled back.',
+        { status: 400 },
+      );
     }
     const visibilityStatus = (
       visibilityRaw === 'public' ||
-      visibilityRaw === 'unlisted' ||
-      visibilityRaw === 'draft'
+        visibilityRaw === 'unlisted' ||
+        visibilityRaw === 'draft'
         ? visibilityRaw
         : null
     ) as PageVisibilityStatus | null;
     if (!visibilityStatus) {
-      return fail(400, {
-        message: 'Invalid visibility status in revision.',
+      return message(form, 'Invalid visibility status in revision.', {
+        status: 400,
       });
     }
     const editorMode = snapshot.editor_mode === 'svedit' ? 'svedit' : 'code';
@@ -308,9 +309,11 @@ export const actions: Actions = {
         : null;
 
     if (sveditDocResult && !sveditDocResult.ok) {
-      return fail(400, {
-        message: `Cannot roll back invalid Svedit revision: ${sveditDocResult.message}`,
-      });
+      return message(
+        form,
+        `Cannot roll back invalid Svedit revision: ${sveditDocResult.message}`,
+        { status: 400 },
+      );
     }
     const sanitizedHtml =
       editorMode === 'code'
@@ -325,7 +328,7 @@ export const actions: Actions = {
           err instanceof CmsTailwindCompileError
             ? err.message
             : 'Failed to compile Tailwind CSS for this rollback.';
-        return fail(400, { message: msg });
+        return message(form, msg, { status: 400 });
       }
     }
 
@@ -356,7 +359,7 @@ export const actions: Actions = {
         : null,
       bg_image_id:
         typeof snapshot.bg_image_id === 'string' &&
-        UUID_REGEX.test(snapshot.bg_image_id)
+          UUID_REGEX.test(snapshot.bg_image_id)
           ? snapshot.bg_image_id
           : null,
       bg_image_fixed: snapshot.bg_image_fixed === true,
@@ -369,18 +372,18 @@ export const actions: Actions = {
     };
 
     const slugProblem = validateCmsPageSlug(payload.slug);
-    if (slugProblem) return fail(400, { message: slugProblem });
+    if (slugProblem) return message(form, slugProblem, { status: 400 });
     if (await isGallerySlugTaken(locals, payload.slug)) {
-      return fail(400, {
-        message: 'Slug conflicts with an existing gallery.',
+      return message(form, 'Slug conflicts with an existing gallery.', {
+        status: 400,
       });
     }
     if (
       payload.editor_mode === 'code' &&
       payload.html_content.toLowerCase().includes('<iframe')
     )
-      return fail(400, {
-        message: 'Cannot roll back to iframe content in v1.',
+      return message(form, 'Cannot roll back to iframe content in v1.', {
+        status: 400,
       });
 
     const updateResult = await locals.supabase
@@ -390,7 +393,7 @@ export const actions: Actions = {
       .neq('kind', 'home');
 
     if (updateResult.error)
-      return fail(400, { message: updateResult.error.message });
+      return message(form, updateResult.error.message, { status: 400 });
 
     redirectToList('Page rolled back from revision.');
   },

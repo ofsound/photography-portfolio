@@ -1,5 +1,5 @@
 import { error, fail, redirect } from '@sveltejs/kit';
-import { superValidate, message } from 'sveltekit-superforms/server';
+import { message, superValidate } from 'sveltekit-superforms/server';
 import { zod4 } from 'sveltekit-superforms/adapters';
 
 import { getCmsRole } from '$lib/server/admin-helpers';
@@ -80,18 +80,19 @@ export const actions: Actions = {
       );
     } catch (cause) {
       if (cause instanceof SettingsValidationError) {
-        return fail(400, {
-          message: cause.message,
+        return {
+          ...message(form, cause.message, { status: 400 }),
           fieldErrors: cause.fieldErrors,
           values: cause.values,
-        });
+        };
       }
-      return fail(400, {
-        message:
-          cause instanceof Error
-            ? `Failed to save settings: ${cause.message}`
-            : 'Failed to save gallery settings.',
-      });
+      return message(
+        form,
+        cause instanceof Error
+          ? `Failed to save settings: ${cause.message}`
+          : 'Failed to save gallery settings.',
+        { status: 400 },
+      );
     }
 
     if (role !== 'admin') {
@@ -116,12 +117,13 @@ export const actions: Actions = {
         ),
       });
     } catch (cause) {
-      return fail(400, {
-        message:
-          cause instanceof Error
-            ? `Saved settings, but failed to save details: ${cause.message}`
-            : 'Saved settings, but failed to save details.',
-      });
+      return message(
+        form,
+        cause instanceof Error
+          ? `Saved settings, but failed to save details: ${cause.message}`
+          : 'Saved settings, but failed to save details.',
+        { status: 400 },
+      );
     }
 
     if (updated.slug !== gallery.slug) {

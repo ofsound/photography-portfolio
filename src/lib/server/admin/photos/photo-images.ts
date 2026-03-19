@@ -119,10 +119,11 @@ export const photoImageActions: Actions = {
         .eq('id', photoId)
         .eq('gallery_id', galleryId)
         .maybeSingle();
-      if (guard.error) return fail(400, { message: guard.error.message });
+      if (guard.error)
+        return message(form, guard.error.message, { status: 400 });
       if (!guard.data)
-        return fail(404, {
-          message: 'Photo not found in this gallery.',
+        return message(form, 'Photo not found in this gallery.', {
+          status: 404,
         });
     }
 
@@ -130,7 +131,7 @@ export const photoImageActions: Actions = {
       p_photo_id: photoId,
       p_ordered_image_ids: orderedImageIds,
     });
-    if (error) return fail(400, { message: error.message });
+    if (error) return message(form, error.message, { status: 400 });
 
     return { success: true, message: 'Additional image order saved.' };
   },
@@ -159,10 +160,11 @@ export const photoImageActions: Actions = {
         .eq('id', photoId)
         .eq('gallery_id', galleryId)
         .maybeSingle();
-      if (guard.error) return fail(400, { message: guard.error.message });
+      if (guard.error)
+        return message(form, guard.error.message, { status: 400 });
       if (!guard.data)
-        return fail(404, {
-          message: 'Photo not found in this gallery.',
+        return message(form, 'Photo not found in this gallery.', {
+          status: 404,
         });
     }
 
@@ -171,7 +173,7 @@ export const photoImageActions: Actions = {
       p_image_id: imageId,
     });
 
-    if (error) return fail(400, { message: error.message });
+    if (error) return message(form, error.message, { status: 400 });
 
     return { success: true, message: 'Lead image updated.' };
   },
@@ -190,7 +192,8 @@ export const photoImageActions: Actions = {
       .eq('id', imageId)
       .maybeSingle();
 
-    if (imageError || !image) return fail(404, { message: 'Image not found.' });
+    if (imageError || !image)
+      return message(form, 'Image not found.', { status: 404 });
     if (galleryId) {
       const guard = await locals.supabase
         .from('photos')
@@ -198,10 +201,11 @@ export const photoImageActions: Actions = {
         .eq('id', image.photo_id)
         .eq('gallery_id', galleryId)
         .maybeSingle();
-      if (guard.error) return fail(400, { message: guard.error.message });
+      if (guard.error)
+        return message(form, guard.error.message, { status: 400 });
       if (!guard.data)
-        return fail(404, {
-          message: 'Photo not found in this gallery.',
+        return message(form, 'Photo not found in this gallery.', {
+          status: 404,
         });
     }
 
@@ -209,7 +213,7 @@ export const photoImageActions: Actions = {
       .from('photo_images')
       .delete()
       .eq('id', imageId);
-    if (deleteError) return fail(400, { message: deleteError.message });
+    if (deleteError) return message(form, deleteError.message, { status: 400 });
 
     const pathsToRemove = [
       image.source_storage_path,
@@ -241,7 +245,7 @@ export const photoImageActions: Actions = {
       image.photo_id,
     );
     if (!normalizeResult.ok) {
-      return fail(400, { message: normalizeResult.message });
+      return message(form, normalizeResult.message, { status: 400 });
     }
 
     return { success: true, message: 'Image removed.' };
@@ -276,10 +280,11 @@ export const photoImageActions: Actions = {
         .eq('id', photoId)
         .eq('gallery_id', galleryId)
         .maybeSingle();
-      if (guard.error) return fail(400, { message: guard.error.message });
+      if (guard.error)
+        return message(form, guard.error.message, { status: 400 });
       if (!guard.data)
-        return fail(404, {
-          message: 'Photo not found in this gallery.',
+        return message(form, 'Photo not found in this gallery.', {
+          status: 404,
         });
       targetGalleryId = guard.data.gallery_id ?? galleryId;
     } else {
@@ -289,8 +294,9 @@ export const photoImageActions: Actions = {
         .eq('id', photoId)
         .maybeSingle();
       if (photoQuery.error)
-        return fail(400, { message: photoQuery.error.message });
-      if (!photoQuery.data) return fail(404, { message: 'Photo not found.' });
+        return message(form, photoQuery.error.message, { status: 400 });
+      if (!photoQuery.data)
+        return message(form, 'Photo not found.', { status: 404 });
       targetGalleryId = photoQuery.data.gallery_id;
     }
 
@@ -301,10 +307,11 @@ export const photoImageActions: Actions = {
       .eq('photo_id', photoId)
       .maybeSingle();
 
-    if (loadError || !image) return fail(404, { message: 'Image not found.' });
+    if (loadError || !image)
+      return message(form, 'Image not found.', { status: 404 });
     if (image.kind !== 'lead')
-      return fail(400, {
-        message: 'Thumbnail crop applies only to lead images.',
+      return message(form, 'Thumbnail crop applies only to lead images.', {
+        status: 400,
       });
 
     const galleryCropConfigByGalleryId = await loadGalleryCropConfigByGalleryId(
@@ -317,9 +324,11 @@ export const photoImageActions: Actions = {
     if (
       galleryCropConfigByGalleryId[targetGalleryId]?.layoutMode !== 'uniform'
     ) {
-      return fail(400, {
-        message: 'Thumbnail crop is only available for uniform galleries.',
-      });
+      return message(
+        form,
+        'Thumbnail crop is only available for uniform galleries.',
+        { status: 400 },
+      );
     }
 
     const updates: Record<string, number | null> = {};
@@ -333,7 +342,7 @@ export const photoImageActions: Actions = {
       .eq('id', imageId)
       .eq('photo_id', photoId);
 
-    if (updateError) return fail(400, { message: updateError.message });
+    if (updateError) return message(form, updateError.message, { status: 400 });
 
     return { success: true, message: 'Thumbnail crop saved.' };
   },
@@ -357,10 +366,11 @@ export const photoImageActions: Actions = {
         .eq('id', photoId)
         .eq('gallery_id', galleryId)
         .maybeSingle();
-      if (guard.error) return fail(400, { message: guard.error.message });
+      if (guard.error)
+        return message(form, guard.error.message, { status: 400 });
       if (!guard.data)
-        return fail(404, {
-          message: 'Photo not found in this gallery.',
+        return message(form, 'Photo not found in this gallery.', {
+          status: 404,
         });
     }
 
@@ -371,10 +381,11 @@ export const photoImageActions: Actions = {
       .eq('photo_id', photoId)
       .maybeSingle();
 
-    if (loadError || !image) return fail(404, { message: 'Image not found.' });
+    if (loadError || !image)
+      return message(form, 'Image not found.', { status: 404 });
     if (image.kind !== 'lead')
-      return fail(400, {
-        message: 'Thumbnail crop applies only to lead images.',
+      return message(form, 'Thumbnail crop applies only to lead images.', {
+        status: 400,
       });
 
     const { error: updateError } = await locals.supabase
@@ -387,7 +398,7 @@ export const photoImageActions: Actions = {
       .eq('id', imageId)
       .eq('photo_id', photoId);
 
-    if (updateError) return fail(400, { message: updateError.message });
+    if (updateError) return message(form, updateError.message, { status: 400 });
 
     return { success: true, message: 'Thumbnail crop cleared.' };
   },

@@ -20,7 +20,10 @@
   const { data, form } = $props();
   const sfForm = $derived(form?.form);
   const formMessage = $derived(
-    (sfForm?.message as string | undefined) ?? form?.message,
+    (sfForm?.message as string | undefined) ??
+      (form && typeof form === 'object' && 'message' in form
+        ? (form.message as string | undefined)
+        : undefined),
   );
   const formSuccess = $derived(
     sfForm?.valid ??

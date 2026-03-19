@@ -20,7 +20,13 @@ export const actions: Actions = {
   login: async ({ locals, request }) => {
     const form = await superValidate(request, zod4(loginSchema));
     if (!form.valid) {
-      return message(form, 'Email and password are required.', { status: 400 });
+      return message(
+        form,
+        form.errors.email?.[0] ??
+        form.errors.password?.[0] ??
+        'Validation failed.',
+        { status: 400 },
+      );
     }
 
     const { error } = await locals.supabase.auth.signInWithPassword({

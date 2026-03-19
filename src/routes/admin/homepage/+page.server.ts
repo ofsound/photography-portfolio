@@ -1,4 +1,4 @@
-import { fail, type Actions } from '@sveltejs/kit';
+import { type Actions } from '@sveltejs/kit';
 import { message, setError, superValidate } from 'sveltekit-superforms/server';
 import { zod4 } from 'sveltekit-superforms/adapters';
 
@@ -258,21 +258,21 @@ export const load: PageServerLoad = async ({ locals, url }) => {
         image && typeof image === 'object' && 'photos' in image
           ? Array.isArray((image as { photos: unknown }).photos)
             ? (
-                image as {
-                  photos: Array<{
-                    title?: string;
-                    slug?: string;
-                  }>;
-                }
-              ).photos[0]
+              image as {
+                photos: Array<{
+                  title?: string;
+                  slug?: string;
+                }>;
+              }
+            ).photos[0]
             : (
-                image as {
-                  photos: {
-                    title?: string;
-                    slug?: string;
-                  };
-                }
-              ).photos
+              image as {
+                photos: {
+                  title?: string;
+                  slug?: string;
+                };
+              }
+            ).photos
           : undefined;
 
       const img = image as
@@ -295,20 +295,20 @@ export const load: PageServerLoad = async ({ locals, url }) => {
     .filter(
       (row: {
         photos?:
-          | {
-              status?: string;
-              deleted_at?: string | null;
-              galleries?:
-                | { visibility_status?: string }
-                | Array<{ visibility_status?: string }>;
-            }
-          | Array<{
-              status?: string;
-              deleted_at?: string | null;
-              galleries?:
-                | { visibility_status?: string }
-                | Array<{ visibility_status?: string }>;
-            }>;
+        | {
+          status?: string;
+          deleted_at?: string | null;
+          galleries?:
+          | { visibility_status?: string }
+          | Array<{ visibility_status?: string }>;
+        }
+        | Array<{
+          status?: string;
+          deleted_at?: string | null;
+          galleries?:
+          | { visibility_status?: string }
+          | Array<{ visibility_status?: string }>;
+        }>;
       }) => {
         const photo = Array.isArray(row.photos) ? row.photos[0] : row.photos;
         if (!photo) return false;
@@ -328,8 +328,8 @@ export const load: PageServerLoad = async ({ locals, url }) => {
         position: number;
         delivery_storage_path: string | null;
         photos?:
-          | { title?: string; slug?: string }
-          | Array<{ title?: string; slug?: string }>;
+        | { title?: string; slug?: string }
+        | Array<{ title?: string; slug?: string }>;
       }) => {
         const photo = Array.isArray(row.photos) ? row.photos[0] : row.photos;
         return {
@@ -352,7 +352,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
     slideDurationMs,
     clampInt(
       settingsQuery.data?.homepage_transition_duration_ms ??
-        DEFAULT_TRANSITION_DURATION_MS,
+      DEFAULT_TRANSITION_DURATION_MS,
       TRANSITION_DURATION_MIN_MS,
       TRANSITION_DURATION_MAX_MS,
     ),
@@ -446,7 +446,7 @@ export const actions: Actions = {
       slideDurationMs,
       clampInt(
         Number(form.data.transition_duration_ms) ||
-          DEFAULT_TRANSITION_DURATION_MS,
+        DEFAULT_TRANSITION_DURATION_MS,
         TRANSITION_DURATION_MIN_MS,
         TRANSITION_DURATION_MAX_MS,
       ),
@@ -478,9 +478,9 @@ export const actions: Actions = {
     ]);
 
     if (slidesResult.error)
-      return fail(400, { message: slidesResult.error.message });
+      return message(form, slidesResult.error.message, { status: 400 });
     if (settingsResult.error)
-      return fail(400, { message: settingsResult.error.message });
+      return message(form, settingsResult.error.message, { status: 400 });
 
     return message(form, 'Homepage slideshow updated.');
   },
@@ -535,7 +535,7 @@ export const actions: Actions = {
       .eq('kind', 'home');
 
     if (updateResult.error) {
-      return fail(400, { message: updateResult.error.message });
+      return message(form, updateResult.error.message, { status: 400 });
     }
 
     return message(form, 'Homepage hero updated.');
@@ -566,7 +566,7 @@ export const actions: Actions = {
       .maybeSingle();
 
     if (revisionQuery.error || !revisionQuery.data) {
-      return fail(404, { message: 'Revision not found.' });
+      return message(form, 'Revision not found.', { status: 404 });
     }
 
     const snapshot = revisionQuery.data.snapshot as Record<string, unknown>;
@@ -578,9 +578,11 @@ export const actions: Actions = {
         : null;
 
     if (sveditDocResult && !sveditDocResult.ok) {
-      return fail(400, {
-        message: `Cannot roll back invalid Svedit revision: ${sveditDocResult.message}`,
-      });
+      return message(
+        form,
+        `Cannot roll back invalid Svedit revision: ${sveditDocResult.message}`,
+        { status: 400 },
+      );
     }
 
     const sanitizedHtml =
@@ -597,7 +599,7 @@ export const actions: Actions = {
           err instanceof CmsTailwindCompileError
             ? err.message
             : 'Failed to compile Tailwind CSS for this rollback.';
-        return fail(400, { message: msg });
+        return message(form, msg, { status: 400 });
       }
     }
 
@@ -647,7 +649,7 @@ export const actions: Actions = {
       .eq('kind', 'home');
 
     if (updateResult.error) {
-      return fail(400, { message: updateResult.error.message });
+      return message(form, updateResult.error.message, { status: 400 });
     }
 
     return message(form, 'Homepage hero rolled back.');

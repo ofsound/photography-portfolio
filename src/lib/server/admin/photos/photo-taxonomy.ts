@@ -1,4 +1,4 @@
-import { fail, type Actions } from '@sveltejs/kit';
+import { type Actions } from '@sveltejs/kit';
 import { superValidate, message } from 'sveltekit-superforms/server';
 import { zod4 } from 'sveltekit-superforms/adapters';
 
@@ -28,7 +28,7 @@ export const photoTaxonomyActions: Actions = {
     );
 
     if (!photoIds.length)
-      return fail(400, { message: 'Select at least one photo.' });
+      return message(form, 'Select at least one photo.', { status: 400 });
 
     if (galleryId) {
       const guard = await locals.supabase
@@ -36,15 +36,18 @@ export const photoTaxonomyActions: Actions = {
         .select('id')
         .eq('gallery_id', galleryId)
         .in('id', photoIds);
-      if (guard.error) return fail(400, { message: guard.error.message });
+      if (guard.error)
+        return message(form, guard.error.message, { status: 400 });
       if ((guard.data ?? []).length !== photoIds.length) {
-        return fail(400, {
-          message: 'Some selected photos are outside this gallery.',
+        return message(form, 'Some selected photos are outside this gallery.', {
+          status: 400,
         });
       }
     }
     if (!categoryIds.length && !tagIds.length) {
-      return fail(400, { message: 'Select categories and/or tags to add.' });
+      return message(form, 'Select categories and/or tags to add.', {
+        status: 400,
+      });
     }
 
     if (categoryIds.length) {
@@ -55,7 +58,7 @@ export const photoTaxonomyActions: Actions = {
           .in('photo_id', photoIds)
           .in('category_id', categoryIds);
       if (existingCatError)
-        return fail(400, { message: existingCatError.message });
+        return message(form, existingCatError.message, { status: 400 });
 
       const existingSet = new Set(
         (existingCats ?? []).map((row) => `${row.photo_id}:${row.category_id}`),
@@ -73,7 +76,7 @@ export const photoTaxonomyActions: Actions = {
         const { error } = await locals.supabase
           .from('photo_categories')
           .insert(payload);
-        if (error) return fail(400, { message: error.message });
+        if (error) return message(form, error.message, { status: 400 });
       }
     }
 
@@ -85,7 +88,7 @@ export const photoTaxonomyActions: Actions = {
           .in('photo_id', photoIds)
           .in('tag_id', tagIds);
       if (existingTagError)
-        return fail(400, { message: existingTagError.message });
+        return message(form, existingTagError.message, { status: 400 });
 
       const existingSet = new Set(
         (existingTags ?? []).map((row) => `${row.photo_id}:${row.tag_id}`),
@@ -100,7 +103,7 @@ export const photoTaxonomyActions: Actions = {
         const { error } = await locals.supabase
           .from('photo_tags')
           .insert(payload);
-        if (error) return fail(400, { message: error.message });
+        if (error) return message(form, error.message, { status: 400 });
       }
     }
 
@@ -133,10 +136,11 @@ export const photoTaxonomyActions: Actions = {
         .eq('id', photoId)
         .eq('gallery_id', galleryId)
         .maybeSingle();
-      if (guard.error) return fail(400, { message: guard.error.message });
+      if (guard.error)
+        return message(form, guard.error.message, { status: 400 });
       if (!guard.data)
-        return fail(404, {
-          message: 'Photo not found in this gallery.',
+        return message(form, 'Photo not found in this gallery.', {
+          status: 404,
         });
     }
 
@@ -146,7 +150,7 @@ export const photoTaxonomyActions: Actions = {
       p_tag_ids: tagIds,
     });
 
-    if (error) return fail(400, { message: error.message });
+    if (error) return message(form, error.message, { status: 400 });
 
     return { success: true, message: 'Photo categories/tags updated.' };
   },

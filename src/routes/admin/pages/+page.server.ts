@@ -1,4 +1,4 @@
-import { fail, redirect, type Actions } from '@sveltejs/kit';
+import { redirect, type Actions } from '@sveltejs/kit';
 import { message, setError, superValidate } from 'sveltekit-superforms/server';
 import { zod4 } from 'sveltekit-superforms/adapters';
 
@@ -113,7 +113,7 @@ export const actions: Actions = {
       .single();
 
     if (insertResult.error) {
-      return fail(400, { message: insertResult.error.message });
+      return message(form, insertResult.error.message, { status: 400 });
     }
 
     const createdSlug = insertResult.data?.slug ?? result.payload.slug;

@@ -13,7 +13,9 @@
     "autofix:queue:next": "node scripts/autofix-batch.mjs next",
     "autofix:queue:status": "node scripts/autofix-batch.mjs status",
     "autofix:queue:reset": "node scripts/autofix-batch.mjs reset",
-    "autofix:queue:mark": "node scripts/autofix-batch.mjs mark"
+    "autofix:queue:mark": "node scripts/autofix-batch.mjs mark",
+    "test:unit": "vitest",
+    "test": "npm run test:unit -- --run"
   },
   "devDependencies": {
     "@sveltejs/adapter-vercel": "^6.3.3",
@@ -30,7 +32,8 @@
     "svelte-check": "^4.4.3",
     "tailwindcss": "^4.2.1",
     "typescript": "^5.9.3",
-    "vite": "^7.3.1"
+    "vite": "^7.3.1",
+    "vitest": "^4.1.0"
   },
   "dependencies": {
     "@codemirror/lang-css": "^6.3.1",

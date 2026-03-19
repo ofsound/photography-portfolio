@@ -402,91 +402,99 @@
       </FormField>
     </div>
 
-    <div
-      class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:gap-5"
-    >
-      <FormField
-        label="Promote Duration (ms)"
-        id={p('thumbnail_promote_duration_ms')}
-        hint={allowMotionOverrides
-          ? 'Leave blank to inherit defaults.'
-          : 'Must be 1 - 5000 ms.'}
-        error={fieldErrors.thumbnail_promote_duration_ms}
-        class="w-fit"
-      >
-        <div class="w-[9ch]">
-          <FormInput
-            id={p('thumbnail_promote_duration_ms')}
-            name="thumbnail_promote_duration_ms"
-            type="number"
-            min="1"
-            max="5000"
-            step="1"
-            value={promoteDurationValue}
-            {readonly}
-          />
-        </div>
-      </FormField>
-      <FormField
-        label="Promote Easing"
-        id={p('thumbnail_promote_easing')}
-        hint={allowMotionOverrides
-          ? 'Leave blank to inherit defaults. Example: cubic-bezier(0.16, 1, 0.3, 1)'
-          : 'Example: cubic-bezier(0.16, 1, 0.3, 1)'}
-        error={fieldErrors.thumbnail_promote_easing}
-        class="min-w-[18rem] flex-1"
-      >
-        <FormInput
-          id={p('thumbnail_promote_easing')}
-          name="thumbnail_promote_easing"
-          value={promoteEasingValue}
-          {readonly}
-        />
-      </FormField>
-    </div>
+    <AdminCard class="grid gap-3 p-3">
+      <div class="grid gap-1">
+        <AdminHeading level={3}>Thumbnail transitions</AdminHeading>
+      </div>
 
-    <div
-      class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:gap-5"
-    >
-      <FormField
-        label="Demote Duration (ms)"
-        id={p('thumbnail_demote_duration_ms')}
-        hint={allowMotionOverrides
-          ? 'Leave blank to inherit defaults.'
-          : 'Must be 1 - 5000 ms.'}
-        error={fieldErrors.thumbnail_demote_duration_ms}
-        class="w-fit"
-      >
-        <div class="w-[9ch]">
-          <FormInput
-            id={p('thumbnail_demote_duration_ms')}
-            name="thumbnail_demote_duration_ms"
-            type="number"
-            min="1"
-            max="5000"
-            step="1"
-            value={demoteDurationValue}
-            {readonly}
-          />
+      <div class="flex flex-col gap-3">
+        <div
+          class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:gap-5"
+        >
+          <FormField
+            label="Promote Duration (ms)"
+            id={p('thumbnail_promote_duration_ms')}
+            hint={allowMotionOverrides
+              ? 'Leave blank to inherit defaults.'
+              : 'Must be 1 - 5000 ms.'}
+            error={fieldErrors.thumbnail_promote_duration_ms}
+            class="w-fit"
+          >
+            <div class="w-[9ch]">
+              <FormInput
+                id={p('thumbnail_promote_duration_ms')}
+                name="thumbnail_promote_duration_ms"
+                type="number"
+                min="1"
+                max="5000"
+                step="1"
+                value={promoteDurationValue}
+                {readonly}
+              />
+            </div>
+          </FormField>
+          <FormField
+            label="Promote Easing"
+            id={p('thumbnail_promote_easing')}
+            hint={allowMotionOverrides
+              ? 'Leave blank to inherit defaults. Example: cubic-bezier(0.16, 1, 0.3, 1)'
+              : 'Example: cubic-bezier(0.16, 1, 0.3, 1)'}
+            error={fieldErrors.thumbnail_promote_easing}
+            class="w-[240px] max-w-full"
+          >
+            <FormInput
+              id={p('thumbnail_promote_easing')}
+              name="thumbnail_promote_easing"
+              value={promoteEasingValue}
+              {readonly}
+            />
+          </FormField>
         </div>
-      </FormField>
-      <FormField
-        label="Demote Easing"
-        id={p('thumbnail_demote_easing')}
-        hint={allowMotionOverrides
-          ? 'Leave blank to inherit defaults. Example: cubic-bezier(0.16, 1, 0.3, 1)'
-          : 'Example: cubic-bezier(0.16, 1, 0.3, 1)'}
-        error={fieldErrors.thumbnail_demote_easing}
-        class="min-w-[18rem] flex-1"
-      >
-        <FormInput
-          id={p('thumbnail_demote_easing')}
-          name="thumbnail_demote_easing"
-          value={demoteEasingValue}
-          {readonly}
-        />
-      </FormField>
-    </div>
+
+        <div
+          class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:gap-5"
+        >
+          <FormField
+            label="Demote Duration (ms)"
+            id={p('thumbnail_demote_duration_ms')}
+            hint={allowMotionOverrides
+              ? 'Leave blank to inherit defaults.'
+              : 'Must be 1 - 5000 ms.'}
+            error={fieldErrors.thumbnail_demote_duration_ms}
+            class="w-fit"
+          >
+            <div class="w-[9ch]">
+              <FormInput
+                id={p('thumbnail_demote_duration_ms')}
+                name="thumbnail_demote_duration_ms"
+                type="number"
+                min="1"
+                max="5000"
+                step="1"
+                value={demoteDurationValue}
+                {readonly}
+              />
+            </div>
+          </FormField>
+          <FormField
+            label="Demote Easing"
+            id={p('thumbnail_demote_easing')}
+            hint={allowMotionOverrides
+              ? 'Leave blank to inherit defaults. Example: cubic-bezier(0.16, 1, 0.3, 1)'
+              : 'Example: cubic-bezier(0.16, 1, 0.3, 1)'}
+            error={fieldErrors.thumbnail_demote_easing}
+            class="w-[240px] max-w-full"
+          >
+            <FormInput
+              id={p('thumbnail_demote_easing')}
+              name="thumbnail_demote_easing"
+              value={demoteEasingValue}
+              {readonly}
+            />
+          </FormField>
+        </div>
+      </div>
+    </AdminCard>
 
     {#if detailViewMode === 'classic'}
       <AdminCard class="grid gap-3 p-3">

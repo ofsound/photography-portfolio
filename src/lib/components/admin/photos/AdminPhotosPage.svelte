@@ -449,6 +449,36 @@
   onDensityChange={updateDensity}
 />
 
+{#if isMobile}
+  <div class="mt-4 flex flex-col gap-3">
+    <label
+      class="flex cursor-pointer items-center gap-2 text-xs tracking-widest uppercase"
+    >
+      <input
+        type="checkbox"
+        checked={showBulkTaxonomy}
+        onchange={() => (showBulkTaxonomy = !showBulkTaxonomy)}
+        class="rounded border-border"
+      />
+      Show Taxonomy
+    </label>
+    {#if showBulkTaxonomy}
+      <PhotoTaxonomyEditor
+        {categories}
+        {tags}
+        {taxonomyDraftCategories}
+        {taxonomyDraftTags}
+        {selectedPhotoIds}
+        {galleryScopeId}
+        {categoryById}
+        {tagById}
+        {addTaxonomyDraft}
+        {removeTaxonomyDraft}
+      />
+    {/if}
+  </div>
+{/if}
+
 <AdminPhotosBulkPanel
   {selectedPhotoIds}
   showArchived={data.showArchived}
@@ -468,6 +498,7 @@
   {showBulkTaxonomy}
   onToggleShowBulkTaxonomy={() => (showBulkTaxonomy = !showBulkTaxonomy)}
   hideTaxonomyEditor={true}
+  showTaxonomyToggleInPanel={!isMobile}
 />
 
 <section class="mt-8">
@@ -475,7 +506,7 @@
     class="mx-auto flex w-full flex-col items-start gap-6 md:flex-row"
     style={sectionMaxWidthStyle}
   >
-    <div class="order-2 min-w-0 flex-1 md:order-none">
+    <div class="min-w-0 flex-1">
       {#if canReorder}
         <p class="mb-2 text-[10px] tracking-wider text-text-muted uppercase">
           Drag photos to change the order
@@ -564,10 +595,8 @@
       </DragDropProvider>
     </div>
 
-    {#if showBulkTaxonomy}
-      <aside
-        class="order-1 w-full flex-shrink-0 md:sticky md:top-20 md:order-none md:max-w-[300px]"
-      >
+    {#if showBulkTaxonomy && !isMobile}
+      <aside class="w-full flex-shrink-0 md:sticky md:top-20 md:max-w-[300px]">
         <PhotoTaxonomyEditor
           {categories}
           {tags}

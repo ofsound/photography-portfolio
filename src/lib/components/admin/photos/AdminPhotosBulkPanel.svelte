@@ -24,6 +24,7 @@
     showBulkTaxonomy = false,
     onToggleShowBulkTaxonomy,
     hideTaxonomyEditor = false,
+    showTaxonomyToggleInPanel = true,
   } = $props<{
     selectedPhotoIds: string[];
     showArchived?: boolean;
@@ -43,6 +44,8 @@
     showBulkTaxonomy?: boolean;
     onToggleShowBulkTaxonomy?: () => void;
     hideTaxonomyEditor?: boolean;
+    /** When false, the parent renders the Show Taxonomy control (e.g. mobile placement). */
+    showTaxonomyToggleInPanel?: boolean;
   }>();
 
   let destinationGalleryId = $state('');
@@ -194,9 +197,9 @@
       </form>
     {/if}
 
-    {#if onToggleShowBulkTaxonomy}
+    {#if onToggleShowBulkTaxonomy && showTaxonomyToggleInPanel}
       <label
-        class="ml-auto flex cursor-pointer items-center gap-2 text-xs tracking-widest uppercase"
+        class="flex cursor-pointer items-center gap-2 text-xs tracking-widest uppercase md:ml-auto"
       >
         <input
           type="checkbox"

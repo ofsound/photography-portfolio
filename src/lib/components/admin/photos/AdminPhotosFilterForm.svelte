@@ -44,7 +44,7 @@
 <div
   class="my-6 flex w-full flex-col gap-3 md:flex-row md:flex-wrap md:items-end"
 >
-  <div class="flex items-center justify-between gap-3 md:hidden">
+  <div class="flex items-center gap-3 md:hidden">
     <label
       class="flex cursor-pointer items-center gap-2 text-xs tracking-widest uppercase"
     >
@@ -55,8 +55,6 @@
       />
       Show Filters
     </label>
-
-    <AdminButton type="submit" form={filterFormId}>Apply</AdminButton>
   </div>
 
   <form
@@ -116,7 +114,7 @@
       </div>
     {/if}
 
-    <div class="mb-1 hidden w-full md:block md:w-auto">
+    <div class="mt-2 mb-1 w-full md:mt-0 md:w-auto">
       <AdminButton type="submit">Apply</AdminButton>
     </div>
   </form>

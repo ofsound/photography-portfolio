@@ -1,10 +1,14 @@
 import { sveltekit } from '@sveltejs/kit/vite';
 import tailwindcss from '@tailwindcss/vite';
-import { defineConfig } from 'vite';
+import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
   plugins: [tailwindcss(), sveltekit()],
-  ssr: {
-    noExternal: ['svelte-codemirror-editor']
+  ssr: { noExternal: ['svelte-codemirror-editor'] },
+  test: {
+    expect: { requireAssertions: true },
+    environment: 'node',
+    include: ['src/**/*.{test,spec}.{js,ts}'],
+    exclude: ['src/**/*.svelte.{test,spec}.{js,ts}']
   }
 });

@@ -24,7 +24,7 @@
 
 <Node
   {path}
-  class="border-border-subtle space-y-3 rounded-md border bg-surface/40 p-3"
+  class="border-border-subtle flex flex-col gap-3 rounded-md border bg-surface/40 p-3"
 >
   <div
     class="border-border-subtle overflow-hidden rounded border bg-surface"

@@ -8,7 +8,7 @@
 </script>
 
 <Node {path}>
-  <div class="space-y-2" contenteditable="false">
+  <div class="flex flex-col gap-2" contenteditable="false">
     <hr class="border-border-strong" />
     {#if svedit.editable}
       <p

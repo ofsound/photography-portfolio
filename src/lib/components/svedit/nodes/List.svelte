@@ -8,6 +8,6 @@
   <NodeArrayProperty
     path={[...path, 'list_items']}
     tag="ul"
-    class="ml-6 list-disc space-y-2"
+    class="ml-6 flex list-disc flex-col gap-2"
   />
 </Node>

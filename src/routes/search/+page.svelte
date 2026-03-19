@@ -446,7 +446,7 @@
     </label>
   </section>
 
-  <section class="space-y-4">
+  <section class="flex flex-col gap-4">
     <div class="flex flex-wrap items-center gap-2">
       {#if hasActiveFilters}
         {#each activeFilterSummary as item (item)}
@@ -463,7 +463,7 @@
       <div
         class="grid min-h-64 place-items-center rounded-sm border border-dashed border-border-strong bg-surface-muted/40 p-8 text-center"
       >
-        <div class="max-w-md space-y-3">
+        <div class="flex max-w-md flex-col gap-3">
           <p class="text-lg font-medium">{emptyStateCopy}</p>
           <p class="text-sm leading-6 text-text-muted">
             Adjust the search or clear the active filters to return to the full
@@ -506,7 +506,7 @@
             </div>
 
             <div class="flex items-start justify-between gap-4 p-4">
-              <div class="min-w-0 space-y-1">
+              <div class="flex min-w-0 flex-col gap-1">
                 <p class="truncate text-lg font-medium">{photo.title}</p>
                 <p
                   class="truncate text-xs tracking-[0.24em] text-text-muted uppercase"

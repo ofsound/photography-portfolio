@@ -35,14 +35,34 @@
     densityMax?: number;
     onDensityChange?: (value: number) => void;
   }>();
+
+  const filterFormId = 'admin-photos-filter-form';
+
+  let showFilters = $state(false);
 </script>
 
 <div
   class="my-6 flex w-full flex-col gap-3 md:flex-row md:flex-wrap md:items-end"
 >
+  <div class="flex items-center justify-between gap-3 md:hidden">
+    <label
+      class="flex cursor-pointer items-center gap-2 text-xs tracking-widest uppercase"
+    >
+      <input
+        type="checkbox"
+        bind:checked={showFilters}
+        class="rounded border-border"
+      />
+      Show Filters
+    </label>
+
+    <AdminButton type="submit" form={filterFormId}>Apply</AdminButton>
+  </div>
+
   <form
+    id={filterFormId}
     method="GET"
-    class="flex min-w-0 flex-1 flex-col gap-3 md:flex-row md:flex-wrap md:items-end"
+    class={`min-w-0 flex-1 flex-col gap-3 md:flex md:flex-row md:flex-wrap md:items-end ${showFilters ? 'flex' : 'hidden'}`}
   >
     <input type="hidden" name="showArchived" value={showArchived ? '1' : '0'} />
     <div class="w-full md:max-w-xs md:min-w-44 md:flex-1">
@@ -96,7 +116,7 @@
       </div>
     {/if}
 
-    <div class="mb-1 w-full md:w-auto">
+    <div class="mb-1 hidden w-full md:block md:w-auto">
       <AdminButton type="submit">Apply</AdminButton>
     </div>
   </form>

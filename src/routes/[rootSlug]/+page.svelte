@@ -1,10 +1,8 @@
 <script lang="ts">
-  import { onMount, untrack } from 'svelte';
   import { page } from '$app/state';
-  import { fade } from 'svelte/transition';
 
+  import CustomPageEntrance from '$lib/components/CustomPageEntrance.svelte';
   import { useAdminFormState } from '$lib/components/admin/useAdminFormState.svelte';
-  import CmsPageView from '$lib/components/CmsPageView.svelte';
   import { resolveSeoOgMeta } from '$lib/utils/seo-meta';
   import { photoPublicUrl, toOgImageUrl } from '$lib/utils/storage-url';
 
@@ -80,19 +78,11 @@
         page.url.searchParams.get('edit') === '1'),
   );
 
-  let bgLoaded = $state(untrack(() => !data.customPage?.bg_image_url));
+  const customPageVisitKey = $derived.by(() => {
+    if (data.viewerMode !== 'page' || !data.customPage) return null;
 
-  onMount(() => {
-    if (!data.customPage?.bg_image_url) return;
-    const timeout = setTimeout(() => {
-      bgLoaded = true;
-    }, 5000);
-    return () => clearTimeout(timeout);
+    return `${data.customPage.id}:${data.customPage.slug}:${data.customPage.bg_image_url ?? ''}`;
   });
-
-  function markBgLoaded() {
-    bgLoaded = true;
-  }
 </script>
 
 <svelte:head>
@@ -133,56 +123,11 @@
 {/if}
 
 {#if data.viewerMode === 'page' && data.customPage}
-  {#if data.customPage.bg_image_url}
-    {#if data.customPage.bg_image_fixed}
-      <div class="relative">
-        <img
-          src={data.customPage.bg_image_url}
-          alt=""
-          aria-hidden="true"
-          class="fixed inset-0 z-0 h-full w-full object-cover"
-          onload={markBgLoaded}
-          onerror={markBgLoaded}
-        />
-        {#if bgLoaded}
-          <div
-            class="relative z-10 min-h-screen"
-            transition:fade={{ duration: 400 }}
-          >
-            <CmsPageView
-              page={data.customPage}
-              editable={isEditMode}
-              maxWidthPx={customPageMaxWidthPx}
-            />
-          </div>
-        {/if}
-      </div>
-    {:else}
-      <div class="relative min-h-screen">
-        <img
-          src={data.customPage.bg_image_url}
-          alt=""
-          aria-hidden="true"
-          class="absolute inset-0 h-full w-full object-cover"
-          onload={markBgLoaded}
-          onerror={markBgLoaded}
-        />
-        {#if bgLoaded}
-          <div class="relative z-10" transition:fade={{ duration: 400 }}>
-            <CmsPageView
-              page={data.customPage}
-              editable={isEditMode}
-              maxWidthPx={customPageMaxWidthPx}
-            />
-          </div>
-        {/if}
-      </div>
-    {/if}
-  {:else}
-    <CmsPageView
+  {#key customPageVisitKey}
+    <CustomPageEntrance
       page={data.customPage}
       editable={isEditMode}
       maxWidthPx={customPageMaxWidthPx}
     />
-  {/if}
+  {/key}
 {/if}

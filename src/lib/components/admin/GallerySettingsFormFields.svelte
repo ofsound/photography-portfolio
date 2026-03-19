@@ -408,7 +408,7 @@
       <FormField
         label="Promote Duration (ms)"
         id={p('thumbnail_promote_duration_ms')}
-        helper={allowMotionOverrides
+        hint={allowMotionOverrides
           ? 'Leave blank to inherit defaults.'
           : 'Must be 1 - 5000 ms.'}
         error={fieldErrors.thumbnail_promote_duration_ms}
@@ -430,7 +430,7 @@
       <FormField
         label="Promote Easing"
         id={p('thumbnail_promote_easing')}
-        helper={allowMotionOverrides
+        hint={allowMotionOverrides
           ? 'Leave blank to inherit defaults. Example: cubic-bezier(0.16, 1, 0.3, 1)'
           : 'Example: cubic-bezier(0.16, 1, 0.3, 1)'}
         error={fieldErrors.thumbnail_promote_easing}
@@ -451,7 +451,7 @@
       <FormField
         label="Demote Duration (ms)"
         id={p('thumbnail_demote_duration_ms')}
-        helper={allowMotionOverrides
+        hint={allowMotionOverrides
           ? 'Leave blank to inherit defaults.'
           : 'Must be 1 - 5000 ms.'}
         error={fieldErrors.thumbnail_demote_duration_ms}
@@ -473,7 +473,7 @@
       <FormField
         label="Demote Easing"
         id={p('thumbnail_demote_easing')}
-        helper={allowMotionOverrides
+        hint={allowMotionOverrides
           ? 'Leave blank to inherit defaults. Example: cubic-bezier(0.16, 1, 0.3, 1)'
           : 'Example: cubic-bezier(0.16, 1, 0.3, 1)'}
         error={fieldErrors.thumbnail_demote_easing}
@@ -879,7 +879,7 @@
       <FormField
         label={'Nav Button Style' + (disableTransitionPreset ? ' (Admin)' : '')}
         id={p('nav_button_preset')}
-        helper={disableTransitionPreset
+        hint={disableTransitionPreset
           ? 'Admin-only setting. Editors can view but cannot modify this preset.'
           : undefined}
         class="w-fit"

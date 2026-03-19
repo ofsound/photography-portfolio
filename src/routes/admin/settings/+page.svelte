@@ -162,7 +162,7 @@
     <FormField
       label="Default Max Width (px)"
       id="default-page-max-width-px"
-      helper="Default/fallback max width for /search and custom pages."
+      hint="Default/fallback max width for /search and custom pages."
       error={fieldErrors.default_page_max_width_px}
     >
       <div class="w-[8ch]">
@@ -224,7 +224,7 @@
       <FormField
         label="Public Font Family"
         id="public-font-family"
-        helper="Example: 'Gabarito', 'sans-serif'"
+        hint="Example: 'Gabarito', 'sans-serif'"
         error={fieldErrors.public_font_family}
       >
         <div class="w-[20ch]">
@@ -258,7 +258,7 @@
     <FormField
       label="Admin Font Family"
       id="admin-font-family"
-      helper="Example: 'Inter', 'sans-serif'"
+      hint="Example: 'Inter', 'sans-serif'"
       error={fieldErrors.admin_font_family}
     >
       <div class="w-[20ch]">

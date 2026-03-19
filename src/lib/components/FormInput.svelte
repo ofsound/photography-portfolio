@@ -10,54 +10,32 @@
     formControlInvalidClass,
   } from '$lib/constants/form';
 
-  type Props = {
-    id?: string;
-    name?: string;
-    type?: string;
+  import type { HTMLInputAttributes } from 'svelte/elements';
+
+  type Props = Omit<HTMLInputAttributes, 'value'> & {
     value?: string;
-    placeholder?: string;
-    required?: boolean;
     invalid?: boolean;
     describedBy?: string;
-    class?: string;
-    oninput?: (e: Event) => void;
-    min?: string | number;
-    max?: string | number;
-    step?: string | number;
-    disabled?: boolean;
-    readonly?: boolean;
-    form?: string;
   };
 
   let {
-    id,
-    name,
-    type = 'text',
     value = $bindable(''),
-    placeholder,
-    required,
     invalid,
     describedBy,
     class: className = '',
-    oninput,
-    min,
-    max,
-    step,
-    disabled = false,
-    readonly = false,
-    form,
+    ...rest
   }: Props = $props();
 
   const fieldContext = getContext<FormFieldContextResolver | undefined>(
     formFieldContextKey,
   );
   const contextState = $derived(fieldContext?.());
-  const isRequired = $derived(required ?? contextState?.required ?? false);
+  const isRequired = $derived(rest.required ?? contextState?.required ?? false);
   const isInvalid = $derived(invalid ?? contextState?.invalid ?? false);
   const ariaDescribedBy = $derived.by(() => {
     const ids = [describedBy, contextState?.describedBy]
       .filter(Boolean)
-      .flatMap((value) => String(value).split(/\s+/g))
+      .flatMap((v) => String(v).split(/\s+/g))
       .filter(Boolean);
 
     if (!ids.length) return undefined;
@@ -70,22 +48,10 @@
 </script>
 
 <input
-  {id}
-  {name}
-  {type}
+  {...rest}
   bind:value
-  {placeholder}
   required={isRequired}
   class={fullClass}
-  {disabled}
-  {readonly}
-  {min}
-  {max}
-  {step}
-  {form}
   aria-invalid={isInvalid ? 'true' : undefined}
   aria-describedby={ariaDescribedBy}
-  oninput={(e) => {
-    oninput?.(e);
-  }}
 />

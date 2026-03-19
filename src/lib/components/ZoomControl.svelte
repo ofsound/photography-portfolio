@@ -1,17 +1,23 @@
 <script lang="ts">
+  import type { HTMLAttributes } from 'svelte/elements';
+
+  type Props = Omit<HTMLAttributes<HTMLDivElement>, 'role'> & {
+    value: number;
+    min?: number;
+    max?: number;
+    label?: string;
+    onUpdate: (value: number) => void;
+  };
+
   const {
     value,
     min = 1,
     max = 20,
     label = 'Zoom',
     onUpdate,
-  } = $props<{
-    value: number;
-    min?: number;
-    max?: number;
-    label?: string;
-    onUpdate: (value: number) => void;
-  }>();
+    class: className,
+    ...rest
+  }: Props = $props();
 
   const handleInput = (e: Event & { currentTarget: HTMLInputElement }) => {
     const v = Number(e.currentTarget.value);
@@ -31,7 +37,9 @@
 </script>
 
 <div
-  class="flex items-center gap-2 text-xs tracking-wider uppercase"
+  {...rest}
+  class="flex items-center gap-2 text-xs tracking-wider uppercase {className ??
+    ''}"
   role="group"
   aria-label={label}
 >

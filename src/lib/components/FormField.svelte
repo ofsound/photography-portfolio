@@ -9,7 +9,6 @@
   type Props = {
     label: string;
     id?: string;
-    helper?: string;
     hint?: string;
     error?: string;
     required?: boolean;
@@ -22,7 +21,6 @@
   const {
     label,
     id,
-    helper,
     hint,
     error,
     required = false,
@@ -32,7 +30,7 @@
     children,
   }: Props = $props();
 
-  const hintText = $derived(hint ?? helper);
+  const hintText = $derived(hint);
   const hintId = $derived(id && hintText ? `${id}-hint` : undefined);
   const errorText = $derived(error?.trim() ? error : undefined);
   const errorId = $derived(id && errorText ? `${id}-error` : undefined);

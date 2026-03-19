@@ -10,48 +10,36 @@
     formControlInvalidClass,
   } from '$lib/constants/form';
 
-  type Props = {
-    id?: string;
-    name?: string;
+  import type { HTMLTextareaAttributes } from 'svelte/elements';
+
+  type Props = Omit<HTMLTextareaAttributes, 'value'> & {
     value?: string;
-    rows?: number;
-    placeholder?: string;
-    required?: boolean;
     invalid?: boolean;
     describedBy?: string;
-    class?: string;
-    disabled?: boolean;
-    readonly?: boolean;
-    form?: string;
   };
 
   let {
-    id,
-    name,
     value = $bindable(''),
-    rows = 4,
-    placeholder,
-    required,
     invalid,
     describedBy,
     class: className = '',
-    disabled = false,
-    readonly = false,
-    form,
+    ...rest
   }: Props = $props();
 
   const fieldContext = getContext<FormFieldContextResolver | undefined>(
     formFieldContextKey,
   );
   const contextState = $derived(fieldContext?.());
-  const isRequired = $derived(required ?? contextState?.required ?? false);
+  const isRequired = $derived(rest.required ?? contextState?.required ?? false);
   const isInvalid = $derived(invalid ?? contextState?.invalid ?? false);
   const ariaDescribedBy = $derived.by(() => {
     const ids = [describedBy, contextState?.describedBy]
       .filter(Boolean)
-      .flatMap((value) => String(value).split(/\s+/g))
+      .flatMap((v) => String(v).split(/\s+/g))
       .filter(Boolean);
+
     if (!ids.length) return undefined;
+
     return [...new Set(ids)].join(' ');
   });
   const fullClass = $derived(
@@ -60,16 +48,10 @@
 </script>
 
 <textarea
-  {id}
-  {name}
+  {...rest}
   bind:value
-  {rows}
-  {placeholder}
   required={isRequired}
   class={fullClass}
-  {disabled}
-  {readonly}
-  {form}
   aria-invalid={isInvalid ? 'true' : undefined}
   aria-describedby={ariaDescribedBy}
 ></textarea>

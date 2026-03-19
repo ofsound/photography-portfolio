@@ -236,7 +236,7 @@
   <FormField
     label="Max Width Override (px)"
     id="page-edit-max_width_override_px"
-    helper="Optional. Leave blank to use the site default ({siteDefaultMaxWidth}px)."
+    hint="Optional. Leave blank to use the site default ({siteDefaultMaxWidth}px)."
     error={fieldErrors.max_width_override_px}
   >
     <FormInput

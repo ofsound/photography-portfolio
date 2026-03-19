@@ -16,10 +16,12 @@
     scrollListOnly?: boolean;
     reverseColumnOrder?: boolean;
     showMobileDivider?: boolean;
+    class?: string;
     create: import('svelte').Snippet;
     list: import('svelte').Snippet;
     leading?: import('svelte').Snippet;
     actions?: import('svelte').Snippet;
+    [key: string]: unknown;
   }
 
   const {
@@ -35,10 +37,12 @@
     scrollListOnly = false,
     reverseColumnOrder = false,
     showMobileDivider = false,
+    class: className,
     create,
     list,
     leading,
     actions,
+    ...rest
   }: Props = $props();
 
   const hasHeaderContent = $derived(!!(title ?? leading ?? actions));
@@ -46,9 +50,10 @@
 
 {#if overflow}
   <div
+    {...rest}
     class="flex flex-col {scrollListOnly
       ? 'lg:max-h-[calc(100dvh-var(--site-header-height)-8rem)] lg:min-h-0'
-      : ''}"
+      : ''} {className ?? ''}"
   >
     {#if hasHeaderContent}
       <AdminPageHeader
@@ -96,51 +101,53 @@
     </section>
   </div>
 {:else}
-  {#if hasHeaderContent}
-    <AdminPageHeader
-      title={title ?? ''}
-      {subtitle}
-      {formMessage}
-      {formSuccess}
-      {dataMessage}
-      {dataSuccess}
-      {clearDataMessageQuery}
-      {toastLinks}
-      {leading}
-      {actions}
-    />
-  {:else}
-    <div class="mb-4">
-      <AdminToastEmitter
-        message={formMessage}
-        type={formSuccess ? 'success' : 'error'}
-        links={formSuccess ? toastLinks : undefined}
+  <div {...rest} class={className ?? ''}>
+    {#if hasHeaderContent}
+      <AdminPageHeader
+        title={title ?? ''}
+        {subtitle}
+        {formMessage}
+        {formSuccess}
+        {dataMessage}
+        {dataSuccess}
+        {clearDataMessageQuery}
+        {toastLinks}
+        {leading}
+        {actions}
       />
-      <AdminToastEmitter
-        message={dataMessage}
-        type={dataSuccess ? 'success' : 'neutral'}
-        clearQueryMessage={clearDataMessageQuery}
-        links={dataSuccess ? toastLinks : undefined}
-      />
-    </div>
-  {/if}
-  <section
-    class="flex gap-8 {reverseColumnOrder
-      ? 'flex-col-reverse lg:flex-row-reverse'
-      : 'flex-col lg:flex-row'}"
-  >
-    <div
-      class="min-w-0 lg:w-96 lg:shrink-0 {reverseColumnOrder
-        ? '[&_form_button[type=submit]]:ml-auto'
-        : ''}"
-    >
-      {@render create()}
-    </div>
-    {#if showMobileDivider}
-      <div class="h-px shrink-0 bg-border lg:hidden" aria-hidden="true"></div>
+    {:else}
+      <div class="mb-4">
+        <AdminToastEmitter
+          message={formMessage}
+          type={formSuccess ? 'success' : 'error'}
+          links={formSuccess ? toastLinks : undefined}
+        />
+        <AdminToastEmitter
+          message={dataMessage}
+          type={dataSuccess ? 'success' : 'neutral'}
+          clearQueryMessage={clearDataMessageQuery}
+          links={dataSuccess ? toastLinks : undefined}
+        />
+      </div>
     {/if}
-    <div class="flex min-w-0 flex-1 flex-col gap-3">
-      {@render list()}
-    </div>
-  </section>
+    <section
+      class="flex gap-8 {reverseColumnOrder
+        ? 'flex-col-reverse lg:flex-row-reverse'
+        : 'flex-col lg:flex-row'}"
+    >
+      <div
+        class="min-w-0 lg:w-96 lg:shrink-0 {reverseColumnOrder
+          ? '[&_form_button[type=submit]]:ml-auto'
+          : ''}"
+      >
+        {@render create()}
+      </div>
+      {#if showMobileDivider}
+        <div class="h-px shrink-0 bg-border lg:hidden" aria-hidden="true"></div>
+      {/if}
+      <div class="flex min-w-0 flex-1 flex-col gap-3">
+        {@render list()}
+      </div>
+    </section>
+  </div>
 {/if}

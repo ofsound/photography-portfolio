@@ -10,46 +10,38 @@
     formControlInvalidClass,
   } from '$lib/constants/form';
 
-  type Props = {
-    id?: string;
-    name?: string;
+  import type { HTMLSelectAttributes } from 'svelte/elements';
+
+  type Props = Omit<HTMLSelectAttributes, 'value'> & {
     value?: string;
-    required?: boolean;
     invalid?: boolean;
     describedBy?: string;
-    class?: string;
-    disabled?: boolean;
-    form?: string;
-    onchange?: (event: Event & { currentTarget: HTMLSelectElement }) => void;
     children: Snippet;
   };
 
   let {
-    id,
-    name,
     value = $bindable(''),
-    required,
     invalid,
     describedBy,
     class: className = '',
-    disabled = false,
-    form,
-    onchange,
     children,
+    ...rest
   }: Props = $props();
 
   const fieldContext = getContext<FormFieldContextResolver | undefined>(
     formFieldContextKey,
   );
   const contextState = $derived(fieldContext?.());
-  const isRequired = $derived(required ?? contextState?.required ?? false);
+  const isRequired = $derived(rest.required ?? contextState?.required ?? false);
   const isInvalid = $derived(invalid ?? contextState?.invalid ?? false);
   const ariaDescribedBy = $derived.by(() => {
     const ids = [describedBy, contextState?.describedBy]
       .filter(Boolean)
-      .flatMap((value) => String(value).split(/\s+/g))
+      .flatMap((v) => String(v).split(/\s+/g))
       .filter(Boolean);
+
     if (!ids.length) return undefined;
+
     return [...new Set(ids)].join(' ');
   });
   const fullClass = $derived(
@@ -58,14 +50,10 @@
 </script>
 
 <select
-  {id}
-  {name}
+  {...rest}
   bind:value
-  {onchange}
   required={isRequired}
   class={fullClass}
-  {disabled}
-  {form}
   aria-invalid={isInvalid ? 'true' : undefined}
   aria-describedby={ariaDescribedBy}
 >

@@ -2,6 +2,7 @@
   import AdminButton from '$lib/components/admin/AdminButton.svelte';
   import AdminHeading from '$lib/components/admin/AdminHeading.svelte';
   import AdminPageHeader from '$lib/components/admin/AdminPageHeader.svelte';
+  import AdminStickyActionBar from '$lib/components/admin/AdminStickyActionBar.svelte';
   import FormField from '$lib/components/FormField.svelte';
   import FormInput from '$lib/components/FormInput.svelte';
   import FormSelect from '$lib/components/FormSelect.svelte';
@@ -137,7 +138,12 @@
   formSuccess={sfForm?.valid === true}
 />
 
-<form method="POST" action="?/saveSettings" class="grid gap-4">
+<form
+  id="site-settings-form"
+  method="POST"
+  action="?/saveSettings"
+  class="grid gap-4 pb-32"
+>
   <div class="flex flex-col gap-6">
     <FormField label="Site Color Theme" id="site-theme-default" class="w-fit">
       <FormSelect
@@ -447,15 +453,18 @@
         </div>
       </FormField>
     </div>
-
-    <div>
-      {#if canEditSiteTheme || canEditTransition || isAdmin}
-        <AdminButton type="submit" variant="submit">Save Settings</AdminButton>
-      {:else}
-        <p class="text-sm text-text-muted">
-          You do not have permission to edit site settings.
-        </p>
-      {/if}
-    </div>
+    {#if !(canEditSiteTheme || canEditTransition || isAdmin)}
+      <p class="text-sm text-text-muted">
+        You do not have permission to edit site settings.
+      </p>
+    {/if}
   </div>
 </form>
+
+{#if canEditSiteTheme || canEditTransition || isAdmin}
+  <AdminStickyActionBar>
+    <AdminButton type="submit" variant="submit" form="site-settings-form">
+      Save Settings
+    </AdminButton>
+  </AdminStickyActionBar>
+{/if}

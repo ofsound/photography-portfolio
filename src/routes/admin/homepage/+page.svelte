@@ -13,6 +13,7 @@
   import AdminHomepageNav from '$lib/components/admin/AdminHomepageNav.svelte';
   import AdminRevisionsDrawer from '$lib/components/admin/AdminRevisionsDrawer.svelte';
   import AdminSeoSocialDrawer from '$lib/components/admin/AdminSeoSocialDrawer.svelte';
+  import AdminStickyActionBar from '$lib/components/admin/AdminStickyActionBar.svelte';
   import AdminToastEmitter from '$lib/components/admin/AdminToastEmitter.svelte';
   import { useAdminFormState } from '$lib/components/admin/useAdminFormState.svelte';
   import FormField from '$lib/components/FormField.svelte';
@@ -300,7 +301,12 @@
   />
 
   {#if homePage}
-    <form method="POST" action="?/saveHero&section=hero" class="grid gap-3">
+    <form
+      id="homepage-hero-form"
+      method="POST"
+      action="?/saveHero&section=hero"
+      class="grid gap-3 pb-32"
+    >
       <input type="hidden" name="id" value={homePage.id} />
       <input type="hidden" name="slug" value="home" />
 
@@ -450,10 +456,6 @@
         bind:ogImagePath={heroOgImagePath}
       />
 
-      <div class="flex flex-wrap items-center gap-3">
-        <AdminButton type="submit" variant="submit">Save Hero</AdminButton>
-      </div>
-
       <AdminRevisionsDrawer
         id="homepage-hero-revisions"
         {revisions}
@@ -461,6 +463,12 @@
         storageKey="admin-revisions:homepage-hero"
       />
     </form>
+
+    <AdminStickyActionBar>
+      <AdminButton type="submit" variant="submit" form="homepage-hero-form">
+        Save Hero
+      </AdminButton>
+    </AdminStickyActionBar>
   {:else}
     <p class="mt-6 text-sm text-text-muted">
       Home page record is not available yet.

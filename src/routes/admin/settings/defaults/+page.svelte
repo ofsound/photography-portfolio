@@ -1,6 +1,7 @@
 <script lang="ts">
   import AdminButton from '$lib/components/admin/AdminButton.svelte';
   import AdminPageHeader from '$lib/components/admin/AdminPageHeader.svelte';
+  import AdminStickyActionBar from '$lib/components/admin/AdminStickyActionBar.svelte';
   import GallerySettingsFormFields from '$lib/components/admin/GallerySettingsFormFields.svelte';
   import { useAdminFormState } from '$lib/components/admin/useAdminFormState.svelte';
 
@@ -21,7 +22,12 @@
   formSuccess={form?.success === true}
 />
 
-<form method="POST" action="?/save" class="grid gap-4">
+<form
+  id="default-gallery-settings-form"
+  method="POST"
+  action="?/save"
+  class="grid gap-4 pb-32"
+>
   <GallerySettingsFormFields
     {settings}
     disableTransitionPreset={!isAdmin}
@@ -32,6 +38,14 @@
     motionOverrides={null}
     allowMotionOverrides={false}
   />
-
-  <AdminButton type="submit" variant="submit">Save Settings</AdminButton>
 </form>
+
+<AdminStickyActionBar>
+  <AdminButton
+    type="submit"
+    variant="submit"
+    form="default-gallery-settings-form"
+  >
+    Save Settings
+  </AdminButton>
+</AdminStickyActionBar>

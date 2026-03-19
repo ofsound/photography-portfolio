@@ -6,15 +6,21 @@
   import AdminToastViewport from '$lib/components/admin/AdminToastViewport.svelte';
   import MobileDropdownMenu from '$lib/components/navigation/MobileDropdownMenu.svelte';
 
+  import type { AdminRouteData } from '$lib/types/route-data';
   import { computeAdminPublicPath } from '$lib/utils/admin-public-paths';
 
-  const { data, children } = $props();
+  import type { LayoutData } from './$types';
+
+  const { data, children } = $props<{
+    data: LayoutData;
+    children: import('svelte').Snippet;
+  }>();
   let adminMobileMenuOpen = $state(false);
 
   const adminPublicPath = $derived.by(() =>
     computeAdminPublicPath(
       page.url.pathname,
-      (page.data as Record<string, unknown> | null) ?? null,
+      (page.data as AdminRouteData | null) ?? null,
     ),
   );
 

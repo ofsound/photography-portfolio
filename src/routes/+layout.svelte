@@ -23,6 +23,7 @@
     isGalleryDetailPath,
   } from '$lib/utils/gallery-routes';
   import { MEDIA_BELOW_MD } from '$lib/constants/breakpoints';
+  import type { AdminRouteData, ViewerRouteData } from '$lib/types/route-data';
 
   import type { LayoutData } from './$types';
 
@@ -97,10 +98,7 @@
 
   const globalSiteSettings = $derived(data?.siteSettings ?? null);
   const viewerGallerySettings = $derived(
-    ((page.data as Record<string, unknown> | null)?.gallerySettings ??
-      null) as {
-      theme_default?: 'light' | 'dark' | 'system' | null;
-    } | null,
+    (page.data as ViewerRouteData | null)?.gallerySettings ?? null,
   );
   const siteSettings = $derived(
     isViewerRoute(page.url.pathname) && viewerGallerySettings
@@ -149,12 +147,7 @@
   const isViewer = $derived(isViewerRoute(page.url.pathname));
   const isHomePage = $derived(page.url.pathname === '/');
   const isAdminRoute = $derived(isAdminPath(page.url.pathname));
-  const cmsRole = $derived(
-    ((data as Record<string, unknown> | null)?.cmsRole ?? null) as
-      | 'admin'
-      | 'editor'
-      | null,
-  );
+  const cmsRole = $derived(data?.cmsRole ?? null);
   const canAccessPublicEditor = $derived(
     cmsRole === 'admin' || cmsRole === 'editor',
   );
@@ -162,7 +155,7 @@
   // --- Public edit mode ---
 
   const currentRouteData = $derived(
-    (page.data as Record<string, unknown> | null) ?? null,
+    (page.data as ViewerRouteData | null) ?? null,
   );
   const canEditPublicPages = $derived(
     Boolean(currentRouteData?.canEditPublicPages),
@@ -170,12 +163,10 @@
   const publicSveditEditable = $derived.by(() => {
     if (!canEditPublicPages || isAdminRoute) return false;
 
-    const heroPage =
-      (currentRouteData?.heroPage as { editor_mode?: string } | null) ?? null;
+    const heroPage = currentRouteData?.heroPage ?? null;
     if (heroPage?.editor_mode === 'svedit') return true;
 
-    const customPage =
-      (currentRouteData?.customPage as { editor_mode?: string } | null) ?? null;
+    const customPage = currentRouteData?.customPage ?? null;
     return (
       currentRouteData?.viewerMode === 'page' &&
       customPage?.editor_mode === 'svedit'
@@ -211,7 +202,10 @@
 
   const adminPublicPath = $derived.by(() => {
     if (!isAdminRoute) return null;
-    return computeAdminPublicPath(page.url.pathname, currentRouteData);
+    return computeAdminPublicPath(
+      page.url.pathname,
+      (page.data as AdminRouteData | null) ?? null,
+    );
   });
 
   // --- Header classes ---

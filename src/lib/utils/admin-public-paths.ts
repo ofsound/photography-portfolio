@@ -1,3 +1,4 @@
+import type { AdminRouteData } from '$lib/types/route-data';
 import {
   buildGalleryPath,
   buildGalleryPhotoPath,
@@ -48,11 +49,9 @@ export function resolveAdminEditorPath(
   return null;
 }
 
-type PageData = Record<string, unknown> | null;
-
 export function computeAdminPublicPath(
   pathname: string,
-  pageData: PageData,
+  pageData: AdminRouteData | null,
 ): string | null {
   const segments = pathname.split('/').filter(Boolean);
   if (segments[0] !== 'admin') return null;
@@ -61,9 +60,9 @@ export function computeAdminPublicPath(
     return '/';
   }
 
-  const pageRecord = (pageData?.page as { slug?: string } | null) ?? null;
-  const galleryRecord = (pageData?.gallery as { slug?: string } | null) ?? null;
-  const photoRecord = (pageData?.photo as { slug?: string } | null) ?? null;
+  const pageRecord = pageData?.page ?? null;
+  const galleryRecord = pageData?.gallery ?? null;
+  const photoRecord = pageData?.photo ?? null;
 
   if (
     segments.length === 4 &&

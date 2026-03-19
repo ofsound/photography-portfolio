@@ -495,8 +495,12 @@
     data-admin-mobile-menu-root
     style="view-transition-name: admin-content"
   >
-    <AdminToastViewport contained />
-    <div class="w-full md:max-w-[1200px]">
+    <div class="pointer-events-none absolute inset-x-0 top-0 z-70">
+      <div class="relative w-full md:max-w-[var(--admin-content-max)]">
+        <AdminToastViewport contained />
+      </div>
+    </div>
+    <div class="w-full md:max-w-[var(--admin-content-max)]">
       {@render children()}
     </div>
   </section>

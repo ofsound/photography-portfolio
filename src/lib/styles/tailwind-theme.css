@@ -166,6 +166,7 @@
   --duration-chrome: 280ms;
 
   /* Layout */
+  --admin-content-max: 1200px;
   --size-header: 54px;
   --size-mobile-header: 60px;
   --size-mobile-header-offset: calc(

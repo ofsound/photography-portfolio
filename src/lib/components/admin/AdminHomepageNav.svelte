@@ -3,6 +3,7 @@
 
   import AdminHeader from '$lib/components/admin/AdminHeader.svelte';
   import AdminHeading from '$lib/components/admin/AdminHeading.svelte';
+  import AdminMobileStickyToggleRow from '$lib/components/admin/AdminMobileStickyToggleRow.svelte';
   import AdminSegmentedToggle from '$lib/components/admin/AdminSegmentedToggle.svelte';
 
   type Segment = {
@@ -24,9 +25,9 @@
 
 <AdminHeader>
   <nav class="flex flex-col gap-4 md:flex-row md:justify-between md:gap-0">
-    <div class="flex justify-center md:order-2">
+    <AdminMobileStickyToggleRow>
       <AdminSegmentedToggle {segments} {activeKey} {ariaLabel} />
-    </div>
+    </AdminMobileStickyToggleRow>
     <div
       class="flex flex-col gap-3 md:order-1 md:flex-row md:items-center md:gap-3"
     >

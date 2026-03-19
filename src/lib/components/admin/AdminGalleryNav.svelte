@@ -4,6 +4,7 @@
   import AdminHeader from '$lib/components/admin/AdminHeader.svelte';
   import AdminButton from '$lib/components/admin/AdminButton.svelte';
   import AdminHeading from '$lib/components/admin/AdminHeading.svelte';
+  import AdminMobileStickyToggleRow from '$lib/components/admin/AdminMobileStickyToggleRow.svelte';
   import AdminSegmentedToggle from '$lib/components/admin/AdminSegmentedToggle.svelte';
 
   const {
@@ -44,13 +45,13 @@
 <div>
   <AdminHeader>
     <nav class="flex flex-col gap-4 md:flex-row md:justify-between md:gap-0">
-      <div class="flex justify-center md:order-2">
+      <AdminMobileStickyToggleRow>
         <AdminSegmentedToggle
           segments={sections}
           activeKey={currentView}
           ariaLabel="Gallery admin sections"
         />
-      </div>
+      </AdminMobileStickyToggleRow>
       <div
         class="flex flex-col gap-3 md:order-1 md:flex-row md:items-center md:gap-3"
       >

@@ -1,9 +1,16 @@
 <script lang="ts">
   import { onMount, type Snippet } from 'svelte';
+  import { quintOut } from 'svelte/easing';
+  import { slide } from 'svelte/transition';
+
+  import { browser } from '$app/environment';
 
   import AdminCard from '$lib/components/admin/AdminCard.svelte';
+  import AdminHeading from '$lib/components/admin/AdminHeading.svelte';
 
   import type { AdminCardVariant } from '$lib/styles/admin-cards';
+
+  const SLIDE_DURATION_MS = 280;
 
   type Props = {
     id: string;
@@ -28,6 +35,7 @@
   }: Props = $props();
 
   let isOpen = $state(false);
+  let panelEl = $state<HTMLDivElement | undefined>();
 
   const panelId = $derived(`${id}-panel`);
   const toggleButtonId = $derived(`${id}-toggle`);
@@ -40,6 +48,19 @@
       isOpen = defaultOpen;
     }
   });
+
+  const scrollPanelIntoViewAfterOpen = () => {
+    if (!browser) return;
+    const el = panelEl;
+    if (!el?.isConnected) return;
+    const smooth = !window.matchMedia('(prefers-reduced-motion: reduce)')
+      .matches;
+    el.scrollIntoView({
+      behavior: smooth ? 'smooth' : 'auto',
+      block: 'nearest',
+      inline: 'nearest',
+    });
+  };
 
   const toggle = () => {
     isOpen = !isOpen;
@@ -59,7 +80,7 @@
     onclick={toggle}
   >
     <div class="grid gap-1">
-      <p class="text-xs tracking-widest uppercase">{title}</p>
+      <AdminHeading level={3} tag="span">{title}</AdminHeading>
       {#if subtitle}
         <p class="text-xs text-text-muted">{subtitle}</p>
       {/if}
@@ -83,7 +104,19 @@
     </svg>
   </button>
 
-  <div id={panelId} class="grid gap-3 px-3 pb-3" hidden={!isOpen}>
-    {@render children?.()}
-  </div>
+  {#if isOpen}
+    <div
+      bind:this={panelEl}
+      id={panelId}
+      class="grid gap-3 px-3 pb-3"
+      onintroend={scrollPanelIntoViewAfterOpen}
+      transition:slide={{
+        duration: SLIDE_DURATION_MS,
+        easing: quintOut,
+        axis: 'y',
+      }}
+    >
+      {@render children?.()}
+    </div>
+  {/if}
 </AdminCard>

@@ -491,9 +491,7 @@
     {#if detailViewMode === 'classic'}
       <AdminCard class="grid gap-3 p-3">
         <div class="grid gap-1">
-          <p class="text-xs font-medium tracking-wide text-text uppercase">
-            Classic Detail Letterbox Inset
-          </p>
+          <AdminHeading level={3}>Classic Detail Letterbox Inset</AdminHeading>
         </div>
 
         <div class="flex flex-col gap-3">
@@ -605,9 +603,7 @@
     {#if detailViewMode === 'contact_sheet'}
       <AdminCard class="grid gap-3 p-3">
         <div class="grid gap-1">
-          <p class="text-xs font-medium tracking-wide text-text uppercase">
-            Contact Sheet Viewer
-          </p>
+          <AdminHeading level={3}>Contact Sheet Viewer</AdminHeading>
         </div>
 
         <div class="flex flex-col gap-3">

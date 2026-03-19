@@ -8,6 +8,7 @@
   import BackgroundImagePickerModal from '$lib/components/admin/BackgroundImagePickerModal.svelte';
   import AdminButton from '$lib/components/admin/AdminButton.svelte';
   import AdminCard from '$lib/components/admin/AdminCard.svelte';
+  import AdminHeading from '$lib/components/admin/AdminHeading.svelte';
   import AdminPageHeader from '$lib/components/admin/AdminPageHeader.svelte';
   import AdminRevisionsDrawer from '$lib/components/admin/AdminRevisionsDrawer.svelte';
   import AdminSeoSocialDrawer from '$lib/components/admin/AdminSeoSocialDrawer.svelte';
@@ -240,13 +241,24 @@
     </FormField>
   </div>
 
-  <div class="grid gap-3 md:grid-cols-2 md:items-start">
-    <AdminCard variant="gradient" class="grid gap-3 p-3">
-      <div class="flex flex-wrap items-center justify-between gap-2">
+  <div class="grid gap-3">
+    <AdminCard
+      variant="gradient"
+      class={[
+        'grid gap-3 p-3',
+        selectedBgImage?.delivery_storage_path
+          ? 'md:grid-cols-2 md:items-start md:gap-4'
+          : '',
+      ]
+        .filter(Boolean)
+        .join(' ')}
+    >
+      <div class="grid min-w-0 gap-3">
         <div>
-          <p class="text-xs tracking-widest uppercase">Page Background</p>
+          <AdminHeading level={3}>Page Background</AdminHeading>
           <p class="text-xs text-text-muted">Select a published lead image.</p>
         </div>
+
         <div class="flex flex-wrap items-center gap-2">
           <AdminButton
             type="button"
@@ -263,68 +275,82 @@
             }}>Remove</AdminButton
           >
         </div>
+
+        {#if fieldErrors.bg_image_id}
+          <p class="text-xs text-red-600">{fieldErrors.bg_image_id}</p>
+        {/if}
+
+        {#if selectedBgImage && selectedBgImage.delivery_storage_path}
+          <div class="grid w-fit max-w-full gap-2 text-xs">
+            <img
+              src={photoPublicUrl(selectedBgImage.delivery_storage_path, 220)}
+              alt={selectedBgImage.photo_title}
+              class="h-20 w-28 rounded object-cover"
+            />
+            <p class="max-w-52 truncate">{selectedBgImage.photo_title}</p>
+          </div>
+        {:else if formBgImageId}
+          <p class="text-xs text-text-muted">
+            Selected image is no longer available in picker results.
+          </p>
+          <p class="text-xs text-text-subtle">ID: {formBgImageId}</p>
+        {/if}
       </div>
 
-      {#if fieldErrors.bg_image_id}
-        <p class="text-xs text-red-600">{fieldErrors.bg_image_id}</p>
-      {/if}
-
       {#if selectedBgImage && selectedBgImage.delivery_storage_path}
-        <div class="grid w-fit gap-2 text-xs">
-          <img
-            src={photoPublicUrl(selectedBgImage.delivery_storage_path, 220)}
-            alt={selectedBgImage.photo_title}
-            class="h-20 w-28 rounded object-cover"
-          />
-          <p class="max-w-52 truncate">{selectedBgImage.photo_title}</p>
+        <div class="min-w-0">
+          <FormField
+            label="Background behavior"
+            id="page-edit-bg_image_fixed"
+            class="min-w-0"
+          >
+            <div class="grid gap-2">
+              {#each PAGE_BACKGROUND_OPTIONS as option (option.value)}
+                <label
+                  class="flex cursor-pointer items-start gap-3 rounded border border-border bg-surface p-3 transition-colors hover:border-border-strong"
+                >
+                  <input
+                    type="radio"
+                    name="bg_image_fixed"
+                    id={`bg-behavior-${option.value}`}
+                    value={option.value}
+                    bind:group={formBgImageFixed}
+                    class="mt-1 size-4 accent-brand"
+                  />
+                  <span class="grid min-w-0 gap-1">
+                    <span class="text-sm font-medium text-text"
+                      >{option.label}</span
+                    >
+                    <span class="text-xs text-text-muted"
+                      >{option.description}</span
+                    >
+                  </span>
+                </label>
+              {/each}
+            </div>
+          </FormField>
         </div>
-        <FormField label="Background behavior" id="page-edit-bg_image_fixed">
-          <div class="grid gap-2">
-            {#each PAGE_BACKGROUND_OPTIONS as option (option.value)}
-              <label
-                class="flex cursor-pointer items-start gap-3 rounded border border-border bg-surface p-3 transition-colors hover:border-border-strong"
-              >
-                <input
-                  type="radio"
-                  name="bg_image_fixed"
-                  id={`bg-behavior-${option.value}`}
-                  value={option.value}
-                  bind:group={formBgImageFixed}
-                  class="mt-1 size-4 accent-brand"
-                />
-                <span class="grid gap-1">
-                  <span class="text-sm font-medium text-text">{option.label}</span
-                  >
-                  <span class="text-xs text-text-muted">{option.description}</span
-                  >
-                </span>
-              </label>
-            {/each}
-          </div>
-        </FormField>
-      {:else if formBgImageId}
-        <p class="text-xs text-text-muted">
-          Selected image is no longer available in picker results.
-        </p>
-        <p class="text-xs text-text-subtle">ID: {formBgImageId}</p>
       {/if}
     </AdminCard>
 
-    <FormField
-      label="Max Width Override (px)"
-      id="page-edit-max_width_override_px"
-      hint="Optional. Leave blank to use the site default ({siteDefaultMaxWidth}px)."
-      error={fieldErrors.max_width_override_px}
-    >
-      <FormInput
+    <div class="grid gap-3 md:grid-cols-2 md:items-start">
+      <FormField
+        label="Max Width Override (px)"
         id="page-edit-max_width_override_px"
-        name="max_width_override_px"
-        type="number"
-        min={1}
-        step={1}
-        bind:value={formMaxWidthOverride}
-      />
-    </FormField>
+        hint="Optional. Leave blank to use the site default ({siteDefaultMaxWidth}px)."
+        error={fieldErrors.max_width_override_px}
+        class="min-w-0"
+      >
+        <FormInput
+          id="page-edit-max_width_override_px"
+          name="max_width_override_px"
+          type="number"
+          min={1}
+          step={1}
+          bind:value={formMaxWidthOverride}
+        />
+      </FormField>
+    </div>
   </div>
 
   {#if formEditorMode === 'code'}

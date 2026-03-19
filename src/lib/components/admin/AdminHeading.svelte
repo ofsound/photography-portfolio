@@ -1,13 +1,19 @@
 <script lang="ts">
   const {
     level = 1,
+    tag: tagOverride = undefined,
     class: className = '',
     children,
   } = $props<{
     level?: 1 | 2 | 3;
+    tag?: 'h1' | 'h2' | 'h3' | 'span';
     class?: string;
     children: import('svelte').Snippet;
   }>();
+
+  const tag = $derived<'h1' | 'h2' | 'h3' | 'span'>(
+    tagOverride ?? (level === 1 ? 'h1' : level === 2 ? 'h2' : 'h3'),
+  );
 
   const headingClass = $derived.by(() => {
     let base: string;
@@ -25,16 +31,6 @@
   });
 </script>
 
-{#if level === 1}
-  <h1 class={headingClass}>
-    {@render children()}
-  </h1>
-{:else if level === 2}
-  <h2 class={headingClass}>
-    {@render children()}
-  </h2>
-{:else}
-  <h3 class={headingClass}>
-    {@render children()}
-  </h3>
-{/if}
+<svelte:element this={tag} class={headingClass}>
+  {@render children()}
+</svelte:element>

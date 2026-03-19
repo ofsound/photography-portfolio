@@ -30,4 +30,6 @@ export type AdminRouteData = {
   page?: AdminSlugRecord | null;
   gallery?: AdminSlugRecord | null;
   photo?: AdminSlugRecord | null;
+  /** Set by homepage / [gallerySlug] layouts for mobile toggle chrome. */
+  adminMobileFlushToggleChrome?: boolean;
 };

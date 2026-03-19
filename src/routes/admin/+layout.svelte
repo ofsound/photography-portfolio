@@ -26,6 +26,10 @@
     ),
   );
 
+  const adminMobileFlushToggleChrome = $derived(
+    (data as AdminRouteData).adminMobileFlushToggleChrome === true,
+  );
+
   const links = $derived.by(() => {
     const list = [
       { href: '/admin/library', label: 'Library' },
@@ -197,7 +201,9 @@
   </aside>
 
   <section
-    class="relative flex h-full min-h-0 flex-col overflow-y-auto overscroll-y-contain p-4 pt-[calc(var(--size-mobile-header-offset)+1rem)] md:p-6"
+    class="relative flex h-full min-h-0 flex-col overflow-y-auto overscroll-y-contain p-4 md:p-6 {adminMobileFlushToggleChrome
+      ? 'pt-[var(--size-mobile-header-offset)]'
+      : 'pt-[calc(var(--size-mobile-header-offset)+1rem)]'}"
     data-admin-mobile-menu-root
     style="view-transition-name: admin-content"
   >
